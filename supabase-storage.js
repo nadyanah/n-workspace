@@ -5,9 +5,8 @@
 // akan mendapat data yang sama, di device manapun.
 // ============================================================================
 
-// ⚠️ GANTI DENGAN CREDENTIAL SUPABASE KAMU ⚠️
-const SUPABASE_URL = 'https://wsrzmemfhrcxqqseanxm.supabase.co/rest/v1/';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzcnptZW1maHJjeHFxc2VhbnhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NzE3NDYsImV4cCI6MjA5NjE0Nzc0Nn0.nAdc3a0GKC9VtMj00pPUVn07cdtGMaCqAAc3Pw7fKOQ';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Email domain palsu untuk auth Supabase (tidak perlu valid)
 const AUTH_EMAIL_DOMAIN = 'nworkspace.app';
