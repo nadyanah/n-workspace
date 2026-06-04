@@ -1,0 +1,6 @@
+{
+  "name": "Habit Tracker",
+  "description": "A beautiful, minimalist personal workspace with a full habit tracker, job logbook, content tracker, and an interactive Pomodoro Hourglass with procedural ambient soundscapes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

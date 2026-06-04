@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>n-workspace</title>
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Load Vue 3 Global from CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <!-- Load SheetJS for Excel Exports and jsPDF + autoTable for PDF Exports -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <div class="app-container">
+      <!-- View 1: Main Landing Dashboard (Desk) -->
+      <div v-if="activePage === 'dashboard'" class="desk-viewport" ref="deskViewport">
+        
+        <!-- Decorative Stars scattered inside desk (Visual details matching Image 5) -->
+        <span v-for="(star, idx) in stars" 
+              :key="idx" 
+              class="star-decorator" 
+              :style="{ left: star.x + '%', top: star.y + '%' }">
+          ★
+        </span>
+        <!-- Center Desk Title & Menu Button (Visual layout matching Image 2 & 5) -->
+        <div class="desk-title-block">
+          <h1 class="desk-title">What's on My Desk</h1>
+          <p class="desk-subtitle">a hidden room of visuals, unlocked through creativity</p>
+        </div>
+        <!-- Scattered Icons/Objects mapping to Pages -->
+        <!-- Drag-and-drop is supported; positions are saved automatically in localStorage -->
+        <div v-for="(cfg, pageKey) in assignedIcons" 
+             :key="pageKey" 
+             class="desk-item" 
+             :style="{ left: cfg.x + '%', top: cfg.y + '%' }"
+             @mousedown="startDrag($event, pageKey)"
+             @touchstart="startDrag($event, pageKey)"
+             @dblclick="navigateTo(pageKey)">
+          
+          <!-- Visual label code (01) etc matching reference Image 2 -->
+          <span class="desk-item-number text-mono">({{ cfg.num }})</span>
+          
+          <!-- Custom image upload or Visual SVG illustration -->
+          <div class="desk-item-svg" :style="{ width: iconPool[cfg.iconId]?.width + 'px', height: iconPool[cfg.iconId]?.width + 'px' }">
+            <img v-if="cfg.customUrl" :src="cfg.customUrl" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none;" alt="Icon">
+            <div v-else style="width: 100%; height: 100%; pointer-events: none;" v-html="iconPool[cfg.iconId]?.svg"></div>
+          </div>
+          
+          <!-- Tooltip on hover (dblclick to navigate) -->
+          <div class="desk-item-label">{{ cfg.label }} <span style="font-weight: normal; opacity: 0.6; display: block; font-size: 9px; margin-top: 2px;">(Double-click untuk Buka)</span></div>
+        </div>
+
+        <!-- Floating Action Dock in bottom-corner for Theme and Desk Icon Styles -->
+        <div class="floating-action-dock" @click.stop>
+          <!-- 1. Desk Icons Configuration Floating Button -->
+          <button class="desk-config-floating-btn" @click="showSettings = !showSettings" title="Pengaturan Ikon & Meja Kerja">
+            ⚙️
+          </button>
+
+          <!-- 2. Color Theme Customizer Widget -->
+          <div class="color-picker-widget-container" style="position: relative;">
+            <button class="color-picker-btn" @click="showColorPicker = !showColorPicker" title="Ubah Warna Tema Dominan">
+              🎨
+            </button>
+            <div v-if="showColorPicker" class="color-picker-popover">
+              <div class="color-picker-title">
+                <span>🎨</span> My mood colour web
+              </div>
+              <div class="theme-preset-grid">
+                <span v-for="color in presetColors" 
+                      :key="color.hex" 
+                      class="theme-preset-dot" 
+                      :class="{ active: dominantColor === color.hex }"
+                      :style="{ backgroundColor: color.hex }" 
+                      :title="color.label"
+                      @click="setDominantColor(color.hex)">
+                </span>
+              </div>
+              <div class="custom-color-input-wrapper">
+                <span style="font-size: 11px;">Warna Kustom:</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span class="text-mono" style="font-size: 11.5px; color: var(--text-dark);">{{ dominantColor }}</span>
+                  <input type="color" class="custom-color-picker-field" v-model="dominantColor" @input="setDominantColor(dominantColor)" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- View 2: Active Personal Subpage (Standard module pages) -->
+      <div v-else class="page-module">
+        <div class="top-header">
+          <button class="back-btn" @click="navigateTo('dashboard')">
+            ← back to my desk
+          </button>
+          <span class="text-mono" style="font-size: 13px; font-weight: 600; color: var(--text-muted);">
+            daily n workspace
+          </span>
+        </div>
+        <!-- Render modular components dynamically based on active page -->
+        <job-logbook v-if="activePage === 'jobLogbook'"></job-logbook>
+        <calendar-moment v-if="activePage === 'calendarMoment'"></calendar-moment>
+        <content-tracker v-if="activePage === 'contentTracker'"></content-tracker>
+        <interview-practice v-if="activePage === 'interviewPractice'"></interview-practice>
+        <daily-nutrition v-if="activePage === 'dailyNutrition'"></daily-nutrition>
+        <pomodoro-timer v-if="activePage === 'pomodoroTimer'"></pomodoro-timer>
+        <google-calendar v-if="activePage === 'googleCalendar'"></google-calendar>
+        <!-- Dynamic Month state passed to Habit Tracker component -->
+        <habit-tracker v-if="activePage === 'habitTracker'"
+                       :current-year-month="habitYearMonth"
+                       :days-in-month="habitDaysInMonth"
+                       :active-month-key="habitMonthKey"
+                       @prev-month="prevMonth"
+                       @next-month="nextMonth"></habit-tracker>
+      </div>
+      <!-- Icon Config Side Drawer mapping menu -->
+      <icon-manager v-if="showSettings" 
+                    :assigned-icons="assignedIcons" 
+                    :available-icons="availableIconsList"
+                    :pool="iconPool"
+                    @close="showSettings = false"
+                    @update-mapping="handleUpdateMapping"
+                    @reset-layout="resetLayout">
+      </icon-manager>
+    </div>
+  </div>
+  <!-- Firebase Compat CDN Libraries -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  
+  <!-- Assets and App scripts -->
+  <script src="assets.js"></script>
+  <!-- Supabase Storage Layer (harus sebelum components.js & app.js) -->
+  <script src="supabase-storage.js"></script>
+  <script>
+    // Tunggu WorkspaceStorage selesai init sebelum mount Vue app
+    window._workspaceStorageReady.then(() => {
+      // Dynamically load app scripts setelah storage ready
+      const loadScript = (src) => new Promise((resolve) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        document.body.appendChild(s);
+      });
+      loadScript('components.js').then(() => loadScript('app.js'));
+    });
+  </script>
+</body>
+</html>
