@@ -6,8 +6,8 @@
 // ============================================================================
 
 // ⚠️ GANTI DENGAN CREDENTIAL SUPABASE KAMU ⚠️
-const SUPABASE_URL = 'GANTI_DENGAN_SUPABASE_URL_KAMU';
-const SUPABASE_ANON_KEY = 'GANTI_DENGAN_SUPABASE_ANON_KEY_KAMU';
+const SUPABASE_URL = 'https://wsrzmemfhrcxqqseanxm.supabase.co/rest/v1/';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzcnptZW1maHJjeHFxc2VhbnhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NzE3NDYsImV4cCI6MjA5NjE0Nzc0Nn0.nAdc3a0GKC9VtMj00pPUVn07cdtGMaCqAAc3Pw7fKOQ';
 
 // Email domain palsu untuk auth Supabase (tidak perlu valid)
 const AUTH_EMAIL_DOMAIN = 'nworkspace.app';
@@ -215,7 +215,7 @@ function _showPasswordPopup() {
       try {
         const result = await _signInWithPassword(pw);
         _currentUserId = result.user.id;
-        localStorage.setItem('_nworkspace_pw_hash', btoa(pw));
+        sessionStorage.setItem('_nws_session', btoa(pw));
 
         // Animate out
         overlay.style.opacity = '0';
@@ -257,10 +257,10 @@ async function _ensureUser() {
   }
 
   // Coba auto-login dari password yang tersimpan di localStorage
-  const storedPwHash = localStorage.getItem('_nworkspace_pw_hash');
+  const storedPwHash = sessionStorage.setItem('_nws_session', btoa(pw));
   if (storedPwHash) {
     try {
-      const pw = atob(storedPwHash);
+      sessionStorage.setItem('_nws_session', btoa(pw));
       const result = await _signInWithPassword(pw);
       _currentUserId = result.user.id;
       return _currentUserId;
