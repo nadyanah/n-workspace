@@ -5,8 +5,8 @@
 // akan mendapat data yang sama, di device manapun.
 // ============================================================================
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_URL = 'https://wsrzmemfhrcxqqseanxm.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_7DUVThoYDRVM2--MH2fkcQ_Gs9c3wyq';
 
 // Email domain palsu untuk auth Supabase (tidak perlu valid)
 const AUTH_EMAIL_DOMAIN = 'nworkspace.app';
@@ -214,7 +214,7 @@ function _showPasswordPopup() {
       try {
         const result = await _signInWithPassword(pw);
         _currentUserId = result.user.id;
-        sessionStorage.setItem('_nws_session', btoa(pw));
+        localStorage.setItem('_nworkspace_pw_hash', btoa(pw));
 
         // Animate out
         overlay.style.opacity = '0';
@@ -256,10 +256,10 @@ async function _ensureUser() {
   }
 
   // Coba auto-login dari password yang tersimpan di localStorage
-  const storedPwHash = sessionStorage.setItem('_nws_session', btoa(pw));
+  const storedPwHash = localStorage.getItem('_nworkspace_pw_hash');
   if (storedPwHash) {
     try {
-      sessionStorage.setItem('_nws_session', btoa(pw));
+      const pw = atob(storedPwHash);
       const result = await _signInWithPassword(pw);
       _currentUserId = result.user.id;
       return _currentUserId;
