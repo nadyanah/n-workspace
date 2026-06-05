@@ -6,3 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
+# Mengabaikan file dokumentasi spesifik
+README.md
+SETUP.md

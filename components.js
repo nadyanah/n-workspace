@@ -6092,6 +6092,20 @@ const PomodoroTimer = {
         this.startTimer();
       }
     },
+    // Broadcast current timer state ke localStorage agar FloatingCountdownTimer
+    // bisa membacanya secara global dari halaman mana pun
+    broadcastTimerState() {
+      const state = {
+        isRunning: this.isRunning,
+        timeLeft: this.timeLeft,
+        totalDuration: this.totalDuration,
+        currentMode: this.currentMode,
+        formattedTime: this.formattedTime,
+        ts: Date.now()
+      };
+      localStorage.setItem('pomo_floating_state', JSON.stringify(state));
+      window.dispatchEvent(new CustomEvent('pomo-state-update', { detail: state }));
+    },
     startTimer() {
       if (this.timerInterval) return;
       
@@ -6106,9 +6120,12 @@ const PomodoroTimer = {
         startProceduralAmbience(this.ambienceType);
       }
       
+      this.broadcastTimerState();
+      
       this.timerInterval = setInterval(() => {
         if (this.timeLeft > 0) {
           this.timeLeft--;
+          this.broadcastTimerState();
           
           // Regular clock ticking hum
           if (this.tickingEnabled && !this.isMuted) {
@@ -6126,6 +6143,7 @@ const PomodoroTimer = {
         this.timerInterval = null;
       }
       stopProceduralAmbience();
+      this.broadcastTimerState();
     },
     flipHourglass() {
       playSwooshSound();
@@ -6138,7 +6156,13 @@ const PomodoroTimer = {
       this.startTimer();
     },
     handleTimerEnd() {
-      this.pauseTimer();
+      this.isRunning = false;
+      if (this.timerInterval) {
+        clearInterval(this.timerInterval);
+        this.timerInterval = null;
+      }
+      stopProceduralAmbience();
+      this.broadcastTimerState();
       
       // Fire procedural finish notification rings
       if (!this.isMuted) {

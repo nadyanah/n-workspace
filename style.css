@@ -3968,3 +3968,110 @@ input:checked + .switch-slider:before {
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.25) !important;
 }
 
+
+/* ============================================================================
+   FLOATING COUNTDOWN TIMER — Global Persistent Widget
+   Posisi: pojok kanan bawah layar. Hanya tampil saat Pomodoro berjalan.
+   ============================================================================ */
+
+.fct-wrapper {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #FAF6F0;
+  border: 1.5px solid var(--color-sand);
+  border-radius: 20px;
+  padding: 10px 16px 10px 12px;
+  box-shadow: 0 8px 32px rgba(44, 38, 33, 0.13), 0 2px 8px rgba(44, 38, 33, 0.06);
+  cursor: default;
+  user-select: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.fct-wrapper:hover {
+  box-shadow: 0 12px 40px rgba(44, 38, 33, 0.18), 0 4px 12px rgba(44, 38, 33, 0.08);
+  border-color: var(--color-terracotta);
+  transform: translateY(-2px);
+  transition: all 0.22s ease;
+}
+
+.fct-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #F39C12, var(--color-terracotta));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(214, 123, 82, 0.3);
+}
+
+.fct-hg-icon {
+  color: #FFFFFF;
+  animation: fct-tick 2s ease-in-out infinite;
+}
+
+@keyframes fct-tick {
+  0%, 100% { transform: rotate(0deg); }
+  10% { transform: rotate(-8deg); }
+  20% { transform: rotate(8deg); }
+  30% { transform: rotate(0deg); }
+}
+
+.fct-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.fct-label {
+  font-family: 'Space Mono', 'Courier New', monospace;
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #9A8E85;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.fct-time {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #2C2621;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+}
+
+.fct-ring {
+  flex-shrink: 0;
+  margin-left: 2px;
+}
+
+.fct-ring-bg {
+  stroke: var(--color-sand);
+}
+
+.fct-ring-fill {
+  stroke: var(--color-terracotta);
+  transition: stroke-dashoffset 0.6s ease;
+}
+
+/* Vue transition — slide in dari kanan bawah */
+.fct-slide-enter-active,
+.fct-slide-leave-active {
+  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.fct-slide-enter-from,
+.fct-slide-leave-to {
+  opacity: 0;
+  transform: translateY(16px) scale(0.92);
+}

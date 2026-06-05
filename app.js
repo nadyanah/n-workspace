@@ -311,6 +311,108 @@ const App = {
   }
 };
 
+// ============================================================================
+// FLOATING COUNTDOWN TIMER — Global Persistent Component
+// ============================================================================
+// Membaca state Pomodoro dari localStorage (ditulis oleh PomodoroTimer setiap
+// detik). Hanya tampil saat timer sedang BERJALAN (isRunning === true).
+// Disembunyikan otomatis saat pause, selesai, atau idle.
+// Tidak muncul di halaman 'dashboard' dan 'pomodoroTimer' (sudah ada timer-nya).
+// ============================================================================
+const FloatingCountdownTimer = {
+  template: `
+    <transition name="fct-slide">
+      <div v-if="visible" class="fct-wrapper" title="Pomodoro sedang berjalan">
+        <!-- Hourglass pulse icon -->
+        <div class="fct-icon">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="fct-hg-icon">
+            <path d="M5 2h14"></path>
+            <path d="M5 22h14"></path>
+            <path d="M19 2v4c0 3-2.5 4.5-5 5.5c2.5 1 5 2.5 5 5.5v4"></path>
+            <path d="M5 2v4c0 3 2.5 4.5 5 5.5c-2.5 1-5 2.5-5 5.5v4"></path>
+          </svg>
+        </div>
+        <!-- Label & time -->
+        <div class="fct-body">
+          <span class="fct-label">WAKTU TERSISA</span>
+          <span class="fct-time">{{ formattedTime }}</span>
+        </div>
+        <!-- Progress ring -->
+        <svg class="fct-ring" viewBox="0 0 36 36" width="44" height="44">
+          <circle class="fct-ring-bg" cx="18" cy="18" r="15.5" fill="none" stroke-width="2.5"/>
+          <circle class="fct-ring-fill" cx="18" cy="18" r="15.5" fill="none" stroke-width="2.5"
+            :stroke-dasharray="97.4"
+            :stroke-dashoffset="ringOffset"
+            stroke-linecap="round"
+            transform="rotate(-90 18 18)"/>
+        </svg>
+      </div>
+    </transition>
+  `,
+  props: {
+    activePage: { type: String, default: 'dashboard' }
+  },
+  data() {
+    return {
+      isRunning: false,
+      timeLeft: 0,
+      totalDuration: 0,
+      formattedTime: '00 : 00',
+    };
+  },
+  computed: {
+    // Hanya tampil di halaman selain 'dashboard' dan 'pomodoroTimer'
+    visible() {
+      return this.isRunning &&
+             this.activePage !== 'dashboard' &&
+             this.activePage !== 'pomodoroTimer';
+    },
+    ringOffset() {
+      if (this.totalDuration <= 0) return 97.4;
+      const elapsed = this.totalDuration - this.timeLeft;
+      const fraction = Math.min(1, Math.max(0, elapsed / this.totalDuration));
+      return (97.4 * fraction).toFixed(2);
+    }
+  },
+  mounted() {
+    // Baca state saat pertama kali mount (misalnya user refresh halaman)
+    this.readState();
+    // Dengarkan update dari PomodoroTimer via CustomEvent (same-tab)
+    window.addEventListener('pomo-state-update', this.onStateUpdate);
+    // Fallback polling untuk memastikan tetap sync
+    this._pollInterval = setInterval(this.readState, 1000);
+  },
+  beforeUnmount() {
+    window.removeEventListener('pomo-state-update', this.onStateUpdate);
+    clearInterval(this._pollInterval);
+  },
+  methods: {
+    readState() {
+      try {
+        const raw = localStorage.getItem('pomo_floating_state');
+        if (!raw) return;
+        const s = JSON.parse(raw);
+        // Abaikan state yang sudah lebih dari 3 detik (timer tidak aktif)
+        if (Date.now() - s.ts > 3000) {
+          this.isRunning = false;
+          return;
+        }
+        this.isRunning = !!s.isRunning;
+        this.timeLeft = s.timeLeft || 0;
+        this.totalDuration = s.totalDuration || 0;
+        this.formattedTime = s.formattedTime || '00 : 00';
+      } catch(e) {}
+    },
+    onStateUpdate(e) {
+      const s = e.detail;
+      this.isRunning = !!s.isRunning;
+      this.timeLeft = s.timeLeft || 0;
+      this.totalDuration = s.totalDuration || 0;
+      this.formattedTime = s.formattedTime || '00 : 00';
+    }
+  }
+};
+
 // Start application
 const app = createApp(App);
 
@@ -324,5 +426,6 @@ app.component('habit-tracker', HabitTracker);
 app.component('pomodoro-timer', PomodoroTimer);
 app.component('google-calendar', GoogleCalendar);
 app.component('icon-manager', IconManager);
+app.component('floating-countdown-timer', FloatingCountdownTimer);
 
 app.mount('#app');
