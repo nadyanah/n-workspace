@@ -4064,17 +4064,7 @@ const InterviewPractice = {
     }
   }
 };
-          hints: q.hints || 'Gunakan framework yang direkomendasikan untuk menjawab.',
-          framework: (q.framework || 'STAR').toUpperCase()
-        }));
-      } catch (err) {
-        this.aiQuestionsError = 'Gagal menghasilkan pertanyaan: ' + err.message;
-      } finally {
-        this.isGeneratingAi = false;
-      }
-    }
-  }
-};
+
 // 5. Daily Nutrition & Insights Component
 const DailyNutrition = {
   template: `
@@ -4435,6 +4425,10 @@ const DailyNutrition = {
     },
     saveToStorage() {
       WorkspaceStorage.setItem('personal_workspace_nutrition_insights', JSON.stringify(this.insights));
+    }
+  }
+};
+
 // 6. Habit Tracker Component (PORTED FROM REACT TO VUE 3)
 const HabitTracker = {
   template: `
