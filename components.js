@@ -588,6 +588,21 @@ const JobLogbook = {
       this.saveToStorage();
     }
   },
+  created() {
+    const savedCats = WorkspaceStorage.getItem('personal_workspace_job_categories');
+    if (savedCats) { try { this.customCategories = JSON.parse(savedCats); } catch (e) { this.customCategories = []; } }
+
+    const savedPlans = WorkspaceStorage.getItem('personal_workspace_job_plans');
+    if (savedPlans) { try { this.plans = JSON.parse(savedPlans); } catch (e) { this.plans = []; } }
+
+    const saved = WorkspaceStorage.getItem('personal_workspace_job_logs');
+    if (saved) {
+      try {
+        this.logs = JSON.parse(saved);
+        this.logs.forEach((l, i) => { if (!l.id) l.id = 'log-' + i + '-' + Date.now(); });
+      } catch (e) { this.logs = []; }
+    }
+  },
   methods: {
     // ── Kategori ──
     addCategory() {
