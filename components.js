@@ -39,7 +39,143 @@ const JobLogbook = {
         </div>
       </div>
 
-      <!-- 1. Interactive Search and Date Filter Box -->
+      <!-- ══════════════════════════════════════════════════════════ -->
+      <!-- SECTION: KELOLA KATEGORI                                  -->
+      <!-- ══════════════════════════════════════════════════════════ -->
+      <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background: #FDFAF6; border: 1.5px solid var(--color-sand);">
+        <div class="flex-between" style="align-items: center; margin-bottom: 14px;">
+          <h3 style="font-size: 15px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 12h6"></path><path d="M9 16h4"></path></svg>
+            Kelola Kategori Pekerjaan
+          </h3>
+          <button @click="showCategoryManager = !showCategoryManager" class="btn btn-secondary" style="font-size: 12px; padding: 6px 14px; cursor: pointer;">
+            {{ showCategoryManager ? 'Sembunyikan' : 'Atur Kategori' }}
+          </button>
+        </div>
+
+        <!-- Chip list of all categories -->
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: showCategoryManager ? '16px' : '0';">
+          <span v-for="cat in allCategories" :key="cat"
+            :style="{ backgroundColor: getCategoryColor(cat) + '15', color: getCategoryColor(cat), borderColor: getCategoryColor(cat) + '40' }"
+            style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1.5px solid; display: inline-flex; align-items: center; gap: 6px;">
+            {{ cat }}
+            <button v-if="!defaultCategories.includes(cat)" @click="deleteCategory(cat)"
+              style="background: none; border: none; cursor: pointer; font-size: 13px; line-height: 1; color: inherit; opacity: 0.6; padding: 0; display: inline-flex;"
+              title="Hapus kategori">✕</button>
+          </span>
+        </div>
+
+        <!-- Add category form -->
+        <div v-if="showCategoryManager" style="display: flex; gap: 10px; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--color-sand);">
+          <input type="text" class="form-input" v-model="newCategoryInput" placeholder="Nama kategori baru..."
+            @keydown.enter="addCategory"
+            style="flex: 1; height: 40px;" />
+          <button class="btn btn-primary" @click="addCategory" style="height: 40px; padding: 0 20px; cursor: pointer; white-space: nowrap;">
+            + Tambah
+          </button>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════ -->
+      <!-- SECTION: TASK PLAN (belum dikerjakan)                     -->
+      <!-- ══════════════════════════════════════════════════════════ -->
+      <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background: #F8F6FF; border: 1.5px solid #C4B5FD;">
+        <div class="flex-between" style="align-items: center; margin-bottom: 16px;">
+          <h3 style="font-size: 16px; font-weight: 700; color: #4C1D95; display: flex; align-items: center; gap: 8px; margin: 0;">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #7C3AED;"><path d="M8 6h13"></path><path d="M8 12h13"></path><path d="M8 18h13"></path><path d="M3 6h.01"></path><path d="M3 12h.01"></path><path d="M3 18h.01"></path></svg>
+            Task Plan
+            <span v-if="plans.length > 0" style="background: #7C3AED; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px;">{{ plans.length }}</span>
+          </h3>
+          <button class="btn" @click="showAddPlan = !showAddPlan"
+            style="background: #7C3AED; color: #fff; border: none; font-size: 13px; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            {{ showAddPlan ? 'Tutup' : 'Tambah Task' }}
+          </button>
+        </div>
+
+        <!-- Form tambah task plan -->
+        <div v-if="showAddPlan" style="background: #fff; border: 1.5px solid #C4B5FD; border-radius: 12px; padding: 18px; margin-bottom: 16px; animation: popIn 0.2s ease;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div class="form-group" style="margin: 0;">
+              <label style="font-size: 12px; font-weight: 600; color: #5B21B6;">Tanggal Target</label>
+              <input type="date" class="form-input" v-model="planForm.date" style="height: 40px;" />
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label style="font-size: 12px; font-weight: 600; color: #5B21B6;">Kategori Pekerjaan</label>
+              <select class="form-input" v-model="planForm.category" style="height: 40px;">
+                <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin: 0 0 14px;">
+            <label style="font-size: 12px; font-weight: 600; color: #5B21B6;">Tugas / Deskripsi</label>
+            <textarea class="form-input" v-model="planForm.tasks" rows="2" placeholder="Deskripsikan tugas yang perlu dikerjakan..."></textarea>
+          </div>
+          <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="btn" @click="showAddPlan = false" style="background: #F3F0FF; border: 1.5px solid #C4B5FD; color: #5B21B6; cursor: pointer; padding: 8px 18px; border-radius: 8px; font-weight: 600;">Batal</button>
+            <button class="btn" @click="savePlan" style="background: #7C3AED; color: #fff; border: none; cursor: pointer; padding: 8px 20px; border-radius: 8px; font-weight: 600;">Simpan Task</button>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div v-if="plans.length === 0 && !showAddPlan" style="text-align: center; padding: 32px 20px; background: #fff; border-radius: 10px; border: 1.5px dashed #C4B5FD;">
+          <p style="font-size: 28px; margin-bottom: 8px;">📋</p>
+          <p style="font-size: 14px; font-weight: 600; color: #5B21B6; margin-bottom: 4px;">Belum ada task yang direncanakan</p>
+          <p style="font-size: 12.5px; color: #7C3AED; opacity: 0.7;">Klik "Tambah Task" untuk mulai merencanakan pekerjaanmu</p>
+        </div>
+
+        <!-- List task plan -->
+        <div v-if="plans.length > 0" style="display: flex; flex-direction: column; gap: 10px;">
+          <div v-for="(plan, idx) in plans" :key="plan.id"
+            style="background: #fff; border: 1.5px solid #DDD6FE; border-radius: 10px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 14px; transition: box-shadow 0.2s;"
+            @mouseenter="$event.currentTarget.style.boxShadow='0 4px 16px rgba(124,58,237,0.10)'"
+            @mouseleave="$event.currentTarget.style.boxShadow='none'">
+
+            <!-- Left: info -->
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;">
+                <span style="font-size: 12px; font-weight: 700; color: #5B21B6; display: flex; align-items: center; gap: 4px;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                  {{ formatDate(plan.date) }}
+                </span>
+                <span :style="{ backgroundColor: getCategoryColor(plan.category) + '15', color: getCategoryColor(plan.category), borderColor: getCategoryColor(plan.category) + '40' }"
+                  style="padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1.5px solid;">
+                  {{ plan.category }}
+                </span>
+                <!-- Overdue badge -->
+                <span v-if="plan.date < todayStr" style="background: #FEF2F2; color: #B91C1C; border: 1.5px solid #FCA5A5; padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700;">
+                  ⚠ Lewat Jadwal
+                </span>
+                <!-- Today badge -->
+                <span v-else-if="plan.date === todayStr" style="background: #ECFDF5; color: #065F46; border: 1.5px solid #6EE7B7; padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700;">
+                  ✦ Hari Ini
+                </span>
+              </div>
+              <p style="font-size: 13.5px; color: #3E2065; margin: 0; line-height: 1.5;">{{ plan.tasks }}</p>
+            </div>
+
+            <!-- Right: actions -->
+            <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
+              <button @click="convertPlanToLog(plan)"
+                title="Tandai sudah dikerjakan → pindah ke Riwayat"
+                style="background: #ECFDF5; color: #065F46; border: 1.5px solid #6EE7B7; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Sudah Dikerjakan
+              </button>
+              <button @click="deletePlan(plan.id)"
+                title="Hapus task"
+                style="background: #FEF2F2; color: #B91C1C; border: 1.5px solid #FCA5A5; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                Hapus
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════ -->
+      <!-- SECTION: FILTER & ANALYTICS (existing)                    -->
+      <!-- ══════════════════════════════════════════════════════════ -->
       <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand);">
         <h3 style="font-size: 15px; margin-bottom: 14px; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
@@ -50,41 +186,27 @@ const JobLogbook = {
             <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Cari Kata Kunci</label>
             <input type="text" class="form-input" v-model="searchQuery" placeholder="Cari berasarkan tugas, kategori, hasil, dsb..." />
           </div>
-
-          <!-- Range Calendar Picker -->
           <div class="form-group" style="margin-bottom: 0; position: relative;">
             <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Rentang Tanggal</label>
-            <!-- Trigger button -->
-            <button
-              type="button"
-              class="form-input"
-              @click.stop="showRangePicker = !showRangePicker"
-              style="width: 100%; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px; background: #fff; height: 42px; box-sizing: border-box; white-space: nowrap; overflow: hidden;"
-            >
+            <button type="button" class="form-input" @click.stop="showRangePicker = !showRangePicker"
+              style="width: 100%; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px; background: #fff; height: 42px; box-sizing: border-box; white-space: nowrap; overflow: hidden;">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; color: var(--color-terracotta);"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
               <span style="font-size: 12.5px; color: var(--text-dark); overflow: hidden; text-overflow: ellipsis;">
                 <template v-if="filterStartDate || filterEndDate">
                   {{ filterStartDate ? formatDate(filterStartDate) : '?' }} – {{ filterEndDate ? formatDate(filterEndDate) : '?' }}
                 </template>
-                <template v-else>
-                  <span style="color: var(--text-muted);">Pilih rentang tanggal...</span>
-                </template>
+                <template v-else><span style="color: var(--text-muted);">Pilih rentang tanggal...</span></template>
               </span>
             </button>
-
-            <!-- Calendar Dropdown -->
             <div v-if="showRangePicker" @click.stop style="position: absolute; top: calc(100% + 6px); left: 0; z-index: 999; background: #fff; border: 1.5px solid var(--color-sand); border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.13); padding: 16px; min-width: 280px;">
-              <!-- Month nav -->
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
                 <button type="button" @click="rangeCalPrevMonth" style="background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text-dark); padding: 4px 8px; border-radius: 6px; line-height: 1;">&lt;</button>
                 <span style="font-weight: 700; font-size: 14px; color: var(--text-dark);">{{ rangeCalMonthLabel }}</span>
                 <button type="button" @click="rangeCalNextMonth" style="background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text-dark); padding: 4px 8px; border-radius: 6px; line-height: 1;">&gt;</button>
               </div>
-              <!-- Day headers -->
               <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 4px;">
                 <span v-for="(d, i) in ['S','S','R','K','J','S','M']" :key="'h'+i" style="text-align: center; font-size: 10.5px; font-weight: 700; color: var(--text-muted); padding: 2px 0;">{{ d }}</span>
               </div>
-              <!-- Day cells -->
               <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;">
                 <span v-for="cell in rangeCalCells" :key="cell.key" @click="cell.date ? onRangeCalClick(cell.date) : null"
                   :style="getRangeCellStyle(cell)"
@@ -92,22 +214,19 @@ const JobLogbook = {
                   {{ cell.label }}
                 </span>
               </div>
-              <!-- Hint text -->
               <div style="margin-top: 10px; font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.4;">
                 <span v-if="!filterStartDate">Klik tanggal mulai</span>
                 <span v-else-if="!filterEndDate">Klik tanggal akhir</span>
                 <span v-else style="color: var(--color-terracotta); font-weight: 600;">✓ Rentang dipilih — klik lagi untuk reset</span>
               </div>
-              <!-- Clear button -->
               <button v-if="filterStartDate || filterEndDate" type="button" @click="filterStartDate=''; filterEndDate=''; showRangePicker=false;"
                 style="margin-top: 8px; width: 100%; background: var(--bg-cream); border: 1px solid var(--color-sand); color: var(--text-dark); border-radius: 7px; padding: 6px; font-size: 12px; cursor: pointer; font-weight: 600;">
                 Hapus Rentang
               </button>
             </div>
           </div>
-
           <div class="form-group" style="margin-bottom: 0;">
-            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Filter Berdasarkan Kategori</label>
+            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Filter Kategori</label>
             <select class="form-input" v-model="filterCategory" style="height: 42px;">
               <option value="">Semua Kategori</option>
               <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
@@ -119,9 +238,8 @@ const JobLogbook = {
         </div>
       </div>
 
-      <!-- 2. Interactive Performance Analytics Summary -->
+      <!-- Analytics -->
       <div class="grid-2" style="grid-template-columns: 1.5fr 1fr; gap: 24px; margin-bottom: 24px; align-items: stretch;">
-        <!-- Left Part: Numerical KPIs -->
         <div class="drawer-section" style="margin-bottom: 0; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; justify-content: space-between;">
           <div class="flex-between" style="border-bottom: 1.5px solid var(--color-sand); padding-bottom: 12px; margin-bottom: 14px; flex-wrap: wrap; gap: 12px;">
             <h3 style="font-size: 15px; font-weight: bold; display: flex; align-items: center; gap: 6px;">
@@ -130,7 +248,7 @@ const JobLogbook = {
             </h3>
             <div style="display: flex; gap: 4px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 2px;">
               <button class="btn" :style="analyticsPeriod === 'semua' ? { background: 'var(--color-terracotta)', color: '#fff', fontSize: '11px', padding: '4px 10px', borderRadius: '6px' } : { background: 'transparent', color: 'var(--text-dark)', fontSize: '11px', padding: '4px 10px' }" @click="analyticsPeriod = 'semua'">Semua</button>
-              <button class="btn" :style="analyticsPeriod === 'today' ? { background: 'var(--color-terracotta)', color: '#fff', fontSize: '11px', padding: '4px 10px', borderRadius: '6px' } : { background: 'transparent', color: 'var(--text-dark)', fontSize: '11px', padding: '4px 10px' }" @click="analyticsPeriod = 'today'">Hari Ini (Today)</button>
+              <button class="btn" :style="analyticsPeriod === 'today' ? { background: 'var(--color-terracotta)', color: '#fff', fontSize: '11px', padding: '4px 10px', borderRadius: '6px' } : { background: 'transparent', color: 'var(--text-dark)', fontSize: '11px', padding: '4px 10px' }" @click="analyticsPeriod = 'today'">Hari Ini</button>
             </div>
           </div>
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
@@ -139,8 +257,8 @@ const JobLogbook = {
               <p class="text-mono" style="font-size: 26px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ filteredLogs.length }}</p>
             </div>
             <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
-              <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Jumlah Hari Rentang</span>
-              <p class="text-mono" style="font-size: 26px; font-weight: bold; color: var(--color-sage); margin-top: 6px;">{{ selectedRangeDaysCount }} Hari</p>
+              <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Task Plan</span>
+              <p class="text-mono" style="font-size: 26px; font-weight: bold; color: #7C3AED; margin-top: 6px;">{{ plans.length }}</p>
             </div>
             <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
               <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Penyelesaian Aksi</span>
@@ -148,8 +266,6 @@ const JobLogbook = {
             </div>
           </div>
         </div>
-        
-        <!-- Right Part: Categories Breakdown Chart -->
         <div class="drawer-section" style="margin-bottom: 0; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; justify-content: space-between;">
           <h3 style="font-size: 15px; font-weight: bold; margin-bottom: 12px; border-bottom: 1.5px solid var(--color-sand); padding-bottom: 8px; display: flex; align-items: center; gap: 6px;">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-sage);"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect width="20" height="14" x="2" y="6" rx="2"></rect></svg>
@@ -166,12 +282,15 @@ const JobLogbook = {
               </div>
             </div>
             <div v-if="filteredLogs.length === 0" style="text-align: center; font-size: 12px; color: var(--text-muted); font-style: italic; margin-top: 10px;">
-              Tidak ada data pencapaian kategori dalam filter aktif ini.
+              Tidak ada data dalam filter aktif ini.
             </div>
           </div>
         </div>
       </div>
 
+      <!-- ══════════════════════════════════════════════════════════ -->
+      <!-- SECTION: FORM + RIWAYAT KEGIATAN KERJA                   -->
+      <!-- ══════════════════════════════════════════════════════════ -->
       <div class="logbook-grid" :style="showAddLog ? 'grid-template-columns: 360px 1fr;' : 'grid-template-columns: 1fr;'">
         <!-- Logging Form -->
         <div v-if="showAddLog" class="drawer-section" style="margin-bottom: 0; padding: 22px; border-radius: 12px; animation: popIn 0.2s ease;">
@@ -184,51 +303,35 @@ const JobLogbook = {
               <label>Tanggal</label>
               <input type="date" class="form-input" v-model="form.date" required />
             </div>
-            
             <div class="form-group">
               <label>Kategori Pekerjaan</label>
               <select class="form-input" v-model="form.category" required>
                 <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
-                <option value="Lainnya">Lainnya (Ketik Baru)</option>
               </select>
             </div>
-
-            <!-- Custom Category Inline Text Field -->
-            <div v-if="form.category === 'Lainnya'" class="form-group" style="background-color: var(--bg-cream); padding: 14px; border-radius: 8px; border: 1.5px dashed var(--color-sand); animation: popIn 0.15s ease;">
-              <label style="color: var(--text-dark); font-size: 12.5px;">Tulis Kategori Baru</label>
-              <input type="text" class="form-input" v-model="customCategoryName" placeholder="Masukkan nama kategori baru..." required />
-              <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.35;">Kategori ini otomatis tersimpan secara interaktif dalam sistem!</p>
-            </div>
-
             <div class="form-group">
               <label>Tugas / Deskripsi Kerja</label>
               <textarea class="form-input" v-model="form.tasks" rows="3" placeholder="Sebutkan kegiatan atau tugas penting yang dikerjakan hari ini..." required></textarea>
             </div>
-
             <div class="form-group">
               <label>Hasil yang Dicapai</label>
               <textarea class="form-input" v-model="form.achievements" rows="3" placeholder="Apa hasil konkrit atau output dari tugas di atas?..." required></textarea>
             </div>
-
             <div class="form-group">
               <label>Langkah Selanjutnya (Next Action)</label>
               <textarea class="form-input" v-model="form.nextAction" rows="2" placeholder="Apa rencana kelanjutan terkait tugas ini?..." required></textarea>
             </div>
-
             <div class="form-group" style="margin-bottom: 16px;">
               <label>Tautan Dokumen, Link (Opsional)</label>
               <input type="url" class="form-input" v-model="form.documentLink" placeholder="https://link-pendukung.com/laporan" />
             </div>
-
-            <!-- Sync Checkbox -->
-            <div class="form-group" style="margin-bottom: 24px; display: flex; align-items: center; gap: 8px; background: #FCFAF7; padding: 10px; border: 1.5px solid #EAE5DD; border-radius: 8px;" id="sync-on-save-container">
+            <div class="form-group" style="margin-bottom: 24px; display: flex; align-items: center; gap: 8px; background: #FCFAF7; padding: 10px; border: 1.5px solid #EAE5DD; border-radius: 8px;">
               <input type="checkbox" id="syncToContentCheckbox" v-model="syncToContentOnSave" style="width: 16px; height: 16px; accent-color: var(--color-terracotta); cursor: pointer;" />
               <label for="syncToContentCheckbox" style="margin: 0; cursor: pointer; font-size: 12px; font-weight: 600; color: #5D4F43; display: flex; align-items: center; gap: 6px; user-select: none;">
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
                 Sync Langsung Jadi Konten Baru di Board
               </label>
             </div>
-
             <div style="display: flex; gap: 10px; margin-top: 16px;">
               <button type="button" class="btn" @click="showAddLog = false" style="flex: 1; background-color: #FAF4F0; border: 1.5px solid var(--color-sand); color: var(--text-dark); font-weight: bold; cursor: pointer; border-radius: 8px;">Batal</button>
               <button type="submit" class="btn btn-primary" style="flex: 2; margin-top: 0 !important; width: auto !important;">Simpan Entri Kerja</button>
@@ -236,11 +339,10 @@ const JobLogbook = {
           </form>
         </div>
 
-        <!-- History Logs List with Searching, Sorting, and Pagination -->
+        <!-- Riwayat Kegiatan Kerja -->
         <div class="drawer-section" style="margin-bottom: 0; padding: 22px; border-radius: 12px;">
           <div class="flex-between" style="margin-bottom: 18px; align-items: center;">
             <h3 style="font-size: 18px; margin-bottom: 0;">Riwayat Kegiatan Kerja</h3>
-            
             <div class="flex-gap" style="align-items: center; font-size: 13px; color: var(--text-muted);">
               <span>Tampilkan</span>
               <select v-model="itemsPerPage" class="form-input" style="width: 75px; padding: 4px 8px; font-size: 13px; height: auto;">
@@ -261,46 +363,30 @@ const JobLogbook = {
               <table class="log-table">
                 <thead>
                   <tr>
-                    <th style="cursor: pointer; user-select: none; white-space: nowrap;" @click="toggleSort('date')">
-                      Tanggal {{ sortBy === 'date' ? (sortDesc ? '▼' : '▲') : '' }}
-                    </th>
-                    <th style="cursor: pointer; user-select: none; white-space: nowrap;" @click="toggleSort('category')">
-                      Kategori {{ sortBy === 'category' ? (sortDesc ? '▼' : '▲') : '' }}
-                    </th>
-                    <th style="cursor: pointer; user-select: none; white-space: nowrap;" @click="toggleSort('tasks')">
-                      Tugas / Kegiatan {{ sortBy === 'tasks' ? (sortDesc ? '▼' : '▲') : '' }}
-                    </th>
+                    <th style="cursor: pointer; user-select: none; white-space: nowrap;" @click="toggleSort('date')">Tanggal {{ sortBy === 'date' ? (sortDesc ? '▼' : '▲') : '' }}</th>
+                    <th style="cursor: pointer; user-select: none; white-space: nowrap;" @click="toggleSort('category')">Kategori {{ sortBy === 'category' ? (sortDesc ? '▼' : '▲') : '' }}</th>
+                    <th style="cursor: pointer; user-select: none; white-space: nowrap;" @click="toggleSort('tasks')">Tugas / Kegiatan {{ sortBy === 'tasks' ? (sortDesc ? '▼' : '▲') : '' }}</th>
                     <th>Hasil yang Dicapai</th>
                     <th>Next Action</th>
-                    <th style="text-align: center;">Tautan / Link</th>
+                    <th style="text-align: center;">Tautan</th>
                     <th style="text-align: center;">Tindakan</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="(log, idx) in paginatedLogs" :key="log.id || idx">
-                    <td class="text-mono" style="font-weight: bold; font-size: 12.5px; white-space: nowrap; color: var(--text-dark);">
-                      {{ formatDate(log.date) }}
-                    </td>
+                    <td class="text-mono" style="font-weight: bold; font-size: 12.5px; white-space: nowrap; color: var(--text-dark);">{{ formatDate(log.date) }}</td>
                     <td>
-                      <span class="pill" :style="{ backgroundColor: getCategoryColor(log.category) + '12', color: getCategoryColor(log.category), borderColor: getCategoryColor(log.category) + '30' }" style="padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-weight: bold; border: 1px solid;">
-                        {{ log.category }}
-                      </span>
+                      <span class="pill" :style="{ backgroundColor: getCategoryColor(log.category) + '12', color: getCategoryColor(log.category), borderColor: getCategoryColor(log.category) + '30' }" style="padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-weight: bold; border: 1px solid;">{{ log.category }}</span>
                     </td>
-                    <td style="max-width: 250px; text-overflow: ellipsis; overflow: hidden; white-space: unset; font-size: 13.5px; line-height: 1.4;" :title="log.tasks">
-                      {{ log.tasks }}
-                    </td>
-                    <td style="max-width: 200px; text-overflow: ellipsis; overflow: hidden; white-space: unset; font-size: 13.5px; line-height: 1.4; color: var(--text-dark);" :title="log.achievements">
-                      {{ log.achievements }}
-                    </td>
+                    <td style="max-width: 250px; font-size: 13.5px; line-height: 1.4;" :title="log.tasks">{{ log.tasks }}</td>
+                    <td style="max-width: 200px; font-size: 13.5px; line-height: 1.4; color: var(--text-dark);" :title="log.achievements">{{ log.achievements }}</td>
                     <td style="max-width: 180px; font-size: 13.5px; line-height: 1.4;">
                       <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                        <span :style="log.nextActionCompleted ? { textDecoration: 'line-through', opacity: 0.5, color: '#10B981' } : {}" style="font-style: italic; color: var(--text-muted); word-break: break-word;" :title="log.nextAction">
-                          {{ log.nextAction }}
-                        </span>
-                        <button v-if="log.nextAction && log.nextAction.trim().length > 0" 
-                                @click="logNextAction(log)" 
-                                :disabled="log.nextActionCompleted" 
-                                :title="log.nextActionCompleted ? 'Tindakan Selesai & Tercatat!' : 'Catat Tindakan ini ke Hari Baru'"
+                        <span :style="log.nextActionCompleted ? { textDecoration: 'line-through', opacity: 0.5, color: '#10B981' } : {}" style="font-style: italic; color: var(--text-muted); word-break: break-word;" :title="log.nextAction">{{ log.nextAction }}</span>
+                        <button v-if="log.nextAction && log.nextAction.trim().length > 0"
+                                @click="logNextAction(log)"
+                                :disabled="log.nextActionCompleted"
+                                :title="log.nextActionCompleted ? 'Tindakan Selesai!' : 'Catat Tindakan ini ke Hari Baru'"
                                 style="border-radius: 6px; padding: 4px 6px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid; font-size: 11px; font-weight: bold; cursor: pointer; min-width: 28px; height: 24px; transition: all 0.2s; flex-shrink: 0;"
                                 :style="log.nextActionCompleted ? { backgroundColor: '#DEF7EC', color: '#0E9F6E', borderColor: '#81E3B4', cursor: 'default' } : { backgroundColor: '#EBF5FF', color: '#1C64F2', borderColor: '#A4CAFE' }">
                           <svg v-if="log.nextActionCompleted" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -311,17 +397,15 @@ const JobLogbook = {
                     <td style="text-align: center; white-space: nowrap;">
                       <a v-if="log.documentLink" :href="log.documentLink" target="_blank" class="text-mono" style="color: var(--color-terracotta); text-decoration: underline; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;" referrerPolicy="no-referrer">
                         <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                        Buka Link
+                        Buka
                       </a>
-                      <span v-else style="color: var(--text-muted); font-size: 12px; font-style: italic;">Tidak ada</span>
+                      <span v-else style="color: var(--text-muted); font-size: 12px; font-style: italic;">—</span>
                     </td>
                     <td style="text-align: center; white-space: nowrap;">
                       <div style="display: inline-flex; gap: 6px; align-items: center; justify-content: center;">
-                        <!-- Sync Button -->
-                        <button class="card-nav-btn" @click="syncToContent(log)" title="Sync Jadi Konten Baru" style="font-size: 14px; padding: 6px; color: #10B981; display: inline-flex; align-items: center; justify-content: center; background: #ECFDF5; border: 1.5px solid #A7F3D0; border-radius: 6px; cursor: pointer;" id="sync-log-btn">
+                        <button class="card-nav-btn" @click="syncToContent(log)" title="Sync Jadi Konten Baru" style="font-size: 14px; padding: 6px; color: #10B981; display: inline-flex; align-items: center; justify-content: center; background: #ECFDF5; border: 1.5px solid #A7F3D0; border-radius: 6px; cursor: pointer;">
                           <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
                         </button>
-                        <!-- Delete Button -->
                         <button class="card-nav-btn" @click="deleteLogById(log.id || log.date)" title="Hapus log" style="font-size: 14px; padding: 6px; color: var(--color-rose); display: inline-flex; align-items: center; justify-content: center; background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; cursor: pointer;">
                           <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                         </button>
@@ -331,22 +415,12 @@ const JobLogbook = {
                 </tbody>
               </table>
             </div>
-
-            <!-- Pagination Control Buttons Row -->
             <div class="flex-between" style="margin-top: 20px; padding-top: 14px; border-top: 1.5px solid var(--color-sand); align-items: center;">
-              <span style="font-size: 13px; color: var(--text-muted);">
-                Menampilkan <strong>{{ paginationInfo.start }}</strong> sampai <strong>{{ paginationInfo.end }}</strong> dari <strong>{{ filteredAndSortedLogs.length }}</strong> entri
-              </span>
+              <span style="font-size: 13px; color: var(--text-muted);">Menampilkan <strong>{{ paginationInfo.start }}</strong> sampai <strong>{{ paginationInfo.end }}</strong> dari <strong>{{ filteredAndSortedLogs.length }}</strong> entri</span>
               <div class="flex-gap" style="gap: 6px;">
-                <button class="btn btn-secondary" :disabled="currentPage === 1" @click="currentPage--" style="padding: 6px 12px; font-size: 13px; cursor: pointer; border-radius: 8px;">
-                  ◀ Seb
-                </button>
-                <button class="btn btn-secondary" v-for="page in totalPages" :key="page" @click="currentPage = page" :style="currentPage === page ? { background: 'var(--color-terracotta)', color: '#fff', borderColor: 'var(--color-terracotta)', fontWeight: 'bold' } : {}" style="padding: 6px 12px; font-size: 13px; cursor: pointer; border-radius: 8px; min-width: 32px; text-align: center;">
-                  {{ page }}
-                </button>
-                <button class="btn btn-secondary" :disabled="currentPage === totalPages" @click="currentPage++" style="padding: 6px 12px; font-size: 13px; cursor: pointer; border-radius: 8px;">
-                  Sel ▶
-                </button>
+                <button class="btn btn-secondary" :disabled="currentPage === 1" @click="currentPage--" style="padding: 6px 12px; font-size: 13px; cursor: pointer; border-radius: 8px;">◀ Seb</button>
+                <button class="btn btn-secondary" v-for="page in totalPages" :key="page" @click="currentPage = page" :style="currentPage === page ? { background: 'var(--color-terracotta)', color: '#fff', borderColor: 'var(--color-terracotta)', fontWeight: 'bold' } : {}" style="padding: 6px 12px; font-size: 13px; cursor: pointer; border-radius: 8px; min-width: 32px; text-align: center;">{{ page }}</button>
+                <button class="btn btn-secondary" :disabled="currentPage === totalPages" @click="currentPage++" style="padding: 6px 12px; font-size: 13px; cursor: pointer; border-radius: 8px;">Sel ▶</button>
               </div>
             </div>
           </div>
@@ -359,8 +433,16 @@ const JobLogbook = {
       showAddLog: false,
       syncToContentOnSave: false,
       logs: [],
+      plans: [],
       customCategories: [],
-      customCategoryName: '',
+      newCategoryInput: '',
+      showCategoryManager: false,
+      showAddPlan: false,
+      planForm: {
+        date: new Date().toISOString().split('T')[0],
+        category: 'Administrasi',
+        tasks: ''
+      },
       searchQuery: '',
       filterStartDate: '',
       filterEndDate: '',
@@ -372,9 +454,7 @@ const JobLogbook = {
       sortDesc: true,
       currentPage: 1,
       itemsPerPage: 5,
-      analyticsPeriod: 'semua', // 'semua' or 'today'
-      analyticsStartDate: new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString().split('T')[0],
-      analyticsEndDate: new Date().toISOString().split('T')[0],
+      analyticsPeriod: 'semua',
       pendingNextActionSourceLogId: null,
       form: {
         date: new Date().toISOString().split('T')[0],
@@ -387,6 +467,12 @@ const JobLogbook = {
     };
   },
   computed: {
+    todayStr() {
+      return new Date().toISOString().split('T')[0];
+    },
+    defaultCategories() {
+      return ['Administrasi', 'HR Operational'];
+    },
     rangeCalMonthLabel() {
       const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
       return `${months[this.rangeCalMonth]} ${this.rangeCalYear}`;
@@ -394,14 +480,11 @@ const JobLogbook = {
     rangeCalCells() {
       const year = this.rangeCalYear;
       const month = this.rangeCalMonth;
-      const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
-      // Shift so Monday=0: Sun becomes 6
+      const firstDay = new Date(year, month, 1).getDay();
       const startOffset = (firstDay === 0) ? 6 : firstDay - 1;
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       const cells = [];
-      for (let i = 0; i < startOffset; i++) {
-        cells.push({ key: 'e' + i, date: null, label: '' });
-      }
+      for (let i = 0; i < startOffset; i++) cells.push({ key: 'e' + i, date: null, label: '' });
       for (let d = 1; d <= daysInMonth; d++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         cells.push({ key: dateStr, date: dateStr, label: d });
@@ -409,63 +492,17 @@ const JobLogbook = {
       return cells;
     },
     allCategories() {
-      const defaults = ['Administrasi', 'HR Operational'];
-      return [...defaults, ...this.customCategories];
+      return [...this.defaultCategories, ...this.customCategories];
     },
     filteredLogs() {
       return this.logs.filter(log => {
-        // Query search
         const q = this.searchQuery.toLowerCase().trim();
-        const matchesQuery = !q || 
-          (log.category && log.category.toLowerCase().includes(q)) ||
-          (log.tasks && log.tasks.toLowerCase().includes(q)) ||
-          (log.achievements && log.achievements.toLowerCase().includes(q)) ||
-          (log.nextAction && log.nextAction.toLowerCase().includes(q)) ||
-          (log.documentLink && log.documentLink.toLowerCase().includes(q));
-
-        // Category filter
-        let matchesCategory = true;
-        if (this.filterCategory) {
-          matchesCategory = log.category === this.filterCategory;
-        }
-
-        // Date filter bounds
-        let matchesDates = true;
-        if (this.filterStartDate) {
-          matchesDates = matchesDates && log.date >= this.filterStartDate;
-        }
-        if (this.filterEndDate) {
-          matchesDates = matchesDates && log.date <= this.filterEndDate;
-        }
-        
-        // Analytics Period dynamic filtering
-        let matchesPeriod = true;
-        if (this.analyticsPeriod === 'today') {
-          const todayStr = new Date().toISOString().split('T')[0];
-          matchesPeriod = log.date === todayStr;
-        }
-
+        const matchesQuery = !q || ['category','tasks','achievements','nextAction','documentLink'].some(k => log[k] && log[k].toLowerCase().includes(q));
+        const matchesCategory = !this.filterCategory || log.category === this.filterCategory;
+        const matchesDates = (!this.filterStartDate || log.date >= this.filterStartDate) && (!this.filterEndDate || log.date <= this.filterEndDate);
+        const matchesPeriod = this.analyticsPeriod !== 'today' || log.date === this.todayStr;
         return matchesQuery && matchesCategory && matchesDates && matchesPeriod;
       });
-    },
-    selectedRangeDaysCount() {
-      if (this.analyticsPeriod === 'today') {
-        return 1;
-      }
-      
-      const start = this.filterStartDate ? new Date(this.filterStartDate) : null;
-      if (start) {
-        const today = new Date();
-        const diffTime = Math.abs(today.getTime() - start.getTime());
-        return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      } else {
-        if (this.filteredLogs.length === 0) return 0;
-        const dates = this.filteredLogs.map(l => new Date(l.date).getTime());
-        const minDate = Math.min(...dates);
-        const maxDate = Math.max(...dates);
-        const diffTime = Math.abs(maxDate - minDate);
-        return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      }
     },
     nextActionCompletionRate() {
       const logsWithNextAction = this.filteredLogs.filter(l => l.nextAction && l.nextAction.trim().length > 0);
@@ -474,329 +511,203 @@ const JobLogbook = {
       return Math.round((completedCount / logsWithNextAction.length) * 100) + '%';
     },
     filteredAndSortedLogs() {
-      // First gather all search and date filtered rows (without the weekly period override)
       const sorted = [...this.logs.filter(log => {
         const q = this.searchQuery.toLowerCase().trim();
-        const matchesQuery = !q || 
-          (log.category && log.category.toLowerCase().includes(q)) ||
-          (log.tasks && log.tasks.toLowerCase().includes(q)) ||
-          (log.achievements && log.achievements.toLowerCase().includes(q)) ||
-          (log.nextAction && log.nextAction.toLowerCase().includes(q)) ||
-          (log.documentLink && log.documentLink.toLowerCase().includes(q));
-
-        let matchesCategory = true;
-        if (this.filterCategory) {
-          matchesCategory = log.category === this.filterCategory;
-        }
-
-        let matchesDates = true;
-        if (this.filterStartDate) {
-          matchesDates = matchesDates && new Date(log.date) >= new Date(this.filterStartDate);
-        }
-        if (this.filterEndDate) {
-          matchesDates = matchesDates && new Date(log.date) <= new Date(this.filterEndDate);
-        }
+        const matchesQuery = !q || ['category','tasks','achievements','nextAction','documentLink'].some(k => log[k] && log[k].toLowerCase().includes(q));
+        const matchesCategory = !this.filterCategory || log.category === this.filterCategory;
+        const matchesDates = (!this.filterStartDate || new Date(log.date) >= new Date(this.filterStartDate)) && (!this.filterEndDate || new Date(log.date) <= new Date(this.filterEndDate));
         return matchesQuery && matchesCategory && matchesDates;
       })];
-
-      // Perform column sorting
       sorted.sort((a, b) => {
-        let valA = a[this.sortBy];
-        let valB = b[this.sortBy];
-
-        if (this.sortBy === 'date') {
-          valA = new Date(valA || 0);
-          valB = new Date(valB || 0);
-        } else {
-          valA = (valA || '').toString().toLowerCase();
-          valB = (valB || '').toString().toLowerCase();
-        }
-
+        let valA = this.sortBy === 'date' ? new Date(a[this.sortBy] || 0) : (a[this.sortBy] || '').toString().toLowerCase();
+        let valB = this.sortBy === 'date' ? new Date(b[this.sortBy] || 0) : (b[this.sortBy] || '').toString().toLowerCase();
         if (valA < valB) return this.sortDesc ? 1 : -1;
         if (valA > valB) return this.sortDesc ? -1 : 1;
         return 0;
       });
-
       return sorted;
     },
-    totalPages() {
-      return Math.ceil(this.filteredAndSortedLogs.length / this.itemsPerPage) || 1;
-    },
+    totalPages() { return Math.ceil(this.filteredAndSortedLogs.length / this.itemsPerPage) || 1; },
     paginatedLogs() {
-      // Adjust current page if it exceeds bounds
-      if (this.currentPage > this.totalPages) {
-        this.currentPage = this.totalPages;
-      }
+      if (this.currentPage > this.totalPages) this.currentPage = this.totalPages;
       const start = (this.currentPage - 1) * this.itemsPerPage;
-      const end = start + this.itemsPerPage;
-      return this.filteredAndSortedLogs.slice(start, end);
+      return this.filteredAndSortedLogs.slice(start, start + this.itemsPerPage);
     },
     paginationInfo() {
       if (this.filteredAndSortedLogs.length === 0) return { start: 0, end: 0 };
       const start = (this.currentPage - 1) * this.itemsPerPage + 1;
-      const end = Math.min(start + this.itemsPerPage - 1, this.filteredAndSortedLogs.length);
-      return { start, end };
+      return { start, end: Math.min(start + this.itemsPerPage - 1, this.filteredAndSortedLogs.length) };
     },
     categoryPercentages() {
       const counts = {};
       const total = this.filteredLogs.length;
-      this.filteredLogs.forEach(l => {
-        counts[l.category] = (counts[l.category] || 0) + 1;
-      });
+      this.filteredLogs.forEach(l => { counts[l.category] = (counts[l.category] || 0) + 1; });
       const results = {};
       Object.keys(counts).forEach(cat => {
-        results[cat] = {
-          count: counts[cat],
-          percentage: total > 0 ? Math.round((counts[cat] / total) * 100) : 0
-        };
+        results[cat] = { count: counts[cat], percentage: total > 0 ? Math.round((counts[cat] / total) * 100) : 0 };
       });
       return results;
     }
   },
   created() {
-    // Load dynamic custom configurations
     const savedCats = WorkspaceStorage.getItem('personal_workspace_job_categories');
-    if (savedCats) {
-      try {
-        this.customCategories = JSON.parse(savedCats);
-      } catch (e) {
-        this.customCategories = [];
-      }
-    }
-    
-    // Load historical entries
+    if (savedCats) { try { this.customCategories = JSON.parse(savedCats); } catch (e) { this.customCategories = []; } }
+
+    const savedPlans = WorkspaceStorage.getItem('personal_workspace_job_plans');
+    if (savedPlans) { try { this.plans = JSON.parse(savedPlans); } catch (e) { this.plans = []; } }
+
     const saved = WorkspaceStorage.getItem('personal_workspace_job_logs');
     if (saved) {
       try {
         this.logs = JSON.parse(saved);
-        // Guarantee UUIDs of state entries
-        this.logs.forEach((l, index) => {
-          if (!l.id) l.id = 'log-' + index + '-' + Date.now();
-        });
-      } catch (e) {
-        this.logs = [];
-      }
+        this.logs.forEach((l, i) => { if (!l.id) l.id = 'log-' + i + '-' + Date.now(); });
+      } catch (e) { this.logs = []; }
     } else {
-      // Preseed dynamic Indonesian logs 
       this.logs = [
-        { 
-          id: 'log-1',
-          date: '2026-05-29', 
-          category: 'Administrasi', 
-          tasks: 'Membuat laporan mingguan divisi dan peninjauan dokumen anggaran triwulan II.', 
-          achievements: 'Laporan selesai diarsip dan draf anggaran disetujui direksi.', 
-          nextAction: 'Kirim salinan digital ke bagian keuangan besok pagi.', 
-          documentLink: 'https://docs.google.com/document/d/example1' 
-        },
-        { 
-          id: 'log-2',
-          date: '2026-05-28', 
-          category: 'HR Operational', 
-          tasks: 'Melakukan screening berkas kandidat Front-End Engineer & koordinasi jadwal wawancara.', 
-          achievements: '5 berkas kandidat lolos screening, jadwal wawancara diatur.', 
-          nextAction: 'Lakukan wawancara teknis tahap pertama pada hari Senin.', 
-          documentLink: 'https://docs.google.com/spreadsheets/d/example2' 
-        },
-        { 
-          id: 'log-3',
-          date: '2026-05-27', 
-          category: 'Administrasi', 
-          tasks: 'Pembaruan data inventaris hardware divisi IT serta mengurus perizinan sewa ruangan rapat baru.', 
-          achievements: 'Inventarisasi selesai dicatat, sewa ruangan rapat disetujui.', 
-          nextAction: 'Bagikan petunjuk akses ruangan rapat baru ke semua tim.', 
-          documentLink: '' 
-        }
+        { id: 'log-1', date: '2026-05-29', category: 'Administrasi', tasks: 'Membuat laporan mingguan divisi dan peninjauan dokumen anggaran triwulan II.', achievements: 'Laporan selesai diarsip dan draf anggaran disetujui direksi.', nextAction: 'Kirim salinan digital ke bagian keuangan besok pagi.', documentLink: '' },
+        { id: 'log-2', date: '2026-05-28', category: 'HR Operational', tasks: 'Melakukan screening berkas kandidat Front-End Engineer & koordinasi jadwal wawancara.', achievements: '5 berkas kandidat lolos screening, jadwal wawancara diatur.', nextAction: 'Lakukan wawancara teknis tahap pertama pada hari Senin.', documentLink: '' },
       ];
       this.saveToStorage();
     }
   },
   methods: {
-    rangeCalPrevMonth() {
-      if (this.rangeCalMonth === 0) { this.rangeCalMonth = 11; this.rangeCalYear--; }
-      else this.rangeCalMonth--;
+    // ── Kategori ──
+    addCategory() {
+      const name = this.newCategoryInput.trim();
+      if (!name) return;
+      if (this.allCategories.includes(name)) { alert('Kategori sudah ada!'); return; }
+      this.customCategories.push(name);
+      WorkspaceStorage.setItem('personal_workspace_job_categories', JSON.stringify(this.customCategories));
+      this.newCategoryInput = '';
     },
-    rangeCalNextMonth() {
-      if (this.rangeCalMonth === 11) { this.rangeCalMonth = 0; this.rangeCalYear++; }
-      else this.rangeCalMonth++;
+    deleteCategory(cat) {
+      if (!confirm(`Hapus kategori "${cat}"?`)) return;
+      this.customCategories = this.customCategories.filter(c => c !== cat);
+      WorkspaceStorage.setItem('personal_workspace_job_categories', JSON.stringify(this.customCategories));
     },
+
+    // ── Task Plan ──
+    savePlan() {
+      if (!this.planForm.tasks.trim()) { alert('Tugas tidak boleh kosong!'); return; }
+      const newPlan = {
+        id: 'plan-' + Date.now(),
+        date: this.planForm.date,
+        category: this.planForm.category,
+        tasks: this.planForm.tasks.trim()
+      };
+      this.plans.unshift(newPlan);
+      this.savePlansToStorage();
+      this.planForm.tasks = '';
+      this.planForm.date = this.todayStr;
+      this.showAddPlan = false;
+    },
+    deletePlan(id) {
+      if (!confirm('Hapus task plan ini?')) return;
+      this.plans = this.plans.filter(p => p.id !== id);
+      this.savePlansToStorage();
+    },
+    convertPlanToLog(plan) {
+      // Prefill form logbook dari data plan
+      this.form.date = plan.date;
+      this.form.category = this.allCategories.includes(plan.category) ? plan.category : this.allCategories[0];
+      this.form.tasks = plan.tasks;
+      this.form.achievements = '';
+      this.form.nextAction = '';
+      this.form.documentLink = '';
+
+      // Hapus dari plans
+      this.plans = this.plans.filter(p => p.id !== plan.id);
+      this.savePlansToStorage();
+
+      // Buka form logbook
+      this.showAddLog = true;
+      this.$nextTick(() => {
+        const formEl = document.querySelector('.job-logbook');
+        if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
+      });
+    },
+    savePlansToStorage() {
+      WorkspaceStorage.setItem('personal_workspace_job_plans', JSON.stringify(this.plans));
+    },
+
+    // ── Log Kerja ──
+    rangeCalPrevMonth() { if (this.rangeCalMonth === 0) { this.rangeCalMonth = 11; this.rangeCalYear--; } else this.rangeCalMonth--; },
+    rangeCalNextMonth() { if (this.rangeCalMonth === 11) { this.rangeCalMonth = 0; this.rangeCalYear++; } else this.rangeCalMonth++; },
     onRangeCalClick(dateStr) {
-      if (!this.filterStartDate || (this.filterStartDate && this.filterEndDate)) {
-        // Start new selection
-        this.filterStartDate = dateStr;
-        this.filterEndDate = '';
-      } else {
-        // Set end date, ensure start <= end
-        if (dateStr < this.filterStartDate) {
-          this.filterEndDate = this.filterStartDate;
-          this.filterStartDate = dateStr;
-        } else {
-          this.filterEndDate = dateStr;
-        }
+      if (!this.filterStartDate || (this.filterStartDate && this.filterEndDate)) { this.filterStartDate = dateStr; this.filterEndDate = ''; }
+      else {
+        if (dateStr < this.filterStartDate) { this.filterEndDate = this.filterStartDate; this.filterStartDate = dateStr; }
+        else this.filterEndDate = dateStr;
         this.showRangePicker = false;
       }
     },
     getRangeCellStyle(cell) {
       if (!cell.date) return { visibility: 'hidden' };
-      const d = cell.date;
-      const isStart = d === this.filterStartDate;
-      const isEnd = d === this.filterEndDate;
-      const inRange = this.filterStartDate && this.filterEndDate && d > this.filterStartDate && d < this.filterEndDate;
-      const today = new Date().toISOString().split('T')[0];
-      const isToday = d === today;
-
-      if (isStart || isEnd) {
-        return { background: 'var(--color-terracotta)', color: '#fff', fontWeight: 'bold', borderRadius: '50%' };
-      }
-      if (inRange) {
-        return { background: 'rgba(214,123,82,0.15)', color: 'var(--text-dark)', borderRadius: '4px' };
-      }
-      if (isToday) {
-        return { border: '1.5px solid var(--color-terracotta)', color: 'var(--color-terracotta)', fontWeight: 'bold', borderRadius: '50%' };
-      }
+      const isStart = cell.date === this.filterStartDate, isEnd = cell.date === this.filterEndDate;
+      const inRange = this.filterStartDate && this.filterEndDate && cell.date > this.filterStartDate && cell.date < this.filterEndDate;
+      const isToday = cell.date === this.todayStr;
+      if (isStart || isEnd) return { background: 'var(--color-terracotta)', color: '#fff', fontWeight: 'bold', borderRadius: '50%' };
+      if (inRange) return { background: 'rgba(214,123,82,0.15)', color: 'var(--text-dark)', borderRadius: '4px' };
+      if (isToday) return { border: '1.5px solid var(--color-terracotta)', color: 'var(--color-terracotta)', fontWeight: 'bold', borderRadius: '50%' };
       return { color: 'var(--text-dark)' };
     },
     formatDate(d) {
-      const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
-      try {
-        return new Date(d).toLocaleDateString('id-ID', options);
-      } catch (e) {
-        return d;
-      }
+      try { return new Date(d).toLocaleDateString('id-ID', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }); }
+      catch (e) { return d; }
     },
     getCategoryColor(cat) {
-      const colors = {
-        'Administrasi': '#4F46E5', // Indigo
-        'HR Operational': '#10B981', // Emerald
-        'Coding': '#06B6D4', // Cyan
-        'Design': '#EC4899', // Pink
-        'Lainnya': '#6B7280' // Gray
-      };
+      const colors = { 'Administrasi': '#4F46E5', 'HR Operational': '#10B981', 'Coding': '#06B6D4', 'Design': '#EC4899', 'Lainnya': '#6B7280' };
       if (colors[cat]) return colors[cat];
-      
-      // Dynamic pastel hash assigner
       let hash = 0;
-      for (let i = 0; i < cat.length; i++) {
-        hash = cat.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      const h = Math.abs(hash) % 360;
-      return `hsl(${h}, 65%, 45%)`;
+      for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash);
+      return `hsl(${Math.abs(hash) % 360}, 65%, 45%)`;
     },
     saveLog() {
-      let finalCategory = this.form.category;
-      if (this.form.category === 'Lainnya') {
-        const newCat = this.customCategoryName.trim();
-        if (newCat) {
-          finalCategory = newCat;
-          if (!this.customCategories.includes(newCat) && newCat !== 'Administrasi' && newCat !== 'HR Operational') {
-            this.customCategories.push(newCat);
-            WorkspaceStorage.setItem('personal_workspace_job_categories', JSON.stringify(this.customCategories));
-          }
-        }
-      }
-
       if (this.pendingNextActionSourceLogId) {
         const src = this.logs.find(l => l.id === this.pendingNextActionSourceLogId);
-        if (src) {
-          src.nextActionCompleted = true;
-        }
+        if (src) src.nextActionCompleted = true;
         this.pendingNextActionSourceLogId = null;
       }
-
       const newLog = {
         id: 'log-' + Date.now(),
         date: this.form.date,
-        category: finalCategory,
+        category: this.form.category,
         tasks: this.form.tasks,
         achievements: this.form.achievements,
         nextAction: this.form.nextAction,
         documentLink: this.form.documentLink
       };
-
       this.logs.unshift(newLog);
       this.saveToStorage();
-
       const shouldSync = this.syncToContentOnSave;
-
-      this.form.tasks = '';
-      this.form.achievements = '';
-      this.form.nextAction = '';
-      this.form.documentLink = '';
-      this.form.category = 'Administrasi';
-      this.customCategoryName = '';
+      this.form = { date: this.todayStr, category: 'Administrasi', tasks: '', achievements: '', nextAction: '', documentLink: '' };
       this.showAddLog = false;
       this.currentPage = 1;
-
-      if (shouldSync) {
-        this.syncToContent(newLog);
-        this.syncToContentOnSave = false; // Reset
-      }
+      if (shouldSync) { this.syncToContent(newLog); this.syncToContentOnSave = false; }
     },
     logNextAction(log) {
       this.form.tasks = log.nextAction;
       this.form.category = this.allCategories.includes(log.category) ? log.category : 'Administrasi';
-      this.form.date = new Date().toISOString().split('T')[0];
+      this.form.date = this.todayStr;
       this.form.achievements = '';
       this.form.nextAction = '';
       this.form.documentLink = '';
       this.pendingNextActionSourceLogId = log.id;
-      
       this.showAddLog = true;
-      
-      this.$nextTick(() => {
-        const formEl = document.querySelector('.job-logbook');
-        if (formEl) {
-          formEl.scrollIntoView({ behavior: 'smooth' });
-        }
-      });
+      this.$nextTick(() => { const el = document.querySelector('.job-logbook'); if (el) el.scrollIntoView({ behavior: 'smooth' }); });
     },
     syncToContent(log) {
-      // 1. Dispatch event to navigate to Content Tracker subpage
       window.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'contentTracker' }));
-
-      // 2. Dispatch event to prefill and open content tracker modal
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('sync-logbook-content', {
-          detail: {
-            tasks: log.tasks,
-            achievements: log.achievements,
-            category: log.category
-          }
-        }));
-      }, 250);
+      setTimeout(() => { window.dispatchEvent(new CustomEvent('sync-logbook-content', { detail: { tasks: log.tasks, achievements: log.achievements, category: log.category } })); }, 250);
     },
     deleteLogById(id) {
-      if (confirm('Apakah Anda yakin ingin menghapus catatan log kerja ini?')) {
-        this.logs = this.logs.filter(l => l.id !== id && l.date !== id);
-        this.saveToStorage();
-      }
+      if (confirm('Yakin ingin menghapus catatan log kerja ini?')) { this.logs = this.logs.filter(l => l.id !== id && l.date !== id); this.saveToStorage(); }
     },
-    toggleSort(field) {
-      if (this.sortBy === field) {
-        this.sortDesc = !this.sortDesc;
-      } else {
-        this.sortBy = field;
-        this.sortDesc = true;
-      }
-    },
-    resetFilters() {
-      this.searchQuery = '';
-      this.filterStartDate = '';
-      this.filterEndDate = '';
-      this.filterCategory = '';
-      this.showRangePicker = false;
-    },
-    saveToStorage() {
-      WorkspaceStorage.setItem('personal_workspace_job_logs', JSON.stringify(this.logs));
-    },
+    toggleSort(field) { if (this.sortBy === field) this.sortDesc = !this.sortDesc; else { this.sortBy = field; this.sortDesc = true; } },
+    resetFilters() { this.searchQuery = ''; this.filterStartDate = ''; this.filterEndDate = ''; this.filterCategory = ''; this.showRangePicker = false; },
+    saveToStorage() { WorkspaceStorage.setItem('personal_workspace_job_logs', JSON.stringify(this.logs)); },
     exportToExcel() {
-      const dataToExport = this.logs.map(log => ({
-        Tanggal: log.date,
-        Kategori: log.category,
-        'Tugas / Pekerjaan': log.tasks,
-        Capaian: log.achievements,
-        'Aksi Selanjutnya': log.nextAction,
-        'Tautan Dokumen': log.documentLink
-      }));
+      const dataToExport = this.logs.map(log => ({ Tanggal: log.date, Kategori: log.category, 'Tugas / Pekerjaan': log.tasks, Capaian: log.achievements, 'Aksi Selanjutnya': log.nextAction, 'Tautan Dokumen': log.documentLink }));
       const worksheet = XLSX.utils.json_to_sheet(dataToExport);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Job Logbook');
@@ -805,58 +716,31 @@ const JobLogbook = {
     exportToPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
-      
-      doc.setFont('Helvetica', 'bold');
-      doc.setFontSize(18);
-      doc.setTextColor(44, 38, 33);
+      doc.setFont('Helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor(44, 38, 33);
       doc.text('Aesthetic Job Logbook', 14, 18);
-      
-      doc.setFont('Helvetica', 'normal');
-      doc.setFontSize(10);
-      doc.setTextColor(120, 111, 102);
+      doc.setFont('Helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(120, 111, 102);
       doc.text('Daftar riwayat pencatatan tugas, capaian kerja harian, dan dokumen pendukung.', 14, 24);
-      
-      const columns = ['Tanggal', 'Kategori', 'Tugas / Aktivitas', 'Hasil Capaian', 'Aksi Selanjutnya'];
-      const rows = this.logs.map(log => [
-        log.date,
-        log.category,
-        log.tasks || '-',
-        log.achievements || '-',
-        log.nextAction || '-'
-      ]);
-      
       doc.autoTable({
         startY: 28,
-        head: [columns],
-        body: rows,
-        headStyles: {
-          fillColor: [141, 110, 99],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold'
-        },
-        bodyStyles: {
-          textColor: [44, 38, 33],
-          fontSize: 9
-        },
-        alternateRowStyles: {
-          fillColor: [253, 251, 247]
-        },
+        head: [['Tanggal', 'Kategori', 'Tugas / Aktivitas', 'Hasil Capaian', 'Aksi Selanjutnya']],
+        body: this.logs.map(log => [log.date, log.category, log.tasks || '-', log.achievements || '-', log.nextAction || '-']),
+        headStyles: { fillColor: [141, 110, 99], textColor: [255, 255, 255], fontStyle: 'bold' },
+        bodyStyles: { textColor: [44, 38, 33], fontSize: 9 },
+        alternateRowStyles: { fillColor: [253, 251, 247] },
         margin: { left: 14, right: 14 }
       });
-      
       doc.save('Job_Logbook_' + new Date().toISOString().slice(0, 10) + '.pdf');
     }
   },
   mounted() {
-    this._closeRangePicker = () => {
-      if (this.showRangePicker) this.showRangePicker = false;
-    };
+    this._closeRangePicker = () => { if (this.showRangePicker) this.showRangePicker = false; };
     document.addEventListener('click', this._closeRangePicker);
   },
   unmounted() {
     document.removeEventListener('click', this._closeRangePicker);
   }
 };
+
 
 // 2. Calendar Moment Component (Multi-moment upgrade with bento layout & memory jar)
 const CalendarMoment = {
