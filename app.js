@@ -323,7 +323,6 @@ const FloatingCountdownTimer = {
   template: `
     <transition name="fct-slide">
       <div v-if="visible" class="fct-wrapper" title="Pomodoro sedang berjalan">
-        <!-- Hourglass pulse icon -->
         <div class="fct-icon">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="fct-hg-icon">
             <path d="M5 2h14"></path>
@@ -332,12 +331,10 @@ const FloatingCountdownTimer = {
             <path d="M5 2v4c0 3 2.5 4.5 5 5.5c-2.5 1-5 2.5-5 5.5v4"></path>
           </svg>
         </div>
-        <!-- Label & time -->
         <div class="fct-body">
           <span class="fct-label">WAKTU TERSISA</span>
           <span class="fct-time">{{ formattedTime }}</span>
         </div>
-        <!-- Progress ring -->
         <svg class="fct-ring" viewBox="0 0 36 36" width="44" height="44">
           <circle class="fct-ring-bg" cx="18" cy="18" r="15.5" fill="none" stroke-width="2.5"/>
           <circle class="fct-ring-fill" cx="18" cy="18" r="15.5" fill="none" stroke-width="2.5"
@@ -357,15 +354,20 @@ const FloatingCountdownTimer = {
       isRunning: false,
       timeLeft: 0,
       totalDuration: 0,
-      formattedTime: '00 : 00',
+      deadline: null,   // timestamp ms kapan timer habis
     };
   },
   computed: {
-    // Hanya tampil di halaman selain 'dashboard' dan 'pomodoroTimer'
     visible() {
       return this.isRunning &&
              this.activePage !== 'dashboard' &&
              this.activePage !== 'pomodoroTimer';
+    },
+    formattedTime() {
+      const t = Math.max(0, this.timeLeft);
+      const m = Math.floor(t / 60);
+      const s = t % 60;
+      return `${String(m).padStart(2, '0')} : ${String(s).padStart(2, '0')}`;
     },
     ringOffset() {
       if (this.totalDuration <= 0) return 97.4;
@@ -375,40 +377,63 @@ const FloatingCountdownTimer = {
     }
   },
   mounted() {
-    // Baca state saat pertama kali mount (misalnya user refresh halaman)
-    this.readState();
-    // Dengarkan update dari PomodoroTimer via CustomEvent (same-tab)
+    this.loadFromStorage();
+    // Dengarkan update langsung dari PomodoroTimer (saat user masih di halaman itu)
     window.addEventListener('pomo-state-update', this.onStateUpdate);
-    // Fallback polling untuk memastikan tetap sync
-    this._pollInterval = setInterval(this.readState, 1000);
+    // Tick mandiri setiap detik — menghitung dari deadline saat PomodoroTimer unmount
+    this._ticker = setInterval(this.tick, 1000);
   },
   beforeUnmount() {
     window.removeEventListener('pomo-state-update', this.onStateUpdate);
-    clearInterval(this._pollInterval);
+    clearInterval(this._ticker);
   },
   methods: {
-    readState() {
+    // Muat state awal dari localStorage
+    loadFromStorage() {
       try {
         const raw = localStorage.getItem('pomo_floating_state');
         if (!raw) return;
         const s = JSON.parse(raw);
-        // Abaikan state yang sudah lebih dari 3 detik (timer tidak aktif)
-        if (Date.now() - s.ts > 3000) {
-          this.isRunning = false;
-          return;
-        }
-        this.isRunning = !!s.isRunning;
-        this.timeLeft = s.timeLeft || 0;
-        this.totalDuration = s.totalDuration || 0;
-        this.formattedTime = s.formattedTime || '00 : 00';
+        this.applyState(s);
       } catch(e) {}
     },
+    // Dipanggil tiap detik oleh _ticker
+    tick() {
+      // Jika PomodoroTimer masih aktif di halaman ini, dia yang handle — skip
+      if (this.activePage === 'pomodoroTimer') return;
+
+      if (!this.isRunning || !this.deadline) {
+        // Cek ulang localStorage kalau-kalau baru saja distart
+        this.loadFromStorage();
+        return;
+      }
+
+      // Hitung sisa waktu dari deadline
+      const remaining = Math.round((this.deadline - Date.now()) / 1000);
+      if (remaining <= 0) {
+        // Timer habis
+        this.timeLeft = 0;
+        this.isRunning = false;
+        this.deadline = null;
+        localStorage.removeItem('pomo_floating_state');
+      } else {
+        this.timeLeft = remaining;
+      }
+    },
+    // Terima update dari PomodoroTimer via CustomEvent
     onStateUpdate(e) {
-      const s = e.detail;
+      this.applyState(e.detail);
+    },
+    applyState(s) {
       this.isRunning = !!s.isRunning;
-      this.timeLeft = s.timeLeft || 0;
       this.totalDuration = s.totalDuration || 0;
-      this.formattedTime = s.formattedTime || '00 : 00';
+      this.deadline = s.deadline || null;
+      // Hitung timeLeft dari deadline agar langsung akurat
+      if (this.isRunning && this.deadline) {
+        this.timeLeft = Math.max(0, Math.round((this.deadline - Date.now()) / 1000));
+      } else {
+        this.timeLeft = s.timeLeft || 0;
+      }
     }
   }
 };

@@ -5995,8 +5995,27 @@ const PomodoroTimer = {
     this.loadState();
   },
   beforeUnmount() {
-    this.pauseTimer();
+    // Saat user navigasi ke halaman lain, JANGAN broadcast isRunning: false.
+    // Hanya hentikan interval lokal & audio — floating timer akan melanjutkan
+    // countdown secara mandiri menggunakan 'deadline' timestamp.
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
     stopProceduralAmbience();
+    if (this.isRunning && this.timeLeft > 0) {
+      const deadline = Date.now() + (this.timeLeft * 1000);
+      const state = {
+        isRunning: true,
+        timeLeft: this.timeLeft,
+        totalDuration: this.totalDuration,
+        currentMode: this.currentMode,
+        formattedTime: this.formattedTime,
+        deadline: deadline,
+        ts: Date.now()
+      };
+      localStorage.setItem('pomo_floating_state', JSON.stringify(state));
+    }
   },
   methods: {
     loadState() {
@@ -6095,12 +6114,16 @@ const PomodoroTimer = {
     // Broadcast current timer state ke localStorage agar FloatingCountdownTimer
     // bisa membacanya secara global dari halaman mana pun
     broadcastTimerState() {
+      const deadline = (this.isRunning && this.timeLeft > 0)
+        ? Date.now() + (this.timeLeft * 1000)
+        : null;
       const state = {
         isRunning: this.isRunning,
         timeLeft: this.timeLeft,
         totalDuration: this.totalDuration,
         currentMode: this.currentMode,
         formattedTime: this.formattedTime,
+        deadline: deadline,
         ts: Date.now()
       };
       localStorage.setItem('pomo_floating_state', JSON.stringify(state));
