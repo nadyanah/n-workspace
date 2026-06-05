@@ -5993,25 +5993,29 @@ const PomodoroTimer = {
   },
   mounted() {
     this.loadState();
+    // Dengerin toggle request dari FloatingCountdownTimer
+    window.addEventListener('pomo-toggle-request', this.toggleTimer);
   },
   beforeUnmount() {
-    // Saat user navigasi ke halaman lain, JANGAN broadcast isRunning: false.
-    // Hanya hentikan interval lokal & audio — floating timer akan melanjutkan
-    // countdown secara mandiri menggunakan 'deadline' timestamp.
+    window.removeEventListener('pomo-toggle-request', this.toggleTimer);
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
     stopProceduralAmbience();
-    if (this.isRunning && this.timeLeft > 0) {
-      const deadline = Date.now() + (this.timeLeft * 1000);
+    // Simpan state ke localStorage — baik running maupun pause
+    // sehingga FloatingCountdownTimer dan loadState bisa resume dengan benar
+    if (this.timeLeft > 0) {
+      const deadline = this.isRunning
+        ? Date.now() + (this.timeLeft * 1000)
+        : null;
       const state = {
-        isRunning: true,
+        isRunning: this.isRunning,
         timeLeft: this.timeLeft,
         totalDuration: this.totalDuration,
         currentMode: this.currentMode,
-        formattedTime: this.formattedTime,
         deadline: deadline,
+        everStarted: true,
         ts: Date.now()
       };
       localStorage.setItem('pomo_floating_state', JSON.stringify(state));
@@ -6044,21 +6048,29 @@ const PomodoroTimer = {
       } else {
         this.historyLogs = [];
       }
-      // Cek apakah ada timer yang sedang berjalan di localStorage (dari floating timer)
-      // Jika ada, resume timer dari state yang tersimpan
+      // Cek apakah ada timer aktif atau pause di localStorage
       try {
         const raw = localStorage.getItem('pomo_floating_state');
         if (raw) {
           const floatState = JSON.parse(raw);
-          if (floatState.isRunning && floatState.deadline) {
-            const remaining = Math.round((floatState.deadline - Date.now()) / 1000);
-            if (remaining > 0) {
-              // Ada timer yang masih berjalan — resume dari sini
-              this.currentMode = floatState.currentMode || 'focus';
-              this.totalDuration = floatState.totalDuration || this.minutesFocus * 60;
-              this.timeLeft = remaining;
-              this.isRunning = false; // akan di-start oleh startTimer
-              this.startTimer();
+          // Hanya resume kalau pernah distart (everStarted) dan masih ada sisa waktu
+          if (floatState.everStarted && floatState.timeLeft > 0) {
+            this.currentMode = floatState.currentMode || 'focus';
+            this.totalDuration = floatState.totalDuration || this.minutesFocus * 60;
+
+            if (floatState.isRunning && floatState.deadline) {
+              // Sedang running — hitung sisa dari deadline
+              const remaining = Math.round((floatState.deadline - Date.now()) / 1000);
+              if (remaining > 0) {
+                this.timeLeft = remaining;
+                this.isRunning = false;
+                this.startTimer();
+                return;
+              }
+            } else if (!floatState.isRunning && floatState.timeLeft > 0) {
+              // Sedang pause — restore timeLeft tanpa start
+              this.timeLeft = floatState.timeLeft;
+              this.isRunning = false;
               return;
             }
           }
@@ -6123,6 +6135,12 @@ const PomodoroTimer = {
       this.timeLeft = mins * 60;
       this.totalDuration = mins * 60;
       this.showSuccessBanner = false;
+
+      // Bersihkan floating state agar floating timer tidak muncul setelah reset
+      localStorage.removeItem('pomo_floating_state');
+      window.dispatchEvent(new CustomEvent('pomo-state-update', { detail: {
+        isRunning: false, timeLeft: 0, totalDuration: 0, deadline: null, everStarted: false
+      }}));
     },
     toggleTimer() {
       if (this.isRunning) {
@@ -6144,6 +6162,7 @@ const PomodoroTimer = {
         currentMode: this.currentMode,
         formattedTime: this.formattedTime,
         deadline: deadline,
+        everStarted: true,
         ts: Date.now()
       };
       localStorage.setItem('pomo_floating_state', JSON.stringify(state));
