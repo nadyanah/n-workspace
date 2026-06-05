@@ -16,7 +16,7 @@ const _supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let _currentUserId = null;
 
-// ── Hash password jadi email + password Supabase yang konsisten ──
+// -- Hash password jadi email + password Supabase yang konsisten --
 async function _passwordToCredentials(password) {
   const encoder = new TextEncoder();
   const data = encoder.encode('nworkspace:' + password.trim().toLowerCase());
@@ -29,7 +29,7 @@ async function _passwordToCredentials(password) {
   };
 }
 
-// ── Login atau daftar otomatis pakai password ──
+// -- Login atau daftar otomatis pakai password (fix: tidak perlu input 2x) --
 async function _signInWithPassword(password) {
   const creds = await _passwordToCredentials(password);
 
@@ -51,14 +51,27 @@ async function _signInWithPassword(password) {
 
   if (signUpError) throw new Error(signUpError.message);
 
-  // Langsung login setelah daftar
-  const { data: retryData, error: retryError } = await _supabaseClient.auth.signInWithPassword({
-    email: creds.email,
-    password: creds.password
-  });
+  // Kalau signup langsung dapat session (confirm email OFF), pakai itu
+  if (signUpData?.session?.user) {
+    return { user: signUpData.session.user, isNew: true };
+  }
 
-  if (retryError) throw new Error(retryError.message);
-  return { user: retryData.user, isNew: true };
+  // Tunggu sebentar supaya Supabase selesai buat akun, lalu retry login
+  await new Promise(r => setTimeout(r, 1200));
+
+  // Retry login sampai 3x dengan jeda
+  for (let i = 0; i < 3; i++) {
+    const { data: retryData, error: retryError } = await _supabaseClient.auth.signInWithPassword({
+      email: creds.email,
+      password: creds.password
+    });
+    if (!retryError && retryData?.user) {
+      return { user: retryData.user, isNew: true };
+    }
+    if (i < 2) await new Promise(r => setTimeout(r, 800));
+  }
+
+  throw new Error('Akun berhasil dibuat tapi gagal login otomatis. Coba masukkan password sekali lagi ya!');
 }
 
 // ============================================================================
@@ -244,7 +257,7 @@ function _showPasswordPopup() {
   });
 }
 
-// ── Cek session yang sudah ada sebelum minta popup ──
+// -- Cek session yang sudah ada sebelum minta popup --
 async function _ensureUser() {
   if (_currentUserId) return _currentUserId;
 
@@ -268,7 +281,7 @@ async function _ensureUser() {
     }
   }
 
-  // Tidak ada session — tampilkan popup
+  // Tidak ada session -- tampilkan popup
   return await _showPasswordPopup();
 }
 
