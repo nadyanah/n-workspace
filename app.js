@@ -322,20 +322,23 @@ const App = {
 const FloatingCountdownTimer = {
   template: `
     <transition name="fct-slide">
-      <div v-if="visible" class="fct-wrapper" title="Pomodoro sedang berjalan">
-        <div class="fct-icon">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="fct-hg-icon">
+      <div v-if="visible" class="fct-wrapper" title="Buka Jam Pasir Pomodoro" @click.self="goToPomodoro">
+        <!-- Hourglass icon — click navigates to pomodoro page -->
+        <div class="fct-icon" @click="goToPomodoro" style="cursor:pointer;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="fct-hg-icon">
             <path d="M5 2h14"></path>
             <path d="M5 22h14"></path>
             <path d="M19 2v4c0 3-2.5 4.5-5 5.5c2.5 1 5 2.5 5 5.5v4"></path>
             <path d="M5 2v4c0 3 2.5 4.5 5 5.5c-2.5 1-5 2.5-5 5.5v4"></path>
           </svg>
         </div>
-        <div class="fct-body">
+        <!-- Timer body — click navigates to pomodoro page -->
+        <div class="fct-body" @click="goToPomodoro" style="cursor:pointer;">
           <span class="fct-label">WAKTU TERSISA</span>
           <span class="fct-time">{{ formattedTime }}</span>
         </div>
-        <svg class="fct-ring" viewBox="0 0 36 36" width="44" height="44">
+        <!-- Progress ring -->
+        <svg class="fct-ring" viewBox="0 0 36 36" width="52" height="52" @click="goToPomodoro" style="cursor:pointer;">
           <circle class="fct-ring-bg" cx="18" cy="18" r="15.5" fill="none" stroke-width="2.5"/>
           <circle class="fct-ring-fill" cx="18" cy="18" r="15.5" fill="none" stroke-width="2.5"
             :stroke-dasharray="97.4"
@@ -343,6 +346,16 @@ const FloatingCountdownTimer = {
             stroke-linecap="round"
             transform="rotate(-90 18 18)"/>
         </svg>
+        <!-- Pause/Resume button -->
+        <button class="fct-pause-btn" @click.stop="togglePause" :title="isPaused ? 'Resume timer' : 'Pause timer'">
+          <svg v-if="!isPaused" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <rect x="6" y="4" width="4" height="16" rx="1"/>
+            <rect x="14" y="4" width="4" height="16" rx="1"/>
+          </svg>
+          <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <polygon points="5,3 19,12 5,21"/>
+          </svg>
+        </button>
       </div>
     </transition>
   `,
@@ -355,11 +368,16 @@ const FloatingCountdownTimer = {
       timeLeft: 0,
       totalDuration: 0,
       deadline: null,   // timestamp ms kapan timer habis
+      pausedTimeLeft: null, // sisa waktu saat di-pause dari floating timer
     };
   },
   computed: {
+    isPaused() {
+      // Timer ada data tapi tidak running (sedang pause)
+      return !this.isRunning && (this.timeLeft > 0 || this.pausedTimeLeft !== null);
+    },
     visible() {
-      return this.isRunning &&
+      return (this.isRunning || this.isPaused) &&
              this.activePage !== 'dashboard' &&
              this.activePage !== 'pomodoroTimer';
     },
@@ -403,6 +421,8 @@ const FloatingCountdownTimer = {
       if (this.activePage === 'pomodoroTimer') return;
 
       if (!this.isRunning || !this.deadline) {
+        // Jika sedang pause, jangan reset — cukup skip
+        if (this.isPaused) return;
         // Cek ulang localStorage kalau-kalau baru saja distart
         this.loadFromStorage();
         return;
@@ -415,6 +435,7 @@ const FloatingCountdownTimer = {
         this.timeLeft = 0;
         this.isRunning = false;
         this.deadline = null;
+        this.pausedTimeLeft = null;
         localStorage.removeItem('pomo_floating_state');
       } else {
         this.timeLeft = remaining;
@@ -431,9 +452,52 @@ const FloatingCountdownTimer = {
       // Hitung timeLeft dari deadline agar langsung akurat
       if (this.isRunning && this.deadline) {
         this.timeLeft = Math.max(0, Math.round((this.deadline - Date.now()) / 1000));
+        this.pausedTimeLeft = null;
       } else {
         this.timeLeft = s.timeLeft || 0;
+        if (!this.isRunning && this.timeLeft > 0) {
+          this.pausedTimeLeft = this.timeLeft;
+        }
       }
+    },
+    // Toggle pause/resume dari floating timer
+    togglePause() {
+      if (this.isRunning) {
+        // Pause: simpan sisa waktu, set isRunning false, update localStorage
+        this.pausedTimeLeft = this.timeLeft;
+        this.isRunning = false;
+        this.deadline = null;
+        const state = {
+          isRunning: false,
+          timeLeft: this.pausedTimeLeft,
+          totalDuration: this.totalDuration,
+          deadline: null,
+          ts: Date.now()
+        };
+        localStorage.setItem('pomo_floating_state', JSON.stringify(state));
+        // Dispatch ke PomodoroTimer kalau kebetulan masih mounted
+        window.dispatchEvent(new CustomEvent('pomo-state-update', { detail: state }));
+      } else if (this.pausedTimeLeft !== null && this.pausedTimeLeft > 0) {
+        // Resume: set deadline baru berdasarkan pausedTimeLeft
+        const newDeadline = Date.now() + (this.pausedTimeLeft * 1000);
+        this.deadline = newDeadline;
+        this.timeLeft = this.pausedTimeLeft;
+        this.isRunning = true;
+        this.pausedTimeLeft = null;
+        const state = {
+          isRunning: true,
+          timeLeft: this.timeLeft,
+          totalDuration: this.totalDuration,
+          deadline: newDeadline,
+          ts: Date.now()
+        };
+        localStorage.setItem('pomo_floating_state', JSON.stringify(state));
+        window.dispatchEvent(new CustomEvent('pomo-state-update', { detail: state }));
+      }
+    },
+    // Klik floating timer → navigasi ke halaman Jam Pasir Pomodoro
+    goToPomodoro() {
+      window.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'pomodoroTimer' }));
     }
   }
 };

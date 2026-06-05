@@ -6044,6 +6044,26 @@ const PomodoroTimer = {
       } else {
         this.historyLogs = [];
       }
+      // Cek apakah ada timer yang sedang berjalan di localStorage (dari floating timer)
+      // Jika ada, resume timer dari state yang tersimpan
+      try {
+        const raw = localStorage.getItem('pomo_floating_state');
+        if (raw) {
+          const floatState = JSON.parse(raw);
+          if (floatState.isRunning && floatState.deadline) {
+            const remaining = Math.round((floatState.deadline - Date.now()) / 1000);
+            if (remaining > 0) {
+              // Ada timer yang masih berjalan — resume dari sini
+              this.currentMode = floatState.currentMode || 'focus';
+              this.totalDuration = floatState.totalDuration || this.minutesFocus * 60;
+              this.timeLeft = remaining;
+              this.isRunning = false; // akan di-start oleh startTimer
+              this.startTimer();
+              return;
+            }
+          }
+        }
+      } catch(e) {}
       this.resetTimer(false);
     },
     saveState() {
