@@ -251,18 +251,22 @@ const JobLogbook = {
               <button class="btn" :style="analyticsPeriod === 'today' ? { background: 'var(--color-terracotta)', color: '#fff', fontSize: '11px', padding: '4px 10px', borderRadius: '6px' } : { background: 'transparent', color: 'var(--text-dark)', fontSize: '11px', padding: '4px 10px' }" @click="analyticsPeriod = 'today'">Hari Ini</button>
             </div>
           </div>
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;">
             <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
-              <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Pekerjaan</span>
-              <p class="text-mono" style="font-size: 26px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ filteredLogs.length }}</p>
+              <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Pekerjaan</span>
+              <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ filteredLogs.length }}</p>
             </div>
             <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
-              <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Task Plan</span>
-              <p class="text-mono" style="font-size: 26px; font-weight: bold; color: #7C3AED; margin-top: 6px;">{{ plans.length }}</p>
+              <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Task Plan</span>
+              <p class="text-mono" style="font-size: 24px; font-weight: bold; color: #7C3AED; margin-top: 6px;">{{ plans.length }}</p>
             </div>
             <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
-              <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Penyelesaian Aksi</span>
-              <p class="text-mono" style="font-size: 26px; font-weight: bold; color: var(--color-terracotta); margin-top: 6px;">{{ nextActionCompletionRate }}</p>
+              <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Jumlah Hari Rentang</span>
+              <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--color-sage); margin-top: 6px;">{{ selectedRangeDaysCount }} <span style="font-size: 12px; font-weight: normal;">hari</span></p>
+            </div>
+            <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
+              <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Penyelesaian Aksi</span>
+              <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--color-terracotta); margin-top: 6px;">{{ nextActionCompletionRate }}</p>
             </div>
           </div>
         </div>
@@ -504,13 +508,21 @@ const JobLogbook = {
         return matchesQuery && matchesCategory && matchesDates && matchesPeriod;
       });
     },
-    nextActionCompletionRate() {
-      const logsWithNextAction = this.filteredLogs.filter(l => l.nextAction && l.nextAction.trim().length > 0);
-      if (logsWithNextAction.length === 0) return '0%';
-      const completedCount = logsWithNextAction.filter(l => l.nextActionCompleted).length;
-      return Math.round((completedCount / logsWithNextAction.length) * 100) + '%';
+    selectedRangeDaysCount() {
+      if (this.analyticsPeriod === 'today') return 1;
+      if (this.filterStartDate && this.filterEndDate) {
+        const start = new Date(this.filterStartDate), end = new Date(this.filterEndDate);
+        return Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+      }
+      if (this.filterStartDate) {
+        const start = new Date(this.filterStartDate), today = new Date();
+        return Math.ceil((today - start) / (1000 * 60 * 60 * 24)) + 1;
+      }
+      if (this.filteredLogs.length === 0) return 0;
+      const dates = this.filteredLogs.map(l => new Date(l.date).getTime());
+      return Math.ceil((Math.max(...dates) - Math.min(...dates)) / (1000 * 60 * 60 * 24)) + 1;
     },
-    filteredAndSortedLogs() {
+    nextActionCompletionRate() {
       const sorted = [...this.logs.filter(log => {
         const q = this.searchQuery.toLowerCase().trim();
         const matchesQuery = !q || ['category','tasks','achievements','nextAction','documentLink'].some(k => log[k] && log[k].toLowerCase().includes(q));
@@ -4048,73 +4060,205 @@ const InterviewPractice = {
 const DailyNutrition = {
   template: `
     <div class="daily-nutrition">
-      <div class="flex-between">
-        <h2>Daily Nutrition & Mind Insights</h2>
-        <button class="btn btn-primary" @click="showAddLog = !showAddLog">
-          {{ showAddLog ? 'Buka Catatan' : 'Tambah Refleksi' }}
+      <!-- HEADER -->
+      <div class="flex-between" style="border-bottom: 2px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 24px; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h2>Daily Nutrition & Mind Insights</h2>
+          <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 4px; max-width: 600px; line-height: 1.6;">
+            Nutrisi harian bagi kecerdasan pikiran. Jaga konsistensi belajar dengan mendelegasikan ringkasan konsep, intisari keilmuan, dan kilatan ide kreatif dalam satu timeline teratur.
+          </p>
+        </div>
+        <button class="btn btn-primary" @click="showAddLog = !showAddLog" style="flex-shrink: 0;">
+          {{ showAddLog ? 'Tutup Form' : '+ Tambah Insight' }}
         </button>
       </div>
-      <p style="color: var(--text-muted); margin-bottom: 20px;">
-        Nutrisi harian bagi kecerdasan pikiran (Nutrition for the mind). Jaga konsistensi belajar dengan mendelegasikan ringkasan konsep, intisari keilmuan, dan kilatan ide kreatif dalam satu timeline linier teratur.
-      </p>
-      <div class="nutrition-container mt-24">
-        <!-- Add Insight Form -->
-        <div v-if="showAddLog" class="drawer-section mt-12" style="animation: popIn 0.2s ease;">
-          <h3 style="font-size: 18px; margin-bottom: 16px;">Catat Pembelajaran / Insight Baru</h3>
-          <form @submit.prevent="saveInsight">
-            <div class="grid-2">
-              <div class="form-group">
-                <label>Tanggal Melintas</label>
-                <input type="date" class="form-input" v-model="form.date" required />
+
+      <!-- FORM TAMBAH INSIGHT -->
+      <div v-if="showAddLog" class="drawer-section" style="margin-bottom: 24px; padding: 22px; border-radius: 12px; animation: popIn 0.2s ease;">
+        <h3 style="font-size: 17px; margin-bottom: 18px; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+          Catat Pembelajaran / Insight Baru
+        </h3>
+        <form @submit.prevent="saveInsight">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div class="form-group" style="margin: 0;">
+              <label>Tanggal</label>
+              <input type="date" class="form-input" v-model="form.date" required />
+            </div>
+            <!-- KATEGORI DROPDOWN + KELOLA -->
+            <div class="form-group" style="margin: 0;">
+              <label>Topik / Kategori</label>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <select class="form-input" v-model="form.category" required style="flex: 1;">
+                  <option v-for="cat in allInsightCategories" :key="cat" :value="cat">{{ cat }}</option>
+                </select>
+                <button type="button" @click="showCatManager = !showCatManager"
+                  style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 0 10px; height: 42px; cursor: pointer; font-size: 18px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;"
+                  title="Kelola kategori">⚙️</button>
               </div>
-              <div class="form-group">
-                <label>Topik / Kategori Pengetahuan</label>
-                <input type="text" class="form-input" v-model="form.category" placeholder="cth., Teknologi, Filsafat, Arsitektur" required />
+              <!-- Mini category manager -->
+              <div v-if="showCatManager" style="margin-top: 8px; background: #FDFBF7; border: 1.5px solid var(--color-sand); border-radius: 10px; padding: 12px; animation: popIn 0.15s ease;">
+                <p style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em;">Kelola Kategori Insight</p>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;">
+                  <span v-for="cat in customInsightCategories" :key="cat"
+                    style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 20px; padding: 3px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; color: var(--text-dark);">
+                    {{ cat }}
+                    <button type="button" @click="deleteInsightCategory(cat)"
+                      style="background: none; border: none; cursor: pointer; font-size: 13px; line-height: 1; color: var(--color-rose); padding: 0;">✕</button>
+                  </span>
+                  <span v-if="customInsightCategories.length === 0" style="font-size: 12px; color: var(--text-muted); font-style: italic;">Belum ada kategori kustom</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <input type="text" class="form-input" v-model="newInsightCatInput" placeholder="Nama kategori baru..."
+                    @keydown.enter.prevent="addInsightCategory" style="flex: 1; height: 36px; font-size: 13px;" />
+                  <button type="button" @click="addInsightCategory"
+                    style="background: var(--color-terracotta); color: #fff; border: none; border-radius: 8px; padding: 0 14px; height: 36px; cursor: pointer; font-size: 13px; font-weight: 600; flex-shrink: 0;">
+                    Tambah
+                  </button>
+                </div>
               </div>
             </div>
-            <div class="form-group">
-              <label>Intisari Pemikiran / Judul</label>
-              <input type="text" class="form-input" v-model="form.title" placeholder="cth., Strategi Desain Nol-Warna Biru" required />
+          </div>
+
+          <!-- SUMBER / SOURCE -->
+          <div class="form-group">
+            <label>Sumber / Source</label>
+            <input type="text" class="form-input" v-model="form.source" placeholder="cth., Buku, Artikel, Podcast, Kursus, YouTube..." />
+          </div>
+
+          <div class="form-group">
+            <label>Intisari Pemikiran / Judul</label>
+            <input type="text" class="form-input" v-model="form.title" placeholder="cth., Strategi Desain Nol-Warna Biru" required />
+          </div>
+          <div class="form-group">
+            <label>Rangkuman Detail (Konsep)</label>
+            <textarea class="form-input" v-model="form.details" rows="3" placeholder="Sederhanakan pemahaman materi tersebut dengan kalimatmu sendiri..." required></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom: 20px;">
+            <label>Poin Keberlanjutan / Takeaway Utama</label>
+            <input type="text" class="form-input" v-model="form.takeaway" placeholder="Garis besar satu kalimat actionable lesson..." required />
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn" @click="showAddLog = false" style="flex: 1; background: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); cursor: pointer; border-radius: 8px; font-weight: 600;">Batal</button>
+            <button type="submit" class="btn btn-primary" style="flex: 2;">Simpan Nutrisi Pikiran</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- FILTER BAR -->
+      <div class="drawer-section" style="margin-bottom: 24px; padding: 18px 20px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 12px;">
+        <p style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          Filter & Pencarian
+        </p>
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1.5fr 1fr; gap: 12px; align-items: end;">
+          <!-- Search -->
+          <div class="form-group" style="margin: 0;">
+            <label style="font-size: 11.5px; font-weight: 600; color: var(--text-muted);">Kata Kunci</label>
+            <input type="text" class="form-input" v-model="searchQuery" placeholder="Cari judul, rangkuman, takeaway..." style="height: 40px;" />
+          </div>
+          <!-- Category filter -->
+          <div class="form-group" style="margin: 0;">
+            <label style="font-size: 11.5px; font-weight: 600; color: var(--text-muted);">Kategori</label>
+            <select class="form-input" v-model="filterCategory" style="height: 40px;">
+              <option value="">Semua Kategori</option>
+              <option v-for="cat in allInsightCategories" :key="cat" :value="cat">{{ cat }}</option>
+            </select>
+          </div>
+          <!-- Date range -->
+          <div class="form-group" style="margin: 0; position: relative;">
+            <label style="font-size: 11.5px; font-weight: 600; color: var(--text-muted);">Rentang Tanggal</label>
+            <button type="button" class="form-input" @click.stop="showDatePicker = !showDatePicker"
+              style="width: 100%; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px; background: #fff; height: 40px; box-sizing: border-box; white-space: nowrap; overflow: hidden;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; color: var(--color-terracotta);"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <span style="font-size: 12px; color: var(--text-dark); overflow: hidden; text-overflow: ellipsis;">
+                <template v-if="filterStartDate || filterEndDate">
+                  {{ filterStartDate || '?' }} – {{ filterEndDate || '?' }}
+                </template>
+                <template v-else><span style="color: var(--text-muted);">Pilih rentang...</span></template>
+              </span>
+            </button>
+            <!-- Mini calendar dropdown -->
+            <div v-if="showDatePicker" @click.stop style="position: absolute; top: calc(100% + 6px); left: 0; z-index: 999; background: #fff; border: 1.5px solid var(--color-sand); border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.13); padding: 16px; min-width: 270px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <button type="button" @click="calPrevMonth" style="background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 6px;">&lt;</button>
+                <span style="font-weight: 700; font-size: 14px; color: var(--text-dark);">{{ calMonthLabel }}</span>
+                <button type="button" @click="calNextMonth" style="background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 6px;">&gt;</button>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 4px;">
+                <span v-for="(d,i) in ['S','S','R','K','J','S','M']" :key="'nh'+i" style="text-align:center;font-size:10px;font-weight:700;color:var(--text-muted);padding:2px 0;">{{d}}</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;">
+                <span v-for="cell in calCells" :key="cell.key" @click="cell.date ? onCalClick(cell.date) : null"
+                  :style="getCalCellStyle(cell)"
+                  style="text-align:center;font-size:12px;padding:5px 2px;border-radius:6px;cursor:pointer;user-select:none;transition:background 0.1s;">
+                  {{cell.label}}
+                </span>
+              </div>
+              <div style="margin-top:8px;font-size:11px;color:var(--text-muted);text-align:center;">
+                <span v-if="!filterStartDate">Klik tanggal mulai</span>
+                <span v-else-if="!filterEndDate">Klik tanggal akhir</span>
+                <span v-else style="color:var(--color-terracotta);font-weight:600;">✓ Rentang dipilih</span>
+              </div>
+              <button v-if="filterStartDate || filterEndDate" type="button" @click="filterStartDate='';filterEndDate='';showDatePicker=false;"
+                style="margin-top:8px;width:100%;background:var(--bg-cream);border:1px solid var(--color-sand);color:var(--text-dark);border-radius:7px;padding:6px;font-size:12px;cursor:pointer;font-weight:600;">
+                Hapus Rentang
+              </button>
             </div>
-            <div class="form-group">
-              <label>Rangkuman Detil Cara Kerja (Konsep)</label>
-              <textarea class="form-input" v-model="form.details" rows="3" placeholder="Sederhanakan pemahaman materi tersebut dengan kalimatmu sendiri..." required></textarea>
-            </div>
-            <div class="form-group">
-              <label>Poin Keberlanjutan Tindakan (Takeaway Utama)</label>
-              <input type="text" class="form-input" v-model="form.takeaway" placeholder="Garis besar satu kalimat actionable lesson..." required />
-            </div>
-            <button type="submit" class="btn btn-primary" style="width: 100%;">Simpan Nutrisi Pikiran</button>
-          </form>
+          </div>
+          <!-- Reset -->
+          <div class="form-group" style="margin: 0;">
+            <button class="btn btn-secondary" @click="resetFilters" style="width: 100%; height: 40px; cursor: pointer; justify-content: center;">Reset Filter</button>
+          </div>
         </div>
-        <!-- Timeline Search and Filter -->
-        <div class="nutrition-controls">
-          <input type="text" class="form-input" style="flex: 2;" v-model="searchQuery" placeholder="Cari rangkuman insight..." />
-          <select class="form-input" style="flex: 1;" v-model="filterCategory">
-            <option value="">Semua Kategori</option>
-            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
-          </select>
+      </div>
+
+      <!-- STATS ROW -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+        <div class="drawer-section" style="margin: 0; padding: 16px 20px; text-align: center;">
+          <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 6px;">Total Insight</p>
+          <p class="text-mono" style="font-size: 28px; font-weight: 800; color: var(--text-dark);">{{ filteredInsights.length }}</p>
         </div>
-        <!-- Vertical Timeline Feed -->
-        <div v-if="filteredInsights.length === 0" style="padding: 40px; text-align: center; color: var(--text-muted);">
-          Belum menemukan draf nutri-pikiran yang cocok.
+        <div class="drawer-section" style="margin: 0; padding: 16px 20px; text-align: center;">
+          <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 6px;">Kategori Aktif</p>
+          <p class="text-mono" style="font-size: 28px; font-weight: 800; color: var(--color-sage);">{{ activeCategories.length }}</p>
+        </div>
+        <div class="drawer-section" style="margin: 0; padding: 16px 20px; text-align: center;">
+          <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 6px;">Insight Terakhir</p>
+          <p style="font-size: 13px; font-weight: 700; color: var(--color-terracotta); margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" :title="latestInsightTitle">{{ latestInsightTitle }}</p>
+        </div>
+      </div>
+
+      <!-- TIMELINE -->
+      <div class="nutrition-container">
+        <div v-if="filteredInsights.length === 0" style="padding: 60px 20px; text-align: center; color: var(--text-muted); background: var(--bg-cream); border-radius: 12px; border: 1.5px dashed var(--color-sand);">
+          <p style="font-size: 32px; margin-bottom: 10px;">🧠</p>
+          <p style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">Belum ada insight yang cocok</p>
+          <p style="font-size: 12.5px;">Coba ubah filter atau tambah insight baru</p>
         </div>
         <div v-else class="timeline">
-          <div v-for="(ins, idx) in filteredInsights" :key="idx" class="timeline-item">
+          <div v-for="(ins, idx) in filteredInsights" :key="ins.id || idx" class="timeline-item">
             <div class="timeline-dot"></div>
-            
             <div class="timeline-date">{{ formatDate(ins.date) }}</div>
-            
             <div class="timeline-card">
-              <div class="flex-between">
-                <span class="timeline-category">{{ ins.category }}</span>
-                <button class="card-nav-btn" @click="deleteInsight(idx)">🗑️</button>
+              <div class="flex-between" style="margin-bottom: 8px; align-items: flex-start; gap: 8px;">
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+                  <span class="timeline-category" :style="{ background: getCatColor(ins.category) + '18', color: getCatColor(ins.category), border: '1.5px solid ' + getCatColor(ins.category) + '40' }">
+                    {{ ins.category }}
+                  </span>
+                  <span v-if="ins.source" style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-muted); border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    {{ ins.source }}
+                  </span>
+                </div>
+                <button class="card-nav-btn" @click="deleteInsight(idx)" style="flex-shrink: 0; background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                </button>
               </div>
               <h3 class="timeline-title">{{ ins.title }}</h3>
-              <p style="font-size: 14.5px; color: var(--text-dark);">{{ ins.details }}</p>
-              
+              <p style="font-size: 14px; color: var(--text-dark); line-height: 1.6; margin-bottom: 12px;">{{ ins.details }}</p>
               <div class="timeline-takeaway">
-                <strong>Intisari:</strong> {{ ins.takeaway }}
+                <strong>💡 Takeaway:</strong> {{ ins.takeaway }}
               </div>
             </div>
           </div>
@@ -4125,12 +4269,21 @@ const DailyNutrition = {
   data() {
     return {
       showAddLog: false,
+      showCatManager: false,
+      showDatePicker: false,
       searchQuery: '',
       filterCategory: '',
+      filterStartDate: '',
+      filterEndDate: '',
+      calYear: new Date().getFullYear(),
+      calMonth: new Date().getMonth(),
+      newInsightCatInput: '',
+      customInsightCategories: [],
       insights: [],
       form: {
         date: new Date().toISOString().split('T')[0],
         category: 'Teknologi',
+        source: '',
         title: '',
         details: '',
         takeaway: ''
@@ -4138,55 +4291,139 @@ const DailyNutrition = {
     };
   },
   computed: {
-    categories() {
-      const cats = this.insights.map(i => i.category);
-      return [...new Set(cats)];
+    defaultInsightCategories() {
+      return ['Teknologi', 'Produktivitas', 'Filsafat', 'Arsitektur', 'UX Design', 'Bisnis', 'Psikologi'];
+    },
+    allInsightCategories() {
+      return [...this.defaultInsightCategories, ...this.customInsightCategories];
+    },
+    calMonthLabel() {
+      const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+      return `${months[this.calMonth]} ${this.calYear}`;
+    },
+    calCells() {
+      const year = this.calYear, month = this.calMonth;
+      const firstDay = new Date(year, month, 1).getDay();
+      const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const cells = [];
+      for (let i = 0; i < startOffset; i++) cells.push({ key: 'e' + i, date: null, label: '' });
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        cells.push({ key: dateStr, date: dateStr, label: d });
+      }
+      return cells;
     },
     filteredInsights() {
       return this.insights
         .filter(i => {
-          const matchQuery = i.title.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
-                             i.details.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
-                             i.takeaway.toLowerCase().includes(this.searchQuery.toLowerCase());
-          const matchCategory = this.filterCategory === '' || i.category === this.filterCategory;
-          return matchQuery && matchCategory;
+          const q = this.searchQuery.toLowerCase();
+          const matchQuery = !q || [i.title, i.details, i.takeaway, i.category, i.source].some(f => f && f.toLowerCase().includes(q));
+          const matchCat = !this.filterCategory || i.category === this.filterCategory;
+          const matchStart = !this.filterStartDate || i.date >= this.filterStartDate;
+          const matchEnd = !this.filterEndDate || i.date <= this.filterEndDate;
+          return matchQuery && matchCat && matchStart && matchEnd;
         })
         .sort((a, b) => new Date(b.date) - new Date(a.date));
+    },
+    activeCategories() {
+      return [...new Set(this.filteredInsights.map(i => i.category))];
+    },
+    latestInsightTitle() {
+      const sorted = [...this.insights].sort((a, b) => new Date(b.date) - new Date(a.date));
+      return sorted[0]?.title || '—';
     }
   },
   created() {
+    const savedCats = WorkspaceStorage.getItem('personal_workspace_insight_categories');
+    if (savedCats) { try { this.customInsightCategories = JSON.parse(savedCats); } catch(e) { this.customInsightCategories = []; } }
+
     const saved = WorkspaceStorage.getItem('personal_workspace_nutrition_insights');
     if (saved) {
-      this.insights = JSON.parse(saved);
+      try {
+        this.insights = JSON.parse(saved);
+        this.insights.forEach((ins, i) => { if (!ins.id) ins.id = 'ins-' + i + '-' + Date.now(); });
+      } catch(e) { this.insights = []; }
     } else {
       this.insights = [
-        { date: '2026-05-28', category: 'Web Architecture', title: 'Why SPA CDNs Boost Developer Workflow', details: 'Using Vue via CDN directly speeds up small tools and static assets logic. You escape complex local package manager installation steps and launch immediately.', takeaway: 'For lightweight standalone apps, clean ESM CDN tags remove build overhead completely.' },
-        { date: '2026-05-26', category: 'Productivity', title: 'The Power of Scattered visual flat-lays', details: 'Allowing customized drag-and-drop flat lay positions mirrors natural office setups. A cluttered virtual desk lowers access friction for visual thinkers.', takeaway: 'Interactivity in UI builds deeper emotional ownership for productivity systems.' },
-        { date: '2026-05-25', category: 'UX Design', title: 'Zero Blue Color Psychology', details: 'By selecting terracotta (#D67B52) and sage (#A3B18A) earth-toned cream bases, layouts feel warmer, organic, and closely resemble tangible paper/stickers instead of clinical digital devices.', takeaway: 'Subtle warm palettes foster longer reading retention and reduce screen fatigue.' }
+        { id: 'ins-1', date: '2026-05-28', category: 'Teknologi', source: 'Vue.js Docs', title: 'Why SPA CDNs Boost Developer Workflow', details: 'Using Vue via CDN directly speeds up small tools and static assets logic. You escape complex local package manager installation steps and launch immediately.', takeaway: 'For lightweight standalone apps, clean ESM CDN tags remove build overhead completely.' },
+        { id: 'ins-2', date: '2026-05-26', category: 'Produktivitas', source: 'Personal Experience', title: 'The Power of Scattered Visual Flat-lays', details: 'Allowing customized drag-and-drop flat lay positions mirrors natural office setups. A cluttered virtual desk lowers access friction for visual thinkers.', takeaway: 'Interactivity in UI builds deeper emotional ownership for productivity systems.' },
+        { id: 'ins-3', date: '2026-05-25', category: 'UX Design', source: 'Color Psychology Article', title: 'Zero Blue Color Psychology', details: 'By selecting terracotta and sage earth-toned cream bases, layouts feel warmer, organic, and closely resemble tangible paper/stickers instead of clinical digital devices.', takeaway: 'Subtle warm palettes foster longer reading retention and reduce screen fatigue.' }
       ];
       this.saveToStorage();
     }
   },
   methods: {
+    calPrevMonth() { if (this.calMonth === 0) { this.calMonth = 11; this.calYear--; } else this.calMonth--; },
+    calNextMonth() { if (this.calMonth === 11) { this.calMonth = 0; this.calYear++; } else this.calMonth++; },
+    onCalClick(dateStr) {
+      if (!this.filterStartDate || (this.filterStartDate && this.filterEndDate)) { this.filterStartDate = dateStr; this.filterEndDate = ''; }
+      else {
+        if (dateStr < this.filterStartDate) { this.filterEndDate = this.filterStartDate; this.filterStartDate = dateStr; }
+        else this.filterEndDate = dateStr;
+        this.showDatePicker = false;
+      }
+    },
+    getCalCellStyle(cell) {
+      if (!cell.date) return { visibility: 'hidden' };
+      const today = new Date().toISOString().split('T')[0];
+      const isStart = cell.date === this.filterStartDate, isEnd = cell.date === this.filterEndDate;
+      const inRange = this.filterStartDate && this.filterEndDate && cell.date > this.filterStartDate && cell.date < this.filterEndDate;
+      if (isStart || isEnd) return { background: 'var(--color-terracotta)', color: '#fff', fontWeight: 'bold', borderRadius: '50%' };
+      if (inRange) return { background: 'rgba(214,123,82,0.15)', color: 'var(--text-dark)', borderRadius: '4px' };
+      if (cell.date === today) return { border: '1.5px solid var(--color-terracotta)', color: 'var(--color-terracotta)', fontWeight: 'bold', borderRadius: '50%' };
+      return { color: 'var(--text-dark)' };
+    },
+    resetFilters() { this.searchQuery = ''; this.filterCategory = ''; this.filterStartDate = ''; this.filterEndDate = ''; this.showDatePicker = false; },
+    getCatColor(cat) {
+      const map = { 'Teknologi': '#06B6D4', 'Produktivitas': '#10B981', 'Filsafat': '#8B5CF6', 'Arsitektur': '#F59E0B', 'UX Design': '#EC4899', 'Bisnis': '#3B82F6', 'Psikologi': '#EF4444' };
+      if (map[cat]) return map[cat];
+      let hash = 0;
+      for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash);
+      return `hsl(${Math.abs(hash) % 360}, 60%, 45%)`;
+    },
+    addInsightCategory() {
+      const name = this.newInsightCatInput.trim();
+      if (!name || this.allInsightCategories.includes(name)) return;
+      this.customInsightCategories.push(name);
+      WorkspaceStorage.setItem('personal_workspace_insight_categories', JSON.stringify(this.customInsightCategories));
+      this.newInsightCatInput = '';
+    },
+    deleteInsightCategory(cat) {
+      if (!confirm(`Hapus kategori "${cat}"?`)) return;
+      this.customInsightCategories = this.customInsightCategories.filter(c => c !== cat);
+      WorkspaceStorage.setItem('personal_workspace_insight_categories', JSON.stringify(this.customInsightCategories));
+      if (this.form.category === cat) this.form.category = this.allInsightCategories[0];
+    },
     formatDate(d) {
-      const options = { month: 'long', day: 'numeric', year: 'numeric' };
-      return new Date(d).toLocaleDateString('id-ID', options);
+      try { return new Date(d).toLocaleDateString('id-ID', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' }); }
+      catch(e) { return d; }
     },
     saveInsight() {
-      this.insights.push({ ...this.form });
+      const newIns = { ...this.form, id: 'ins-' + Date.now() };
+      this.insights.push(newIns);
       this.saveToStorage();
-      this.form.title = '';
-      this.form.details = '';
-      this.form.takeaway = '';
+      this.form = { date: new Date().toISOString().split('T')[0], category: this.form.category, source: '', title: '', details: '', takeaway: '' };
       this.showAddLog = false;
     },
     deleteInsight(idx) {
-      this.insights.splice(idx, 1);
+      if (!confirm('Hapus insight ini?')) return;
+      const sorted = this.filteredInsights;
+      const insToDelete = sorted[idx];
+      const realIdx = this.insights.findIndex(i => i.id === insToDelete.id);
+      if (realIdx !== -1) this.insights.splice(realIdx, 1);
       this.saveToStorage();
     },
     saveToStorage() {
       WorkspaceStorage.setItem('personal_workspace_nutrition_insights', JSON.stringify(this.insights));
     }
+  },
+  mounted() {
+    this._closePicker = () => { if (this.showDatePicker) this.showDatePicker = false; if (this.showCatManager) this.showCatManager = false; };
+    document.addEventListener('click', this._closePicker);
+  },
+  unmounted() {
+    document.removeEventListener('click', this._closePicker);
   }
 };
 
