@@ -251,7 +251,7 @@ const JobLogbook = {
               <button class="btn" :style="analyticsPeriod === 'today' ? { background: 'var(--color-terracotta)', color: '#fff', fontSize: '11px', padding: '4px 10px', borderRadius: '6px' } : { background: 'transparent', color: 'var(--text-dark)', fontSize: '11px', padding: '4px 10px' }" @click="analyticsPeriod = 'today'">Hari Ini</button>
             </div>
           </div>
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;">
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
             <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
               <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Pekerjaan</span>
               <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ filteredLogs.length }}</p>
@@ -262,7 +262,7 @@ const JobLogbook = {
             </div>
             <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
               <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Jumlah Hari Rentang</span>
-              <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--color-sage); margin-top: 6px;">{{ selectedRangeDaysCount }} <span style="font-size: 12px; font-weight: normal;">hari</span></p>
+              <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--color-sage); margin-top: 6px;">{{ selectedRangeDaysCount }} <span style="font-size: 11px; font-weight: normal;">hari</span></p>
             </div>
             <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
               <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Penyelesaian Aksi</span>
@@ -511,18 +511,24 @@ const JobLogbook = {
     selectedRangeDaysCount() {
       if (this.analyticsPeriod === 'today') return 1;
       if (this.filterStartDate && this.filterEndDate) {
-        const start = new Date(this.filterStartDate), end = new Date(this.filterEndDate);
-        return Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        const diff = (new Date(this.filterEndDate) - new Date(this.filterStartDate)) / (1000*60*60*24);
+        return Math.ceil(diff) + 1;
       }
       if (this.filterStartDate) {
-        const start = new Date(this.filterStartDate), today = new Date();
-        return Math.ceil((today - start) / (1000 * 60 * 60 * 24)) + 1;
+        const diff = (new Date() - new Date(this.filterStartDate)) / (1000*60*60*24);
+        return Math.ceil(diff) + 1;
       }
       if (this.filteredLogs.length === 0) return 0;
       const dates = this.filteredLogs.map(l => new Date(l.date).getTime());
-      return Math.ceil((Math.max(...dates) - Math.min(...dates)) / (1000 * 60 * 60 * 24)) + 1;
+      return Math.ceil((Math.max(...dates) - Math.min(...dates)) / (1000*60*60*24)) + 1;
     },
     nextActionCompletionRate() {
+      const logsWithNextAction = this.filteredLogs.filter(l => l.nextAction && l.nextAction.trim().length > 0);
+      if (logsWithNextAction.length === 0) return '0%';
+      const completedCount = logsWithNextAction.filter(l => l.nextActionCompleted).length;
+      return Math.round((completedCount / logsWithNextAction.length) * 100) + '%';
+    },
+    filteredAndSortedLogs() {
       const sorted = [...this.logs.filter(log => {
         const q = this.searchQuery.toLowerCase().trim();
         const matchesQuery = !q || ['category','tasks','achievements','nextAction','documentLink'].some(k => log[k] && log[k].toLowerCase().includes(q));
@@ -753,6 +759,8 @@ const JobLogbook = {
   }
 };
 
+
+// 2. Calendar Moment Component (Multi-moment upgrade with bento layout & memory jar)
 
 // 2. Calendar Moment Component (Multi-moment upgrade with bento layout & memory jar)
 const CalendarMoment = {
@@ -4056,6 +4064,17 @@ const InterviewPractice = {
     }
   }
 };
+          hints: q.hints || 'Gunakan framework yang direkomendasikan untuk menjawab.',
+          framework: (q.framework || 'STAR').toUpperCase()
+        }));
+      } catch (err) {
+        this.aiQuestionsError = 'Gagal menghasilkan pertanyaan: ' + err.message;
+      } finally {
+        this.isGeneratingAi = false;
+      }
+    }
+  }
+};
 // 5. Daily Nutrition & Insights Component
 const DailyNutrition = {
   template: `
@@ -4416,17 +4435,6 @@ const DailyNutrition = {
     },
     saveToStorage() {
       WorkspaceStorage.setItem('personal_workspace_nutrition_insights', JSON.stringify(this.insights));
-    }
-  },
-  mounted() {
-    this._closePicker = () => { if (this.showDatePicker) this.showDatePicker = false; if (this.showCatManager) this.showCatManager = false; };
-    document.addEventListener('click', this._closePicker);
-  },
-  unmounted() {
-    document.removeEventListener('click', this._closePicker);
-  }
-};
-
 // 6. Habit Tracker Component (PORTED FROM REACT TO VUE 3)
 const HabitTracker = {
   template: `
