@@ -77,64 +77,70 @@ const JobLogbook = {
       </div>
 
       <!-- ══════════════════════════════════════════════════════════ -->
-      <!-- SECTION: TASK PLAN (belum dikerjakan)                     -->
+      <!-- SECTION: TASK PLAN                                        -->
       <!-- ══════════════════════════════════════════════════════════ -->
-      <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background: #F8F6FF; border: 1.5px solid #C4B5FD;">
+      <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand);">
         <div class="flex-between" style="align-items: center; margin-bottom: 16px;">
-          <h3 style="font-size: 16px; font-weight: 700; color: #4C1D95; display: flex; align-items: center; gap: 8px; margin: 0;">
-            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #7C3AED;"><path d="M8 6h13"></path><path d="M8 12h13"></path><path d="M8 18h13"></path><path d="M3 6h.01"></path><path d="M3 12h.01"></path><path d="M3 18h.01"></path></svg>
+          <h3 style="font-size: 16px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M8 6h13"></path><path d="M8 12h13"></path><path d="M8 18h13"></path><path d="M3 6h.01"></path><path d="M3 12h.01"></path><path d="M3 18h.01"></path></svg>
             Task Plan
-            <span v-if="plans.length > 0" style="background: #7C3AED; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px;">{{ plans.length }}</span>
+            <span v-if="plans.length > 0" style="background: var(--color-terracotta); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px;">{{ plans.length }}</span>
           </h3>
-          <button class="btn" @click="showAddPlan = !showAddPlan"
-            style="background: #7C3AED; color: #fff; border: none; font-size: 13px; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+          <button class="btn btn-primary" @click="openAddPlan"
+            style="font-size: 13px; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             {{ showAddPlan ? 'Tutup' : 'Tambah Task' }}
           </button>
         </div>
 
-        <!-- Form tambah task plan -->
-        <div v-if="showAddPlan" style="background: #fff; border: 1.5px solid #C4B5FD; border-radius: 12px; padding: 18px; margin-bottom: 16px; animation: popIn 0.2s ease;">
+        <!-- Form tambah / edit task plan -->
+        <div v-if="showAddPlan" style="background: #fff; border: 1.5px solid var(--color-sand); border-radius: 12px; padding: 18px; margin-bottom: 16px; animation: popIn 0.2s ease;">
+          <p style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+            {{ editingPlanId ? 'Edit Task Plan' : 'Tambah Task Plan Baru' }}
+          </p>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
             <div class="form-group" style="margin: 0;">
-              <label style="font-size: 12px; font-weight: 600; color: #5B21B6;">Tanggal Target</label>
+              <label>Tanggal Target</label>
               <input type="date" class="form-input" v-model="planForm.date" style="height: 40px;" />
             </div>
             <div class="form-group" style="margin: 0;">
-              <label style="font-size: 12px; font-weight: 600; color: #5B21B6;">Kategori Pekerjaan</label>
+              <label>Kategori Pekerjaan</label>
               <select class="form-input" v-model="planForm.category" style="height: 40px;">
                 <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
               </select>
             </div>
           </div>
           <div class="form-group" style="margin: 0 0 14px;">
-            <label style="font-size: 12px; font-weight: 600; color: #5B21B6;">Tugas / Deskripsi</label>
+            <label>Tugas / Deskripsi</label>
             <textarea class="form-input" v-model="planForm.tasks" rows="2" placeholder="Deskripsikan tugas yang perlu dikerjakan..."></textarea>
           </div>
           <div style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button class="btn" @click="showAddPlan = false" style="background: #F3F0FF; border: 1.5px solid #C4B5FD; color: #5B21B6; cursor: pointer; padding: 8px 18px; border-radius: 8px; font-weight: 600;">Batal</button>
-            <button class="btn" @click="savePlan" style="background: #7C3AED; color: #fff; border: none; cursor: pointer; padding: 8px 20px; border-radius: 8px; font-weight: 600;">Simpan Task</button>
+            <button class="btn btn-secondary" @click="cancelPlanForm" style="cursor: pointer; padding: 8px 18px; border-radius: 8px; font-weight: 600;">Batal</button>
+            <button class="btn btn-primary" @click="savePlan" style="cursor: pointer; padding: 8px 20px; border-radius: 8px; font-weight: 600;">
+              {{ editingPlanId ? 'Simpan Perubahan' : 'Simpan Task' }}
+            </button>
           </div>
         </div>
 
         <!-- Empty state -->
-        <div v-if="plans.length === 0 && !showAddPlan" style="text-align: center; padding: 32px 20px; background: #fff; border-radius: 10px; border: 1.5px dashed #C4B5FD;">
+        <div v-if="plans.length === 0 && !showAddPlan" style="text-align: center; padding: 32px 20px; background: #fff; border-radius: 10px; border: 1.5px dashed var(--color-sand);">
           <p style="font-size: 28px; margin-bottom: 8px;">📋</p>
-          <p style="font-size: 14px; font-weight: 600; color: #5B21B6; margin-bottom: 4px;">Belum ada task yang direncanakan</p>
-          <p style="font-size: 12.5px; color: #7C3AED; opacity: 0.7;">Klik "Tambah Task" untuk mulai merencanakan pekerjaanmu</p>
+          <p style="font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px;">Belum ada task yang direncanakan</p>
+          <p style="font-size: 12.5px; color: var(--text-muted);">Klik "Tambah Task" untuk mulai merencanakan pekerjaanmu</p>
         </div>
 
         <!-- List task plan -->
         <div v-if="plans.length > 0" style="display: flex; flex-direction: column; gap: 10px;">
           <div v-for="(plan, idx) in plans" :key="plan.id"
-            style="background: #fff; border: 1.5px solid #DDD6FE; border-radius: 10px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 14px; transition: box-shadow 0.2s;"
-            @mouseenter="$event.currentTarget.style.boxShadow='0 4px 16px rgba(124,58,237,0.10)'"
-            @mouseleave="$event.currentTarget.style.boxShadow='none'">
+            style="background: #fff; border: 1.5px solid var(--color-sand); border-radius: 10px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 14px; transition: box-shadow 0.2s, border-color 0.2s;"
+            @mouseenter="$event.currentTarget.style.boxShadow='0 4px 16px rgba(214,123,82,0.10)'; $event.currentTarget.style.borderColor='var(--color-gold)'"
+            @mouseleave="$event.currentTarget.style.boxShadow='none'; $event.currentTarget.style.borderColor='var(--color-sand)'">
 
             <!-- Left: info -->
             <div style="flex: 1; min-width: 0;">
               <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;">
-                <span style="font-size: 12px; font-weight: 700; color: #5B21B6; display: flex; align-items: center; gap: 4px;">
+                <span style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 4px;">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                   {{ formatDate(plan.date) }}
                 </span>
@@ -147,11 +153,11 @@ const JobLogbook = {
                   ⚠ Lewat Jadwal
                 </span>
                 <!-- Today badge -->
-                <span v-else-if="plan.date === todayStr" style="background: #ECFDF5; color: #065F46; border: 1.5px solid #6EE7B7; padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700;">
+                <span v-else-if="plan.date === todayStr" style="background: #FBF0EA; color: var(--color-terracotta); border: 1.5px solid var(--color-gold); padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700;">
                   ✦ Hari Ini
                 </span>
               </div>
-              <p style="font-size: 13.5px; color: #3E2065; margin: 0; line-height: 1.5;">{{ plan.tasks }}</p>
+              <p style="font-size: 13.5px; color: var(--text-dark); margin: 0; line-height: 1.5;">{{ plan.tasks }}</p>
             </div>
 
             <!-- Right: actions -->
@@ -161,6 +167,12 @@ const JobLogbook = {
                 style="background: #ECFDF5; color: #065F46; border: 1.5px solid #6EE7B7; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 Sudah Dikerjakan
+              </button>
+              <button @click="startEditPlan(plan)"
+                title="Edit task plan ini"
+                style="background: var(--bg-cream); color: var(--text-dark); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                Edit
               </button>
               <button @click="deletePlan(plan.id)"
                 title="Hapus task"
@@ -173,7 +185,7 @@ const JobLogbook = {
         </div>
       </div>
 
-      <!-- ══════════════════════════════════════════════════════════ -->
+            <!-- ══════════════════════════════════════════════════════════ -->
       <!-- SECTION: FILTER & ANALYTICS (existing)                    -->
       <!-- ══════════════════════════════════════════════════════════ -->
       <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand);">
@@ -258,7 +270,7 @@ const JobLogbook = {
             </div>
             <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
               <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Task Plan</span>
-              <p class="text-mono" style="font-size: 24px; font-weight: bold; color: #7C3AED; margin-top: 6px;">{{ plans.length }}</p>
+              <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--color-terracotta); margin-top: 6px;">{{ plans.length }}</p>
             </div>
             <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
               <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Jumlah Hari Rentang</span>
@@ -442,6 +454,7 @@ const JobLogbook = {
       newCategoryInput: '',
       showCategoryManager: false,
       showAddPlan: false,
+      editingPlanId: null,
       planForm: {
         date: new Date().toISOString().split('T')[0],
         category: 'Administrasi',
@@ -620,15 +633,55 @@ const JobLogbook = {
     },
 
     // ── Task Plan ──
+    openAddPlan() {
+      if (this.showAddPlan && !this.editingPlanId) {
+        this.showAddPlan = false;
+        return;
+      }
+      this.editingPlanId = null;
+      this.planForm.tasks = '';
+      this.planForm.date = this.todayStr;
+      this.planForm.category = this.allCategories[0] || 'Administrasi';
+      this.showAddPlan = true;
+    },
+    startEditPlan(plan) {
+      this.editingPlanId = plan.id;
+      this.planForm.date = plan.date;
+      this.planForm.category = plan.category;
+      this.planForm.tasks = plan.tasks;
+      this.showAddPlan = true;
+      this.$nextTick(() => {
+        const el = document.querySelector('.job-logbook');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    },
+    cancelPlanForm() {
+      this.showAddPlan = false;
+      this.editingPlanId = null;
+      this.planForm.tasks = '';
+      this.planForm.date = this.todayStr;
+    },
     savePlan() {
       if (!this.planForm.tasks.trim()) { alert('Tugas tidak boleh kosong!'); return; }
-      const newPlan = {
-        id: 'plan-' + Date.now(),
-        date: this.planForm.date,
-        category: this.planForm.category,
-        tasks: this.planForm.tasks.trim()
-      };
-      this.plans.unshift(newPlan);
+      if (this.editingPlanId) {
+        // Update existing plan
+        const idx = this.plans.findIndex(p => p.id === this.editingPlanId);
+        if (idx !== -1) {
+          this.plans[idx].date = this.planForm.date;
+          this.plans[idx].category = this.planForm.category;
+          this.plans[idx].tasks = this.planForm.tasks.trim();
+        }
+        this.editingPlanId = null;
+      } else {
+        // Add new plan
+        const newPlan = {
+          id: 'plan-' + Date.now(),
+          date: this.planForm.date,
+          category: this.planForm.category,
+          tasks: this.planForm.tasks.trim()
+        };
+        this.plans.unshift(newPlan);
+      }
       this.savePlansToStorage();
       this.planForm.tasks = '';
       this.planForm.date = this.todayStr;
@@ -637,6 +690,7 @@ const JobLogbook = {
     deletePlan(id) {
       if (!confirm('Hapus task plan ini?')) return;
       this.plans = this.plans.filter(p => p.id !== id);
+      if (this.editingPlanId === id) { this.editingPlanId = null; this.showAddPlan = false; }
       this.savePlansToStorage();
     },
     convertPlanToLog(plan) {
