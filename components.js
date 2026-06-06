@@ -5993,11 +5993,8 @@ const PomodoroTimer = {
   },
   mounted() {
     this.loadState();
-    // Dengerin toggle request dari FloatingCountdownTimer
-    window.addEventListener('pomo-toggle-request', this.toggleTimer);
   },
   beforeUnmount() {
-    window.removeEventListener('pomo-toggle-request', this.toggleTimer);
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
@@ -6130,13 +6127,13 @@ const PomodoroTimer = {
       
       let mins = this.minutesFocus;
       if (this.currentMode === 'shortBreak') mins = this.minutesShortBreak;
-      if (this.currentMode === 'longBreak') mins = this.minutesLongBreak;
+      if (this.currentMode === 'longBreak')  mins = this.minutesLongBreak;
       
-      this.timeLeft = mins * 60;
+      this.timeLeft      = mins * 60;
       this.totalDuration = mins * 60;
       this.showSuccessBanner = false;
 
-      // Bersihkan floating state agar floating timer tidak muncul setelah reset
+      // Selalu bersihkan floating state saat timer direset agar floating tidak muncul lagi
       localStorage.removeItem('pomo_floating_state');
       window.dispatchEvent(new CustomEvent('pomo-state-update', { detail: {
         isRunning: false, timeLeft: 0, totalDuration: 0, deadline: null, everStarted: false
