@@ -137,16 +137,47 @@ const JobLogbook = {
           </div>
         </div>
 
-        <!-- Empty state -->
+        <!-- Empty state (no tasks at all) -->
         <div v-if="plans.length === 0 && !showAddPlan" style="text-align: center; padding: 32px 20px; background: #fff; border-radius: 10px; border: 1.5px dashed var(--color-sand);">
           <p style="font-size: 28px; margin-bottom: 8px;">📋</p>
           <p style="font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px;">Belum ada task yang direncanakan</p>
           <p style="font-size: 12.5px; color: var(--text-muted);">Klik "Tambah Task" untuk mulai merencanakan pekerjaanmu</p>
         </div>
 
-        <!-- List task plan -->
-        <div v-if="plans.length > 0" style="display: flex; flex-direction: column; gap: 10px;">
-          <div v-for="(plan, idx) in plans" :key="plan.id"
+        <!-- Filter bar (only shown when there are plans) -->
+        <div v-if="plans.length > 0" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+          <span style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;">Filter Prioritas:</span>
+          <button @click="planFilterPriority = ''"
+            :style="{ background: planFilterPriority === '' ? 'var(--color-terracotta)' : '#fff', color: planFilterPriority === '' ? '#fff' : 'var(--text-dark)', borderColor: planFilterPriority === '' ? 'var(--color-terracotta)' : 'var(--color-sand)' }"
+            style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
+            Semua <span style="opacity:0.8;">({{ plans.length }})</span>
+          </button>
+          <button @click="planFilterPriority = 'High'"
+            :style="{ background: planFilterPriority === 'High' ? '#B91C1C' : '#FEE2E2', color: planFilterPriority === 'High' ? '#fff' : '#B91C1C', borderColor: '#FCA5A5' }"
+            style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
+            🔴 High <span style="opacity:0.8;">({{ plans.filter(p => p.priority === 'High').length }})</span>
+          </button>
+          <button @click="planFilterPriority = 'Medium'"
+            :style="{ background: planFilterPriority === 'Medium' ? '#854D0E' : '#FEF9C3', color: planFilterPriority === 'Medium' ? '#fff' : '#854D0E', borderColor: '#FDE047' }"
+            style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
+            🟡 Medium <span style="opacity:0.8;">({{ plans.filter(p => p.priority === 'Medium').length }})</span>
+          </button>
+          <button @click="planFilterPriority = 'Low'"
+            :style="{ background: planFilterPriority === 'Low' ? '#166534' : '#DCFCE7', color: planFilterPriority === 'Low' ? '#fff' : '#166534', borderColor: '#86EFAC' }"
+            style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
+            🟢 Low <span style="opacity:0.8;">({{ plans.filter(p => p.priority === 'Low').length }})</span>
+          </button>
+        </div>
+
+        <!-- Empty filtered state -->
+        <div v-if="plans.length > 0 && sortedFilteredPlans.length === 0" style="text-align: center; padding: 20px; background: #fff; border-radius: 10px; border: 1.5px dashed var(--color-sand);">
+          <p style="font-size: 13px; color: var(--text-muted);">Tidak ada task dengan prioritas <strong>{{ planFilterPriority }}</strong>.</p>
+        </div>
+
+        <!-- List task plan (scrollable) -->
+        <div v-if="sortedFilteredPlans.length > 0"
+          style="display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; scrollbar-color: var(--color-sand) transparent;">
+          <div v-for="(plan, idx) in sortedFilteredPlans" :key="plan.id"
             style="background: #fff; border: 1.5px solid var(--color-sand); border-radius: 10px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 14px; transition: box-shadow 0.2s, border-color 0.2s;"
             @mouseenter="$event.currentTarget.style.boxShadow='0 4px 16px rgba(214,123,82,0.10)'; $event.currentTarget.style.borderColor='var(--color-gold)'"
             @mouseleave="$event.currentTarget.style.boxShadow='none'; $event.currentTarget.style.borderColor='var(--color-sand)'">
@@ -485,6 +516,7 @@ const JobLogbook = {
       showCategoryManager: false,
       showAddPlan: false,
       editingPlanId: null,
+      planFilterPriority: '',
       planForm: {
         date: new Date().toISOString().split('T')[0],
         category: 'Administrasi',
@@ -572,6 +604,34 @@ const JobLogbook = {
       if (logsWithNextAction.length === 0) return '0%';
       const completedCount = logsWithNextAction.filter(l => l.nextActionCompleted).length;
       return Math.round((completedCount / logsWithNextAction.length) * 100) + '%';
+    },
+    sortedFilteredPlans() {
+      const priorityOrder = { High: 0, Medium: 1, Low: 2 };
+      const today = this.todayStr;
+      return [...this.plans]
+        .filter(p => !this.planFilterPriority || p.priority === this.planFilterPriority)
+        .sort((a, b) => {
+          // 1) Overdue (past) comes first, sorted ascending by date (most overdue first)
+          // 2) Today's tasks next
+          // 3) Upcoming tasks sorted ascending
+          // Secondary sort: priority (High → Medium → Low)
+          const aOverdue = a.date < today;
+          const bOverdue = b.date < today;
+          const aToday  = a.date === today;
+          const bToday  = b.date === today;
+          const aGroup  = aOverdue ? 0 : aToday ? 1 : 2;
+          const bGroup  = bOverdue ? 0 : bToday ? 1 : 2;
+          if (aGroup !== bGroup) return aGroup - bGroup;
+          // Within overdue: ascending date (longest overdue first)
+          if (aOverdue) {
+            if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+          } else {
+            // Within upcoming / today: ascending date
+            if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+          }
+          // Same date → sort by priority
+          return (priorityOrder[a.priority] ?? 1) - (priorityOrder[b.priority] ?? 1);
+        });
     },
     filteredAndSortedLogs() {
       const sorted = [...this.logs.filter(log => {
