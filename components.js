@@ -111,9 +111,23 @@ const JobLogbook = {
               </select>
             </div>
           </div>
-          <div class="form-group" style="margin: 0 0 14px;">
+          <div class="form-group" style="margin: 0 0 12px;">
             <label>Tugas / Deskripsi</label>
             <textarea class="form-input" v-model="planForm.tasks" rows="2" placeholder="Deskripsikan tugas yang perlu dikerjakan..."></textarea>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+            <div class="form-group" style="margin: 0;">
+              <label>Prioritas</label>
+              <select class="form-input" v-model="planForm.priority" style="height: 40px;">
+                <option value="Low">🟢 Low</option>
+                <option value="Medium">🟡 Medium</option>
+                <option value="High">🔴 High</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label>Requester</label>
+              <input type="text" class="form-input" v-model="planForm.requester" placeholder="Nama peminta / atasan..." style="height: 40px;" />
+            </div>
           </div>
           <div style="display: flex; gap: 10px; justify-content: flex-end;">
             <button class="btn btn-secondary" @click="cancelPlanForm" style="cursor: pointer; padding: 8px 18px; border-radius: 8px; font-weight: 600;">Batal</button>
@@ -147,6 +161,22 @@ const JobLogbook = {
                 <span :style="{ backgroundColor: getCategoryColor(plan.category) + '15', color: getCategoryColor(plan.category), borderColor: getCategoryColor(plan.category) + '40' }"
                   style="padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1.5px solid;">
                   {{ plan.category }}
+                </span>
+                <!-- Priority badge -->
+                <span v-if="plan.priority"
+                  :style="{
+                    background: plan.priority === 'High' ? '#FEE2E2' : plan.priority === 'Medium' ? '#FEF9C3' : '#DCFCE7',
+                    color: plan.priority === 'High' ? '#B91C1C' : plan.priority === 'Medium' ? '#854D0E' : '#166534',
+                    borderColor: plan.priority === 'High' ? '#FCA5A5' : plan.priority === 'Medium' ? '#FDE047' : '#86EFAC'
+                  }"
+                  style="padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700; border: 1.5px solid;">
+                  {{ plan.priority === 'High' ? '🔴' : plan.priority === 'Medium' ? '🟡' : '🟢' }} {{ plan.priority }}
+                </span>
+                <!-- Requester badge -->
+                <span v-if="plan.requester"
+                  style="background: #EFF6FF; color: #1D4ED8; border: 1.5px solid #BFDBFE; padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;">
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  {{ plan.requester }}
                 </span>
                 <!-- Overdue badge -->
                 <span v-if="plan.date < todayStr" style="background: #FEF2F2; color: #B91C1C; border: 1.5px solid #FCA5A5; padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700;">
@@ -458,7 +488,9 @@ const JobLogbook = {
       planForm: {
         date: new Date().toISOString().split('T')[0],
         category: 'Administrasi',
-        tasks: ''
+        tasks: '',
+        priority: 'Medium',
+        requester: ''
       },
       searchQuery: '',
       filterStartDate: '',
@@ -642,6 +674,8 @@ const JobLogbook = {
       this.planForm.tasks = '';
       this.planForm.date = this.todayStr;
       this.planForm.category = this.allCategories[0] || 'Administrasi';
+      this.planForm.priority = 'Medium';
+      this.planForm.requester = '';
       this.showAddPlan = true;
     },
     startEditPlan(plan) {
@@ -649,6 +683,8 @@ const JobLogbook = {
       this.planForm.date = plan.date;
       this.planForm.category = plan.category;
       this.planForm.tasks = plan.tasks;
+      this.planForm.priority = plan.priority || 'Medium';
+      this.planForm.requester = plan.requester || '';
       this.showAddPlan = true;
       this.$nextTick(() => {
         const el = document.querySelector('.job-logbook');
@@ -660,6 +696,8 @@ const JobLogbook = {
       this.editingPlanId = null;
       this.planForm.tasks = '';
       this.planForm.date = this.todayStr;
+      this.planForm.priority = 'Medium';
+      this.planForm.requester = '';
     },
     savePlan() {
       if (!this.planForm.tasks.trim()) { alert('Tugas tidak boleh kosong!'); return; }
@@ -670,6 +708,8 @@ const JobLogbook = {
           this.plans[idx].date = this.planForm.date;
           this.plans[idx].category = this.planForm.category;
           this.plans[idx].tasks = this.planForm.tasks.trim();
+          this.plans[idx].priority = this.planForm.priority;
+          this.plans[idx].requester = this.planForm.requester.trim();
         }
         this.editingPlanId = null;
       } else {
@@ -678,13 +718,17 @@ const JobLogbook = {
           id: 'plan-' + Date.now(),
           date: this.planForm.date,
           category: this.planForm.category,
-          tasks: this.planForm.tasks.trim()
+          tasks: this.planForm.tasks.trim(),
+          priority: this.planForm.priority,
+          requester: this.planForm.requester.trim()
         };
         this.plans.unshift(newPlan);
       }
       this.savePlansToStorage();
       this.planForm.tasks = '';
       this.planForm.date = this.todayStr;
+      this.planForm.priority = 'Medium';
+      this.planForm.requester = '';
       this.showAddPlan = false;
     },
     deletePlan(id) {
