@@ -14,6 +14,7 @@ const App = {
     // activePage menentukan halaman mana yang sedang aktif ('dashboard' atau key halaman sub-program)
     const activePage = ref('dashboard');
     const showSettings = ref(false);
+    const showNavDrawer = ref(false);
 
     // Color customization variables
     const showColorPicker = ref(false);
@@ -195,6 +196,7 @@ const App = {
     // Navigation helper
     const navigateTo = (pageKey) => {
       activePage.value = pageKey;
+      showNavDrawer.value = false;
     };
 
     // Drag-and-drop mechanics
@@ -289,6 +291,7 @@ const App = {
     return {
       activePage,
       showSettings,
+      showNavDrawer,
       showColorPicker,
       dominantColor,
       presetColors,

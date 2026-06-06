@@ -95,14 +95,176 @@
       </div>
       <!-- View 2: Active Personal Subpage (Standard module pages) -->
       <div v-else class="page-module">
-        <div class="top-header">
-          <button class="back-btn" @click="navigateTo('dashboard')">
-            ← back to my desk
+
+        <!-- ══════════════════════════════════════════════════════════ -->
+        <!-- NAVBAR: Hamburger | my self | Live Clock                  -->
+        <!-- ══════════════════════════════════════════════════════════ -->
+        <nav class="ws-navbar">
+          <!-- LEFT: Hamburger menu -->
+          <button class="ws-nav-hamburger" @click="showNavDrawer = !showNavDrawer" :class="{ 'is-open': showNavDrawer }" aria-label="Navigation menu">
+            <span></span>
+            <span></span>
+            <span></span>
           </button>
-          <span class="text-mono" style="font-size: 13px; font-weight: 600; color: var(--text-muted);">
-            daily n workspace
-          </span>
-        </div>
+
+          <!-- CENTER: Brand title -->
+          <div class="ws-nav-brand" @click="navigateTo('dashboard')" title="Back to desk">
+            my self
+          </div>
+
+          <!-- RIGHT: Live clock -->
+          <div class="ws-nav-clock" id="ws-live-clock">
+            <span class="ws-clock-day" id="ws-clock-day">—</span>
+            <span class="ws-clock-date" id="ws-clock-date">—</span>
+            <span class="ws-clock-time" id="ws-clock-time">--:--:--</span>
+          </div>
+        </nav>
+
+        <!-- Navigation Drawer Overlay -->
+        <transition name="ws-drawer-fade">
+          <div v-if="showNavDrawer" class="ws-drawer-overlay" @click="showNavDrawer = false"></div>
+        </transition>
+
+        <!-- Navigation Drawer Panel -->
+        <transition name="ws-drawer-slide">
+          <div v-if="showNavDrawer" class="ws-nav-drawer">
+            <div class="ws-drawer-header">
+              <span class="ws-drawer-title">my pages</span>
+              <button class="ws-drawer-close" @click="showNavDrawer = false">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+
+            <!-- Back to desk -->
+            <button class="ws-drawer-item ws-drawer-desk" @click="navigateTo('dashboard'); showNavDrawer = false">
+              <span class="ws-drawer-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+              </span>
+              <span class="ws-drawer-label">back to my desk</span>
+            </button>
+
+            <div class="ws-drawer-divider"></div>
+            <p class="ws-drawer-section-label">pages</p>
+
+            <!-- Page items -->
+            <button class="ws-drawer-item" :class="{ active: activePage === 'jobLogbook' }" @click="navigateTo('jobLogbook'); showNavDrawer = false">
+              <span class="ws-drawer-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              </span>
+              <div class="ws-drawer-item-text">
+                <span class="ws-drawer-label">My 8-4 Job Logbook</span>
+                <span class="ws-drawer-sub">pencatatan aktivitas harian kerja</span>
+              </div>
+              <span class="ws-drawer-num">01</span>
+            </button>
+
+            <button class="ws-drawer-item" :class="{ active: activePage === 'calendarMoment' }" @click="navigateTo('calendarMoment'); showNavDrawer = false">
+              <span class="ws-drawer-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              </span>
+              <div class="ws-drawer-item-text">
+                <span class="ws-drawer-label">Calendar Moment</span>
+                <span class="ws-drawer-sub">kalender digital & catatan memo</span>
+              </div>
+              <span class="ws-drawer-num">02</span>
+            </button>
+
+            <button class="ws-drawer-item" :class="{ active: activePage === 'contentTracker' }" @click="navigateTo('contentTracker'); showNavDrawer = false">
+              <span class="ws-drawer-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              </span>
+              <div class="ws-drawer-item-text">
+                <span class="ws-drawer-label">Content Plan & Tracker</span>
+                <span class="ws-drawer-sub">penjadwalan postingan konten</span>
+              </div>
+              <span class="ws-drawer-num">03</span>
+            </button>
+
+            <button class="ws-drawer-item" :class="{ active: activePage === 'interviewPractice' }" @click="navigateTo('interviewPractice'); showNavDrawer = false">
+              <span class="ws-drawer-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+              </span>
+              <div class="ws-drawer-item-text">
+                <span class="ws-drawer-label">Interview Practice</span>
+                <span class="ws-drawer-sub">latihan wawancara interaktif</span>
+              </div>
+              <span class="ws-drawer-num">04</span>
+            </button>
+
+            <button class="ws-drawer-item" :class="{ active: activePage === 'dailyNutrition' }" @click="navigateTo('dailyNutrition'); showNavDrawer = false">
+              <span class="ws-drawer-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"></path><path d="M12 2a10 10 0 0 1 10 10"></path></svg>
+              </span>
+              <div class="ws-drawer-item-text">
+                <span class="ws-drawer-label">Daily Nutrition & Insights</span>
+                <span class="ws-drawer-sub">pelacakan nutrisi & asupan harian</span>
+              </div>
+              <span class="ws-drawer-num">05</span>
+            </button>
+
+            <button class="ws-drawer-item" :class="{ active: activePage === 'habitTracker' }" @click="navigateTo('habitTracker'); showNavDrawer = false">
+              <span class="ws-drawer-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+              </span>
+              <div class="ws-drawer-item-text">
+                <span class="ws-drawer-label">Habit Tracker</span>
+                <span class="ws-drawer-sub">grafik progress habit bulanan</span>
+              </div>
+              <span class="ws-drawer-num">06</span>
+            </button>
+
+            <button class="ws-drawer-item" :class="{ active: activePage === 'pomodoroTimer' }" @click="navigateTo('pomodoroTimer'); showNavDrawer = false">
+              <span class="ws-drawer-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2h14"></path><path d="M5 22h14"></path><path d="M19 2v4c0 3-2.5 4.5-5 5.5c2.5 1 5 2.5 5 5.5v4"></path><path d="M5 2v4c0 3 2.5 4.5 5 5.5c-2.5 1-5 2.5-5 5.5v4"></path></svg>
+              </span>
+              <div class="ws-drawer-item-text">
+                <span class="ws-drawer-label">Pomodoro Timer</span>
+                <span class="ws-drawer-sub">jam pasir fokus & istirahat</span>
+              </div>
+              <span class="ws-drawer-num">07</span>
+            </button>
+
+            <button class="ws-drawer-item" :class="{ active: activePage === 'googleCalendar' }" @click="navigateTo('googleCalendar'); showNavDrawer = false">
+              <span class="ws-drawer-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"></path></svg>
+              </span>
+              <div class="ws-drawer-item-text">
+                <span class="ws-drawer-label">Google Calendar</span>
+                <span class="ws-drawer-sub">kalender google terintegrasi</span>
+              </div>
+              <span class="ws-drawer-num">08</span>
+            </button>
+
+            <!-- Drawer footer -->
+            <div class="ws-drawer-footer">
+              <span>✦ my personal workspace ✦</span>
+            </div>
+          </div>
+        </transition>
+
+        <!-- Live clock JS injected here -->
+        <script>
+          (function() {
+            function updateClock() {
+              const now = new Date();
+              const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+              const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+              const dayEl = document.getElementById('ws-clock-day');
+              const dateEl = document.getElementById('ws-clock-date');
+              const timeEl = document.getElementById('ws-clock-time');
+              if (dayEl) dayEl.textContent = days[now.getDay()];
+              if (dateEl) dateEl.textContent = now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+              if (timeEl) {
+                const hh = String(now.getHours()).padStart(2,'0');
+                const mm = String(now.getMinutes()).padStart(2,'0');
+                const ss = String(now.getSeconds()).padStart(2,'0');
+                timeEl.textContent = hh + ':' + mm + ':' + ss;
+              }
+            }
+            updateClock();
+            setInterval(updateClock, 1000);
+          })();
+        </script>
         <!-- Render modular components dynamically based on active page -->
         <job-logbook v-if="activePage === 'jobLogbook'"></job-logbook>
         <calendar-moment v-if="activePage === 'calendarMoment'"></calendar-moment>

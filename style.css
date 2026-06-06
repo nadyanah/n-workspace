@@ -4125,3 +4125,318 @@ input:checked + .switch-slider:before {
   opacity: 0;
   transform: translateY(16px) scale(0.92);
 }
+
+/* ============================================================================ */
+/* NAVBAR: ws-navbar — Hamburger | my self | Live Clock                         */
+/* ============================================================================ */
+
+.ws-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: #FFFFFF;
+  border-bottom: 1.5px solid var(--color-sand);
+  border-radius: 14px;
+  margin-bottom: 28px;
+  box-shadow: 0 2px 12px rgba(44, 38, 33, 0.05);
+  position: sticky;
+  top: 10px;
+  z-index: 200;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ── Hamburger Button ── */
+.ws-nav-hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+.ws-nav-hamburger:hover {
+  background: var(--bg-cream);
+}
+.ws-nav-hamburger span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--text-dark);
+  border-radius: 2px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, width 0.3s ease;
+  transform-origin: center;
+}
+.ws-nav-hamburger.is-open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.ws-nav-hamburger.is-open span:nth-child(2) {
+  opacity: 0;
+  width: 0;
+}
+.ws-nav-hamburger.is-open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ── Brand / Center ── */
+.ws-nav-brand {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--text-dark);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.ws-nav-brand:hover {
+  color: var(--color-terracotta);
+}
+
+/* ── Live Clock (Right side) ── */
+.ws-nav-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0px;
+  flex-shrink: 0;
+}
+.ws-clock-day {
+  font-family: 'Outfit', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+.ws-clock-date {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dark);
+  line-height: 1.3;
+}
+.ws-clock-time {
+  font-family: 'Space Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-terracotta);
+  letter-spacing: 0.5px;
+  line-height: 1.3;
+}
+
+/* ── Drawer Overlay ── */
+.ws-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(44, 38, 33, 0.35);
+  z-index: 400;
+  backdrop-filter: blur(2px);
+}
+
+/* ── Drawer Panel ── */
+.ws-nav-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 300px;
+  height: 100vh;
+  background: #FFFFFF;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0 32px rgba(44, 38, 33, 0.14);
+  overflow-y: auto;
+}
+.ws-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 14px;
+  border-bottom: 1.5px solid var(--color-sand);
+}
+.ws-drawer-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--text-dark);
+}
+.ws-drawer-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--bg-cream);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: background 0.2s, color 0.2s;
+}
+.ws-drawer-close:hover {
+  background: var(--color-sand);
+  color: var(--text-dark);
+}
+.ws-drawer-divider {
+  height: 1px;
+  background: var(--color-sand);
+  margin: 8px 20px;
+}
+.ws-drawer-section-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+  color: var(--text-muted);
+  padding: 4px 20px 8px;
+}
+
+/* ── Drawer Nav Items ── */
+.ws-drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+  position: relative;
+}
+.ws-drawer-item:hover {
+  background: var(--bg-cream);
+}
+.ws-drawer-item.active {
+  background: #FBF0EA;
+}
+.ws-drawer-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  background: var(--color-terracotta);
+  border-radius: 0 3px 3px 0;
+}
+.ws-drawer-desk {
+  margin-top: 4px;
+}
+.ws-drawer-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--bg-cream);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 8px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: background 0.15s, color 0.15s;
+}
+.ws-drawer-item:hover .ws-drawer-icon,
+.ws-drawer-item.active .ws-drawer-icon {
+  background: #FAF0EC;
+  border-color: #F3C9B5;
+  color: var(--color-terracotta);
+}
+.ws-drawer-item-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.ws-drawer-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ws-drawer-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ws-drawer-num {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+.ws-drawer-item.active .ws-drawer-num {
+  color: var(--color-terracotta);
+  opacity: 1;
+}
+.ws-drawer-item.active .ws-drawer-label {
+  color: var(--color-terracotta);
+}
+
+/* ── Drawer Footer ── */
+.ws-drawer-footer {
+  margin-top: auto;
+  padding: 16px 20px;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  border-top: 1px solid var(--color-sand);
+  letter-spacing: 0.5px;
+}
+
+/* ── Transitions ── */
+.ws-drawer-fade-enter-active,
+.ws-drawer-fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+.ws-drawer-fade-enter-from,
+.ws-drawer-fade-leave-to {
+  opacity: 0;
+}
+.ws-drawer-slide-enter-active,
+.ws-drawer-slide-leave-active {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ws-drawer-slide-enter-from,
+.ws-drawer-slide-leave-to {
+  transform: translateX(-100%);
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .ws-nav-brand {
+    font-size: 15px;
+  }
+  .ws-clock-time {
+    font-size: 13px;
+  }
+  .ws-nav-drawer {
+    width: 280px;
+  }
+}
