@@ -575,7 +575,7 @@ const DESK_ASSETS = {
   },
   wallet: {
     name: 'Dompet',
-    width: 110,
+    width: 95,
     svg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
       <path d="M 15 30 Q 15 15 28 15 L 72 15 Q 85 15 85 30" fill="#E8C99A" stroke="#4A3F35" stroke-width="1.5" fill-opacity="0.7"/>
       <rect x="30" y="18" width="40" height="4" rx="2" fill="#C84B31" opacity="0.5"/>
@@ -590,7 +590,7 @@ const DESK_ASSETS = {
   },
   brain_insight: {
     name: 'Otak Insight',
-    width: 110,
+    width: 95,
     svg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
       <path d="M 50 85 L 50 68" stroke="#8C7864" stroke-width="2" stroke-linecap="round"/>
       <rect x="38" y="85" width="24" height="6" rx="3" fill="#8C7864" stroke="#4A3F35" stroke-width="1.5"/>
@@ -613,7 +613,7 @@ const DESK_ASSETS = {
   },
   plant_growth: {
     name: 'Plant Growth',
-    width: 110,
+    width: 95,
     svg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
       <rect x="25" y="75" width="50" height="20" rx="5" fill="#DDA15E" stroke="#4A3F35" stroke-width="2"/>
       <rect x="28" y="78" width="44" height="8" rx="2" fill="#C89A5A" opacity="0.5"/>
@@ -628,7 +628,7 @@ const DESK_ASSETS = {
   },
   laptop: {
     name: 'Laptop',
-    width: 120,
+    width: 95,
     svg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
       <rect x="5" y="12" width="90" height="58" rx="5" fill="#E8DFD8" stroke="#4A3F35" stroke-width="2"/>
       <rect x="10" y="17" width="80" height="48" rx="3" fill="#FAF6F0" stroke="#4A3F35" stroke-width="1.5"/>
@@ -647,7 +647,7 @@ const DESK_ASSETS = {
   },
   matcha_cup: {
     name: 'Minuman Matcha',
-    width: 110,
+    width: 95,
     svg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
       <path d="M 36 44 Q 33 36 36 28" fill="none" stroke="#8C7864" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
       <path d="M 50 40 Q 47 30 50 20" fill="none" stroke="#8C7864" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
