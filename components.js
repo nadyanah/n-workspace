@@ -16,416 +16,436 @@
 // ============================================================================
 
 // 1. My 8-4 Job Logbook Component
+// 1. My 8-4 Job Logbook Component
 const JobLogbook = {
   template: `
     <div class="job-logbook">
-      <div class="flex-between" style="border-bottom: 2px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 24px; align-items: center;">
-        <div>
-          <h2>My 8-9 Job Logbook</h2>
-          <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 4px;">Perekaman aktivitas harian kerja, kategori dinamis, hasil capaian, rencana aksi selanjutnya, dan koordinasi dokumen pendukung.</p>
-        </div>
-        <div class="flex-gap">
-          <button class="btn text-mono" @click="exportToExcel" style="background-color: #DEF7EC; border: 1.5px solid #31C48D; color: #03543F; font-weight: bold; cursor: pointer; padding: 10px 16px; display: inline-flex; align-items: center; gap: 6px;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M8 13h8"></path><path d="M8 17h8"></path><path d="M8 9h1"></path></svg>
-            Excel
-          </button>
-          <button class="btn text-mono" @click="exportToPDF" style="background-color: #FDE8E8; border: 1.5px solid #F05252; color: #9B1C1C; font-weight: bold; cursor: pointer; padding: 10px 16px; display: inline-flex; align-items: center; gap: 6px;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>
-            PDF
-          </button>
-          <button class="btn btn-primary" @click="showAddLog = true">
-           + Catat Hari Baru
-          </button>
-        </div>
-      </div>
-
-      <transition name="modal-fade">
-        <div v-if="showAddLog" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(44, 38, 33, 0.6); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 99999;" @click.self="showAddLog = false">
-          <div style="background: var(--bg-card); max-width: 540px; width: 90%; padding: 28px; border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
-            
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-              <h3 style="font-size: 18px; margin: 0; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-                Catat Logbook Harian
-              </h3>
-              <button @click="showAddLog = false" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:24px; line-height:1;">✕</button>
-            </div>
-
-            <form @submit.prevent="saveLog">
-              <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 12px; margin-bottom: 16px;">
-                <div class="form-group" style="margin: 0;">
-                  <label>Tanggal</label>
-                  <input type="date" class="form-input" v-model="form.date" required style="height: 42px;" />
-                </div>
-                <div class="form-group" style="margin: 0;">
-                  <label>Kategori Pekerjaan</label>
-                  <select class="form-input" v-model="form.category" required style="height: 42px;">
-                    <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
-                  </select>
-                </div>
-              </div>
-              <div class="form-group" style="margin-bottom: 16px;">
-                <label>Tugas / Deskripsi Kerja</label>
-                <textarea class="form-input" v-model="form.tasks" rows="3" placeholder="Sebutkan kegiatan atau tugas penting yang dikerjakan hari ini..." required></textarea>
-              </div>
-              <div class="form-group" style="margin-bottom: 16px;">
-                <label>Hasil yang Dicapai</label>
-                <textarea class="form-input" v-model="form.achievements" rows="2" placeholder="Apa hasil konkrit atau output dari tugas di atas?..." required></textarea>
-              </div>
-              <div class="form-group" style="margin-bottom: 16px;">
-                <label>Langkah Selanjutnya (Next Action)</label>
-                <textarea class="form-input" v-model="form.nextAction" rows="2" placeholder="Apa rencana kelanjutan terkait tugas ini?..." required></textarea>
-              </div>
-              <div class="form-group" style="margin-bottom: 16px;">
-                <label>Tautan Dokumen, Link (Opsional)</label>
-                <input type="url" class="form-input" v-model="form.documentLink" placeholder="https://link-pendukung.com/laporan" />
-              </div>
-              <div class="form-group" style="margin-bottom: 24px; display: flex; align-items: center; gap: 8px; background: #FCFAF7; padding: 12px; border: 1.5px solid #EAE5DD; border-radius: 8px;">
-                <input type="checkbox" id="syncToContentCheckbox" v-model="syncToContentOnSave" style="width: 16px; height: 16px; accent-color: var(--color-terracotta); cursor: pointer;" />
-                <label for="syncToContentCheckbox" style="margin: 0; cursor: pointer; font-size: 12px; font-weight: 600; color: #5D4F43; display: flex; align-items: center; gap: 6px; user-select: none;">
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-                  Sync Langsung Jadi Konten Baru di Board
-                </label>
-              </div>
-              <div style="display: flex; gap: 10px;">
-                <button type="button" class="btn" @click="showAddLog = false" style="flex: 1; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); font-weight: bold; cursor: pointer; border-radius: 8px;">Batal</button>
-                <button type="submit" class="btn btn-primary" style="flex: 2;">Simpan Entri Kerja</button>
-              </div>
-            </form>
+      <div v-show="!showFullNotesPage" class="animate-fade-in">
+        <div class="flex-between" style="border-bottom: 2px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 24px; align-items: center;">
+          <div>
+            <h2>My 8-9 Job Logbook</h2>
+            <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 4px;">Perekaman aktivitas harian kerja, kategori dinamis, hasil capaian, rencana aksi selanjutnya, dan koordinasi dokumen pendukung.</p>
           </div>
-        </div>
-      </transition>
-
-      <!-- ══════════════════════════════════════════════════════════ -->
-      <!-- SECTION: KELOLA KATEGORI                                  -->
-      <!-- ══════════════════════════════════════════════════════════ -->
-      <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background: #FDFAF6; border: 1.5px solid var(--color-sand);">
-        <div class="flex-between" style="align-items: center; margin-bottom: 14px;">
-          <h3 style="font-size: 15px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 12h6"></path><path d="M9 16h4"></path></svg>
-            Kelola Kategori Pekerjaan
-          </h3>
-          <button @click="showCategoryManager = !showCategoryManager" class="btn btn-secondary" style="font-size: 12px; padding: 6px 14px; cursor: pointer;">
-            {{ showCategoryManager ? 'Sembunyikan' : 'Atur Kategori' }}
-          </button>
-        </div>
-
-        <!-- Chip list of all categories -->
-        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: showCategoryManager ? '16px' : '0';">
-          <span v-for="cat in allCategories" :key="cat"
-            :style="{ backgroundColor: getCategoryColor(cat) + '15', color: getCategoryColor(cat), borderColor: getCategoryColor(cat) + '40' }"
-            style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1.5px solid; display: inline-flex; align-items: center; gap: 6px;">
-            {{ cat }}
-            <button v-if="!defaultCategories.includes(cat)" @click="deleteCategory(cat)"
-              style="background: none; border: none; cursor: pointer; font-size: 13px; line-height: 1; color: inherit; opacity: 0.6; padding: 0; display: inline-flex;"
-              title="Hapus kategori">✕</button>
-          </span>
-        </div>
-
-        <!-- Add category form -->
-        <div v-if="showCategoryManager" style="display: flex; gap: 10px; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--color-sand);">
-          <input type="text" class="form-input" v-model="newCategoryInput" placeholder="Nama kategori baru..."
-            @keydown.enter="addCategory"
-            style="flex: 1; height: 40px;" />
-          <button class="btn btn-primary" @click="addCategory" style="height: 40px; padding: 0 20px; cursor: pointer; white-space: nowrap;">
-            + Tambah
-          </button>
-        </div>
-      </div>
-
-      <!-- ══════════════════════════════════════════════════════════ -->
-      <!-- SECTION: TASK PLAN                                        -->
-      <!-- ══════════════════════════════════════════════════════════ -->
-      <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand);">
-        <div class="flex-between" style="align-items: center; margin-bottom: 16px;">
-          <h3 style="font-size: 16px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
-            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M8 6h13"></path><path d="M8 12h13"></path><path d="M8 18h13"></path><path d="M3 6h.01"></path><path d="M3 12h.01"></path><path d="M3 18h.01"></path></svg>
-            Task Plan
-            <span v-if="plans.length > 0" style="background: var(--color-terracotta); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px;">{{ plans.length }}</span>
-          </h3>
-          <button class="btn btn-primary" @click="openAddPlan"
-            style="font-size: 13px; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            {{ showAddPlan ? 'Tutup' : 'Tambah Task' }}
-          </button>
-        </div>
-
-        <!-- Form tambah / edit task plan -->
-        <div v-if="showAddPlan" style="background: #fff; border: 1.5px solid var(--color-sand); border-radius: 12px; padding: 18px; margin-bottom: 16px; animation: popIn 0.2s ease;">
-          <p style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-            {{ editingPlanId ? 'Edit Task Plan' : 'Tambah Task Plan Baru' }}
-          </p>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-            <div class="form-group" style="margin: 0;">
-              <label>Tanggal Target</label>
-              <input type="date" class="form-input" v-model="planForm.date" style="height: 40px;" />
-            </div>
-            <div class="form-group" style="margin: 0;">
-              <label>Kategori Pekerjaan</label>
-              <select class="form-input" v-model="planForm.category" style="height: 40px;">
-                <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group" style="margin: 0 0 12px;">
-            <label>Tugas / Deskripsi</label>
-            <textarea class="form-input" v-model="planForm.tasks" rows="2" placeholder="Deskripsikan tugas yang perlu dikerjakan..."></textarea>
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
-            <div class="form-group" style="margin: 0;">
-              <label>Prioritas</label>
-              <select class="form-input" v-model="planForm.priority" style="height: 40px;">
-                <option value="Low">🟢 Low</option>
-                <option value="Medium">🟡 Medium</option>
-                <option value="High">🔴 High</option>
-              </select>
-            </div>
-            <div class="form-group" style="margin: 0;">
-              <label>Requester</label>
-              <input type="text" class="form-input" v-model="planForm.requester" placeholder="Nama peminta / atasan..." style="height: 40px;" />
-            </div>
-          </div>
-          <div style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button class="btn btn-secondary" @click="cancelPlanForm" style="cursor: pointer; padding: 8px 18px; border-radius: 8px; font-weight: 600;">Batal</button>
-            <button class="btn btn-primary" @click="savePlan" style="cursor: pointer; padding: 8px 20px; border-radius: 8px; font-weight: 600;">
-              {{ editingPlanId ? 'Simpan Perubahan' : 'Simpan Task' }}
+          <div class="flex-gap">
+            <button class="btn text-mono" @click="exportToExcel" style="background-color: #DEF7EC; border: 1.5px solid #31C48D; color: #03543F; font-weight: bold; cursor: pointer; padding: 10px 16px; display: inline-flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M8 13h8"></path><path d="M8 17h8"></path><path d="M8 9h1"></path></svg>
+              Excel
+            </button>
+            <button class="btn text-mono" @click="exportToPDF" style="background-color: #FDE8E8; border: 1.5px solid #F05252; color: #9B1C1C; font-weight: bold; cursor: pointer; padding: 10px 16px; display: inline-flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>
+              PDF
+            </button>
+            <button class="btn btn-primary" @click="showAddLog = true">
+             + Catat Hari Baru
             </button>
           </div>
         </div>
 
-        <!-- Empty state (no tasks at all) -->
-        <div v-if="plans.length === 0 && !showAddPlan" style="text-align: center; padding: 32px 20px; background: #fff; border-radius: 10px; border: 1.5px dashed var(--color-sand);">
-          <p style="font-size: 28px; margin-bottom: 8px;">📋</p>
-          <p style="font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px;">Belum ada task yang direncanakan</p>
-          <p style="font-size: 12.5px; color: var(--text-muted);">Klik "Tambah Task" untuk mulai merencanakan pekerjaanmu</p>
-        </div>
-
-        <!-- Filter bar (only shown when there are plans) -->
-        <div v-if="plans.length > 0" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
-          <span style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;">Filter Prioritas:</span>
-          <button @click="planFilterPriority = ''"
-            :style="{ background: planFilterPriority === '' ? 'var(--color-terracotta)' : '#ffffff', color: planFilterPriority === '' ? '#fff' : 'var(--text-dark)', borderColor: planFilterPriority === '' ? 'var(--color-terracotta)' : 'var(--color-sand)' }"
-            style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
-            Semua <span style="opacity:0.8;">({{ plans.length }})</span>
-          </button>
-          <button @click="planFilterPriority = 'High'"
-            :style="{ background: planFilterPriority === 'High' ? '#B91C1C' : '#ffffff', color: planFilterPriority === 'High' ? '#fff' : '#B91C1C', borderColor: '#FCA5A5' }"
-            style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
-            🔴 High <span style="opacity:0.8;">({{ plans.filter(p => p.priority === 'High').length }})</span>
-          </button>
-          <button @click="planFilterPriority = 'Medium'"
-            :style="{ background: planFilterPriority === 'Medium' ? '#854D0E' : '#ffffff', color: planFilterPriority === 'Medium' ? '#fff' : '#854D0E', borderColor: '#FDE047' }"
-            style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
-            🟡 Medium <span style="opacity:0.8;">({{ plans.filter(p => p.priority === 'Medium').length }})</span>
-          </button>
-          <button @click="planFilterPriority = 'Low'"
-            :style="{ background: planFilterPriority === 'Low' ? '#166534' : '#ffffff', color: planFilterPriority === 'Low' ? '#fff' : '#166534', borderColor: '#86EFAC' }"
-            style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
-            🟢 Low <span style="opacity:0.8;">({{ plans.filter(p => p.priority === 'Low').length }})</span>
-          </button>
-        </div>
-
-        <!-- Empty filtered state -->
-        <div v-if="plans.length > 0 && sortedFilteredPlans.length === 0" style="text-align: center; padding: 20px; background: #fff; border-radius: 10px; border: 1.5px dashed var(--color-sand);">
-          <p style="font-size: 13px; color: var(--text-muted);">Tidak ada task dengan prioritas <strong>{{ planFilterPriority }}</strong>.</p>
-        </div>
-
-        <!-- List task plan (scrollable) -->
-        <div v-if="sortedFilteredPlans.length > 0"
-          style="display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; scrollbar-color: var(--color-sand) transparent;">
-          <div v-for="(plan, idx) in sortedFilteredPlans" :key="plan.id"
-            style="background: #fff; border: 1.5px solid var(--color-sand); border-radius: 10px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 14px; transition: box-shadow 0.2s, border-color 0.2s;"
-            @mouseenter="$event.currentTarget.style.boxShadow='0 4px 16px rgba(214,123,82,0.10)'; $event.currentTarget.style.borderColor='var(--color-gold)'"
-            @mouseleave="$event.currentTarget.style.boxShadow='none'; $event.currentTarget.style.borderColor='var(--color-sand)'">
-
-            <!-- Left: info -->
-            <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;">
-                <span style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 4px;">
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                  {{ formatDate(plan.date) }}
+        <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background-color: transparent; border: 1.5px dashed var(--color-sand);">
+          <div class="flex-between" style="align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              Quick Notes
+              <span style="background: var(--color-terracotta); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px;">{{ notes.length }}</span>
+            </h3>
+            <button class="btn btn-secondary" @click="showFullNotesPage = true" style="font-size: 13px; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; background-color: var(--bg-card);">
+              Lihat Semua Note
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+          </div>
+          
+          <div v-if="notes.length === 0" style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 13.5px;">
+            Belum ada catatan. Klik "Lihat Semua Note" untuk menambahkan.
+          </div>
+          
+          <div v-else style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+            <div v-for="note in recentNotes" :key="note.id" 
+                 :style="{ backgroundColor: getNoteColorStyle(note.color).bg }"
+                 style="border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.2s;"
+                 @click="showFullNotesPage = true"
+                 onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+              
+              <div class="flex-between" style="margin-bottom: 10px; padding: 0 4px;">
+                <span :style="{ color: getNoteColorStyle(note.color).headerText }" style="font-size: 14px; font-weight: 700;">
+                  {{ note.category }}
                 </span>
-                <span :style="{ backgroundColor: getCategoryColor(plan.category) + '15', color: getCategoryColor(plan.category), borderColor: getCategoryColor(plan.category) + '40' }"
-                  style="padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1.5px solid;">
-                  {{ plan.category }}
-                </span>
-                <!-- Priority badge -->
-                <span v-if="plan.priority"
-                  :style="{
-                    background: plan.priority === 'High' ? '#FEE2E2' : plan.priority === 'Medium' ? '#FEF9C3' : '#DCFCE7',
-                    color: plan.priority === 'High' ? '#B91C1C' : plan.priority === 'Medium' ? '#854D0E' : '#166534',
-                    borderColor: plan.priority === 'High' ? '#FCA5A5' : plan.priority === 'Medium' ? '#FDE047' : '#86EFAC'
-                  }"
-                  style="padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700; border: 1.5px solid;">
-                  {{ plan.priority === 'High' ? '🔴' : plan.priority === 'Medium' ? '🟡' : '🟢' }} {{ plan.priority }}
-                </span>
-                <!-- Requester badge -->
-                <span v-if="plan.requester"
-                  style="background: #EFF6FF; color: #1D4ED8; border: 1.5px solid #BFDBFE; padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;">
-                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                  {{ plan.requester }}
-                </span>
-                <!-- Overdue badge -->
-                <span v-if="plan.date < todayStr" style="background: #FEF2F2; color: #B91C1C; border: 1.5px solid #FCA5A5; padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700;">
-                  ⚠ Lewat Jadwal
-                </span>
-                <!-- Today badge -->
-                <span v-else-if="plan.date === todayStr" style="background: #FBF0EA; color: var(--color-terracotta); border: 1.5px solid var(--color-gold); padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700;">
-                  ✦ Hari Ini
-                </span>
+                <span :style="{ color: getNoteColorStyle(note.color).headerText }" style="font-weight: 700; opacity: 0.6;">...</span>
               </div>
+              
+              <div style="background-color: #ffffff; border-radius: 12px; padding: 14px; min-height: 120px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">{{ formatDate(note.date) }}</div>
+                <h4 style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0 0 6px 0; line-height: 1.3;">
+                  {{ note.title }}
+                </h4>
+                <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                  {{ note.body }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <transition name="modal-fade">
+          <div v-if="showAddLog" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(44, 38, 33, 0.6); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 99999;" @click.self="showAddLog = false">
+            <div style="background: var(--bg-card); max-width: 540px; width: 90%; padding: 28px; border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
+              
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="font-size: 18px; margin: 0; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                  Catat Logbook Harian
+                </h3>
+                <button @click="showAddLog = false" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:24px; line-height:1;">✕</button>
+              </div>
+
+              <form @submit.prevent="saveLog">
+                <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 12px; margin-bottom: 16px;">
+                  <div class="form-group" style="margin: 0;">
+                    <label>Tanggal</label>
+                    <input type="date" class="form-input" v-model="form.date" required style="height: 42px;" />
+                  </div>
+                  <div class="form-group" style="margin: 0;">
+                    <label>Kategori Pekerjaan</label>
+                    <select class="form-input" v-model="form.category" required style="height: 42px;">
+                      <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                  <label>Tugas / Deskripsi Kerja</label>
+                  <textarea class="form-input" v-model="form.tasks" rows="3" placeholder="Sebutkan kegiatan atau tugas penting yang dikerjakan hari ini..." required></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                  <label>Hasil yang Dicapai</label>
+                  <textarea class="form-input" v-model="form.achievements" rows="2" placeholder="Apa hasil konkrit atau output dari tugas di atas?..." required></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                  <label>Langkah Selanjutnya (Next Action)</label>
+                  <textarea class="form-input" v-model="form.nextAction" rows="2" placeholder="Apa rencana kelanjutan terkait tugas ini?..." required></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                  <label>Tautan Dokumen, Link (Opsional)</label>
+                  <input type="url" class="form-input" v-model="form.documentLink" placeholder="https://link-pendukung.com/laporan" />
+                </div>
+                <div class="form-group" style="margin-bottom: 24px; display: flex; align-items: center; gap: 8px; background: #FCFAF7; padding: 12px; border: 1.5px solid #EAE5DD; border-radius: 8px;">
+                  <input type="checkbox" id="syncToContentCheckbox" v-model="syncToContentOnSave" style="width: 16px; height: 16px; accent-color: var(--color-terracotta); cursor: pointer;" />
+                  <label for="syncToContentCheckbox" style="margin: 0; cursor: pointer; font-size: 12px; font-weight: 600; color: #5D4F43; display: flex; align-items: center; gap: 6px; user-select: none;">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                    Sync Langsung Jadi Konten Baru di Board
+                  </label>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                  <button type="button" class="btn" @click="showAddLog = false" style="flex: 1; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); font-weight: bold; cursor: pointer; border-radius: 8px;">Batal</button>
+                  <button type="submit" class="btn btn-primary" style="flex: 2;">Simpan Entri Kerja</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </transition>
+
+        <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background: #FDFAF6; border: 1.5px solid var(--color-sand);">
+          <div class="flex-between" style="align-items: center; margin-bottom: 14px;">
+            <h3 style="font-size: 15px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 12h6"></path><path d="M9 16h4"></path></svg>
+              Kelola Kategori Pekerjaan
+            </h3>
+            <button @click="showCategoryManager = !showCategoryManager" class="btn btn-secondary" style="font-size: 12px; padding: 6px 14px; cursor: pointer;">
+              {{ showCategoryManager ? 'Sembunyikan' : 'Atur Kategori' }}
+            </button>
+          </div>
+
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: showCategoryManager ? '16px' : '0';">
+            <span v-for="cat in allCategories" :key="cat"
+              :style="{ backgroundColor: getCategoryColor(cat) + '15', color: getCategoryColor(cat), borderColor: getCategoryColor(cat) + '40' }"
+              style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1.5px solid; display: inline-flex; align-items: center; gap: 6px;">
+              {{ cat }}
+              <button v-if="!defaultCategories.includes(cat)" @click="deleteCategory(cat)"
+                style="background: none; border: none; cursor: pointer; font-size: 13px; line-height: 1; color: inherit; opacity: 0.6; padding: 0; display: inline-flex;"
+                title="Hapus kategori">✕</button>
+            </span>
+          </div>
+
+          <div v-if="showCategoryManager" style="display: flex; gap: 10px; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--color-sand);">
+            <input type="text" class="form-input" v-model="newCategoryInput" placeholder="Nama kategori baru..."
+              @keydown.enter="addCategory"
+              style="flex: 1; height: 40px;" />
+            <button class="btn btn-primary" @click="addCategory" style="height: 40px; padding: 0 20px; cursor: pointer; white-space: nowrap;">
+              + Tambah
+            </button>
+          </div>
+        </div>
+
+        <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand);">
+          <div class="flex-between" style="align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M8 6h13"></path><path d="M8 12h13"></path><path d="M8 18h13"></path><path d="M3 6h.01"></path><path d="M3 12h.01"></path><path d="M3 18h.01"></path></svg>
+              Task Plan
+              <span v-if="plans.length > 0" style="background: var(--color-terracotta); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px;">{{ plans.length }}</span>
+            </h3>
+            <button class="btn btn-primary" @click="openAddPlan"
+              style="font-size: 13px; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              {{ showAddPlan ? 'Tutup' : 'Tambah Task' }}
+            </button>
+          </div>
+
+          <div v-if="showAddPlan" style="background: #fff; border: 1.5px solid var(--color-sand); border-radius: 12px; padding: 18px; margin-bottom: 16px; animation: popIn 0.2s ease;">
+            <p style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+              {{ editingPlanId ? 'Edit Task Plan' : 'Tambah Task Plan Baru' }}
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+              <div class="form-group" style="margin: 0;">
+                <label>Tanggal Target</label>
+                <input type="date" class="form-input" v-model="planForm.date" style="height: 40px;" />
+              </div>
+              <div class="form-group" style="margin: 0;">
+                <label>Kategori Pekerjaan</label>
+                <select class="form-input" v-model="planForm.category" style="height: 40px;">
+                  <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" style="margin: 0 0 12px;">
+              <label>Tugas / Deskripsi</label>
+              <textarea class="form-input" v-model="planForm.tasks" rows="2" placeholder="Deskripsikan tugas yang perlu dikerjakan..."></textarea>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+              <div class="form-group" style="margin: 0;">
+                <label>Prioritas</label>
+                <select class="form-input" v-model="planForm.priority" style="height: 40px;">
+                  <option value="Low">🟢 Low</option>
+                  <option value="Medium">🟡 Medium</option>
+                  <option value="High">🔴 High</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin: 0;">
+                <label>Requester</label>
+                <input type="text" class="form-input" v-model="planForm.requester" placeholder="Nama peminta / atasan..." style="height: 40px;" />
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+              <button class="btn btn-secondary" @click="cancelPlanForm" style="cursor: pointer; padding: 8px 18px; border-radius: 8px; font-weight: 600;">Batal</button>
+              <button class="btn btn-primary" @click="savePlan" style="cursor: pointer; padding: 8px 20px; border-radius: 8px; font-weight: 600;">
+                {{ editingPlanId ? 'Simpan Perubahan' : 'Simpan Task' }}
+              </button>
+            </div>
+          </div>
+
+          <div v-if="plans.length === 0 && !showAddPlan" style="text-align: center; padding: 32px 20px; background: #fff; border-radius: 10px; border: 1.5px dashed var(--color-sand);">
+            <p style="font-size: 28px; margin-bottom: 8px;">📋</p>
+            <p style="font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px;">Belum ada task yang direncanakan</p>
+            <p style="font-size: 12.5px; color: var(--text-muted);">Klik "Tambah Task" untuk mulai merencanakan pekerjaanmu</p>
+          </div>
+
+          <div v-if="plans.length > 0" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+            <span style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;">Filter Prioritas:</span>
+            <button @click="planFilterPriority = ''"
+              :style="{ background: planFilterPriority === '' ? 'var(--color-terracotta)' : '#ffffff', color: planFilterPriority === '' ? '#fff' : 'var(--text-dark)', borderColor: planFilterPriority === '' ? 'var(--color-terracotta)' : 'var(--color-sand)' }"
+              style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
+              Semua <span style="opacity:0.8;">({{ plans.length }})</span>
+            </button>
+            <button @click="planFilterPriority = 'High'"
+              :style="{ background: planFilterPriority === 'High' ? '#B91C1C' : '#ffffff', color: planFilterPriority === 'High' ? '#fff' : '#B91C1C', borderColor: '#FCA5A5' }"
+              style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
+              🔴 High <span style="opacity:0.8;">({{ plans.filter(p => p.priority === 'High').length }})</span>
+            </button>
+            <button @click="planFilterPriority = 'Medium'"
+              :style="{ background: planFilterPriority === 'Medium' ? '#854D0E' : '#ffffff', color: planFilterPriority === 'Medium' ? '#fff' : '#854D0E', borderColor: '#FDE047' }"
+              style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
+              🟡 Medium <span style="opacity:0.8;">({{ plans.filter(p => p.priority === 'Medium').length }})</span>
+            </button>
+            <button @click="planFilterPriority = 'Low'"
+              :style="{ background: planFilterPriority === 'Low' ? '#166534' : '#ffffff', color: planFilterPriority === 'Low' ? '#fff' : '#166534', borderColor: '#86EFAC' }"
+              style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
+              🟢 Low <span style="opacity:0.8;">({{ plans.filter(p => p.priority === 'Low').length }})</span>
+            </button>
+          </div>
+
+          <div v-if="plans.length > 0 && sortedFilteredPlans.length === 0" style="text-align: center; padding: 20px; background: #fff; border-radius: 10px; border: 1.5px dashed var(--color-sand);">
+            <p style="font-size: 13px; color: var(--text-muted);">Tidak ada task dengan prioritas <strong>{{ planFilterPriority }}</strong>.</p>
+          </div>
+
+          <div v-if="sortedFilteredPlans.length > 0"
+            style="display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; scrollbar-color: var(--color-sand) transparent;">
+            
+            <div v-for="(plan, idx) in sortedFilteredPlans" :key="plan.id"
+              style="background: #fff; border: 1.5px solid var(--color-sand); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; transition: box-shadow 0.2s, border-color 0.2s;"
+              @mouseenter="$event.currentTarget.style.boxShadow='0 4px 16px rgba(214,123,82,0.10)'; $event.currentTarget.style.borderColor='var(--color-gold)'"
+              @mouseleave="$event.currentTarget.style.boxShadow='none'; $event.currentTarget.style.borderColor='var(--color-sand)'">
+              
+              <div class="flex-between" style="align-items: flex-start; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1;">
+                  <span style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 4px;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    {{ formatDate(plan.date) }}
+                  </span>
+                  <span :style="{ backgroundColor: getCategoryColor(plan.category) + '15', color: getCategoryColor(plan.category), borderColor: getCategoryColor(plan.category) + '40' }"
+                    style="padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1.5px solid;">
+                    {{ plan.category }}
+                  </span>
+                  <span v-if="plan.priority"
+                    :style="{
+                      background: plan.priority === 'High' ? '#FEE2E2' : plan.priority === 'Medium' ? '#FEF9C3' : '#DCFCE7',
+                      color: plan.priority === 'High' ? '#B91C1C' : plan.priority === 'Medium' ? '#854D0E' : '#166534',
+                      borderColor: plan.priority === 'High' ? '#FCA5A5' : plan.priority === 'Medium' ? '#FDE047' : '#86EFAC'
+                    }"
+                    style="padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700; border: 1.5px solid;">
+                    {{ plan.priority === 'High' ? '🔴' : plan.priority === 'Medium' ? '🟡' : '🟢' }} {{ plan.priority }}
+                  </span>
+                  <span v-if="plan.requester"
+                    style="background: #EFF6FF; color: #1D4ED8; border: 1.5px solid #BFDBFE; padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;">
+                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    {{ plan.requester }}
+                  </span>
+                  <span v-if="plan.date < todayStr" style="background: #FEF2F2; color: #B91C1C; border: 1.5px solid #FCA5A5; padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700;">
+                    ⚠ Lewat Jadwal
+                  </span>
+                  <span v-else-if="plan.date === todayStr" style="background: #FBF0EA; color: var(--color-terracotta); border: 1.5px solid var(--color-gold); padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700;">
+                    ✦ Hari Ini
+                  </span>
+                </div>
+                
+                <div style="display: flex; gap: 6px; flex-shrink: 0; align-items: center;">
+                  <button @click="convertPlanToLog(plan)"
+                    title="Tandai sudah dikerjakan → pindah ke Riwayat"
+                    style="background: #ECFDF5; color: #065F46; border: 1.5px solid #6EE7B7; border-radius: 8px; padding: 4px 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Selesai
+                  </button>
+                  <button @click="startEditPlan(plan)"
+                    title="Edit task plan ini"
+                    style="background: var(--bg-cream); color: var(--text-dark); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 4px 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                  </button>
+                  <button @click="deletePlan(plan.id)"
+                    title="Hapus task"
+                    style="background: #FEF2F2; color: #B91C1C; border: 1.5px solid #FCA5A5; border-radius: 8px; padding: 4px 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                  </button>
+                </div>
+              </div>
+              
               <p style="font-size: 13.5px; color: var(--text-dark); margin: 0; line-height: 1.5;">{{ plan.tasks }}</p>
             </div>
 
-            <!-- Right: actions -->
-            <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
-              <button @click="convertPlanToLog(plan)"
-                title="Tandai sudah dikerjakan → pindah ke Riwayat"
-                style="background: #ECFDF5; color: #065F46; border: 1.5px solid #6EE7B7; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              </button>
-              <button @click="startEditPlan(plan)"
-                title="Edit task plan ini"
-                style="background: var(--bg-cream); color: var(--text-dark); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-              </button>
-              <button @click="deletePlan(plan.id)"
-                title="Hapus task"
-                style="background: #FEF2F2; color: #B91C1C; border: 1.5px solid #FCA5A5; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-              </button>
-            </div>
           </div>
         </div>
-      </div>
 
-            <!-- ══════════════════════════════════════════════════════════ -->
-      <!-- SECTION: FILTER & ANALYTICS (existing)                    -->
-      <!-- ══════════════════════════════════════════════════════════ -->
-      <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand);">
-        <h3 style="font-size: 15px; margin-bottom: 14px; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-          Penyaringan & Pencarian Log Kerja
-        </h3>
-        <div style="display: grid; grid-template-columns: 2fr 1.4fr 1fr 1fr; gap: 16px; align-items: end;">
-          <div class="form-group" style="margin-bottom: 0;">
-            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Cari Kata Kunci</label>
-            <input type="text" class="form-input" v-model="searchQuery" placeholder="Cari berasarkan tugas, kategori, hasil, dsb..." />
-          </div>
-          <div class="form-group" style="margin-bottom: 0; position: relative;">
-            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Rentang Tanggal</label>
-            <button type="button" class="form-input" @click.stop="showRangePicker = !showRangePicker"
-              style="width: 100%; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px; background: #fff; height: 42px; box-sizing: border-box; white-space: nowrap; overflow: hidden;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; color: var(--color-terracotta);"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              <span style="font-size: 12.5px; color: var(--text-dark); overflow: hidden; text-overflow: ellipsis;">
-                <template v-if="filterStartDate || filterEndDate">
-                  {{ filterStartDate ? formatDate(filterStartDate) : '?' }} – {{ filterEndDate ? formatDate(filterEndDate) : '?' }}
-                </template>
-                <template v-else><span style="color: var(--text-muted);">Pilih rentang tanggal...</span></template>
-              </span>
-            </button>
-            <div v-if="showRangePicker" @click.stop style="position: absolute; top: calc(100% + 6px); left: 0; z-index: 999; background: #fff; border: 1.5px solid var(--color-sand); border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.13); padding: 16px; min-width: 280px;">
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                <button type="button" @click="rangeCalPrevMonth" style="background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text-dark); padding: 4px 8px; border-radius: 6px; line-height: 1;">&lt;</button>
-                <span style="font-weight: 700; font-size: 14px; color: var(--text-dark);">{{ rangeCalMonthLabel }}</span>
-                <button type="button" @click="rangeCalNextMonth" style="background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text-dark); padding: 4px 8px; border-radius: 6px; line-height: 1;">&gt;</button>
-              </div>
-              <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 4px;">
-                <span v-for="(d, i) in ['S','S','R','K','J','S','M']" :key="'h'+i" style="text-align: center; font-size: 10.5px; font-weight: 700; color: var(--text-muted); padding: 2px 0;">{{ d }}</span>
-              </div>
-              <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;">
-                <span v-for="cell in rangeCalCells" :key="cell.key" @click="cell.date ? onRangeCalClick(cell.date) : null"
-                  :style="getRangeCellStyle(cell)"
-                  style="text-align: center; font-size: 13px; padding: 6px 2px; border-radius: 7px; cursor: pointer; user-select: none; transition: background 0.12s;">
-                  {{ cell.label }}
-                </span>
-              </div>
-              <div style="margin-top: 10px; font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.4;">
-                <span v-if="!filterStartDate">Klik tanggal mulai</span>
-                <span v-else-if="!filterEndDate">Klik tanggal akhir</span>
-                <span v-else style="color: var(--color-terracotta); font-weight: 600;">✓ Rentang dipilih — klik lagi untuk reset</span>
-              </div>
-              <button v-if="filterStartDate || filterEndDate" type="button" @click="filterStartDate=''; filterEndDate=''; showRangePicker=false;"
-                style="margin-top: 8px; width: 100%; background: var(--bg-cream); border: 1px solid var(--color-sand); color: var(--text-dark); border-radius: 7px; padding: 6px; font-size: 12px; cursor: pointer; font-weight: 600;">
-                Hapus Rentang
-              </button>
-            </div>
-          </div>
-          <div class="form-group" style="margin-bottom: 0;">
-            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Filter Kategori</label>
-            <select class="form-input" v-model="filterCategory" style="height: 42px;">
-              <option value="">Semua Kategori</option>
-              <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
-            </select>
-          </div>
-          <div class="form-group" style="margin-bottom: 0;">
-            <button class="btn btn-secondary" style="width: 100%; height: 42px; cursor: pointer; justify-content: center;" @click="resetFilters">Reset Filter</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Analytics -->
-      <div class="grid-2" style="grid-template-columns: 1.5fr 1fr; gap: 24px; margin-bottom: 24px; align-items: stretch;">
-        <div class="drawer-section" style="margin-bottom: 0; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; justify-content: space-between;">
-          <div class="flex-between" style="border-bottom: 1.5px solid var(--color-sand); padding-bottom: 12px; margin-bottom: 14px; flex-wrap: wrap; gap: 12px;">
-            <h3 style="font-size: 15px; font-weight: bold; display: flex; align-items: center; gap: 6px;">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-              Ringkasan Analitik Performa
-            </h3>
-            <div style="display: flex; gap: 4px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 2px;">
-              <button class="btn" :style="analyticsPeriod === 'semua' ? { background: 'var(--color-terracotta)', color: '#fff', fontSize: '11px', padding: '4px 10px', borderRadius: '6px' } : { background: 'transparent', color: 'var(--text-dark)', fontSize: '11px', padding: '4px 10px' }" @click="analyticsPeriod = 'semua'">Semua</button>
-              <button class="btn" :style="analyticsPeriod === 'today' ? { background: 'var(--color-terracotta)', color: '#fff', fontSize: '11px', padding: '4px 10px', borderRadius: '6px' } : { background: 'transparent', color: 'var(--text-dark)', fontSize: '11px', padding: '4px 10px' }" @click="analyticsPeriod = 'today'">Hari Ini</button>
-            </div>
-          </div>
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
-            <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
-              <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Pekerjaan</span>
-              <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ filteredLogs.length }}</p>
-            </div>
-            <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
-              <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Task Plan</span>
-              <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ plans.length }}</p>
-            </div>
-            <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
-              <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Jumlah Hari Rentang</span>
-              <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ selectedRangeDaysCount }} <span style="font-size: 11px; font-weight: normal;">hari</span></p>
-            </div>
-            <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
-              <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Penyelesaian Aksi</span>
-              <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ nextActionCompletionRate }}</p>
-            </div>
-          </div>
-        </div>
-        <div class="drawer-section" style="margin-bottom: 0; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; justify-content: space-between;">
-          <h3 style="font-size: 15px; font-weight: bold; margin-bottom: 12px; border-bottom: 1.5px solid var(--color-sand); padding-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-sage);"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect width="20" height="14" x="2" y="6" rx="2"></rect></svg>
-            Distribusi Kategori
+        <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand);">
+          <h3 style="font-size: 15px; margin-bottom: 14px; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            Penyaringan & Pencarian Log Kerja
           </h3>
-          <div style="display: flex; flex-direction: column; gap: 10px; max-height: 120px; overflow-y: auto; padding-right: 4px;">
-            <div v-for="(pct, cat) in categoryPercentages" :key="cat">
-              <div class="flex-between" style="font-size: 11.5px; margin-bottom: 4px;">
-                <span style="font-weight: 600; color: var(--text-dark);">{{ cat }}</span>
-                <span class="text-mono" style="font-weight: bold; color: var(--text-muted);">{{ pct.count }}x ({{ pct.percentage }}%)</span>
-              </div>
-              <div style="width: 100%; background-color: var(--color-sand); height: 6px; border-radius: 10px; overflow: hidden;">
-                <div :style="{ width: pct.percentage + '%', backgroundColor: getCategoryColor(cat) }" style="height: 100%; border-radius: 10px; transition: width 0.3s ease;"></div>
+          <div style="display: grid; grid-template-columns: 2fr 1.4fr 1fr 1fr; gap: 16px; align-items: end;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Cari Kata Kunci</label>
+              <input type="text" class="form-input" v-model="searchQuery" placeholder="Cari berasarkan tugas, kategori, hasil, dsb..." />
+            </div>
+            <div class="form-group" style="margin-bottom: 0; position: relative;">
+              <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Rentang Tanggal</label>
+              <button type="button" class="form-input" @click.stop="showRangePicker = !showRangePicker"
+                style="width: 100%; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px; background: #fff; height: 42px; box-sizing: border-box; white-space: nowrap; overflow: hidden;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; color: var(--color-terracotta);"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span style="font-size: 12.5px; color: var(--text-dark); overflow: hidden; text-overflow: ellipsis;">
+                  <template v-if="filterStartDate || filterEndDate">
+                    {{ filterStartDate ? formatDate(filterStartDate) : '?' }} – {{ filterEndDate ? formatDate(filterEndDate) : '?' }}
+                  </template>
+                  <template v-else><span style="color: var(--text-muted);">Pilih rentang tanggal...</span></template>
+                </span>
+              </button>
+              <div v-if="showRangePicker" @click.stop style="position: absolute; top: calc(100% + 6px); left: 0; z-index: 999; background: #fff; border: 1.5px solid var(--color-sand); border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.13); padding: 16px; min-width: 280px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                  <button type="button" @click="rangeCalPrevMonth" style="background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text-dark); padding: 4px 8px; border-radius: 6px; line-height: 1;">&lt;</button>
+                  <span style="font-weight: 700; font-size: 14px; color: var(--text-dark);">{{ rangeCalMonthLabel }}</span>
+                  <button type="button" @click="rangeCalNextMonth" style="background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text-dark); padding: 4px 8px; border-radius: 6px; line-height: 1;">&gt;</button>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 4px;">
+                  <span v-for="(d, i) in ['S','S','R','K','J','S','M']" :key="'h'+i" style="text-align: center; font-size: 10.5px; font-weight: 700; color: var(--text-muted); padding: 2px 0;">{{ d }}</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;">
+                  <span v-for="cell in rangeCalCells" :key="cell.key" @click="cell.date ? onRangeCalClick(cell.date) : null"
+                    :style="getRangeCellStyle(cell)"
+                    style="text-align: center; font-size: 13px; padding: 6px 2px; border-radius: 7px; cursor: pointer; user-select: none; transition: background 0.12s;">
+                    {{ cell.label }}
+                  </span>
+                </div>
+                <div style="margin-top: 10px; font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.4;">
+                  <span v-if="!filterStartDate">Klik tanggal mulai</span>
+                  <span v-else-if="!filterEndDate">Klik tanggal akhir</span>
+                  <span v-else style="color: var(--color-terracotta); font-weight: 600;">✓ Rentang dipilih — klik lagi untuk reset</span>
+                </div>
+                <button v-if="filterStartDate || filterEndDate" type="button" @click="filterStartDate=''; filterEndDate=''; showRangePicker=false;"
+                  style="margin-top: 8px; width: 100%; background: var(--bg-cream); border: 1px solid var(--color-sand); color: var(--text-dark); border-radius: 7px; padding: 6px; font-size: 12px; cursor: pointer; font-weight: 600;">
+                  Hapus Rentang
+                </button>
               </div>
             </div>
-            <div v-if="filteredLogs.length === 0" style="text-align: center; font-size: 12px; color: var(--text-muted); font-style: italic; margin-top: 10px;">
-              Tidak ada data dalam filter aktif ini.
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Filter Kategori</label>
+              <select class="form-input" v-model="filterCategory" style="height: 42px;">
+                <option value="">Semua Kategori</option>
+                <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <button class="btn btn-secondary" style="width: 100%; height: 42px; cursor: pointer; justify-content: center;" @click="resetFilters">Reset Filter</button>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- ══════════════════════════════════════════════════════════ -->
-      <!-- SECTION: FORM + RIWAYAT KEGIATAN KERJA                   -->
-      <!-- ══════════════════════════════════════════════════════════ -->
-      <div class="logbook-grid" style="grid-template-columns: 1fr;">
-        <!-- Logging Form -->
+        <div class="grid-2" style="grid-template-columns: 1.5fr 1fr; gap: 24px; margin-bottom: 24px; align-items: stretch;">
+          <div class="drawer-section" style="margin-bottom: 0; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="flex-between" style="border-bottom: 1.5px solid var(--color-sand); padding-bottom: 12px; margin-bottom: 14px; flex-wrap: wrap; gap: 12px;">
+              <h3 style="font-size: 15px; font-weight: bold; display: flex; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                Ringkasan Analitik Performa
+              </h3>
+              <div style="display: flex; gap: 4px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 2px;">
+                <button class="btn" :style="analyticsPeriod === 'semua' ? { background: 'var(--color-terracotta)', color: '#fff', fontSize: '11px', padding: '4px 10px', borderRadius: '6px' } : { background: 'transparent', color: 'var(--text-dark)', fontSize: '11px', padding: '4px 10px' }" @click="analyticsPeriod = 'semua'">Semua</button>
+                <button class="btn" :style="analyticsPeriod === 'today' ? { background: 'var(--color-terracotta)', color: '#fff', fontSize: '11px', padding: '4px 10px', borderRadius: '6px' } : { background: 'transparent', color: 'var(--text-dark)', fontSize: '11px', padding: '4px 10px' }" @click="analyticsPeriod = 'today'">Hari Ini</button>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
+                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Pekerjaan</span>
+                <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ filteredLogs.length }}</p>
+              </div>
+              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
+                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Task Plan</span>
+                <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ plans.length }}</p>
+              </div>
+              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
+                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Jumlah Hari Rentang</span>
+                <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ selectedRangeDaysCount }} <span style="font-size: 11px; font-weight: normal;">hari</span></p>
+              </div>
+              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
+                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Penyelesaian Aksi</span>
+                <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ nextActionCompletionRate }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="drawer-section" style="margin-bottom: 0; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; justify-content: space-between;">
+            <h3 style="font-size: 15px; font-weight: bold; margin-bottom: 12px; border-bottom: 1.5px solid var(--color-sand); padding-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-sage);"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect width="20" height="14" x="2" y="6" rx="2"></rect></svg>
+              Distribusi Kategori
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 10px; max-height: 120px; overflow-y: auto; padding-right: 4px;">
+              <div v-for="(pct, cat) in categoryPercentages" :key="cat">
+                <div class="flex-between" style="font-size: 11.5px; margin-bottom: 4px;">
+                  <span style="font-weight: 600; color: var(--text-dark);">{{ cat }}</span>
+                  <span class="text-mono" style="font-weight: bold; color: var(--text-muted);">{{ pct.count }}x ({{ pct.percentage }}%)</span>
+                </div>
+                <div style="width: 100%; background-color: var(--color-sand); height: 6px; border-radius: 10px; overflow: hidden;">
+                  <div :style="{ width: pct.percentage + '%', backgroundColor: getCategoryColor(cat) }" style="height: 100%; border-radius: 10px; transition: width 0.3s ease;"></div>
+                </div>
+              </div>
+              <div v-if="filteredLogs.length === 0" style="text-align: center; font-size: 12px; color: var(--text-muted); font-style: italic; margin-top: 10px;">
+                Tidak ada data dalam filter aktif ini.
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <!-- Riwayat Kegiatan Kerja -->
         <div class="drawer-section" style="margin-bottom: 0; padding: 22px; border-radius: 12px; min-width: 0; overflow: visible;">
           <div class="flex-between" style="margin-bottom: 18px; align-items: center;">
             <h3 style="font-size: 18px; margin-bottom: 0;">Riwayat Kegiatan Kerja</h3>
@@ -501,7 +521,6 @@ const JobLogbook = {
                 </tbody>
               </table>
             </div>
-            <!-- Scroll hint -->
             <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; margin-bottom: 4px;">
               <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); opacity: 0.5;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
               <span style="font-size: 11px; color: var(--text-muted); opacity: 0.6; font-style: italic; letter-spacing: 0.03em;">geser tabel untuk melihat lebih banyak kolom</span>
@@ -518,10 +537,137 @@ const JobLogbook = {
           </div>
         </div>
       </div>
+
+      <div v-show="showFullNotesPage" class="animate-fade-in" style="animation: popIn 0.3s ease;">
+        <div class="flex-between" style="border-bottom: 2px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 24px; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <button class="btn btn-secondary" @click="showFullNotesPage = false" style="padding: 8px; border-radius: 8px;" title="Kembali ke Logbook">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
+            <div>
+              <h2 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                All Notes
+              </h2>
+              <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 2px;">Simpan ide, referensi, atau rekap meeting dengan rapi.</p>
+            </div>
+          </div>
+          <button class="btn btn-primary" @click="openAddNoteForm">
+            + Note Baru
+          </button>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-bottom: 24px; align-items: center; background: #fff; padding: 12px; border-radius: 12px; border: 1.5px solid var(--color-sand);">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+            <span style="font-size: 13px; font-weight: 700; color: var(--text-muted);">Filters:</span>
+          </div>
+          <input type="date" class="form-input" v-model="noteFilterDate" style="height: 38px; width: auto;" title="Filter berdasarkan tanggal dibuat" />
+          <select class="form-input" v-model="noteFilterCategory" style="height: 38px; width: auto;">
+            <option value="">Semua Kategori</option>
+            <option v-for="cat in noteCategories" :key="'filter-' + cat" :value="cat">{{ cat }}</option>
+          </select>
+          <button v-if="noteFilterDate || noteFilterCategory" class="btn btn-secondary" @click="noteFilterDate=''; noteFilterCategory=''" style="height: 38px; font-size: 12px;">Reset</button>
+        </div>
+
+        <div v-if="filteredNotes.length === 0" style="text-align: center; padding: 60px 20px; color: var(--text-muted); border: 1.5px dashed var(--color-sand); border-radius: 16px; background: var(--bg-cream);">
+          <p style="font-size: 32px; margin-bottom: 12px;">📝</p>
+          <p style="font-size: 15px; font-weight: 600;">Belum ada catatan yang ditemukan.</p>
+        </div>
+
+        <div v-else style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+          <div v-for="note in filteredNotes" :key="note.id" 
+               :style="{ backgroundColor: getNoteColorStyle(note.color).bg }"
+               style="border-radius: 16px; padding: 16px; position: relative; transition: all 0.2s;"
+               onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 24px rgba(0,0,0,0.06)'" 
+               onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+            
+            <div class="flex-between" style="margin-bottom: 12px; padding: 0 4px;">
+              <span :style="{ color: getNoteColorStyle(note.color).headerText }" style="font-size: 15px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                {{ note.category }}
+              </span>
+              <div style="display: flex; gap: 4px;">
+                <button @click="editNote(note)" title="Edit Note" style="background: none; border: none; cursor: pointer; padding: 4px; opacity: 0.6;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" :stroke="getNoteColorStyle(note.color).headerText" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </button>
+                <button @click="deleteNote(note.id)" title="Hapus Note" style="background: none; border: none; cursor: pointer; padding: 4px; opacity: 0.6;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" :stroke="getNoteColorStyle(note.color).headerText" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                </button>
+              </div>
+            </div>
+
+            <div style="background-color: #ffffff; border-radius: 12px; padding: 16px; min-height: 120px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">{{ formatDate(note.date) }}</div>
+              <h3 :style="{ color: getNoteColorStyle(note.color).text }" style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 800; margin: 0 0 8px 0; line-height: 1.3;">
+                {{ note.title }}
+              </h3>
+              <p :style="{ color: getNoteColorStyle(note.color).text }" style="font-size: 13px; color: var(--text-muted); line-height: 1.5; opacity: 0.9; margin: 0; white-space: pre-wrap;">
+                {{ note.body }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <transition name="modal-fade">
+          <div v-if="showAddNoteForm" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(44, 38, 33, 0.6); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 99999;" @click.self="cancelNoteForm">
+            <div style="background: var(--bg-card); max-width: 480px; width: 90%; padding: 28px; border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
+              
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="font-size: 18px; margin: 0; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                  {{ editingNoteId ? 'Edit Note' : 'Buat Note Baru' }}
+                </h3>
+                <button @click="cancelNoteForm" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:24px; line-height:1;">✕</button>
+              </div>
+
+              <form @submit.prevent="saveNote">
+                <div class="form-group" style="margin-bottom: 16px;">
+                  <label>Judul / Header Note</label>
+                  <input type="text" class="form-input" v-model="noteForm.title" placeholder="cth. Introduction to Psychology" required style="font-weight: 600;" />
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 16px;">
+                  <label>Kategori</label>
+                  <div style="display: flex; gap: 8px;">
+                    <select class="form-input" v-model="noteForm.category" required style="flex: 1;">
+                      <option v-for="cat in noteCategories" :key="'opt-' + cat" :value="cat">{{ cat }}</option>
+                    </select>
+                    <button type="button" class="btn btn-secondary" @click="showNoteCatManager = !showNoteCatManager" style="padding: 0 12px; font-size: 16px;" title="Kelola Kategori">⚙️</button>
+                  </div>
+                  <div v-if="showNoteCatManager" style="margin-top: 8px; background: var(--bg-cream); padding: 12px; border-radius: 8px; border: 1.5px solid var(--color-sand);">
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;">
+                      <span v-for="cat in noteCategories" :key="'chip-' + cat" style="background: #fff; border: 1px solid var(--color-sand); padding: 2px 8px; border-radius: 12px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+                        {{ cat }}
+                        <button type="button" @click="deleteNoteCategory(cat)" style="background: none; border: none; cursor: pointer; color: #DC2626;">✕</button>
+                      </span>
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                      <input type="text" class="form-input" v-model="newNoteCatInput" placeholder="Kategori baru..." style="height: 32px; font-size: 12px;" @keydown.enter.prevent="addNoteCategory" />
+                      <button type="button" class="btn btn-primary" @click="addNoteCategory" style="height: 32px; padding: 0 12px; font-size: 12px;">Tambah</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 24px;">
+                  <label>Isi Note</label>
+                  <textarea class="form-input" v-model="noteForm.body" rows="6" placeholder="Ketik isi catatan di sini..." required></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                  <button type="button" class="btn" @click="cancelNoteForm" style="flex: 1; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); font-weight: bold; cursor: pointer; border-radius: 8px;">Batal</button>
+                  <button type="submit" class="btn btn-primary" style="flex: 2;">{{ editingNoteId ? 'Simpan Perubahan' : 'Simpan Note' }}</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </transition>
+
+      </div>
     </div>
   `,
   data() {
     return {
+      // Data Logbook yang lama
       showAddLog: false,
       syncToContentOnSave: false,
       logs: [],
@@ -559,10 +705,27 @@ const JobLogbook = {
         achievements: '',
         nextAction: '',
         documentLink: ''
+      },
+      
+      // Data Khusus Fitur Notes
+      showFullNotesPage: false,
+      showAddNoteForm: false,
+      showNoteCatManager: false,
+      newNoteCatInput: '',
+      noteFilterCategory: '',
+      noteFilterDate: '',
+      notes: [],
+      noteCategories: ['Psychology', 'Groceries', 'Work', 'Ideas'],
+      editingNoteId: null, // Baru: untuk menyimpan ID note yang sedang di-edit
+      noteForm: {
+        category: 'Work',
+        title: '',
+        body: ''
       }
     };
   },
   computed: {
+    // Computed Logbook (Existing)
     todayStr() {
       return new Date().toISOString().split('T')[0];
     },
@@ -626,10 +789,6 @@ const JobLogbook = {
       return [...this.plans]
         .filter(p => !this.planFilterPriority || p.priority === this.planFilterPriority)
         .sort((a, b) => {
-          // 1) Overdue (past) comes first, sorted ascending by date (most overdue first)
-          // 2) Today's tasks next
-          // 3) Upcoming tasks sorted ascending
-          // Secondary sort: priority (High → Medium → Low)
           const aOverdue = a.date < today;
           const bOverdue = b.date < today;
           const aToday  = a.date === today;
@@ -637,14 +796,11 @@ const JobLogbook = {
           const aGroup  = aOverdue ? 0 : aToday ? 1 : 2;
           const bGroup  = bOverdue ? 0 : bToday ? 1 : 2;
           if (aGroup !== bGroup) return aGroup - bGroup;
-          // Within overdue: ascending date (longest overdue first)
           if (aOverdue) {
             if (a.date !== b.date) return a.date < b.date ? -1 : 1;
           } else {
-            // Within upcoming / today: ascending date
             if (a.date !== b.date) return a.date < b.date ? -1 : 1;
           }
-          // Same date → sort by priority
           return (priorityOrder[a.priority] ?? 1) - (priorityOrder[b.priority] ?? 1);
         });
     },
@@ -685,36 +841,26 @@ const JobLogbook = {
         results[cat] = { count: counts[cat], percentage: total > 0 ? Math.round((counts[cat] / total) * 100) : 0 };
       });
       return results;
+    },
+    
+    // Computed Khusus Notes
+    recentNotes() {
+      return [...this.notes].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3);
+    },
+    filteredNotes() {
+      return this.notes.filter(n => {
+        const matchCat = !this.noteFilterCategory || n.category === this.noteFilterCategory;
+        const matchDate = !this.noteFilterDate || n.date === this.noteFilterDate;
+        return matchCat && matchDate;
+      }).sort((a, b) => new Date(b.date) - new Date(a.date));
     }
   },
   created() {
+    // Load Logbook Data
     const savedCats = WorkspaceStorage.getItem('personal_workspace_job_categories');
     if (savedCats) { try { this.customCategories = JSON.parse(savedCats); } catch (e) { this.customCategories = []; } }
-
     const savedPlans = WorkspaceStorage.getItem('personal_workspace_job_plans');
     if (savedPlans) { try { this.plans = JSON.parse(savedPlans); } catch (e) { this.plans = []; } }
-
-    const saved = WorkspaceStorage.getItem('personal_workspace_job_logs');
-    if (saved) {
-      try {
-        this.logs = JSON.parse(saved);
-        this.logs.forEach((l, i) => { if (!l.id) l.id = 'log-' + i + '-' + Date.now(); });
-      } catch (e) { this.logs = []; }
-    } else {
-      this.logs = [
-        { id: 'log-1', date: '2026-05-29', category: 'Administrasi', tasks: 'Membuat laporan mingguan divisi dan peninjauan dokumen anggaran triwulan II.', achievements: 'Laporan selesai diarsip dan draf anggaran disetujui direksi.', nextAction: 'Kirim salinan digital ke bagian keuangan besok pagi.', documentLink: '' },
-        { id: 'log-2', date: '2026-05-28', category: 'HR Operational', tasks: 'Melakukan screening berkas kandidat Front-End Engineer & koordinasi jadwal wawancara.', achievements: '5 berkas kandidat lolos screening, jadwal wawancara diatur.', nextAction: 'Lakukan wawancara teknis tahap pertama pada hari Senin.', documentLink: '' },
-      ];
-      this.saveToStorage();
-    }
-  },
-  created() {
-    const savedCats = WorkspaceStorage.getItem('personal_workspace_job_categories');
-    if (savedCats) { try { this.customCategories = JSON.parse(savedCats); } catch (e) { this.customCategories = []; } }
-
-    const savedPlans = WorkspaceStorage.getItem('personal_workspace_job_plans');
-    if (savedPlans) { try { this.plans = JSON.parse(savedPlans); } catch (e) { this.plans = []; } }
-
     const saved = WorkspaceStorage.getItem('personal_workspace_job_logs');
     if (saved) {
       try {
@@ -722,9 +868,15 @@ const JobLogbook = {
         this.logs.forEach((l, i) => { if (!l.id) l.id = 'log-' + i + '-' + Date.now(); });
       } catch (e) { this.logs = []; }
     }
+    
+    // Load Notes Data
+    const savedNotes = WorkspaceStorage.getItem('personal_workspace_job_notes');
+    if (savedNotes) { try { this.notes = JSON.parse(savedNotes); } catch(e) { this.notes = []; } }
+    const savedNoteCats = WorkspaceStorage.getItem('personal_workspace_job_note_cats');
+    if (savedNoteCats) { try { this.noteCategories = JSON.parse(savedNoteCats); } catch(e) {} }
   },
   methods: {
-    // ── Kategori ──
+    // ── Logbook Methods (Existing) ──
     addCategory() {
       const name = this.newCategoryInput.trim();
       if (!name) return;
@@ -738,8 +890,6 @@ const JobLogbook = {
       this.customCategories = this.customCategories.filter(c => c !== cat);
       WorkspaceStorage.setItem('personal_workspace_job_categories', JSON.stringify(this.customCategories));
     },
-
-    // ── Task Plan ──
     openAddPlan() {
       if (this.showAddPlan && !this.editingPlanId) {
         this.showAddPlan = false;
@@ -777,7 +927,6 @@ const JobLogbook = {
     savePlan() {
       if (!this.planForm.tasks.trim()) { alert('Tugas tidak boleh kosong!'); return; }
       if (this.editingPlanId) {
-        // Update existing plan
         const idx = this.plans.findIndex(p => p.id === this.editingPlanId);
         if (idx !== -1) {
           this.plans[idx].date = this.planForm.date;
@@ -788,7 +937,6 @@ const JobLogbook = {
         }
         this.editingPlanId = null;
       } else {
-        // Add new plan
         const newPlan = {
           id: 'plan-' + Date.now(),
           date: this.planForm.date,
@@ -813,19 +961,14 @@ const JobLogbook = {
       this.savePlansToStorage();
     },
     convertPlanToLog(plan) {
-      // Prefill form logbook dari data plan
       this.form.date = plan.date;
       this.form.category = this.allCategories.includes(plan.category) ? plan.category : this.allCategories[0];
       this.form.tasks = plan.tasks;
       this.form.achievements = '';
       this.form.nextAction = '';
       this.form.documentLink = '';
-
-      // Hapus dari plans
       this.plans = this.plans.filter(p => p.id !== plan.id);
       this.savePlansToStorage();
-
-      // Buka form logbook
       this.showAddLog = true;
       this.$nextTick(() => {
         const formEl = document.querySelector('.job-logbook');
@@ -835,8 +978,6 @@ const JobLogbook = {
     savePlansToStorage() {
       WorkspaceStorage.setItem('personal_workspace_job_plans', JSON.stringify(this.plans));
     },
-
-    // ── Log Kerja ──
     rangeCalPrevMonth() { if (this.rangeCalMonth === 0) { this.rangeCalMonth = 11; this.rangeCalYear--; } else this.rangeCalMonth--; },
     rangeCalNextMonth() { if (this.rangeCalMonth === 11) { this.rangeCalMonth = 0; this.rangeCalYear++; } else this.rangeCalMonth++; },
     onRangeCalClick(dateStr) {
@@ -936,6 +1077,86 @@ const JobLogbook = {
         margin: { left: 14, right: 14 }
       });
       doc.save('Job_Logbook_' + new Date().toISOString().slice(0, 10) + '.pdf');
+    },
+
+    // ── Methods Khusus Fitur Notes ──
+    openAddNoteForm() {
+      this.editingNoteId = null;
+      this.noteForm.title = '';
+      this.noteForm.body = '';
+      this.noteForm.category = this.noteCategories[0] || 'Work';
+      this.showAddNoteForm = true;
+    },
+    editNote(note) {
+      this.editingNoteId = note.id;
+      this.noteForm.title = note.title;
+      this.noteForm.category = note.category;
+      this.noteForm.body = note.body;
+      this.showAddNoteForm = true;
+    },
+    cancelNoteForm() {
+      this.showAddNoteForm = false;
+      this.editingNoteId = null;
+      this.noteForm.title = '';
+      this.noteForm.body = '';
+    },
+    saveNote() {
+      if (this.editingNoteId) {
+        const idx = this.notes.findIndex(n => n.id === this.editingNoteId);
+        if (idx !== -1) {
+          this.notes[idx].title = this.noteForm.title;
+          this.notes[idx].category = this.noteForm.category;
+          this.notes[idx].body = this.noteForm.body;
+        }
+        this.editingNoteId = null;
+      } else {
+        const colors = ['pink', 'blue', 'green', 'yellow', 'purple'];
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        const newN = {
+          id: 'note-' + Date.now(),
+          date: new Date().toISOString().split('T')[0],
+          category: this.noteForm.category,
+          title: this.noteForm.title,
+          body: this.noteForm.body,
+          color: randomColor
+        };
+        this.notes.unshift(newN);
+      }
+      this.saveNotesToStorage();
+      this.showAddNoteForm = false;
+      this.noteForm.title = '';
+      this.noteForm.body = '';
+    },
+    deleteNote(id) {
+      if(!confirm('Hapus note ini secara permanen?')) return;
+      this.notes = this.notes.filter(n => n.id !== id);
+      this.saveNotesToStorage();
+    },
+    saveNotesToStorage() { 
+      WorkspaceStorage.setItem('personal_workspace_job_notes', JSON.stringify(this.notes)); 
+    },
+    addNoteCategory() {
+      if (this.newNoteCatInput && !this.noteCategories.includes(this.newNoteCatInput)) {
+        this.noteCategories.push(this.newNoteCatInput);
+        WorkspaceStorage.setItem('personal_workspace_job_note_cats', JSON.stringify(this.noteCategories));
+        this.newNoteCatInput = '';
+      }
+    },
+    deleteNoteCategory(cat) {
+      if(!confirm(`Hapus kategori note "${cat}"?`)) return;
+      this.noteCategories = this.noteCategories.filter(c => c !== cat);
+      WorkspaceStorage.setItem('personal_workspace_job_note_cats', JSON.stringify(this.noteCategories));
+      if (this.noteForm.category === cat) this.noteForm.category = this.noteCategories[0] || '';
+    },
+    getNoteColorStyle(color) {
+      const styles = {
+        pink: { bg: '#FCE7F3', headerText: '#831843', text: '#2C2621', border: '#FBCFE8' },
+        blue: { bg: '#DBEAFE', headerText: '#1E3A8A', text: '#2C2621', border: '#BFDBFE' },
+        green: { bg: '#D1FAE5', headerText: '#065F46', text: '#2C2621', border: '#A7F3D0' },
+        yellow: { bg: '#FEF3C7', headerText: '#92400E', text: '#2C2621', border: '#FDE68A' },
+        purple: { bg: '#F3E8FF', headerText: '#4C1D95', text: '#2C2621', border: '#E9D5FF' }
+      };
+      return styles[color] || styles.pink;
     }
   },
   mounted() {
@@ -6153,7 +6374,8 @@ const PomodoroTimer = {
       },
       currentQuoteIndex: 0,
       timerInterval: null,
-      historyLogs: []
+      historyLogs: [],
+      hasEverStarted: false
     };
   },
   computed: {
@@ -6203,9 +6425,10 @@ const PomodoroTimer = {
       this.timerInterval = null;
     }
     stopProceduralAmbience();
-    // Simpan state ke localStorage — baik running maupun pause
-    // sehingga FloatingCountdownTimer dan loadState bisa resume dengan benar
-    if (this.timeLeft > 0) {
+    // Hanya simpan ke localStorage kalau timer pernah distart oleh user
+    // Tanpa ini, setiap navigasi pergi dari Pomodoro akan nulis state ke localStorage
+    // meskipun timer belum pernah dipakai (timeLeft default 1500 selalu > 0)
+    if (this.hasEverStarted && this.timeLeft > 0) {
       const deadline = this.isRunning
         ? Date.now() + (this.timeLeft * 1000)
         : null;
@@ -6335,6 +6558,7 @@ const PomodoroTimer = {
       this.timeLeft      = mins * 60;
       this.totalDuration = mins * 60;
       this.showSuccessBanner = false;
+      this.hasEverStarted = false;
 
       // Selalu bersihkan floating state saat timer direset agar floating tidak muncul lagi
       localStorage.removeItem('pomo_floating_state');
@@ -6375,6 +6599,7 @@ const PomodoroTimer = {
       getAudioContext();
       
       this.isRunning = true;
+      this.hasEverStarted = true;
       this.showSuccessBanner = false;
       
       // Fire ambient generator (if enabled)
