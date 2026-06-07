@@ -4259,7 +4259,7 @@ const DailyNutrition = {
       <div v-if="showAddLog" class="drawer-section" style="margin-bottom: 24px; padding: 22px; border-radius: 12px; animation: popIn 0.2s ease;">
         <h3 style="font-size: 17px; margin-bottom: 18px; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-          Catat Pembelajaran / Insight Baru
+          {{ editingInsightId ? 'Edit Insight' : 'Catat Pembelajaran / Insight Baru' }}
         </h3>
         <form @submit.prevent="saveInsight">
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
@@ -4321,8 +4321,8 @@ const DailyNutrition = {
             <input type="text" class="form-input" v-model="form.takeaway" placeholder="Garis besar satu kalimat actionable lesson..." required />
           </div>
           <div style="display: flex; gap: 10px;">
-            <button type="button" class="btn" @click="showAddLog = false" style="flex: 1; background: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); cursor: pointer; border-radius: 8px; font-weight: 600;">Batal</button>
-            <button type="submit" class="btn btn-primary" style="flex: 2;">Simpan Nutrisi Pikiran</button>
+            <button type="button" class="btn" @click="cancelEditInsight" style="flex: 1; background: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); cursor: pointer; border-radius: 8px; font-weight: 600;">Batal</button>
+            <button type="submit" class="btn btn-primary" style="flex: 2;">{{ editingInsightId ? 'Simpan Perubahan' : 'Simpan Nutrisi Pikiran' }}</button>
           </div>
         </form>
       </div>
@@ -4433,9 +4433,14 @@ const DailyNutrition = {
                     {{ ins.source }}
                   </span>
                 </div>
-                <button class="card-nav-btn" @click="deleteInsight(idx)" style="flex-shrink: 0; background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                </button>
+                <div style="display: inline-flex; gap: 6px; flex-shrink: 0; align-items: center;">
+                  <button class="card-nav-btn" @click="startEditInsight(idx)" title="Edit insight" style="background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  <button class="card-nav-btn" @click="deleteInsight(idx)" title="Hapus insight" style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                  </button>
+                </div>
               </div>
               <h3 class="timeline-title">{{ ins.title }}</h3>
               <p style="font-size: 14px; color: var(--text-dark); line-height: 1.6; margin-bottom: 12px;">{{ ins.details }}</p>
@@ -4462,6 +4467,7 @@ const DailyNutrition = {
       newInsightCatInput: '',
       customInsightCategories: [],
       insights: [],
+      editingInsightId: null,
       form: {
         date: new Date().toISOString().split('T')[0],
         category: 'Teknologi',
@@ -4582,10 +4588,33 @@ const DailyNutrition = {
       catch(e) { return d; }
     },
     saveInsight() {
-      const newIns = { ...this.form, id: 'ins-' + Date.now() };
-      this.insights.push(newIns);
+      if (this.editingInsightId) {
+        // Update existing insight
+        const idx = this.insights.findIndex(i => i.id === this.editingInsightId);
+        if (idx !== -1) {
+          this.insights[idx] = { ...this.form, id: this.editingInsightId };
+        }
+        this.editingInsightId = null;
+      } else {
+        // Add new insight
+        const newIns = { ...this.form, id: 'ins-' + Date.now() };
+        this.insights.push(newIns);
+      }
       this.saveToStorage();
       this.form = { date: new Date().toISOString().split('T')[0], category: this.form.category, source: '', title: '', details: '', takeaway: '' };
+      this.showAddLog = false;
+    },
+    startEditInsight(idx) {
+      const ins = this.filteredInsights[idx];
+      if (!ins) return;
+      this.editingInsightId = ins.id;
+      this.form = { date: ins.date, category: ins.category, source: ins.source || '', title: ins.title, details: ins.details, takeaway: ins.takeaway };
+      this.showAddLog = true;
+      this.$nextTick(() => { document.querySelector('.drawer-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    },
+    cancelEditInsight() {
+      this.editingInsightId = null;
+      this.form = { date: new Date().toISOString().split('T')[0], category: 'Teknologi', source: '', title: '', details: '', takeaway: '' };
       this.showAddLog = false;
     },
     deleteInsight(idx) {
