@@ -148,22 +148,22 @@ const JobLogbook = {
         <div v-if="plans.length > 0" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
           <span style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;">Filter Prioritas:</span>
           <button @click="planFilterPriority = ''"
-            :style="{ background: planFilterPriority === '' ? 'var(--color-terracotta)' : '#fff', color: planFilterPriority === '' ? '#fff' : 'var(--text-dark)', borderColor: planFilterPriority === '' ? 'var(--color-terracotta)' : 'var(--color-sand)' }"
+            :style="{ background: planFilterPriority === '' ? 'var(--color-terracotta)' : '#ffffff', color: planFilterPriority === '' ? '#fff' : 'var(--text-dark)', borderColor: planFilterPriority === '' ? 'var(--color-terracotta)' : 'var(--color-sand)' }"
             style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
             Semua <span style="opacity:0.8;">({{ plans.length }})</span>
           </button>
           <button @click="planFilterPriority = 'High'"
-            :style="{ background: planFilterPriority === 'High' ? '#B91C1C' : '#FEE2E2', color: planFilterPriority === 'High' ? '#fff' : '#B91C1C', borderColor: '#FCA5A5' }"
+            :style="{ background: planFilterPriority === 'High' ? '#B91C1C' : '#ffffff', color: planFilterPriority === 'High' ? '#fff' : '#B91C1C', borderColor: '#FCA5A5' }"
             style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
             🔴 High <span style="opacity:0.8;">({{ plans.filter(p => p.priority === 'High').length }})</span>
           </button>
           <button @click="planFilterPriority = 'Medium'"
-            :style="{ background: planFilterPriority === 'Medium' ? '#854D0E' : '#FEF9C3', color: planFilterPriority === 'Medium' ? '#fff' : '#854D0E', borderColor: '#FDE047' }"
+            :style="{ background: planFilterPriority === 'Medium' ? '#854D0E' : '#ffffff', color: planFilterPriority === 'Medium' ? '#fff' : '#854D0E', borderColor: '#FDE047' }"
             style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
             🟡 Medium <span style="opacity:0.8;">({{ plans.filter(p => p.priority === 'Medium').length }})</span>
           </button>
           <button @click="planFilterPriority = 'Low'"
-            :style="{ background: planFilterPriority === 'Low' ? '#166534' : '#DCFCE7', color: planFilterPriority === 'Low' ? '#fff' : '#166534', borderColor: '#86EFAC' }"
+            :style="{ background: planFilterPriority === 'Low' ? '#166534' : '#ffffff', color: planFilterPriority === 'Low' ? '#fff' : '#166534', borderColor: '#86EFAC' }"
             style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
             🟢 Low <span style="opacity:0.8;">({{ plans.filter(p => p.priority === 'Low').length }})</span>
           </button>
