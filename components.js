@@ -7025,3 +7025,528 @@ const GoogleCalendar = {
     }
   }
 };
+
+// 10. Financial Tracker Component
+const FinancialTracker = {
+  template: `
+    <div class="fin-tracker">
+
+      <!-- HEADER -->
+      <div class="flex-between" style="border-bottom: 2px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 28px; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h2 style="display:flex; align-items:center; gap:10px;">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            Financial Tracker
+          </h2>
+          <p style="color:var(--text-muted); font-size:13.5px; margin-top:4px;">Pantau tabungan, pengeluaran & reimburse per rekening bank</p>
+        </div>
+        <button class="btn btn-primary" @click="openAddBank" style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah Bank
+        </button>
+      </div>
+
+      <!-- EMPTY STATE: no banks -->
+      <div v-if="banks.length === 0" style="text-align:center; padding:64px 20px; background:var(--bg-cream); border-radius:16px; border:2px dashed var(--color-sand);">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--color-sand)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 16px; display:block;"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        <p style="font-size:16px; font-weight:600; color:var(--text-dark); margin-bottom:6px;">Belum ada rekening bank</p>
+        <p style="font-size:13px; color:var(--text-muted);">Klik "Tambah Bank" untuk mulai mencatat keuangan kamu</p>
+      </div>
+
+      <!-- BANK CARDS OVERVIEW -->
+      <div v-if="banks.length > 0" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:16px; margin-bottom:28px;">
+        <div v-for="bank in banks" :key="bank.id"
+             class="fin-bank-card"
+             :class="{ 'fin-bank-card--active': selectedBankId === bank.id }"
+             @click="selectBank(bank.id)"
+             :style="{ borderColor: selectedBankId === bank.id ? bank.color : 'var(--color-sand)' }">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="width:10px; height:10px; border-radius:50%; display:inline-block; flex-shrink:0;" :style="{ background: bank.color }"></span>
+                <span style="font-weight:700; font-size:14px; color:var(--text-dark);">{{ bank.name }}</span>
+              </div>
+              <span style="font-size:11px; color:var(--text-muted); margin-top:3px; display:block; margin-left:18px;">{{ bank.function }}</span>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button @click.stop="editBank(bank)" title="Edit" style="background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:6px; padding:4px 6px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="var(--text-muted)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button @click.stop="deleteBank(bank.id)" title="Hapus" style="background:#FEF2F2; border:1.5px solid #FCA5A5; border-radius:6px; padding:4px 6px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </div>
+          <!-- Balance -->
+          <div style="margin-bottom:10px;">
+            <p style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); margin-bottom:3px;">Saldo Tersedia</p>
+            <p style="font-size:22px; font-weight:800; font-family:'Space Mono',monospace;" :style="{ color: bank.color }">
+              {{ formatCurrency(getBankBalance(bank.id)) }}
+            </p>
+          </div>
+          <!-- Mini stats row -->
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; padding-top:10px; border-top:1px solid var(--color-sand);">
+            <div>
+              <p style="font-size:10px; color:var(--text-muted); font-weight:600;">Masuk</p>
+              <p style="font-size:12px; font-weight:700; color:#10B981;">+{{ formatCurrencyShort(getBankInflow(bank.id)) }}</p>
+            </div>
+            <div>
+              <p style="font-size:10px; color:var(--text-muted); font-weight:600;">Keluar</p>
+              <p style="font-size:12px; font-weight:700; color:#EF4444;">-{{ formatCurrencyShort(getBankOutflow(bank.id)) }}</p>
+            </div>
+            <div>
+              <p style="font-size:10px; color:var(--text-muted); font-weight:600;">Reimburse</p>
+              <p style="font-size:12px; font-weight:700; color:#F59E0B;">{{ formatCurrencyShort(getBankPendingReimburse(bank.id)) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TOTAL SUMMARY ROW -->
+      <div v-if="banks.length > 0" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:12px; margin-bottom:28px;">
+        <div class="fin-summary-chip" style="border-left:4px solid #10B981;">
+          <p class="fin-chip-label">Total Saldo</p>
+          <p class="fin-chip-value" style="color:var(--text-dark);">{{ formatCurrency(totalBalance) }}</p>
+        </div>
+        <div class="fin-summary-chip" style="border-left:4px solid #EF4444;">
+          <p class="fin-chip-label">Total Pengeluaran</p>
+          <p class="fin-chip-value" style="color:#EF4444;">-{{ formatCurrency(totalOutflow) }}</p>
+        </div>
+        <div class="fin-summary-chip" style="border-left:4px solid #F59E0B;">
+          <p class="fin-chip-label">Reimburse Pending</p>
+          <p class="fin-chip-value" style="color:#F59E0B;">{{ formatCurrency(totalPendingReimburse) }}</p>
+        </div>
+        <div class="fin-summary-chip" style="border-left:4px solid #6366F1;">
+          <p class="fin-chip-label">Reimburse Selesai</p>
+          <p class="fin-chip-value" style="color:#6366F1;">{{ formatCurrency(totalSettledReimburse) }}</p>
+        </div>
+      </div>
+
+      <!-- SELECTED BANK DETAIL -->
+      <div v-if="selectedBank" class="drawer-section" style="padding:0; overflow:hidden; margin-bottom:24px;">
+
+        <!-- Bank Section Header -->
+        <div style="padding:18px 22px 16px; border-bottom:1.5px solid var(--color-sand); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; background:var(--bg-cream);">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="width:14px; height:14px; border-radius:50%; display:inline-block; flex-shrink:0;" :style="{ background: selectedBank.color }"></span>
+            <div>
+              <h3 style="font-size:17px; margin:0;">{{ selectedBank.name }}</h3>
+              <span style="font-size:12px; color:var(--text-muted);">{{ selectedBank.function }}</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button @click="openAddTransaction('income')" class="fin-action-btn fin-btn-income">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Tambah Saldo
+            </button>
+            <button @click="openAddTransaction('expense')" class="fin-action-btn fin-btn-expense">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Catat Pengeluaran
+            </button>
+            <button @click="openAddTransaction('reimburse')" class="fin-action-btn fin-btn-reimburse">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              Reimburse
+            </button>
+          </div>
+        </div>
+
+        <!-- Transaction Filter Tabs -->
+        <div style="padding:14px 22px 0; display:flex; gap:6px; flex-wrap:wrap;">
+          <button v-for="tab in tabs" :key="tab.key" @click="activeTab = tab.key"
+            style="font-size:12px; font-weight:600; padding:5px 14px; border-radius:20px; cursor:pointer; border:1.5px solid; transition:all 0.15s;"
+            :style="activeTab === tab.key
+              ? { background: tab.color, color: '#fff', borderColor: tab.color }
+              : { background: 'transparent', color: 'var(--text-muted)', borderColor: 'var(--color-sand)' }">
+            {{ tab.label }}
+            <span v-if="tab.key !== 'all'" style="opacity:0.8; margin-left:3px;">({{ getTabCount(tab.key) }})</span>
+          </button>
+        </div>
+
+        <!-- Transaction List -->
+        <div style="padding:14px 22px 20px;">
+          <div v-if="filteredTransactions.length === 0" style="text-align:center; padding:32px; color:var(--text-muted);">
+            <p style="font-size:14px;">Belum ada transaksi {{ activeTab !== 'all' ? 'tipe ini' : '' }}</p>
+          </div>
+          <div v-else style="display:flex; flex-direction:column; gap:8px;">
+            <div v-for="tx in filteredTransactions" :key="tx.id" class="fin-tx-row">
+              <!-- Icon -->
+              <div class="fin-tx-icon" :style="{ background: getTxBg(tx.type), color: getTxColor(tx.type) }">
+                <svg v-if="tx.type === 'income'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+                <svg v-else-if="tx.type === 'expense'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+                <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              </div>
+              <!-- Info -->
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                  <span style="font-size:13.5px; font-weight:600; color:var(--text-dark);">{{ tx.description }}</span>
+                  <span v-if="tx.type === 'reimburse'" class="fin-badge"
+                    :style="tx.settled ? { background:'#D1FAE5', color:'#065F46', borderColor:'#6EE7B7' } : { background:'#FEF3C7', color:'#92400E', borderColor:'#FCD34D' }">
+                    {{ tx.settled ? '✓ Lunas' : '⏳ Pending' }}
+                  </span>
+                  <span v-if="tx.category" class="fin-badge" style="background:var(--bg-cream); color:var(--text-muted); border-color:var(--color-sand);">{{ tx.category }}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin-top:3px; flex-wrap:wrap;">
+                  <span style="font-size:11.5px; color:var(--text-muted);">{{ formatDate(tx.date) }}</span>
+                  <span v-if="tx.paidBy" style="font-size:11.5px; color:var(--text-muted);">· dipinjam oleh: <strong>{{ tx.paidBy }}</strong></span>
+                  <span v-if="tx.notes" style="font-size:11.5px; color:var(--text-muted); font-style:italic;">· {{ tx.notes }}</span>
+                </div>
+              </div>
+              <!-- Amount & Actions -->
+              <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                <span style="font-size:14px; font-weight:700; font-family:'Space Mono',monospace;"
+                  :style="{ color: tx.type === 'income' ? '#10B981' : tx.type === 'expense' ? '#EF4444' : '#F59E0B' }">
+                  {{ tx.type === 'income' ? '+' : '-' }}{{ formatCurrency(tx.amount) }}
+                </span>
+                <div style="display:flex; gap:4px;">
+                  <button v-if="tx.type === 'reimburse' && !tx.settled" @click="settleReimburse(tx)"
+                    title="Tandai Lunas" style="background:#D1FAE5; border:1.5px solid #6EE7B7; border-radius:6px; padding:4px 7px; cursor:pointer; font-size:11px; font-weight:700; color:#065F46; display:inline-flex; align-items:center; gap:3px;">
+                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Lunas
+                  </button>
+                  <button @click="deleteTx(tx.id)" title="Hapus" style="background:#FEF2F2; border:1.5px solid #FCA5A5; border-radius:6px; padding:4px 6px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ MODAL: ADD / EDIT BANK ══ -->
+      <transition name="modal-fade">
+        <div v-if="showBankModal" class="moment-backdrop" @click.self="closeBankModal">
+          <div class="moment-modal" style="max-width:440px; width:100%; padding:28px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+              <h3 style="font-size:17px; margin:0;">{{ editingBankId ? 'Edit Rekening Bank' : 'Tambah Rekening Bank' }}</h3>
+              <button @click="closeBankModal" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:20px; line-height:1;">✕</button>
+            </div>
+            <div class="form-group">
+              <label>Nama Bank</label>
+              <input type="text" class="form-input" v-model="bankForm.name" placeholder="cth. BCA, Mandiri, GoPay..." />
+            </div>
+            <div class="form-group">
+              <label>Fungsi / Peruntukan</label>
+              <input type="text" class="form-input" v-model="bankForm.function" placeholder="cth. Tabungan utama, Belanja online, Investasi..." />
+            </div>
+            <div class="form-group">
+              <label>Saldo Awal (Rp)</label>
+              <input type="number" class="form-input" v-model.number="bankForm.initialBalance" placeholder="0" min="0" />
+            </div>
+            <div class="form-group" style="margin-bottom:20px;">
+              <label>Warna Identitas</label>
+              <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                <span v-for="c in bankColors" :key="c" @click="bankForm.color = c"
+                  style="width:24px; height:24px; border-radius:50%; cursor:pointer; transition:transform 0.15s; display:inline-block;"
+                  :style="{ background: c, outline: bankForm.color === c ? '3px solid var(--text-dark)' : 'none', outlineOffset: '2px', transform: bankForm.color === c ? 'scale(1.15)' : 'scale(1)' }">
+                </span>
+                <input type="color" v-model="bankForm.color" style="width:28px; height:28px; border:none; cursor:pointer; border-radius:50%; padding:0; background:none;" title="Pilih warna kustom" />
+              </div>
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button class="btn" @click="closeBankModal" style="flex:1; background:var(--bg-cream); border:1.5px solid var(--color-sand); color:var(--text-dark); cursor:pointer; border-radius:8px; font-weight:600;">Batal</button>
+              <button class="btn btn-primary" @click="saveBank" style="flex:2; cursor:pointer;">{{ editingBankId ? 'Simpan Perubahan' : 'Tambah Rekening' }}</button>
+            </div>
+          </div>
+        </div>
+      </transition>
+
+      <!-- ══ MODAL: ADD TRANSACTION ══ -->
+      <transition name="modal-fade">
+        <div v-if="showTxModal" class="moment-backdrop" @click.self="closeTxModal">
+          <div class="moment-modal" style="max-width:460px; width:100%; padding:28px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+              <h3 style="font-size:17px; margin:0; display:flex; align-items:center; gap:8px;">
+                <span :style="{ color: getTxColor(txForm.type) }">
+                  <svg v-if="txForm.type === 'income'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+                  <svg v-else-if="txForm.type === 'expense'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+                  <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                </span>
+                {{ txTypeLabel }}
+              </h3>
+              <button @click="closeTxModal" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:20px; line-height:1;">✕</button>
+            </div>
+            <!-- Type switcher -->
+            <div style="display:flex; gap:6px; margin-bottom:18px;">
+              <button v-for="t in txTypes" :key="t.key" @click="txForm.type = t.key"
+                style="flex:1; padding:7px 4px; border-radius:8px; border:1.5px solid; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s;"
+                :style="txForm.type === t.key
+                  ? { background: t.color, color:'#fff', borderColor: t.color }
+                  : { background:'transparent', color:'var(--text-muted)', borderColor:'var(--color-sand)' }">
+                {{ t.label }}
+              </button>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:0;">
+              <div class="form-group" style="margin-bottom:14px;">
+                <label>Tanggal</label>
+                <input type="date" class="form-input" v-model="txForm.date" required />
+              </div>
+              <div class="form-group" style="margin-bottom:14px;">
+                <label>Jumlah (Rp)</label>
+                <input type="number" class="form-input" v-model.number="txForm.amount" placeholder="0" min="1" required />
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:14px;">
+              <label>Deskripsi</label>
+              <input type="text" class="form-input" v-model="txForm.description" placeholder="cth. Makan siang, Gaji, Tagihan listrik..." required />
+            </div>
+            <div class="form-group" style="margin-bottom:14px;">
+              <label>Kategori <span style="font-weight:400; color:var(--text-muted);">(opsional)</span></label>
+              <input type="text" class="form-input" v-model="txForm.category" placeholder="cth. Makan, Transport, Hiburan, Tagihan..." list="fin-cat-list" />
+              <datalist id="fin-cat-list">
+                <option v-for="cat in allCategories" :key="cat" :value="cat"/>
+              </datalist>
+            </div>
+            <!-- Reimburse-specific fields -->
+            <div v-if="txForm.type === 'reimburse'" class="form-group" style="margin-bottom:14px;">
+              <label>Dipinjam Oleh</label>
+              <input type="text" class="form-input" v-model="txForm.paidBy" placeholder="cth. Andi, Kantor, Dina..." />
+            </div>
+            <div class="form-group" style="margin-bottom:20px;">
+              <label>Catatan <span style="font-weight:400; color:var(--text-muted);">(opsional)</span></label>
+              <input type="text" class="form-input" v-model="txForm.notes" placeholder="Tambahkan catatan singkat..." />
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button class="btn" @click="closeTxModal" style="flex:1; background:var(--bg-cream); border:1.5px solid var(--color-sand); color:var(--text-dark); cursor:pointer; border-radius:8px; font-weight:600;">Batal</button>
+              <button class="btn btn-primary" @click="saveTx" style="flex:2; cursor:pointer;">Simpan Transaksi</button>
+            </div>
+          </div>
+        </div>
+      </transition>
+
+    </div>
+  `,
+
+  data() {
+    return {
+      banks: [],
+      transactions: [],
+      selectedBankId: null,
+      activeTab: 'all',
+
+      // Bank modal
+      showBankModal: false,
+      editingBankId: null,
+      bankForm: { name: '', function: '', initialBalance: 0, color: '#10B981' },
+
+      // Transaction modal
+      showTxModal: false,
+      txForm: {
+        type: 'expense',
+        date: new Date().toISOString().split('T')[0],
+        amount: null,
+        description: '',
+        category: '',
+        paidBy: '',
+        notes: '',
+      },
+
+      bankColors: ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#EC4899', '#14B8A6', '#D67B52'],
+
+      tabs: [
+        { key: 'all', label: 'Semua', color: 'var(--text-dark)' },
+        { key: 'income', label: '↑ Masuk', color: '#10B981' },
+        { key: 'expense', label: '↓ Keluar', color: '#EF4444' },
+        { key: 'reimburse', label: '↺ Reimburse', color: '#F59E0B' },
+      ],
+
+      txTypes: [
+        { key: 'income', label: '↑ Tambah Saldo', color: '#10B981' },
+        { key: 'expense', label: '↓ Pengeluaran', color: '#EF4444' },
+        { key: 'reimburse', label: '↺ Reimburse', color: '#F59E0B' },
+      ],
+    };
+  },
+
+  computed: {
+    selectedBank() {
+      return this.banks.find(b => b.id === this.selectedBankId) || null;
+    },
+    bankTransactions() {
+      if (!this.selectedBankId) return [];
+      return this.transactions
+        .filter(tx => tx.bankId === this.selectedBankId)
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+    },
+    filteredTransactions() {
+      if (this.activeTab === 'all') return this.bankTransactions;
+      return this.bankTransactions.filter(tx => tx.type === this.activeTab);
+    },
+    totalBalance() { return this.banks.reduce((s, b) => s + this.getBankBalance(b.id), 0); },
+    totalOutflow() { return this.banks.reduce((s, b) => s + this.getBankOutflow(b.id), 0); },
+    totalPendingReimburse() { return this.banks.reduce((s, b) => s + this.getBankPendingReimburse(b.id), 0); },
+    totalSettledReimburse() {
+      return this.transactions.filter(tx => tx.type === 'reimburse' && tx.settled)
+        .reduce((s, tx) => s + tx.amount, 0);
+    },
+    txTypeLabel() {
+      const map = { income: 'Tambah Saldo', expense: 'Catat Pengeluaran', reimburse: 'Catat Reimburse' };
+      return map[this.txForm.type] || '';
+    },
+    allCategories() {
+      const cats = new Set(this.transactions.map(tx => tx.category).filter(Boolean));
+      return [...cats];
+    },
+  },
+
+  methods: {
+    // ── Data helpers ──
+    getBankTx(bankId) { return this.transactions.filter(tx => tx.bankId === bankId); },
+    getBankBalance(bankId) {
+      const bank = this.banks.find(b => b.id === bankId);
+      if (!bank) return 0;
+      const txs = this.getBankTx(bankId);
+      const inflow = txs.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0);
+      const outflow = txs.filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0);
+      // Reimburse yang pending → tetap kurangi saldo (uang sudah keluar, belum balik)
+      const reimbursePending = txs.filter(tx => tx.type === 'reimburse' && !tx.settled).reduce((s, tx) => s + tx.amount, 0);
+      return (bank.initialBalance || 0) + inflow - outflow - reimbursePending;
+    },
+    getBankInflow(bankId) { return this.getBankTx(bankId).filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0); },
+    getBankOutflow(bankId) { return this.getBankTx(bankId).filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0); },
+    getBankPendingReimburse(bankId) { return this.getBankTx(bankId).filter(tx => tx.type === 'reimburse' && !tx.settled).reduce((s, tx) => s + tx.amount, 0); },
+    getTabCount(type) { return this.bankTransactions.filter(tx => tx.type === type).length; },
+
+    // ── Format ──
+    formatCurrency(v) {
+      if (v === undefined || v === null) return 'Rp 0';
+      return 'Rp ' + Math.abs(v).toLocaleString('id-ID');
+    },
+    formatCurrencyShort(v) {
+      if (!v) return '0';
+      if (v >= 1_000_000_000) return (v / 1_000_000_000).toFixed(1) + 'M';
+      if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'jt';
+      if (v >= 1_000) return (v / 1_000).toFixed(0) + 'rb';
+      return v.toLocaleString('id-ID');
+    },
+    formatDate(d) {
+      try { return new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }); }
+      catch(e) { return d; }
+    },
+
+    // ── Tx color/bg ──
+    getTxColor(type) {
+      const m = { income: '#10B981', expense: '#EF4444', reimburse: '#F59E0B' };
+      return m[type] || 'var(--text-muted)';
+    },
+    getTxBg(type) {
+      const m = { income: '#D1FAE5', expense: '#FEE2E2', reimburse: '#FEF3C7' };
+      return m[type] || 'var(--bg-cream)';
+    },
+
+    // ── Select bank ──
+    selectBank(id) { this.selectedBankId = id; this.activeTab = 'all'; },
+
+    // ── Bank CRUD ──
+    openAddBank() {
+      this.editingBankId = null;
+      this.bankForm = { name: '', function: '', initialBalance: 0, color: '#10B981' };
+      this.showBankModal = true;
+    },
+    editBank(bank) {
+      this.editingBankId = bank.id;
+      this.bankForm = { name: bank.name, function: bank.function, initialBalance: bank.initialBalance || 0, color: bank.color };
+      this.showBankModal = true;
+    },
+    saveBank() {
+      if (!this.bankForm.name.trim()) return alert('Nama bank wajib diisi!');
+      if (this.editingBankId) {
+        const idx = this.banks.findIndex(b => b.id === this.editingBankId);
+        if (idx !== -1) this.banks[idx] = { ...this.banks[idx], ...this.bankForm };
+      } else {
+        const newBank = { id: 'bank-' + Date.now(), ...this.bankForm };
+        this.banks.push(newBank);
+        this.selectedBankId = newBank.id;
+      }
+      this.saveAll();
+      this.closeBankModal();
+    },
+    deleteBank(id) {
+      if (!confirm('Hapus rekening ini beserta semua transaksinya?')) return;
+      this.banks = this.banks.filter(b => b.id !== id);
+      this.transactions = this.transactions.filter(tx => tx.bankId !== id);
+      if (this.selectedBankId === id) this.selectedBankId = this.banks[0]?.id || null;
+      this.saveAll();
+    },
+    closeBankModal() { this.showBankModal = false; this.editingBankId = null; },
+
+    // ── Transaction CRUD ──
+    openAddTransaction(type) {
+      if (!this.selectedBankId) return;
+      this.txForm = {
+        type: type || 'expense',
+        date: new Date().toISOString().split('T')[0],
+        amount: null,
+        description: '',
+        category: '',
+        paidBy: '',
+        notes: '',
+      };
+      this.showTxModal = true;
+    },
+    saveTx() {
+      if (!this.txForm.description.trim()) return alert('Deskripsi wajib diisi!');
+      if (!this.txForm.amount || this.txForm.amount <= 0) return alert('Jumlah harus lebih dari 0!');
+      const newTx = {
+        id: 'tx-' + Date.now(),
+        bankId: this.selectedBankId,
+        type: this.txForm.type,
+        date: this.txForm.date,
+        amount: Number(this.txForm.amount),
+        description: this.txForm.description,
+        category: this.txForm.category,
+        paidBy: this.txForm.type === 'reimburse' ? this.txForm.paidBy : '',
+        notes: this.txForm.notes,
+        settled: false,
+      };
+      this.transactions.push(newTx);
+      this.saveAll();
+      this.closeTxModal();
+    },
+    deleteTx(id) {
+      if (!confirm('Hapus transaksi ini?')) return;
+      this.transactions = this.transactions.filter(tx => tx.id !== id);
+      this.saveAll();
+    },
+    settleReimburse(tx) {
+      const idx = this.transactions.findIndex(t => t.id === tx.id);
+      if (idx !== -1) {
+        this.transactions[idx] = { ...this.transactions[idx], settled: true };
+        // Uang sudah balik → tambahkan income tersembunyi
+        const refund = {
+          id: 'tx-refund-' + Date.now(),
+          bankId: tx.bankId,
+          type: 'income',
+          date: new Date().toISOString().split('T')[0],
+          amount: tx.amount,
+          description: 'Reimburse kembali: ' + tx.description,
+          category: 'Reimburse',
+          paidBy: '',
+          notes: 'Auto-created saat reimburse dari ' + (tx.paidBy || 'seseorang') + ' dilunasi',
+          settled: false,
+        };
+        this.transactions.push(refund);
+        this.saveAll();
+      }
+    },
+    closeTxModal() { this.showTxModal = false; },
+
+    // ── Storage ──
+    saveAll() {
+      WorkspaceStorage.setItem('fin_banks', JSON.stringify(this.banks));
+      WorkspaceStorage.setItem('fin_transactions', JSON.stringify(this.transactions));
+    },
+  },
+
+  mounted() {
+    try {
+      const savedBanks = WorkspaceStorage.getItem('fin_banks');
+      if (savedBanks) this.banks = JSON.parse(savedBanks);
+    } catch(e) { this.banks = []; }
+    try {
+      const savedTx = WorkspaceStorage.getItem('fin_transactions');
+      if (savedTx) this.transactions = JSON.parse(savedTx);
+    } catch(e) { this.transactions = []; }
+    if (this.banks.length > 0 && !this.selectedBankId) this.selectedBankId = this.banks[0].id;
+  },
+};

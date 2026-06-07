@@ -544,5 +544,6 @@ app.component('pomodoro-timer', PomodoroTimer);
 app.component('google-calendar', GoogleCalendar);
 app.component('icon-manager', IconManager);
 app.component('floating-countdown-timer', FloatingCountdownTimer);
+app.component('financial-tracker', FinancialTracker);
 
 app.mount('#app');
