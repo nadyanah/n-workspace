@@ -226,17 +226,17 @@ const JobLogbook = {
               <button @click="convertPlanToLog(plan)"
                 title="Tandai sudah dikerjakan → pindah ke Riwayat"
                 style="background: #ECFDF5; color: #065F46; border: 1.5px solid #6EE7B7; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
-                Sudah Dikerjakan
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
               </button>
               <button @click="startEditPlan(plan)"
                 title="Edit task plan ini"
                 style="background: var(--bg-cream); color: var(--text-dark); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
-                Edit
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
               </button>
               <button @click="deletePlan(plan.id)"
                 title="Hapus task"
                 style="background: #FEF2F2; color: #B91C1C; border: 1.5px solid #FCA5A5; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
-                Hapus
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
               </button>
             </div>
           </div>
