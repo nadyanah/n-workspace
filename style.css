@@ -4600,3 +4600,11 @@ input:checked + .switch-slider:before {
   .fin-chip-value { font-size: 14px; }
   .fin-tx-row { flex-wrap: wrap; }
 }
+
+/* Responsive khusus untuk halaman Interview Practice di Tablet/Mobile */
+@media (max-width: 1024px) {
+  .interview-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}

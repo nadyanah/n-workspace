@@ -3868,7 +3868,7 @@ const InterviewPractice = {
           </div>
 
           <!-- Quick Custom (Manual only) -->
-          <div v-if="activeMode==='manual'" style="display: none; "background:#FCFAF7; border:1.5px solid #EAE5DD; border-radius:14px; padding:16px;">
+          <div v-if="activeMode==='manual'" style="display: none; background:#FCFAF7; border:1.5px solid #EAE5DD; border-radius:14px; padding:16px;">
             <h4 style="font-family:'Outfit',sans-serif; font-size:14px; font-weight:800; color:#1C3B34; margin:0 0 4px 0; display:flex; align-items:center; gap:6px;">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#6C5CE7;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
               ✍️ Latih Pertanyaan Kustom Langsung
