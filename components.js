@@ -7044,7 +7044,7 @@ const FinancialTracker = {
   template: `
     <div class="fin-tracker">
 
-      <div class="flex-between" style="border-bottom: 2px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 28px; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+      <div style="border-bottom: 2px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 28px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
         <div>
           <h2 style="display:flex; align-items:center; gap:10px;">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
@@ -7052,10 +7052,64 @@ const FinancialTracker = {
           </h2>
           <p style="color:var(--text-muted); font-size:13.5px; margin-top:4px;">Pantau tabungan, pengeluaran & reimburse (Global Ledger)</p>
         </div>
-        <button class="btn btn-primary" @click="openAddBank" style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Tambah Bank
-        </button>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+
+          <!-- Rentang Tanggal Picker -->
+          <div style="position:relative;">
+            <button type="button" @click.stop="showFinRangePicker = !showFinRangePicker"
+              style="display:inline-flex; align-items:center; gap:7px; height:38px; padding:0 14px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:8px; cursor:pointer; font-size:12.5px; color:var(--text-dark); white-space:nowrap; max-width:240px; overflow:hidden;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; color:var(--color-terracotta);"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span style="overflow:hidden; text-overflow:ellipsis;">
+                <template v-if="finFilterStartDate || finFilterEndDate">
+                  {{ finFilterStartDate ? formatDate(finFilterStartDate) : '?' }} – {{ finFilterEndDate ? formatDate(finFilterEndDate) : '?' }}
+                </template>
+                <template v-else><span style="color:var(--text-muted);">Pilih rentang tanggal...</span></template>
+              </span>
+            </button>
+
+            <!-- Popup Kalender -->
+            <div v-if="showFinRangePicker" @click.stop style="position:absolute; top:calc(100% + 6px); right:0; z-index:9999; background:#fff; border:1.5px solid var(--color-sand); border-radius:14px; box-shadow:0 8px 32px rgba(0,0,0,0.13); padding:16px; min-width:284px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                <button type="button" @click="finRangeCalPrevMonth" style="background:none; border:none; cursor:pointer; font-size:16px; color:var(--text-dark); padding:4px 8px; border-radius:6px; line-height:1;">&lt;</button>
+                <span style="font-weight:700; font-size:14px; color:var(--text-dark);">{{ finRangeCalMonthLabel }}</span>
+                <button type="button" @click="finRangeCalNextMonth" style="background:none; border:none; cursor:pointer; font-size:16px; color:var(--text-dark); padding:4px 8px; border-radius:6px; line-height:1;">&gt;</button>
+              </div>
+              <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:2px; margin-bottom:4px;">
+                <span v-for="(d,i) in ['S','S','R','K','J','S','M']" :key="'fh'+i" style="text-align:center; font-size:10.5px; font-weight:700; color:var(--text-muted); padding:2px 0;">{{ d }}</span>
+              </div>
+              <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:2px;">
+                <span v-for="cell in finRangeCalCells" :key="cell.key" @click="cell.date ? onFinRangeCalClick(cell.date) : null"
+                  :style="getFinRangeCellStyle(cell)"
+                  style="text-align:center; font-size:13px; padding:6px 2px; border-radius:7px; cursor:pointer; user-select:none; transition:background 0.12s;">
+                  {{ cell.label }}
+                </span>
+              </div>
+              <div style="margin-top:10px; font-size:11px; color:var(--text-muted); text-align:center; line-height:1.4;">
+                <span v-if="!finFilterStartDate">Klik tanggal mulai</span>
+                <span v-else-if="!finFilterEndDate">Klik tanggal akhir</span>
+                <span v-else style="color:var(--color-terracotta); font-weight:600;">✓ Rentang dipilih — klik lagi untuk reset</span>
+              </div>
+              <button v-if="finFilterStartDate || finFilterEndDate" type="button" @click="finFilterStartDate=''; finFilterEndDate=''; showFinRangePicker=false;"
+                style="margin-top:8px; width:100%; background:var(--bg-cream); border:1px solid var(--color-sand); color:var(--text-dark); border-radius:7px; padding:6px; font-size:12px; cursor:pointer; font-weight:600;">
+                Hapus Rentang
+              </button>
+            </div>
+          </div>
+
+          <!-- Badge aktif filter -->
+          <span v-if="finFilterStartDate || finFilterEndDate"
+            @click="finFilterStartDate=''; finFilterEndDate=''; showFinRangePicker=false;"
+            title="Klik untuk hapus filter"
+            style="display:inline-flex; align-items:center; gap:5px; height:38px; padding:0 12px; background:#FEF3C7; border:1.5px solid #FCD34D; border-radius:8px; font-size:11.5px; font-weight:600; color:#92400E; cursor:pointer; white-space:nowrap;">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            {{ finFilteredCount }} transaksi
+          </span>
+
+          <button class="btn btn-primary" @click="openAddBank" style="display:inline-flex; align-items:center; gap:6px; cursor:pointer; height:38px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah Bank
+          </button>
+        </div>
       </div>
 
       <div v-if="banks.length === 0" style="text-align:center; padding:64px 20px; background:var(--bg-cream); border-radius:16px; border:2px dashed var(--color-sand);">
@@ -7069,21 +7123,28 @@ const FinancialTracker = {
         <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
           <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Total Saldo Global</span>
           <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ formatCurrency(totalBalance) }}</p>
+          <span style="font-size: 10px; color: var(--text-muted); font-style: italic;">semua waktu</span>
         </div>
         
-        <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
+        <div :style="(finFilterStartDate || finFilterEndDate) ? { background: '#FFF7ED', border: '1px solid #FCD34D', borderRadius: '12px', padding: '14px', textAlign: 'center' } : { backgroundColor: 'var(--bg-cream)', border: '1px solid var(--color-sand)', borderRadius: '12px', padding: '14px', textAlign: 'center' }">
           <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Total Pengeluaran</span>
           <p class="text-mono" style="font-size: 24px; font-weight: bold; color: #EF4444; margin-top: 6px;">-{{ formatCurrency(totalOutflow) }}</p>
+          <span v-if="finFilterStartDate || finFilterEndDate" style="font-size: 10px; color: #92400E; font-weight: 600;">🗓 dalam rentang</span>
+          <span v-else style="font-size: 10px; color: var(--text-muted); font-style: italic;">semua waktu</span>
         </div>
         
-        <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
+        <div :style="(finFilterStartDate || finFilterEndDate) ? { background: '#FFF7ED', border: '1px solid #FCD34D', borderRadius: '12px', padding: '14px', textAlign: 'center' } : { backgroundColor: 'var(--bg-cream)', border: '1px solid var(--color-sand)', borderRadius: '12px', padding: '14px', textAlign: 'center' }">
           <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Reimburse Pending</span>
           <p class="text-mono" style="font-size: 24px; font-weight: bold; color: #F59E0B; margin-top: 6px;">{{ formatCurrency(totalPendingReimburse) }}</p>
+          <span v-if="finFilterStartDate || finFilterEndDate" style="font-size: 10px; color: #92400E; font-weight: 600;">🗓 dalam rentang</span>
+          <span v-else style="font-size: 10px; color: var(--text-muted); font-style: italic;">semua waktu</span>
         </div>
         
-        <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
+        <div :style="(finFilterStartDate || finFilterEndDate) ? { background: '#FFF7ED', border: '1px solid #FCD34D', borderRadius: '12px', padding: '14px', textAlign: 'center' } : { backgroundColor: 'var(--bg-cream)', border: '1px solid var(--color-sand)', borderRadius: '12px', padding: '14px', textAlign: 'center' }">
           <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Reimburse Selesai</span>
           <p class="text-mono" style="font-size: 24px; font-weight: bold; color: #6366F1; margin-top: 6px;">{{ formatCurrency(totalSettledReimburse) }}</p>
+          <span v-if="finFilterStartDate || finFilterEndDate" style="font-size: 10px; color: #92400E; font-weight: 600;">🗓 dalam rentang</span>
+          <span v-else style="font-size: 10px; color: var(--text-muted); font-style: italic;">semua waktu</span>
         </div>
 
       </div>
@@ -7356,6 +7417,12 @@ const FinancialTracker = {
 
       bankColors: ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#EC4899', '#14B8A6', '#D67B52'],
 
+      finFilterStartDate: '',
+      finFilterEndDate: '',
+      showFinRangePicker: false,
+      finRangeCalYear: new Date().getFullYear(),
+      finRangeCalMonth: new Date().getMonth(),
+
       tabs: [
         { key: 'all', label: 'Semua', color: 'var(--text-dark)' },
         { key: 'income', label: '↑ Masuk', color: '#10B981' },
@@ -7367,18 +7434,57 @@ const FinancialTracker = {
 
   computed: {
     filteredTransactions() {
-      let txs = [...this.transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+      let txs = [...this.finDateFilteredTx].sort((a, b) => new Date(b.date) - new Date(a.date));
       if (this.activeTab === 'income') return txs.filter(t => t.type === 'income');
       if (this.activeTab === 'expense') return txs.filter(t => t.type === 'expense' && !t.isReimburse);
       if (this.activeTab === 'reimburse') return txs.filter(t => t.isReimburse);
       return txs;
     },
-    totalBalance() { return this.banks.reduce((s, b) => s + this.getBankBalance(b.id), 0); },
-    totalOutflow() { return this.banks.reduce((s, b) => s + this.getBankOutflow(b.id), 0); },
-    totalPendingReimburse() { return this.banks.reduce((s, b) => s + this.getBankPendingReimburse(b.id), 0); },
+    finFilteredCount() {
+      return this.finDateFilteredTx.length;
+    },
+    finTodayStr() {
+      return new Date().toISOString().split('T')[0];
+    },
+    finRangeCalMonthLabel() {
+      const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+      return `${months[this.finRangeCalMonth]} ${this.finRangeCalYear}`;
+    },
+    finRangeCalCells() {
+      const year = this.finRangeCalYear;
+      const month = this.finRangeCalMonth;
+      const firstDay = new Date(year, month, 1).getDay();
+      const startOffset = (firstDay === 0) ? 6 : firstDay - 1;
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const cells = [];
+      for (let i = 0; i < startOffset; i++) cells.push({ key: 'fe' + i, date: null, label: '' });
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        cells.push({ key: dateStr, date: dateStr, label: d });
+      }
+      return cells;
+    },
+    totalBalance() {
+      // Saldo tetap pakai semua transaksi (saldo adalah kondisi real rekening)
+      return this.banks.reduce((s, b) => s + this.getBankBalance(b.id), 0);
+    },
+    totalOutflow() {
+      const txs = this.finDateFilteredTx;
+      return txs.filter(tx => tx.type === 'expense' && !tx.isReimburse).reduce((s, tx) => s + tx.amount, 0);
+    },
+    totalPendingReimburse() {
+      const txs = this.finDateFilteredTx;
+      return txs.filter(tx => tx.isReimburse && !tx.settled).reduce((s, tx) => s + tx.amount, 0);
+    },
     totalSettledReimburse() {
-      return this.transactions.filter(tx => tx.isReimburse && tx.settled)
-        .reduce((s, tx) => s + tx.amount, 0);
+      const txs = this.finDateFilteredTx;
+      return txs.filter(tx => tx.isReimburse && tx.settled).reduce((s, tx) => s + tx.amount, 0);
+    },
+    finDateFilteredTx() {
+      let txs = [...this.transactions];
+      if (this.finFilterStartDate) txs = txs.filter(t => t.date >= this.finFilterStartDate);
+      if (this.finFilterEndDate) txs = txs.filter(t => t.date <= this.finFilterEndDate);
+      return txs;
     },
     allCategories() {
       const cats = new Set(this.transactions.map(tx => tx.category).filter(Boolean));
@@ -7543,6 +7649,26 @@ const FinancialTracker = {
       }
     },
     
+    finRangeCalPrevMonth() { if (this.finRangeCalMonth === 0) { this.finRangeCalMonth = 11; this.finRangeCalYear--; } else this.finRangeCalMonth--; },
+    finRangeCalNextMonth() { if (this.finRangeCalMonth === 11) { this.finRangeCalMonth = 0; this.finRangeCalYear++; } else this.finRangeCalMonth++; },
+    onFinRangeCalClick(dateStr) {
+      if (!this.finFilterStartDate || (this.finFilterStartDate && this.finFilterEndDate)) { this.finFilterStartDate = dateStr; this.finFilterEndDate = ''; }
+      else {
+        if (dateStr < this.finFilterStartDate) { this.finFilterEndDate = this.finFilterStartDate; this.finFilterStartDate = dateStr; }
+        else this.finFilterEndDate = dateStr;
+        this.showFinRangePicker = false;
+      }
+    },
+    getFinRangeCellStyle(cell) {
+      if (!cell.date) return { visibility: 'hidden' };
+      const isStart = cell.date === this.finFilterStartDate, isEnd = cell.date === this.finFilterEndDate;
+      const inRange = this.finFilterStartDate && this.finFilterEndDate && cell.date > this.finFilterStartDate && cell.date < this.finFilterEndDate;
+      const isToday = cell.date === this.finTodayStr;
+      if (isStart || isEnd) return { background: 'var(--color-terracotta)', color: '#fff', fontWeight: 'bold', borderRadius: '50%' };
+      if (inRange) return { background: 'rgba(214,123,82,0.15)', color: 'var(--text-dark)', borderRadius: '4px' };
+      if (isToday) return { border: '1.5px solid var(--color-terracotta)', color: 'var(--color-terracotta)', fontWeight: 'bold', borderRadius: '50%' };
+      return { color: 'var(--text-dark)' };
+    },
     closeTxModal() { this.showTxModal = false; },
 
     saveAll() {
@@ -7570,5 +7696,10 @@ const FinancialTracker = {
         this.transactions = loadedTxs;
       }
     } catch(e) { this.transactions = []; }
+    this._closeFinRangePicker = () => { if (this.showFinRangePicker) this.showFinRangePicker = false; };
+    document.addEventListener('click', this._closeFinRangePicker);
+  },
+  unmounted() {
+    if (this._closeFinRangePicker) document.removeEventListener('click', this._closeFinRangePicker);
   },
 };
