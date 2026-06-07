@@ -33,11 +33,68 @@ const JobLogbook = {
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>
             PDF
           </button>
-          <button class="btn btn-primary" @click="showAddLog = !showAddLog">
-            {{ showAddLog ? 'Tutup Form' : 'Catat Hari Baru' }}
+          <button class="btn btn-primary" @click="showAddLog = true">
+           + Catat Hari Baru
           </button>
         </div>
       </div>
+
+      <transition name="modal-fade">
+        <div v-if="showAddLog" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(44, 38, 33, 0.6); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 99999;" @click.self="showAddLog = false">
+          <div style="background: var(--bg-card); max-width: 540px; width: 90%; padding: 28px; border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+              <h3 style="font-size: 18px; margin: 0; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                Catat Logbook Harian
+              </h3>
+              <button @click="showAddLog = false" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:24px; line-height:1;">✕</button>
+            </div>
+
+            <form @submit.prevent="saveLog">
+              <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 12px; margin-bottom: 16px;">
+                <div class="form-group" style="margin: 0;">
+                  <label>Tanggal</label>
+                  <input type="date" class="form-input" v-model="form.date" required style="height: 42px;" />
+                </div>
+                <div class="form-group" style="margin: 0;">
+                  <label>Kategori Pekerjaan</label>
+                  <select class="form-input" v-model="form.category" required style="height: 42px;">
+                    <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label>Tugas / Deskripsi Kerja</label>
+                <textarea class="form-input" v-model="form.tasks" rows="3" placeholder="Sebutkan kegiatan atau tugas penting yang dikerjakan hari ini..." required></textarea>
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label>Hasil yang Dicapai</label>
+                <textarea class="form-input" v-model="form.achievements" rows="2" placeholder="Apa hasil konkrit atau output dari tugas di atas?..." required></textarea>
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label>Langkah Selanjutnya (Next Action)</label>
+                <textarea class="form-input" v-model="form.nextAction" rows="2" placeholder="Apa rencana kelanjutan terkait tugas ini?..." required></textarea>
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label>Tautan Dokumen, Link (Opsional)</label>
+                <input type="url" class="form-input" v-model="form.documentLink" placeholder="https://link-pendukung.com/laporan" />
+              </div>
+              <div class="form-group" style="margin-bottom: 24px; display: flex; align-items: center; gap: 8px; background: #FCFAF7; padding: 12px; border: 1.5px solid #EAE5DD; border-radius: 8px;">
+                <input type="checkbox" id="syncToContentCheckbox" v-model="syncToContentOnSave" style="width: 16px; height: 16px; accent-color: var(--color-terracotta); cursor: pointer;" />
+                <label for="syncToContentCheckbox" style="margin: 0; cursor: pointer; font-size: 12px; font-weight: 600; color: #5D4F43; display: flex; align-items: center; gap: 6px; user-select: none;">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                  Sync Langsung Jadi Konten Baru di Board
+                </label>
+              </div>
+              <div style="display: flex; gap: 10px;">
+                <button type="button" class="btn" @click="showAddLog = false" style="flex: 1; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); font-weight: bold; cursor: pointer; border-radius: 8px;">Batal</button>
+                <button type="submit" class="btn btn-primary" style="flex: 2;">Simpan Entri Kerja</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </transition>
 
       <!-- ══════════════════════════════════════════════════════════ -->
       <!-- SECTION: KELOLA KATEGORI                                  -->
@@ -365,53 +422,8 @@ const JobLogbook = {
       <!-- ══════════════════════════════════════════════════════════ -->
       <!-- SECTION: FORM + RIWAYAT KEGIATAN KERJA                   -->
       <!-- ══════════════════════════════════════════════════════════ -->
-      <div class="logbook-grid" :style="showAddLog ? 'grid-template-columns: 360px 1fr;' : 'grid-template-columns: 1fr;'">
+      <div class="logbook-grid" style="grid-template-columns: 1fr;">
         <!-- Logging Form -->
-        <div v-if="showAddLog" class="drawer-section" style="margin-bottom: 0; padding: 22px; border-radius: 12px; animation: popIn 0.2s ease;">
-          <h3 style="font-size: 18px; margin-bottom: 16px; color: var(--text-dark); display: flex; align-items: center; gap: 6px;">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-            Catat Logbook
-          </h3>
-          <form @submit.prevent="saveLog">
-            <div class="form-group">
-              <label>Tanggal</label>
-              <input type="date" class="form-input" v-model="form.date" required />
-            </div>
-            <div class="form-group">
-              <label>Kategori Pekerjaan</label>
-              <select class="form-input" v-model="form.category" required>
-                <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Tugas / Deskripsi Kerja</label>
-              <textarea class="form-input" v-model="form.tasks" rows="3" placeholder="Sebutkan kegiatan atau tugas penting yang dikerjakan hari ini..." required></textarea>
-            </div>
-            <div class="form-group">
-              <label>Hasil yang Dicapai</label>
-              <textarea class="form-input" v-model="form.achievements" rows="3" placeholder="Apa hasil konkrit atau output dari tugas di atas?..." required></textarea>
-            </div>
-            <div class="form-group">
-              <label>Langkah Selanjutnya (Next Action)</label>
-              <textarea class="form-input" v-model="form.nextAction" rows="2" placeholder="Apa rencana kelanjutan terkait tugas ini?..." required></textarea>
-            </div>
-            <div class="form-group" style="margin-bottom: 16px;">
-              <label>Tautan Dokumen, Link (Opsional)</label>
-              <input type="url" class="form-input" v-model="form.documentLink" placeholder="https://link-pendukung.com/laporan" />
-            </div>
-            <div class="form-group" style="margin-bottom: 24px; display: flex; align-items: center; gap: 8px; background: #FCFAF7; padding: 10px; border: 1.5px solid #EAE5DD; border-radius: 8px;">
-              <input type="checkbox" id="syncToContentCheckbox" v-model="syncToContentOnSave" style="width: 16px; height: 16px; accent-color: var(--color-terracotta); cursor: pointer;" />
-              <label for="syncToContentCheckbox" style="margin: 0; cursor: pointer; font-size: 12px; font-weight: 600; color: #5D4F43; display: flex; align-items: center; gap: 6px; user-select: none;">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-                Sync Langsung Jadi Konten Baru di Board
-              </label>
-            </div>
-            <div style="display: flex; gap: 10px; margin-top: 16px;">
-              <button type="button" class="btn" @click="showAddLog = false" style="flex: 1; background-color: #FAF4F0; border: 1.5px solid var(--color-sand); color: var(--text-dark); font-weight: bold; cursor: pointer; border-radius: 8px;">Batal</button>
-              <button type="submit" class="btn btn-primary" style="flex: 2; margin-top: 0 !important; width: auto !important;">Simpan Entri Kerja</button>
-            </div>
-          </form>
-        </div>
 
         <!-- Riwayat Kegiatan Kerja -->
         <div class="drawer-section" style="margin-bottom: 0; padding: 22px; border-radius: 12px; min-width: 0; overflow: visible;">
