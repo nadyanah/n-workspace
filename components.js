@@ -457,9 +457,9 @@ const JobLogbook = {
                     </td>
                     <td style="max-width: 250px; font-size: 13.5px; line-height: 1.4;" :title="log.tasks">{{ log.tasks }}</td>
                     <td style="max-width: 200px; font-size: 13.5px; line-height: 1.4; color: var(--text-dark);" :title="log.achievements">{{ log.achievements }}</td>
-                    <td style="max-width: 180px; font-size: 13.5px; line-height: 1.4;">
-                      <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                        <span :style="log.nextActionCompleted ? { textDecoration: 'line-through', opacity: 0.5, color: '#10B981' } : {}" style="font-style: italic; color: var(--text-muted); word-break: break-word;" :title="log.nextAction">{{ log.nextAction }}</span>
+                    <td style="min-width: 180px; max-width: 220px; font-size: 13.5px; line-height: 1.4;">
+                      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;">
+                        <span :style="log.nextActionCompleted ? { textDecoration: 'line-through', opacity: 0.5, color: '#10B981' } : {}" style="font-style: italic; color: var(--text-muted); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;" :title="log.nextAction">{{ log.nextAction }}</span>
                         <button v-if="log.nextAction && log.nextAction.trim().length > 0"
                                 @click="logNextAction(log)"
                                 :disabled="log.nextActionCompleted"
