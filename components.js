@@ -7052,23 +7052,28 @@ const FinancialTracker = {
         <p style="font-size:13px; color:var(--text-muted);">Klik "Tambah Bank" untuk mulai mencatat keuangan kamu</p>
       </div>
 
-      <div v-if="banks.length > 0" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:12px; margin-bottom:28px;">
-        <div class="fin-summary-chip" style="border-left:4px solid #10B981;">
-          <p class="fin-chip-label">Total Saldo Global</p>
-          <p class="fin-chip-value" style="color:var(--text-dark);">{{ formatCurrency(totalBalance) }}</p>
+      <div v-if="banks.length > 0" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px;">
+        
+        <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
+          <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Total Saldo Global</span>
+          <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ formatCurrency(totalBalance) }}</p>
         </div>
-        <div class="fin-summary-chip" style="border-left:4px solid #EF4444;">
-          <p class="fin-chip-label">Total Pengeluaran</p>
-          <p class="fin-chip-value" style="color:#EF4444;">-{{ formatCurrency(totalOutflow) }}</p>
+        
+        <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
+          <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Total Pengeluaran</span>
+          <p class="text-mono" style="font-size: 24px; font-weight: bold; color: #EF4444; margin-top: 6px;">-{{ formatCurrency(totalOutflow) }}</p>
         </div>
-        <div class="fin-summary-chip" style="border-left:4px solid #F59E0B;">
-          <p class="fin-chip-label">Reimburse Pending</p>
-          <p class="fin-chip-value" style="color:#F59E0B;">{{ formatCurrency(totalPendingReimburse) }}</p>
+        
+        <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
+          <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Reimburse Pending</span>
+          <p class="text-mono" style="font-size: 24px; font-weight: bold; color: #F59E0B; margin-top: 6px;">{{ formatCurrency(totalPendingReimburse) }}</p>
         </div>
-        <div class="fin-summary-chip" style="border-left:4px solid #6366F1;">
-          <p class="fin-chip-label">Reimburse Selesai</p>
-          <p class="fin-chip-value" style="color:#6366F1;">{{ formatCurrency(totalSettledReimburse) }}</p>
+        
+        <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
+          <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Reimburse Selesai</span>
+          <p class="text-mono" style="font-size: 24px; font-weight: bold; color: #6366F1; margin-top: 6px;">{{ formatCurrency(totalSettledReimburse) }}</p>
         </div>
+
       </div>
 
       <div v-if="banks.length > 0" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:16px; margin-bottom:28px;">
