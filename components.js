@@ -5481,7 +5481,7 @@ const IconManager = {
         { id: 5, key: 'dailyNutrition', num: 5, name: 'daily nutrition' },
         { id: 6, key: 'habitTracker', num: 6, name: 'personal habit tracker' },
         { id: 7, key: 'pomodoroTimer', num: 7, name: 'jam pasir pomodoro' },
-        { id: 8, key: 'googleCalendar', num: 8, name: 'google calendar sync' }
+        { id: 8, key: 'googleCalendar', num: 8, name: 'google calendar sync' },
         { id: 9, key: 'financialTracker', num: 9, name: 'financial tracker' }
       ]
     };
