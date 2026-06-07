@@ -440,9 +440,9 @@ const JobLogbook = {
               <table class="log-table">
                 <thead>
                   <tr>
-                    <th style="cursor: pointer; user-select: none; white-space: nowrap;" @click="toggleSort('date')">Tanggal {{ sortBy === 'date' ? (sortDesc ? '▼' : '▲') : '' }}</th>
-                    <th style="cursor: pointer; user-select: none; white-space: nowrap;" @click="toggleSort('category')">Kategori {{ sortBy === 'category' ? (sortDesc ? '▼' : '▲') : '' }}</th>
-                    <th style="cursor: pointer; user-select: none; white-space: nowrap;" @click="toggleSort('tasks')">Tugas / Kegiatan {{ sortBy === 'tasks' ? (sortDesc ? '▼' : '▲') : '' }}</th>
+                    <th style="cursor: pointer; user-select: none;" @click="toggleSort('date')">Tanggal {{ sortBy === 'date' ? (sortDesc ? '▼' : '▲') : '' }}</th>
+                    <th style="cursor: pointer; user-select: none;" @click="toggleSort('category')">Kategori {{ sortBy === 'category' ? (sortDesc ? '▼' : '▲') : '' }}</th>
+                    <th style="cursor: pointer; user-select: none;" @click="toggleSort('tasks')">Tugas / Kegiatan {{ sortBy === 'tasks' ? (sortDesc ? '▼' : '▲') : '' }}</th>
                     <th>Hasil yang Dicapai</th>
                     <th>Next Action</th>
                     <th style="text-align: center;">Tautan</th>
@@ -491,6 +491,12 @@ const JobLogbook = {
                   </tr>
                 </tbody>
               </table>
+            </div>
+            <!-- Scroll hint -->
+            <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; margin-bottom: 4px;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); opacity: 0.5;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              <span style="font-size: 11px; color: var(--text-muted); opacity: 0.6; font-style: italic; letter-spacing: 0.03em;">geser tabel untuk melihat lebih banyak kolom</span>
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); opacity: 0.5;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             </div>
             <div class="flex-between" style="margin-top: 20px; padding-top: 14px; border-top: 1.5px solid var(--color-sand); align-items: center;">
               <span style="font-size: 13px; color: var(--text-muted);">Menampilkan <strong>{{ paginationInfo.start }}</strong> sampai <strong>{{ paginationInfo.end }}</strong> dari <strong>{{ filteredAndSortedLogs.length }}</strong> entri</span>

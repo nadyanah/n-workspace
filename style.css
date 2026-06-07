@@ -473,10 +473,30 @@ h1, h2, h3, h4 {
 .log-table-container {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  border-radius: 8px;
-  padding-bottom: 4px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--color-sand);
+  border-radius: 12px;
+  padding-bottom: 0;
   scrollbar-width: thin;
-  scrollbar-color: var(--color-sand) transparent;
+  scrollbar-color: var(--color-sand) var(--bg-cream);
+}
+
+.log-table-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.log-table-container::-webkit-scrollbar-track {
+  background: var(--bg-cream);
+  border-radius: 0 0 12px 12px;
+}
+
+.log-table-container::-webkit-scrollbar-thumb {
+  background: var(--color-sand);
+  border-radius: 4px;
+}
+
+.log-table-container::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold);
 }
 
 .log-table {
@@ -492,16 +512,22 @@ h1, h2, h3, h4 {
   font-size: 13px;
   color: var(--text-muted);
   border-bottom: 1.5px solid var(--color-sand);
+  background-color: var(--bg-cream);
+  white-space: nowrap;
 }
 
 .log-table td {
-  padding: 16px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--color-sand);
-  font-size: 14px;
+  font-size: 13.5px;
+}
+
+.log-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .log-table tr:hover {
-  background-color: var(--bg-cream);
+  background-color: rgba(245, 240, 235, 0.5);
 }
 
 .pill {
