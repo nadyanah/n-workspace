@@ -417,7 +417,7 @@ const JobLogbook = {
         </div>
 
         <!-- Riwayat Kegiatan Kerja -->
-        <div class="drawer-section" style="margin-bottom: 0; padding: 22px; border-radius: 12px;">
+        <div class="drawer-section" style="margin-bottom: 0; padding: 22px; border-radius: 12px; min-width: 0; overflow: visible;">
           <div class="flex-between" style="margin-bottom: 18px; align-items: center;">
             <h3 style="font-size: 18px; margin-bottom: 0;">Riwayat Kegiatan Kerja</h3>
             <div class="flex-gap" style="align-items: center; font-size: 13px; color: var(--text-muted);">

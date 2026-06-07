@@ -403,14 +403,33 @@ h1, h2, h3, h4 {
   box-shadow: var(--shadow-md);
   padding: 32px;
   min-height: calc(100vh - 160px);
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Module 1: Job Logbook Styles */
+.job-logbook {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 .logbook-grid {
   display: grid;
   grid-template-columns: 360px 1fr;
   gap: 28px;
   margin-top: 16px;
+  min-width: 0;
+  /* Prevent grid from expanding beyond page */
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Critical: prevent grid children from blowing out container */
+.logbook-grid > * {
+  min-width: 0;
 }
 
 .form-group {
