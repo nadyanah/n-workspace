@@ -1150,11 +1150,11 @@ const JobLogbook = {
     },
     getNoteColorStyle(color) {
       const styles = {
-        pink: { bg: '#FCE7F3', headerText: '#831843', text: '#2C2621', border: '#FBCFE8' },
-        blue: { bg: '#DBEAFE', headerText: '#1E3A8A', text: '#2C2621', border: '#BFDBFE' },
-        green: { bg: '#D1FAE5', headerText: '#065F46', text: '#2C2621', border: '#A7F3D0' },
-        yellow: { bg: '#FEF3C7', headerText: '#92400E', text: '#2C2621', border: '#FDE68A' },
-        purple: { bg: '#F3E8FF', headerText: '#4C1D95', text: '#2C2621', border: '#E9D5FF' }
+        pink: { bg: '#FCE7F3', headerText: '#831843', text: '#2C2621', border: '#f3ccde' },
+        blue: { bg: '#DBEAFE', headerText: '#1E3A8A', text: '#2C2621', border: '#becdef' },
+        green: { bg: '#D1FAE5', headerText: '#065F46', text: '#2C2621', border: '#bce7c4' },
+        yellow: { bg: '#FEF3C7', headerText: '#92400E', text: '#2C2621', border: '#f5f7c4' },
+        purple: { bg: '#F3E8FF', headerText: '#4C1D95', text: '#2C2621', border: '#fecbbd' }
       };
       return styles[color] || styles.pink;
     }
