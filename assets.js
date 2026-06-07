@@ -572,5 +572,94 @@ const DESK_ASSETS = {
       <rect x="46" y="56" width="8" height="6" rx="1.5" fill="#4A3F35" />
       <rect x="60" y="56" width="8" height="6" rx="1.5" fill="#8C7864" />
     </svg>`
+  },
+  wallet: {
+    name: 'Dompet',
+    width: 110,
+    svg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 15 30 Q 15 15 28 15 L 72 15 Q 85 15 85 30" fill="#E8C99A" stroke="#4A3F35" stroke-width="1.5" fill-opacity="0.7"/>
+      <rect x="30" y="18" width="40" height="4" rx="2" fill="#C84B31" opacity="0.5"/>
+      <rect x="0" y="30" width="100" height="65" rx="8" fill="#DDA15E" stroke="#4A3F35" stroke-width="2"/>
+      <rect x="0" y="30" width="100" height="18" rx="4" fill="#C84B31" stroke="#4A3F35" stroke-width="1.5"/>
+      <rect x="55" y="48" width="45" height="28" rx="6" fill="#FAF6F0" stroke="#4A3F35" stroke-width="1.5"/>
+      <circle cx="92" cy="62" r="6" fill="#DDA15E" stroke="#4A3F35" stroke-width="1.5"/>
+      <circle cx="92" cy="62" r="2.5" fill="#4A3F35"/>
+      <line x1="10" y1="62" x2="48" y2="62" stroke="#4A3F35" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="10" y1="70" x2="35" y2="70" stroke="#4A3F35" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`
+  },
+  brain_insight: {
+    name: 'Otak Insight',
+    width: 110,
+    svg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 50 85 L 50 68" stroke="#8C7864" stroke-width="2" stroke-linecap="round"/>
+      <rect x="38" y="85" width="24" height="6" rx="3" fill="#8C7864" stroke="#4A3F35" stroke-width="1.5"/>
+      <path d="M 50 24 Q 50 38 50 68" fill="none" stroke="#4A3F35" stroke-width="1.2" stroke-dasharray="2,2"/>
+      <path d="M 50 24 Q 56 20 64 26 Q 72 32 70 42 Q 68 50 58 54 Q 50 58 50 68" fill="#E8C99A" stroke="#4A3F35" stroke-width="2"/>
+      <path d="M 50 24 Q 44 20 36 26 Q 28 32 30 42 Q 32 50 42 54 Q 50 58 50 68" fill="#E8C99A" stroke="#4A3F35" stroke-width="2"/>
+      <path d="M 36 38 Q 44 42 50 40" fill="none" stroke="#C84B31" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M 64 38 Q 56 42 50 40" fill="none" stroke="#C84B31" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M 34 50 Q 42 48 50 50" fill="none" stroke="#606C38" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M 66 50 Q 58 48 50 50" fill="none" stroke="#606C38" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="30" cy="32" r="4" fill="#DDA15E" stroke="#4A3F35" stroke-width="1.2"/>
+      <circle cx="70" cy="32" r="4" fill="#DDA15E" stroke="#4A3F35" stroke-width="1.2"/>
+      <line x1="22" y1="20" x2="18" y2="14" stroke="#C84B31" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="15" y1="24" x2="9" y2="23" stroke="#C84B31" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="20" y1="30" x2="14" y2="32" stroke="#C84B31" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="78" y1="20" x2="82" y2="14" stroke="#C84B31" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="85" y1="24" x2="91" y2="23" stroke="#C84B31" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="80" y1="30" x2="86" y2="32" stroke="#C84B31" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`
+  },
+  plant_growth: {
+    name: 'Plant Growth',
+    width: 110,
+    svg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect x="25" y="75" width="50" height="20" rx="5" fill="#DDA15E" stroke="#4A3F35" stroke-width="2"/>
+      <rect x="28" y="78" width="44" height="8" rx="2" fill="#C89A5A" opacity="0.5"/>
+      <line x1="50" y1="75" x2="50" y2="32" stroke="#606C38" stroke-width="3" stroke-linecap="round"/>
+      <path d="M 50 57 Q 35 52 28 40 Q 38 38 50 48" fill="#606C38" stroke="#4A3F35" stroke-width="1.2"/>
+      <path d="M 50 44 Q 65 38 72 26 Q 62 24 50 34" fill="#283618" stroke="#4A3F35" stroke-width="1.2"/>
+      <path d="M 50 32 Q 42 22 44 10 Q 52 16 54 30" fill="#606C38" stroke="#4A3F35" stroke-width="1.2"/>
+      <circle cx="50" cy="8" r="5" fill="#C84B31" stroke="#4A3F35" stroke-width="1.5"/>
+      <line x1="47" y1="8" x2="53" y2="8" stroke="#FAF6F0" stroke-width="1.5"/>
+      <line x1="50" y1="5" x2="50" y2="11" stroke="#FAF6F0" stroke-width="1.5"/>
+    </svg>`
+  },
+  laptop: {
+    name: 'Laptop',
+    width: 120,
+    svg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect x="5" y="12" width="90" height="58" rx="5" fill="#E8DFD8" stroke="#4A3F35" stroke-width="2"/>
+      <rect x="10" y="17" width="80" height="48" rx="3" fill="#FAF6F0" stroke="#4A3F35" stroke-width="1.5"/>
+      <rect x="14" y="21" width="72" height="40" rx="2" fill="#283618"/>
+      <rect x="18" y="25" width="30" height="4" rx="1" fill="#606C38" opacity="0.8"/>
+      <rect x="18" y="32" width="20" height="3" rx="1" fill="#DDA15E" opacity="0.7"/>
+      <rect x="18" y="38" width="25" height="3" rx="1" fill="#DDA15E" opacity="0.5"/>
+      <rect x="18" y="44" width="18" height="3" rx="1" fill="#DDA15E" opacity="0.4"/>
+      <rect x="54" y="30" width="6" height="14" rx="1" fill="#C84B31" opacity="0.85"/>
+      <rect x="63" y="35" width="6" height="9" rx="1" fill="#DDA15E" opacity="0.85"/>
+      <rect x="72" y="27" width="6" height="17" rx="1" fill="#606C38" opacity="0.85"/>
+      <path d="M 0 72 Q 0 70 5 70 L 95 70 Q 100 70 100 72 L 100 76 Q 100 78 50 78 Q 0 78 0 76 Z" fill="#DDA15E" stroke="#4A3F35" stroke-width="1.5"/>
+      <rect x="30" y="70" width="40" height="4" rx="1" fill="#C89A5A" opacity="0.6"/>
+      <circle cx="50" cy="68" r="2" fill="#8C7864"/>
+    </svg>`
+  },
+  matcha_cup: {
+    name: 'Minuman Matcha',
+    width: 110,
+    svg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 36 44 Q 33 36 36 28" fill="none" stroke="#8C7864" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+      <path d="M 50 40 Q 47 30 50 20" fill="none" stroke="#8C7864" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+      <path d="M 64 44 Q 67 36 64 28" fill="none" stroke="#8C7864" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+      <ellipse cx="50" cy="88" rx="38" ry="7" fill="#DDA15E" stroke="#4A3F35" stroke-width="1.5"/>
+      <path d="M 18 52 Q 16 88 50 88 Q 84 88 82 52 Z" fill="#FAF6F0" stroke="#4A3F35" stroke-width="2"/>
+      <ellipse cx="50" cy="52" rx="32" ry="7" fill="#E8DFD8" stroke="#4A3F35" stroke-width="2"/>
+      <path d="M 22 58 Q 20 88 50 88 Q 80 88 78 58 Q 64 64 50 64 Q 36 64 22 58 Z" fill="#606C38" opacity="0.85"/>
+      <ellipse cx="50" cy="58" rx="28" ry="6" fill="#E8DFD8" stroke="#4A3F35" stroke-width="1"/>
+      <path d="M 34 58 Q 42 54 50 58 Q 58 62 66 58" fill="none" stroke="#606C38" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M 38 55 Q 44 58 50 55 Q 56 52 62 55" fill="none" stroke="#8C7864" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+      <path d="M 82 60 Q 96 60 96 70 Q 96 80 82 80" fill="none" stroke="#4A3F35" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>`
   }
 };
