@@ -7179,7 +7179,7 @@ const FinancialTracker = {
                   <span style="font-size:13.5px; font-weight:600; color:var(--text-dark);">{{ tx.description }}</span>
                   <span v-if="tx.isReimburse" class="fin-badge"
                     :style="tx.settled ? { background:'#D1FAE5', color:'#065F46', borderColor:'#6EE7B7' } : { background:'#FEF3C7', color:'#92400E', borderColor:'#FCD34D' }">
-                    {{ tx.settled ? '✓ Lunas' : '⏳ Pending' }}
+                    {{ tx.settled ? '✓ Reimburse Lunas' : '⏳ Reimburse Pending' }}
                   </span>
                   <span class="fin-badge" :style="{ background: getBankColor(tx.bankId) + '15', color: getBankColor(tx.bankId), borderColor: getBankColor(tx.bankId) + '50' }">
                     🏦 {{ getBankName(tx.bankId) }}
@@ -7188,7 +7188,7 @@ const FinancialTracker = {
                 </div>
                 <div style="display:flex; align-items:center; gap:8px; margin-top:3px; flex-wrap:wrap;">
                   <span style="font-size:11.5px; color:var(--text-muted);">{{ formatDate(tx.date) }}</span>
-                  <span v-if="tx.isReimburse && tx.paidBy" style="font-size:11.5px; color:var(--text-muted);">· dipinjam oleh: <strong>{{ tx.paidBy }}</strong></span>
+                  <span v-if="tx.isReimburse && tx.paidBy" style="font-size:11.5px; color:var(--text-muted);">· ditalangi untuk: <strong>{{ tx.paidBy }}</strong></span>
                   <span v-if="tx.notes" style="font-size:11.5px; color:var(--text-muted); font-style:italic;">· {{ tx.notes }}</span>
                 </div>
               </div>
@@ -7199,11 +7199,11 @@ const FinancialTracker = {
                 </span>
                 <div style="display:flex; gap:4px;">
                   <button v-if="tx.isReimburse && !tx.settled" @click="settleReimburse(tx)"
-                    title="Tandai Lunas" style="background:#D1FAE5; border:1.5px solid #6EE7B7; border-radius:6px; padding:4px 7px; cursor:pointer; font-size:11px; font-weight:700; color:#065F46; display:inline-flex; align-items:center; gap:3px;">
-                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    Lunas
+                    title="Uang dikembalikan! (Otomatis Tambah Saldo)" style="background:#D1FAE5; border:1.5px solid #6EE7B7; border-radius:6px; padding:4px 8px; cursor:pointer; font-size:11px; font-weight:700; color:#065F46; display:inline-flex; align-items:center; gap:4px;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Uang Cair (Tambah Saldo)
                   </button>
-                  <button @click="deleteTx(tx.id)" title="Hapus" style="background:#FEF2F2; border:1.5px solid #FCA5A5; border-radius:6px; padding:4px 6px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;">
+                  <button @click="deleteTx(tx.id)" title="Hapus Transaksi" style="background:#FEF2F2; border:1.5px solid #FCA5A5; border-radius:6px; padding:4px 6px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;">
                     <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                   </button>
                 </div>
@@ -7272,6 +7272,20 @@ const FinancialTracker = {
               </select>
             </div>
 
+            <div v-if="txForm.type === 'expense'" class="form-group" style="margin-bottom:16px;">
+              <label style="font-weight: 600; color: var(--text-dark); display: block; margin-bottom: 6px;">Sifat Pengeluaran</label>
+              <div style="display: flex; flex-direction: column; gap: 8px; background: var(--bg-cream); padding: 12px; border-radius: 8px; border: 1.5px solid var(--color-sand);">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0; font-size: 13px; font-weight: 500; color: var(--text-dark);">
+                  <input type="radio" v-model="txForm.isReimburse" :value="false" style="width:16px; height:16px; accent-color: var(--color-terracotta);">
+                  Pengeluaran Biasa (Tidak diganti)
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0; font-size: 13px; font-weight: 500; color: var(--color-terracotta);">
+                  <input type="radio" v-model="txForm.isReimburse" :value="true" style="width:16px; height:16px; accent-color: var(--color-terracotta);">
+                  Pengeluaran Reimburse (Akan diganti)
+                </label>
+              </div>
+            </div>
+
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:0;">
               <div class="form-group" style="margin-bottom:14px;">
                 <label>Tanggal</label>
@@ -7294,13 +7308,6 @@ const FinancialTracker = {
               <datalist id="fin-cat-list">
                 <option v-for="cat in allCategories" :key="cat" :value="cat"/>
               </datalist>
-            </div>
-
-            <div v-if="txForm.type === 'expense'" class="form-group" style="margin-bottom:14px; background:var(--bg-cream); padding:10px; border-radius:8px; border:1px solid var(--color-sand);">
-              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin:0; color:var(--text-dark);">
-                 <input type="checkbox" v-model="txForm.isReimburse" style="width:16px; height:16px; accent-color:var(--color-terracotta);" />
-                 <span>Jadikan sebagai <strong>Reimburse</strong> (Dana diganti)</span>
-              </label>
             </div>
 
             <div v-if="txForm.type === 'expense' && txForm.isReimburse" class="form-group" style="margin-bottom:14px;">
@@ -7330,12 +7337,10 @@ const FinancialTracker = {
       transactions: [],
       activeTab: 'all',
 
-      // Bank modal
       showBankModal: false,
       editingBankId: null,
       bankForm: { name: '', function: '', initialBalance: 0, color: '#10B981' },
 
-      // Transaction modal
       showTxModal: false,
       txForm: {
         type: 'expense',
@@ -7361,7 +7366,6 @@ const FinancialTracker = {
   },
 
   computed: {
-    // Transaksi digabung jadi satu, di-sort tanggal terbaru
     filteredTransactions() {
       let txs = [...this.transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
       if (this.activeTab === 'income') return txs.filter(t => t.type === 'income');
@@ -7383,7 +7387,6 @@ const FinancialTracker = {
   },
 
   methods: {
-    // ── Data helpers ──
     getBankName(bankId) {
       const b = this.banks.find(x => x.id === bankId);
       return b ? b.name : 'Unknown Bank';
@@ -7399,7 +7402,6 @@ const FinancialTracker = {
       const bank = this.banks.find(b => b.id === bankId);
       if (!bank) return 0;
       const txs = this.getBankTx(bankId);
-      // Pengeluaran = Expense biasa + Expense yang direimburse (uang tetap keluar dari bank ini)
       const inflow = txs.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0);
       const outflow = txs.filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0);
       return (bank.initialBalance || 0) + inflow - outflow;
@@ -7413,8 +7415,6 @@ const FinancialTracker = {
     getBankPendingReimburse(bankId) { 
       return this.getBankTx(bankId).filter(tx => tx.isReimburse && !tx.settled).reduce((s, tx) => s + tx.amount, 0); 
     },
-
-    // ── Format ──
     formatCurrency(v) {
       if (v === undefined || v === null) return 'Rp 0';
       return 'Rp ' + Math.abs(v).toLocaleString('id-ID');
@@ -7430,8 +7430,6 @@ const FinancialTracker = {
       try { return new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }); }
       catch(e) { return d; }
     },
-
-    // ── Tx color/bg ──
     getTxColor(tx) {
       if (tx.isReimburse) return '#F59E0B';
       if (tx.type === 'income') return '#10B981';
@@ -7443,7 +7441,6 @@ const FinancialTracker = {
       return '#FEE2E2';
     },
 
-    // ── Bank CRUD ──
     openAddBank() {
       this.editingBankId = null;
       this.bankForm = { name: '', function: '', initialBalance: 0, color: '#10B981' };
@@ -7474,7 +7471,6 @@ const FinancialTracker = {
     },
     closeBankModal() { this.showBankModal = false; this.editingBankId = null; },
 
-    // ── Transaction CRUD ──
     openAddTransaction(type) {
       if (this.banks.length === 0) return alert('Silakan tambah Bank/Rekening terlebih dahulu!');
       this.txForm = {
@@ -7506,7 +7502,7 @@ const FinancialTracker = {
         isReimburse: this.txForm.type === 'expense' ? this.txForm.isReimburse : false,
         paidBy: this.txForm.type === 'expense' && this.txForm.isReimburse ? this.txForm.paidBy : '',
         notes: this.txForm.notes,
-        settled: false,
+        settled: (this.txForm.type === 'expense' && this.txForm.isReimburse) ? false : null,
       };
       this.transactions.push(newTx);
       this.saveAll();
@@ -7517,31 +7513,38 @@ const FinancialTracker = {
       this.transactions = this.transactions.filter(tx => tx.id !== id);
       this.saveAll();
     },
+    
+    // SISTEM PENGEMBALIAN DANA REIMBURSE
     settleReimburse(tx) {
       const idx = this.transactions.findIndex(t => t.id === tx.id);
       if (idx !== -1) {
+        // 1. Ubah status hutang/reimburse yang lama menjadi lunas
         this.transactions[idx] = { ...this.transactions[idx], settled: true };
-        // Uang reimburse sudah balik → tambahkan sebagai income (Uang Masuk) otomatis
+        
+        // 2. Buat otomatis transaksi INCOME untuk mengembalikan uangnya ke bank
         const refund = {
           id: 'tx-refund-' + Date.now(),
           bankId: tx.bankId,
           type: 'income',
           date: new Date().toISOString().split('T')[0],
           amount: tx.amount,
-          description: 'Reimburse lunas: ' + tx.description,
-          category: 'Reimburse',
+          description: 'Pencairan Reimburse: ' + tx.description,
+          category: 'Reimburse Lunas',
           isReimburse: false,
           paidBy: '',
-          notes: 'Auto-created saat reimburse dari ' + (tx.paidBy || 'seseorang') + ' dilunasi',
-          settled: false,
+          notes: 'Otomatis dibuat oleh sistem karena dana ditalangi untuk ' + (tx.paidBy || 'seseorang') + ' sudah dilunasi.',
+          settled: null,
         };
         this.transactions.push(refund);
         this.saveAll();
+        
+        // Kasih notifikasi biar tahu saldonya udah nambah!
+        alert('Hore! Uang berhasil dicairkan. Status Reimburse menjadi Lunas dan saldo direkening Anda otomatis bertambah kembali.');
       }
     },
+    
     closeTxModal() { this.showTxModal = false; },
 
-    // ── Storage ──
     saveAll() {
       WorkspaceStorage.setItem('fin_banks', JSON.stringify(this.banks));
       WorkspaceStorage.setItem('fin_transactions', JSON.stringify(this.transactions));
@@ -7557,10 +7560,10 @@ const FinancialTracker = {
       const savedTx = WorkspaceStorage.getItem('fin_transactions');
       if (savedTx) {
         let loadedTxs = JSON.parse(savedTx);
-        // Migrasi Data Lama: ubah 'type: reimburse' menjadi 'type: expense, isReimburse: true'
+        // Migrasi data (jika ada data lama tipe 'reimburse')
         loadedTxs = loadedTxs.map(tx => {
           if (tx.type === 'reimburse') {
-            return { ...tx, type: 'expense', isReimburse: true };
+            return { ...tx, type: 'expense', isReimburse: true, settled: tx.settled || false };
           }
           return tx;
         });
