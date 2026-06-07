@@ -3494,9 +3494,9 @@ const InterviewPractice = {
         <div>
           <h2 style="font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: #2C2621; margin: 0; display: flex; align-items: center; gap: 8px;">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
-            Interview Practice Simulator
+            Daily Interview Practice
           </h2>
-          <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 4px;">Tarik tuas, acak pertanyaan, rekam suara & asah kerangka STAR/PREP/PPF.</p>
+          <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 4px;">Practice Room : Tarik tuas, acak pertanyaan, rekam suara dengan framework STAR/PREP/PPF.</p>
         </div>
         <!-- Mode switcher + Kelola button -->
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
@@ -3715,7 +3715,7 @@ const InterviewPractice = {
       <div class="interview-grid" style="grid-template-columns: 280px 1fr; gap: 24px;">
         <!-- Left Column -->
         <div class="interview-col-left">
-          <div class="interview-prep-banner">
+          <div class="interview-prep-banner" style="display: none;">
             <span class="star-deco star-1">★</span>
             <span class="star-deco star-2">✦</span>
             <span class="star-deco star-3">★</span>
@@ -3856,7 +3856,7 @@ const InterviewPractice = {
           </div>
 
           <!-- Quick Custom (Manual only) -->
-          <div v-if="activeMode==='manual'" style="background:#FCFAF7; border:1.5px solid #EAE5DD; border-radius:14px; padding:16px;">
+          <div v-if="activeMode==='manual'" style="display: none; "background:#FCFAF7; border:1.5px solid #EAE5DD; border-radius:14px; padding:16px;">
             <h4 style="font-family:'Outfit',sans-serif; font-size:14px; font-weight:800; color:#1C3B34; margin:0 0 4px 0; display:flex; align-items:center; gap:6px;">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#6C5CE7;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
               ✍️ Latih Pertanyaan Kustom Langsung
