@@ -152,6 +152,14 @@ const App = {
         customUrl: '',
         label: '8. Google Calendar Sync',
         num: '08'
+      },
+      financialTracker: {
+        iconId: 'Lime Green Pager',   // ganti iconId sesuai icon yang kamu mau
+        x: 40,
+        y: 70,
+        customUrl: '',
+        label: '9. Financial Tracker',
+        num: '09'
       }
     };
 
@@ -176,6 +184,9 @@ const App = {
         }
         if (!assignedIcons.googleCalendar) {
           assignedIcons.googleCalendar = { ...defaultAssignedIcons.googleCalendar };
+        }
+        if (!assignedIcons.financialTracker) {
+          assignedIcons.financialTracker = { ...defaultAssignedIcons.financialTracker };
         }
         saveConfig();
       } else {
