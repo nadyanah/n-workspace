@@ -16,68 +16,76 @@
 // ============================================================================
 
 // 1. My 8-4 Job Logbook Component
-// 1. My 8-4 Job Logbook Component
 const JobLogbook = {
   template: `
     <div class="job-logbook">
       <div v-show="!showFullNotesPage" class="animate-fade-in">
-        <div class="flex-between" style="border-bottom: 2px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 24px; align-items: center;">
-          <div>
-            <h2>My 8-9 Job Logbook</h2>
-            <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 4px;">Perekaman aktivitas harian kerja, kategori dinamis, hasil capaian, rencana aksi selanjutnya, dan koordinasi dokumen pendukung.</p>
+        <!-- ── Page Header ── -->
+        <div style="margin-bottom: 28px; padding-bottom: 20px; border-bottom: 2px solid var(--color-sand);">
+          <!-- Title row -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+            <div>
+              <h2 style="margin: 0 0 4px 0;">My 8-9 Job Logbook</h2>
+              <p style="color: var(--text-muted); font-size: 13px; margin: 0; max-width: 520px; line-height: 1.5;">Perekaman aktivitas harian kerja, kategori dinamis, hasil capaian, rencana aksi selanjutnya, dan koordinasi dokumen pendukung.</p>
+            </div>
+            <!-- Primary action -->
+            <button class="btn btn-primary" @click="showAddLog = true" style="flex-shrink: 0; padding: 10px 20px; font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              Catat Hari Baru
+            </button>
           </div>
-          <div class="flex-gap">
-            <button class="btn text-mono" @click="exportToExcel" style="background-color: #DEF7EC; border: 1.5px solid #31C48D; color: #03543F; font-weight: bold; cursor: pointer; padding: 10px 16px; display: inline-flex; align-items: center; gap: 6px;">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M8 13h8"></path><path d="M8 17h8"></path><path d="M8 9h1"></path></svg>
+          <!-- Export toolbar -->
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap;">
+            <span style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-right: 2px;">Ekspor:</span>
+            <button class="btn text-mono" @click="exportToExcel" style="background-color: #DEF7EC; border: 1.5px solid #31C48D; color: #03543F; font-weight: bold; cursor: pointer; padding: 7px 14px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M8 13h8"></path><path d="M8 17h8"></path><path d="M8 9h1"></path></svg>
               Excel
             </button>
-            <button class="btn text-mono" @click="exportToPDF" style="background-color: #FDE8E8; border: 1.5px solid #F05252; color: #9B1C1C; font-weight: bold; cursor: pointer; padding: 10px 16px; display: inline-flex; align-items: center; gap: 6px;">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>
+            <button class="btn text-mono" @click="exportToPDF" style="background-color: #FDE8E8; border: 1.5px solid #F05252; color: #9B1C1C; font-weight: bold; cursor: pointer; padding: 7px 14px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>
               PDF
-            </button>
-            <button class="btn btn-primary" @click="showAddLog = true">
-             + Catat Hari Baru
             </button>
           </div>
         </div>
 
-        <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background-color: transparent; border: 1.5px dashed var(--color-sand);">
-          <div class="flex-between" style="align-items: center; margin-bottom: 16px;">
-            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <!-- ── Quick Notes ── -->
+        <div style="margin-bottom: 24px; padding: 18px 20px; border-radius: 12px; background-color: transparent; border: 1.5px dashed var(--color-sand);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
               Quick Notes
               <span style="background: var(--color-terracotta); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px;">{{ notes.length }}</span>
             </h3>
-            <button class="btn btn-secondary" @click="showFullNotesPage = true" style="font-size: 13px; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; background-color: var(--bg-card);">
+            <button class="btn btn-secondary" @click="showFullNotesPage = true" style="font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 600; padding: 7px 14px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; background-color: var(--bg-card);">
               Lihat Semua Note
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </button>
           </div>
           
-          <div v-if="notes.length === 0" style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 13.5px;">
+          <div v-if="notes.length === 0" style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px;">
             Belum ada catatan. Klik "Lihat Semua Note" untuk menambahkan.
           </div>
           
-          <div v-else style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+          <div v-else style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;">
             <div v-for="note in recentNotes" :key="note.id" 
                  :style="{ backgroundColor: getNoteColorStyle(note.color).bg }"
-                 style="border-radius: 16px; padding: 14px; cursor: pointer; transition: transform 0.2s;"
+                 style="border-radius: 10px; padding: 9px; cursor: pointer; transition: transform 0.2s;"
                  @click="showFullNotesPage = true"
-                 onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                 onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
               
-              <div class="flex-between" style="margin-bottom: 10px; padding: 0 4px;">
-                <span :style="{ color: getNoteColorStyle(note.color).headerText }" style="font-size: 14px; font-weight: 700;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding: 0 2px;">
+                <span :style="{ color: getNoteColorStyle(note.color).headerText }" style="font-size: 11.5px; font-weight: 700;">
                   {{ note.category }}
                 </span>
-                <span :style="{ color: getNoteColorStyle(note.color).headerText }" style="font-weight: 700; opacity: 0.6;">...</span>
+                <span :style="{ color: getNoteColorStyle(note.color).headerText }" style="font-weight: 700; opacity: 0.5; font-size: 14px; line-height: 1;">···</span>
               </div>
               
-              <div style="background-color: #ffffff; border-radius: 12px; padding: 14px; min-height: 120px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-                <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">{{ formatDate(note.date) }}</div>
-                <h4 style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0 0 6px 0; line-height: 1.3;">
+              <div style="background-color: #ffffff; border-radius: 8px; padding: 9px 10px; min-height: 76px; box-shadow: 0 1px 4px rgba(0,0,0,0.03);">
+                <div style="font-size: 9.5px; color: var(--text-muted); margin-bottom: 3px; font-weight: 600;">{{ formatDate(note.date) }}</div>
+                <h4 style="font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 800; color: var(--text-dark); margin: 0 0 4px 0; line-height: 1.3;">
                   {{ note.title }}
                 </h4>
-                <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                <p style="font-size: 11.5px; color: var(--text-muted); line-height: 1.45; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                   {{ note.body }}
                 </p>
               </div>
@@ -142,33 +150,34 @@ const JobLogbook = {
           </div>
         </transition>
 
-        <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background: #FDFAF6; border: 1.5px solid var(--color-sand);">
-          <div class="flex-between" style="align-items: center; margin-bottom: 14px;">
-            <h3 style="font-size: 15px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 12h6"></path><path d="M9 16h4"></path></svg>
+        <!-- ── Kelola Kategori ── -->
+        <div class="drawer-section" style="margin-bottom: 20px; padding: 16px 20px; border-radius: 12px; background: #FDFAF6; border: 1.5px solid var(--color-sand);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 12h6"></path><path d="M9 16h4"></path></svg>
               Kelola Kategori Pekerjaan
             </h3>
-            <button @click="showCategoryManager = !showCategoryManager" class="btn btn-secondary" style="font-size: 12px; padding: 6px 14px; cursor: pointer;">
+            <button @click="showCategoryManager = !showCategoryManager" class="btn btn-secondary" style="font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 600; padding: 5px 12px; cursor: pointer; border-radius: 7px;">
               {{ showCategoryManager ? 'Sembunyikan' : 'Atur Kategori' }}
             </button>
           </div>
 
-          <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: showCategoryManager ? '16px' : '0';">
+          <div style="display: flex; flex-wrap: wrap; gap: 7px;">
             <span v-for="cat in allCategories" :key="cat"
               :style="{ backgroundColor: getCategoryColor(cat) + '15', color: getCategoryColor(cat), borderColor: getCategoryColor(cat) + '40' }"
-              style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1.5px solid; display: inline-flex; align-items: center; gap: 6px;">
+              style="padding: 3px 11px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1.5px solid; display: inline-flex; align-items: center; gap: 5px;">
               {{ cat }}
               <button v-if="!defaultCategories.includes(cat)" @click="deleteCategory(cat)"
-                style="background: none; border: none; cursor: pointer; font-size: 13px; line-height: 1; color: inherit; opacity: 0.6; padding: 0; display: inline-flex;"
+                style="background: none; border: none; cursor: pointer; font-size: 12px; line-height: 1; color: inherit; opacity: 0.5; padding: 0; display: inline-flex;"
                 title="Hapus kategori">✕</button>
             </span>
           </div>
 
-          <div v-if="showCategoryManager" style="display: flex; gap: 10px; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--color-sand);">
+          <div v-if="showCategoryManager" style="display: flex; gap: 10px; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-sand);">
             <input type="text" class="form-input" v-model="newCategoryInput" placeholder="Nama kategori baru..."
               @keydown.enter="addCategory"
-              style="flex: 1; height: 40px;" />
-            <button class="btn btn-primary" @click="addCategory" style="height: 40px; padding: 0 20px; cursor: pointer; white-space: nowrap;">
+              style="flex: 1; height: 38px;" />
+            <button class="btn btn-primary" @click="addCategory" style="height: 38px; padding: 0 18px; cursor: pointer; white-space: nowrap; font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 600;">
               + Tambah
             </button>
           </div>
@@ -176,18 +185,30 @@ const JobLogbook = {
 
         <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand);">
           <div class="flex-between" style="align-items: center; margin-bottom: 16px;">
-            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
-              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M8 6h13"></path><path d="M8 12h13"></path><path d="M8 18h13"></path><path d="M3 6h.01"></path><path d="M3 12h.01"></path><path d="M3 18h.01"></path></svg>
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M8 6h13"></path><path d="M8 12h13"></path><path d="M8 18h13"></path><path d="M3 6h.01"></path><path d="M3 12h.01"></path><path d="M3 18h.01"></path></svg>
               Task Plan
               <span v-if="plans.length > 0" style="background: var(--color-terracotta); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px;">{{ plans.length }}</span>
             </h3>
-            <button class="btn btn-primary" @click="openAddPlan"
-              style="font-size: 13px; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              {{ showAddPlan ? 'Tutup' : 'Tambah Task' }}
-            </button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button class="btn btn-primary" @click="openAddPlan"
+                style="font-family: 'Outfit', sans-serif; font-size: 12.5px; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                {{ showAddPlan ? 'Tutup' : 'Tambah Task' }}
+              </button>
+              <!-- Collapse toggle -->
+              <button @click="taskPlanCollapsed = !taskPlanCollapsed"
+                :title="taskPlanCollapsed ? 'Buka section Task Plan' : 'Tutup section Task Plan'"
+                style="background: var(--bg-card); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 6px 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background 0.15s;">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                  :style="{ transition: 'transform 0.25s ease', transform: taskPlanCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+            </div>
           </div>
 
+          <div v-show="!taskPlanCollapsed">
           <div v-if="showAddPlan" style="background: #fff; border: 1.5px solid var(--color-sand); border-radius: 12px; padding: 18px; margin-bottom: 16px; animation: popIn 0.2s ease;">
             <p style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
               <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
@@ -329,18 +350,20 @@ const JobLogbook = {
             </div>
 
           </div>
+          </div><!-- end collapse wrapper -->
         </div>
-
-        <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand);">
-          <h3 style="font-size: 15px; margin-bottom: 14px; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-            Penyaringan & Pencarian Log Kerja
+        <div class="drawer-section" style="margin-bottom: 20px; padding: 18px 20px; border-radius: 12px; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand);">
+          <h3 style="font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 14px; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            Penyaringan &amp; Pencarian Log Kerja
           </h3>
-          <div style="display: grid; grid-template-columns: 2fr 1.4fr 1fr 1fr; gap: 16px; align-items: end;">
-            <div class="form-group" style="margin-bottom: 0;">
-              <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Cari Kata Kunci</label>
-              <input type="text" class="form-input" v-model="searchQuery" placeholder="Cari berasarkan tugas, kategori, hasil, dsb..." />
-            </div>
+          <!-- Row 1: keyword search -->
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Cari Kata Kunci</label>
+            <input type="text" class="form-input" v-model="searchQuery" placeholder="Cari berdasarkan tugas, kategori, hasil, dsb..." />
+          </div>
+          <!-- Row 2: date range + category + reset -->
+          <div style="display: grid; grid-template-columns: 1.6fr 1fr auto; gap: 12px; align-items: end;">
             <div class="form-group" style="margin-bottom: 0; position: relative;">
               <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Rentang Tanggal</label>
               <button type="button" class="form-input" @click.stop="showRangePicker = !showRangePicker"
@@ -387,55 +410,58 @@ const JobLogbook = {
                 <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
               </select>
             </div>
-            <div class="form-group" style="margin-bottom: 0;">
-              <button class="btn btn-secondary" style="width: 100%; height: 42px; cursor: pointer; justify-content: center;" @click="resetFilters">Reset Filter</button>
+            <div style="padding-bottom: 0;">
+              <button class="btn btn-secondary" style="height: 42px; padding: 0 16px; cursor: pointer; justify-content: center; white-space: nowrap; font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 600;" @click="resetFilters">Reset Filter</button>
             </div>
           </div>
         </div>
 
-        <div class="grid-2" style="grid-template-columns: 1.5fr 1fr; gap: 24px; margin-bottom: 24px; align-items: stretch;">
-          <div class="drawer-section" style="margin-bottom: 0; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; justify-content: space-between;">
-            <div class="flex-between" style="border-bottom: 1.5px solid var(--color-sand); padding-bottom: 12px; margin-bottom: 14px; flex-wrap: wrap; gap: 12px;">
-              <h3 style="font-size: 15px; font-weight: bold; display: flex; align-items: center; gap: 6px;">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        <!-- ── Analytics + Distribusi ── -->
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-bottom: 20px; align-items: stretch;">
+          <!-- Ringkasan Analitik -->
+          <div class="drawer-section" style="margin-bottom: 0; padding: 18px 20px; border-radius: 12px; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid var(--color-sand); padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+              <h3 style="font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; margin: 0;">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
                 Ringkasan Analitik Performa
               </h3>
-              <div style="display: flex; gap: 4px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 2px;">
+              <div style="display: flex; gap: 3px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 2px;">
                 <button class="btn" :style="analyticsPeriod === 'semua' ? { background: 'var(--color-terracotta)', color: '#fff', fontSize: '11px', padding: '4px 10px', borderRadius: '6px' } : { background: 'transparent', color: 'var(--text-dark)', fontSize: '11px', padding: '4px 10px' }" @click="analyticsPeriod = 'semua'">Semua</button>
                 <button class="btn" :style="analyticsPeriod === 'today' ? { background: 'var(--color-terracotta)', color: '#fff', fontSize: '11px', padding: '4px 10px', borderRadius: '6px' } : { background: 'transparent', color: 'var(--text-dark)', fontSize: '11px', padding: '4px 10px' }" @click="analyticsPeriod = 'today'">Hari Ini</button>
               </div>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
-              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
-                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Pekerjaan</span>
-                <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ filteredLogs.length }}</p>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; flex: 1;">
+              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 10px; padding: 14px 10px; text-align: center;">
+                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; display: block; line-height: 1.3; margin-bottom: 8px;">Pekerjaan</span>
+                <p class="text-mono" style="font-size: 22px; font-weight: bold; color: var(--text-dark); margin: 0;">{{ filteredLogs.length }}</p>
               </div>
-              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
-                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Task Plan</span>
-                <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ plans.length }}</p>
+              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 10px; padding: 14px 10px; text-align: center;">
+                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; display: block; line-height: 1.3; margin-bottom: 8px;">Task Plan</span>
+                <p class="text-mono" style="font-size: 22px; font-weight: bold; color: var(--text-dark); margin: 0;">{{ plans.length }}</p>
               </div>
-              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
-                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Jumlah Hari Rentang</span>
-                <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ selectedRangeDaysCount }} <span style="font-size: 11px; font-weight: normal;">hari</span></p>
+              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 10px; padding: 14px 10px; text-align: center;">
+                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; display: block; line-height: 1.3; margin-bottom: 8px;">Rentang</span>
+                <p class="text-mono" style="font-size: 22px; font-weight: bold; color: var(--text-dark); margin: 0;">{{ selectedRangeDaysCount }} <span style="font-size: 11px; font-weight: normal;">hr</span></p>
               </div>
-              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 12px; padding: 14px; text-align: center;">
-                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Penyelesaian Aksi</span>
-                <p class="text-mono" style="font-size: 24px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ nextActionCompletionRate }}</p>
+              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 10px; padding: 14px 10px; text-align: center;">
+                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; display: block; line-height: 1.3; margin-bottom: 8px;">Penyelesaian</span>
+                <p class="text-mono" style="font-size: 22px; font-weight: bold; color: var(--text-dark); margin: 0;">{{ nextActionCompletionRate }}</p>
               </div>
             </div>
           </div>
-          <div class="drawer-section" style="margin-bottom: 0; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; justify-content: space-between;">
-            <h3 style="font-size: 15px; font-weight: bold; margin-bottom: 12px; border-bottom: 1.5px solid var(--color-sand); padding-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-sage);"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect width="20" height="14" x="2" y="6" rx="2"></rect></svg>
+          <!-- Distribusi Kategori -->
+          <div class="drawer-section" style="margin-bottom: 0; padding: 18px 20px; border-radius: 12px; display: flex; flex-direction: column;">
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 14px; border-bottom: 1.5px solid var(--color-sand); padding-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-sage);"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect width="20" height="14" x="2" y="6" rx="2"></rect></svg>
               Distribusi Kategori
             </h3>
-            <div style="display: flex; flex-direction: column; gap: 10px; max-height: 120px; overflow-y: auto; padding-right: 4px;">
+            <div style="display: flex; flex-direction: column; gap: 9px; flex: 1; overflow-y: auto; max-height: 130px; padding-right: 4px;">
               <div v-for="(pct, cat) in categoryPercentages" :key="cat">
-                <div class="flex-between" style="font-size: 11.5px; margin-bottom: 4px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; margin-bottom: 4px;">
                   <span style="font-weight: 600; color: var(--text-dark);">{{ cat }}</span>
                   <span class="text-mono" style="font-weight: bold; color: var(--text-muted);">{{ pct.count }}x ({{ pct.percentage }}%)</span>
                 </div>
-                <div style="width: 100%; background-color: var(--color-sand); height: 6px; border-radius: 10px; overflow: hidden;">
+                <div style="width: 100%; background-color: var(--color-sand); height: 5px; border-radius: 10px; overflow: hidden;">
                   <div :style="{ width: pct.percentage + '%', backgroundColor: getCategoryColor(cat) }" style="height: 100%; border-radius: 10px; transition: width 0.3s ease;"></div>
                 </div>
               </div>
@@ -446,16 +472,18 @@ const JobLogbook = {
           </div>
         </div>
 
-        <div class="drawer-section" style="margin-bottom: 0; padding: 22px; border-radius: 12px; min-width: 0; overflow: visible;">
-          <div class="flex-between" style="margin-bottom: 18px; align-items: center;">
-            <h3 style="font-size: 18px; margin-bottom: 0;">Riwayat Kegiatan Kerja</h3>
-            <div class="flex-gap" style="align-items: center; font-size: 13px; color: var(--text-muted);">
+        <!-- ── Riwayat Kegiatan Kerja ── -->
+        <div class="drawer-section" style="margin-bottom: 0; padding: 20px 22px; border-radius: 12px; min-width: 0; overflow: visible;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 0;">Riwayat Kegiatan Kerja</h3>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);">
               <span>Tampilkan</span>
-              <select v-model="itemsPerPage" class="form-input" style="width: 75px; padding: 4px 8px; font-size: 13px; height: auto;">
-                <option :value="5">5 entri</option>
-                <option :value="10">10 entri</option>
-                <option :value="20">20 entri</option>
+              <select v-model="itemsPerPage" class="form-input" style="width: 80px; padding: 4px 8px; font-size: 13px; height: 34px;">
+                <option :value="5">5</option>
+                <option :value="10">10</option>
+                <option :value="20">20</option>
               </select>
+              <span>entri</span>
             </div>
           </div>
 
@@ -521,17 +549,17 @@ const JobLogbook = {
                 </tbody>
               </table>
             </div>
-            <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; margin-bottom: 4px;">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); opacity: 0.5;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-              <span style="font-size: 11px; color: var(--text-muted); opacity: 0.6; font-style: italic; letter-spacing: 0.03em;">geser tabel untuk melihat lebih banyak kolom</span>
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); opacity: 0.5;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 6px; margin-bottom: 2px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); opacity: 0.4;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              <span style="font-size: 11px; color: var(--text-muted); opacity: 0.5; font-style: italic; letter-spacing: 0.03em;">geser tabel untuk melihat lebih banyak kolom</span>
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); opacity: 0.4;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             </div>
-            <div class="flex-between" style="margin-top: 20px; padding-top: 14px; border-top: 1.5px solid var(--color-sand); align-items: center;">
-              <span style="font-size: 13px; color: var(--text-muted);">Menampilkan <strong>{{ paginationInfo.start }}</strong> sampai <strong>{{ paginationInfo.end }}</strong> dari <strong>{{ filteredAndSortedLogs.length }}</strong> entri</span>
-              <div class="flex-gap" style="gap: 6px;">
-                <button class="btn btn-secondary" :disabled="currentPage === 1" @click="currentPage--" style="padding: 6px 12px; font-size: 13px; cursor: pointer; border-radius: 8px;">◀ Seb</button>
-                <button class="btn btn-secondary" v-for="page in totalPages" :key="page" @click="currentPage = page" :style="currentPage === page ? { background: 'var(--color-terracotta)', color: '#fff', borderColor: 'var(--color-terracotta)', fontWeight: 'bold' } : {}" style="padding: 6px 12px; font-size: 13px; cursor: pointer; border-radius: 8px; min-width: 32px; text-align: center;">{{ page }}</button>
-                <button class="btn btn-secondary" :disabled="currentPage === totalPages" @click="currentPage++" style="padding: 6px 12px; font-size: 13px; cursor: pointer; border-radius: 8px;">Sel ▶</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 14px; border-top: 1.5px solid var(--color-sand); flex-wrap: wrap; gap: 10px;">
+              <span style="font-size: 12.5px; color: var(--text-muted);">Menampilkan <strong>{{ paginationInfo.start }}</strong>–<strong>{{ paginationInfo.end }}</strong> dari <strong>{{ filteredAndSortedLogs.length }}</strong> entri</span>
+              <div style="display: flex; gap: 5px; align-items: center;">
+                <button class="btn btn-secondary" :disabled="currentPage === 1" @click="currentPage--" style="padding: 5px 11px; font-size: 13px; cursor: pointer; border-radius: 7px;">◀</button>
+                <button class="btn btn-secondary" v-for="page in totalPages" :key="page" @click="currentPage = page" :style="currentPage === page ? { background: 'var(--color-terracotta)', color: '#fff', borderColor: 'var(--color-terracotta)', fontWeight: 'bold' } : {}" style="padding: 5px 11px; font-size: 13px; cursor: pointer; border-radius: 7px; min-width: 32px; text-align: center;">{{ page }}</button>
+                <button class="btn btn-secondary" :disabled="currentPage === totalPages" @click="currentPage++" style="padding: 5px 11px; font-size: 13px; cursor: pointer; border-radius: 7px;">▶</button>
               </div>
             </div>
           </div>
@@ -676,6 +704,7 @@ const JobLogbook = {
       newCategoryInput: '',
       showCategoryManager: false,
       showAddPlan: false,
+      taskPlanCollapsed: false,
       editingPlanId: null,
       planFilterPriority: '',
       planForm: {
