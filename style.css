@@ -4343,7 +4343,7 @@ input:checked + .switch-slider:before {
   border-bottom: 1.5px solid var(--color-sand);
 }
 .ws-drawer-title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Playfair Display', serif !important;
   font-size: 18px;
   font-weight: 700;
   font-style: italic;
