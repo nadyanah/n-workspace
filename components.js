@@ -25,7 +25,7 @@ const JobLogbook = {
           <!-- Title row -->
           <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
             <div>
-              <h2 style="margin: 0 0 4px 0;">My 8-9 Job Logbook</h2>
+              <h2 style="margin: 0 0 4px 0; font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: var(--text-dark);">My 8-9 Job Logbook</h2>
               <p style="color: var(--text-muted); font-size: 13px; margin: 0; max-width: 520px; line-height: 1.5;">Perekaman aktivitas harian kerja, kategori dinamis, hasil capaian, rencana aksi selanjutnya, dan koordinasi dokumen pendukung.</p>
             </div>
             <!-- Primary action -->
@@ -573,7 +573,7 @@ const JobLogbook = {
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             </button>
             <div>
-              <h2 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+              <h2 style="margin: 0; display: flex; align-items: center; gap: 8px; font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: var(--text-dark);">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 All Notes
               </h2>
@@ -2845,7 +2845,7 @@ const ContentTracker = {
   template: `
     <div class="content-tracker" @click="showPlatDropdown = false; showUserDropdown = false">
       <div class="flex-between">
-        <h2 style="font-family: 'Playfair Display', serif; font-weight: 700; color: var(--text-dark);">Content Plan & Tracker</h2>
+        <h2 style="font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: var(--text-dark);">Content Plan & Tracker</h2>
         <div style="display: flex; gap: 8px; align-items: center;">
           <button class="btn btn-secondary" style="padding: 10px; display: inline-flex; align-items: center; justify-content: center; height: 38px; border: 1.5px solid #EAE5DD; background-color: #FFFFFF;" @click="showSettingsModal = true" title="Pengaturan Board">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -3004,7 +3004,7 @@ const ContentTracker = {
       <div v-if="showAddModal" class="modal-backdrop" @click.self="showAddModal = false">
         <div class="moment-modal" style="max-height: 90vh; overflow-y: auto; max-width: 500px; width: 100%;">
           <div class="flex-between" style="margin-bottom: 18px;">
-            <h3 style="font-family: 'Playfair Display', serif; font-weight: 700; color: var(--text-dark);">
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-dark);">
               {{ isEditing ? 'Ubah Konten Planning' : 'Buat Konten Planning Baru' }}
             </h3>
             <button class="close-btn" @click="showAddModal = false">×</button>
@@ -3131,7 +3131,7 @@ const ContentTracker = {
       <div v-if="showSettingsModal" class="modal-backdrop" @click.self="showSettingsModal = false">
         <div class="moment-modal text-left" style="max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: left;">
           <div class="flex-between" style="border-bottom: 1.5px solid #EAE5DD; padding-bottom: 12px; margin-bottom: 16px;">
-            <h3 style="font-family: 'Playfair Display', serif; font-weight: 700; color: var(--text-dark); margin: 0;">Pengaturan Kanban & Atribut</h3>
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-dark); margin: 0;">Pengaturan Kanban & Atribut</h3>
             <button class="close-btn" @click="showSettingsModal = false">×</button>
           </div>
           
@@ -4510,7 +4510,7 @@ const DailyNutrition = {
       <!-- HEADER -->
       <div class="flex-between" style="border-bottom: 2px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 24px; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
         <div>
-          <h2>Daily Nutrition & Mind Insights</h2>
+          <h2 style="font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: var(--text-dark); margin: 0 0 4px 0;">Daily Nutrition & Mind Insights</h2>
           <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 4px; max-width: 600px; line-height: 1.6;">
             Nutrisi harian bagi kecerdasan pikiran. Jaga konsistensi belajar dengan mendelegasikan ringkasan konsep, intisari keilmuan, dan kilatan ide kreatif dalam satu timeline teratur.
           </p>
@@ -5014,7 +5014,7 @@ const HabitTracker = {
       <!-- PAGE HEADER -->
       <div class="flex-between" style="border-bottom: 1.5px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 24px;">
         <div>
-          <h2>Aesthetic Habit Tracker</h2>
+          <h2 style="font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: var(--text-dark); margin: 0 0 4px 0;">Aesthetic Habit Tracker</h2>
           <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 4px;">Indikator kedisiplinan log harian pribadi dengan akumulasi data otomatis dan grafik progress terupdate.</p>
         </div>
 
@@ -6744,7 +6744,7 @@ const GoogleCalendar = {
       <!-- Top Screen Banner / Header -->
       <div class="flex-between" style="border-bottom: 2px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 24px; align-items: center; flex-wrap: wrap; gap: 12px;">
         <div>
-          <h2>Google Calendar Sync</h2>
+          <h2 style="font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: var(--text-dark); margin: 0 0 4px 0;">Google Calendar Sync</h2>
           <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 4px;">Sinkronisasikan agenda kesibukan & jadwal harian Anda secara langsung</p>
         </div>
         <!-- Profile metadata status if signed in -->
@@ -7300,7 +7300,7 @@ const FinancialTracker = {
 
       <div style="border-bottom: 2px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 28px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
         <div>
-          <h2 style="display:flex; align-items:center; gap:10px;">
+          <h2 style="display:flex; align-items:center; gap:10px; font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: var(--text-dark);">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
             Financial Tracker
           </h2>
