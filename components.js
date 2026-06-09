@@ -34,10 +34,17 @@ const JobLogbook = {
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M8 13h8"></path><path d="M8 17h8"></path><path d="M8 9h1"></path></svg>
                 Excel
               </button>
+              
               <button class="btn text-mono" @click="exportToPDF" style="background-color: #FDE8E8; border: 1.5px solid #F05252; color: #9B1C1C; font-weight: bold; cursor: pointer; padding: 7px 14px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>
                 PDF
               </button>
+
+              <button class="btn text-mono" @click="showManageCategories = true" style="background-color: #FFF4ED; border: 1.5px solid #D67B52; color: #8C4B2D; font-weight: bold; cursor: pointer; padding: 7px 14px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                Kelola Kategori
+              </button>
+
               <button class="btn btn-primary" @click="showAddLog = true" style="padding: 10px 20px; font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 Catat Hari Baru
@@ -204,38 +211,97 @@ const JobLogbook = {
           </div>
         </div>
 
-        <!-- ── Kelola Kategori ── -->
-        <div class="drawer-section" style="margin-bottom: 20px; padding: 16px 20px; border-radius: 12px; background: #FDFAF6; border: 1.5px solid var(--color-sand);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h3 style="font-size: 14px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 12h6"></path><path d="M9 16h4"></path></svg>
-              Kelola Kategori Pekerjaan
-            </h3>
-            <button @click="showCategoryManager = !showCategoryManager" class="btn btn-secondary" style="font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 600; padding: 5px 12px; cursor: pointer; border-radius: 7px;">
-              {{ showCategoryManager ? 'Sembunyikan' : 'Atur Kategori' }}
-            </button>
-          </div>
+        <!-- ── Modal Kelola Kategori ── -->
+        <transition name="modal-fade">
+          <div v-if="showManageCategories" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(44,38,33,0.55); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 99999;" @click.self="showManageCategories = false">
+            <div style="background: var(--bg-card); max-width: 460px; width: 90%; padding: 28px; border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,0.18); max-height: 80vh; overflow-y: auto;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; color: var(--text-dark);">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #D67B52;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                  Kelola Kategori Pekerjaan
+                </h3>
+                <button @click="showManageCategories = false" style="background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 22px; line-height: 1;">✕</button>
+              </div>
 
-          <div style="display: flex; flex-wrap: wrap; gap: 7px;">
-            <span v-for="cat in allCategories" :key="cat"
-              :style="{ backgroundColor: getCategoryColor(cat) + '15', color: getCategoryColor(cat), borderColor: getCategoryColor(cat) + '40' }"
-              style="padding: 3px 11px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1.5px solid; display: inline-flex; align-items: center; gap: 5px;">
-              {{ cat }}
-              <button v-if="!defaultCategories.includes(cat)" @click="deleteCategory(cat)"
-                style="background: none; border: none; cursor: pointer; font-size: 12px; line-height: 1; color: inherit; opacity: 0.5; padding: 0; display: inline-flex;"
-                title="Hapus kategori">✕</button>
-            </span>
-          </div>
+              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Kategori ini dipakai di Logbook dan Task Plan. Kategori default tidak bisa dihapus.</p>
 
-          <div v-if="showCategoryManager" style="display: flex; gap: 10px; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-sand);">
-            <input type="text" class="form-input" v-model="newCategoryInput" placeholder="Nama kategori baru..."
-              @keydown.enter="addCategory"
-              style="flex: 1; height: 38px;" />
-            <button class="btn btn-primary" @click="addCategory" style="height: 38px; padding: 0 18px; cursor: pointer; white-space: nowrap; font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 600;">
-              + Tambah
-            </button>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; padding: 14px; background: var(--bg-cream); border-radius: 10px; border: 1px solid var(--color-sand);">
+                <span v-for="cat in allCategories" :key="cat"
+                  :style="{ backgroundColor: getCategoryColor(cat) + '18', color: getCategoryColor(cat), borderColor: getCategoryColor(cat) + '50' }"
+                  style="padding: 4px 12px; border-radius: 20px; font-size: 12.5px; font-weight: 600; border: 1.5px solid; display: inline-flex; align-items: center; gap: 6px;">
+                  {{ cat }}
+                  <button v-if="!defaultCategories.includes(cat)" @click="deleteCategory(cat)"
+                    style="background: none; border: none; cursor: pointer; font-size: 13px; line-height: 1; color: inherit; opacity: 0.5; padding: 0; display: inline-flex; transition: opacity 0.15s;"
+                    @mouseenter="$event.target.style.opacity='1'" @mouseleave="$event.target.style.opacity='0.5'"
+                    title="Hapus kategori">✕</button>
+                </span>
+              </div>
+
+              <div style="border-top: 1.5px solid var(--color-sand); padding-top: 16px;">
+                <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em;">Tambah Kategori Baru</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                  <input type="text" class="form-input" v-model="newCategoryInput" placeholder="Nama kategori baru..."
+                    @keydown.enter="addCategory" style="flex: 1; height: 40px;" />
+                  <button class="btn btn-primary" @click="addCategory" style="height: 40px; padding: 0 20px; cursor: pointer; white-space: nowrap; font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 600;">
+                    + Tambah
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </transition>
+
+        <!-- ── Floating Form Task Plan ── -->
+        <transition name="modal-fade">
+          <div v-if="showAddPlan" style="position: fixed; bottom: 32px; right: 32px; z-index: 9999; width: 400px; max-width: calc(100vw - 48px); background: var(--bg-card); border-radius: 16px; box-shadow: 0 12px 40px rgba(44,38,33,0.18), 0 2px 8px rgba(0,0,0,0.08); border: 1.5px solid var(--color-sand); animation: popIn 0.22s ease;">
+            <!-- Header floating -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 18px 0; margin-bottom: 14px;">
+              <p style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0; display: flex; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                {{ editingPlanId ? 'Edit Task Plan' : 'Tambah Task Plan Baru' }}
+              </p>
+              <button @click="cancelPlanForm" style="background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 20px; line-height: 1; padding: 0 2px;" title="Tutup">✕</button>
+            </div>
+            <div style="padding: 0 18px 18px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <div class="form-group" style="margin: 0;">
+                  <label>Tanggal Target</label>
+                  <input type="date" class="form-input" v-model="planForm.date" style="height: 38px;" />
+                </div>
+                <div class="form-group" style="margin: 0;">
+                  <label>Kategori</label>
+                  <select class="form-input" v-model="planForm.category" style="height: 38px;">
+                    <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" style="margin: 0 0 10px;">
+                <label>Tugas / Deskripsi</label>
+                <textarea class="form-input" v-model="planForm.tasks" rows="2" placeholder="Deskripsikan tugas yang perlu dikerjakan..."></textarea>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                <div class="form-group" style="margin: 0;">
+                  <label>Prioritas</label>
+                  <select class="form-input" v-model="planForm.priority" style="height: 38px;">
+                    <option value="Low">🟢 Low</option>
+                    <option value="Medium">🟡 Medium</option>
+                    <option value="High">🔴 High</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin: 0;">
+                  <label>Requester</label>
+                  <input type="text" class="form-input" v-model="planForm.requester" placeholder="Nama peminta..." style="height: 38px;" />
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button class="btn btn-secondary" @click="cancelPlanForm" style="cursor: pointer; padding: 7px 16px; border-radius: 8px; font-weight: 600; font-size: 12.5px;">Batal</button>
+                <button class="btn btn-primary" @click="savePlan" style="cursor: pointer; padding: 7px 18px; border-radius: 8px; font-weight: 600; font-size: 12.5px;">
+                  {{ editingPlanId ? 'Simpan Perubahan' : 'Simpan Task' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </transition>
 
         <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand);">
           <div class="flex-between" style="align-items: center; margin-bottom: 16px;">
@@ -248,7 +314,7 @@ const JobLogbook = {
               <button class="btn btn-primary" @click="openAddPlan"
                 style="font-family: 'Outfit', sans-serif; font-size: 12.5px; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                {{ showAddPlan ? 'Tutup' : 'Tambah Task' }}
+                Tambah Task
               </button>
               <!-- Collapse toggle -->
               <button @click="taskPlanCollapsed = !taskPlanCollapsed"
@@ -263,48 +329,6 @@ const JobLogbook = {
           </div>
 
           <div v-show="!taskPlanCollapsed">
-          <div v-if="showAddPlan" style="background: #fff; border: 1.5px solid var(--color-sand); border-radius: 12px; padding: 18px; margin-bottom: 16px; animation: popIn 0.2s ease;">
-            <p style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-              {{ editingPlanId ? 'Edit Task Plan' : 'Tambah Task Plan Baru' }}
-            </p>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-              <div class="form-group" style="margin: 0;">
-                <label>Tanggal Target</label>
-                <input type="date" class="form-input" v-model="planForm.date" style="height: 40px;" />
-              </div>
-              <div class="form-group" style="margin: 0;">
-                <label>Kategori Pekerjaan</label>
-                <select class="form-input" v-model="planForm.category" style="height: 40px;">
-                  <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group" style="margin: 0 0 12px;">
-              <label>Tugas / Deskripsi</label>
-              <textarea class="form-input" v-model="planForm.tasks" rows="2" placeholder="Deskripsikan tugas yang perlu dikerjakan..."></textarea>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
-              <div class="form-group" style="margin: 0;">
-                <label>Prioritas</label>
-                <select class="form-input" v-model="planForm.priority" style="height: 40px;">
-                  <option value="Low">🟢 Low</option>
-                  <option value="Medium">🟡 Medium</option>
-                  <option value="High">🔴 High</option>
-                </select>
-              </div>
-              <div class="form-group" style="margin: 0;">
-                <label>Requester</label>
-                <input type="text" class="form-input" v-model="planForm.requester" placeholder="Nama peminta / atasan..." style="height: 40px;" />
-              </div>
-            </div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end;">
-              <button class="btn btn-secondary" @click="cancelPlanForm" style="cursor: pointer; padding: 8px 18px; border-radius: 8px; font-weight: 600;">Batal</button>
-              <button class="btn btn-primary" @click="savePlan" style="cursor: pointer; padding: 8px 20px; border-radius: 8px; font-weight: 600;">
-                {{ editingPlanId ? 'Simpan Perubahan' : 'Simpan Task' }}
-              </button>
-            </div>
-          </div>
 
           <div v-if="plans.length === 0 && !showAddPlan" style="text-align: center; padding: 32px 20px; background: #fff; border-radius: 10px; border: 1.5px dashed var(--color-sand);">
             <p style="font-size: 28px; margin-bottom: 8px;">📋</p>
@@ -312,41 +336,49 @@ const JobLogbook = {
             <p style="font-size: 12.5px; color: var(--text-muted);">Klik "Tambah Task" untuk mulai merencanakan pekerjaanmu</p>
           </div>
 
-          <div v-if="plans.length > 0" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
-            <span style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;">Filter Prioritas:</span>
-            <button @click="planFilterPriority = ''"
-              :style="{ background: planFilterPriority === '' ? 'var(--color-terracotta)' : '#ffffff', color: planFilterPriority === '' ? '#fff' : 'var(--text-dark)', borderColor: planFilterPriority === '' ? 'var(--color-terracotta)' : 'var(--color-sand)' }"
-              style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
-              Semua <span style="opacity:0.8;">({{ plans.length }})</span>
-            </button>
-            <button @click="planFilterPriority = 'High'"
-              :style="{ background: planFilterPriority === 'High' ? '#B91C1C' : '#ffffff', color: planFilterPriority === 'High' ? '#fff' : '#B91C1C', borderColor: '#FCA5A5' }"
-              style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
-              🔴 High <span style="opacity:0.8;">({{ plans.filter(p => p.priority === 'High').length }})</span>
-            </button>
-            <button @click="planFilterPriority = 'Medium'"
-              :style="{ background: planFilterPriority === 'Medium' ? '#854D0E' : '#ffffff', color: planFilterPriority === 'Medium' ? '#fff' : '#854D0E', borderColor: '#FDE047' }"
-              style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
-              🟡 Medium <span style="opacity:0.8;">({{ plans.filter(p => p.priority === 'Medium').length }})</span>
-            </button>
-            <button @click="planFilterPriority = 'Low'"
-              :style="{ background: planFilterPriority === 'Low' ? '#166534' : '#ffffff', color: planFilterPriority === 'Low' ? '#fff' : '#166534', borderColor: '#86EFAC' }"
-              style="border: 1.5px solid; border-radius: 20px; padding: 3px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
-              🟢 Low <span style="opacity:0.8;">({{ plans.filter(p => p.priority === 'Low').length }})</span>
-            </button>
+          <div v-if="plans.length > 0" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;">Prioritas:</label>
+              <select v-model="planFilterPriority" class="form-input" style="height: 36px; padding: 0 10px; font-size: 12.5px; font-weight: 600; min-width: 130px;">
+                <option value="">Semua ({{ plans.length }})</option>
+                <option value="High">🔴 High ({{ plans.filter(p => p.priority === 'High').length }})</option>
+                <option value="Medium">🟡 Medium ({{ plans.filter(p => p.priority === 'Medium').length }})</option>
+                <option value="Low">🟢 Low ({{ plans.filter(p => p.priority === 'Low').length }})</option>
+              </select>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;">Jadwal:</label>
+              <select v-model="planFilterSchedule" class="form-input" style="height: 36px; padding: 0 10px; font-size: 12.5px; font-weight: 600; min-width: 155px;">
+                <option value="">Semua Jadwal</option>
+                <option value="overdue">⚠️ Lewat Jadwal ({{ plans.filter(p => p.date < todayStr).length }})</option>
+                <option value="today">✦ Hari Ini ({{ plans.filter(p => p.date === todayStr).length }})</option>
+                <option value="upcoming">🔜 Akan Datang ({{ plans.filter(p => p.date > todayStr).length }})</option>
+              </select>
+            </div>
+            <button v-if="planFilterPriority || planFilterSchedule" class="btn btn-secondary" @click="planFilterPriority = ''; planFilterSchedule = ''" style="height: 36px; padding: 0 12px; font-size: 12px; cursor: pointer; color: var(--color-terracotta); border-color: var(--color-terracotta);">Reset</button>
           </div>
 
           <div v-if="plans.length > 0 && sortedFilteredPlans.length === 0" style="text-align: center; padding: 20px; background: #fff; border-radius: 10px; border: 1.5px dashed var(--color-sand);">
-            <p style="font-size: 13px; color: var(--text-muted);">Tidak ada task dengan prioritas <strong>{{ planFilterPriority }}</strong>.</p>
+            <p style="font-size: 13px; color: var(--text-muted);">Tidak ada task yang cocok dengan filter yang dipilih.</p>
           </div>
 
           <div v-if="sortedFilteredPlans.length > 0"
             style="display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; scrollbar-color: var(--color-sand) transparent;">
             
             <div v-for="(plan, idx) in sortedFilteredPlans" :key="plan.id"
-              style="background: #fff; border: 1.5px solid var(--color-sand); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; transition: box-shadow 0.2s, border-color 0.2s;"
-              @mouseenter="$event.currentTarget.style.boxShadow='0 4px 16px rgba(214,123,82,0.10)'; $event.currentTarget.style.borderColor='var(--color-gold)'"
-              @mouseleave="$event.currentTarget.style.boxShadow='none'; $event.currentTarget.style.borderColor='var(--color-sand)'">
+              :style="plan.date === todayStr ? {
+                background: 'linear-gradient(135deg, #FBF0EA 0%, #FFF4ED 100%)',
+                border: '1.5px solid var(--color-gold)',
+                borderRadius: '10px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px',
+                transition: 'box-shadow 0.2s, border-color 0.2s'
+              } : {
+                background: '#fff',
+                border: '1.5px solid var(--color-sand)',
+                borderRadius: '10px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px',
+                transition: 'box-shadow 0.2s, border-color 0.2s'
+              }"
+              @mouseenter="$event.currentTarget.style.boxShadow = plan.date === todayStr ? '0 4px 20px rgba(214,123,82,0.20)' : '0 4px 16px rgba(214,123,82,0.10)'; if(plan.date !== todayStr) $event.currentTarget.style.borderColor='var(--color-gold)'"
+              @mouseleave="$event.currentTarget.style.boxShadow='none'; if(plan.date !== todayStr) $event.currentTarget.style.borderColor='var(--color-sand)'">
               
               <div class="flex-between" style="align-items: flex-start; gap: 12px;">
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1;">
@@ -400,7 +432,7 @@ const JobLogbook = {
                 </div>
               </div>
               
-              <p style="font-size: 13.5px; color: var(--text-dark); margin: 0; line-height: 1.5;">{{ plan.tasks }}</p>
+              <p :style="plan.date === todayStr ? { fontSize: '13.5px', color: '#5A3E2B', margin: '0', lineHeight: '1.5', fontWeight: '600' } : { fontSize: '13.5px', color: 'var(--text-dark)', margin: '0', lineHeight: '1.5' }">{{ plan.tasks }}</p>
             </div>
 
           </div>
@@ -584,17 +616,81 @@ const JobLogbook = {
           </button>
         </div>
 
-        <div style="display: flex; gap: 12px; margin-bottom: 24px; align-items: center; background: #fff; padding: 12px; border-radius: 12px; border: 1.5px solid var(--color-sand);">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-            <span style="font-size: 13px; font-weight: 700; color: var(--text-muted);">Filters:</span>
+        <div style="background: #fff; padding: 16px 18px; border-radius: 12px; border: 1.5px solid var(--color-sand); margin-bottom: 24px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+            <span style="font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 700; color: var(--text-muted);">Filter Notes</span>
+            <button v-if="noteFilterStartDate || noteFilterEndDate || noteFilterCategory || noteFilterSchedule" class="btn btn-secondary" @click="noteFilterStartDate=''; noteFilterEndDate=''; noteFilterCategory=''; noteFilterSchedule=''; noteShowRangePicker=false" style="margin-left: auto; height: 30px; font-size: 12px; padding: 0 12px; cursor: pointer; color: var(--color-terracotta); border-color: var(--color-terracotta);">Reset Semua</button>
           </div>
-          <input type="date" class="form-input" v-model="noteFilterDate" style="height: 38px; width: auto;" title="Filter berdasarkan tanggal dibuat" />
-          <select class="form-input" v-model="noteFilterCategory" style="height: 38px; width: auto;">
-            <option value="">Semua Kategori</option>
-            <option v-for="cat in noteCategories" :key="'filter-' + cat" :value="cat">{{ cat }}</option>
-          </select>
-          <button v-if="noteFilterDate || noteFilterCategory" class="btn btn-secondary" @click="noteFilterDate=''; noteFilterCategory=''" style="height: 38px; font-size: 12px;">Reset</button>
+
+          <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr auto; gap: 10px; align-items: end;">
+            <!-- Rentang Tanggal -->
+            <div class="form-group" style="margin-bottom: 0; position: relative;">
+              <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 5px;">Rentang Tanggal</label>
+              <button type="button" class="form-input" @click.stop="noteShowRangePicker = !noteShowRangePicker"
+                style="width: 100%; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px; background: #fff; height: 40px; box-sizing: border-box; white-space: nowrap; overflow: hidden;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; color: var(--color-terracotta);"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span style="font-size: 12px; color: var(--text-dark); overflow: hidden; text-overflow: ellipsis;">
+                  <template v-if="noteFilterStartDate || noteFilterEndDate">
+                    {{ noteFilterStartDate ? formatDate(noteFilterStartDate) : '?' }} – {{ noteFilterEndDate ? formatDate(noteFilterEndDate) : '?' }}
+                  </template>
+                  <template v-else><span style="color: var(--text-muted);">Semua tanggal...</span></template>
+                </span>
+              </button>
+              <!-- Range Picker Popup -->
+              <div v-if="noteShowRangePicker" @click.stop style="position: absolute; top: calc(100% + 6px); left: 0; z-index: 999; background: #fff; border: 1.5px solid var(--color-sand); border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.13); padding: 16px; min-width: 280px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                  <button type="button" @click="noteRangeCalPrevMonth" style="background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text-dark); padding: 4px 8px; border-radius: 6px;">&lt;</button>
+                  <span style="font-weight: 700; font-size: 14px; color: var(--text-dark);">{{ noteRangeCalMonthLabel }}</span>
+                  <button type="button" @click="noteRangeCalNextMonth" style="background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text-dark); padding: 4px 8px; border-radius: 6px;">&gt;</button>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 4px;">
+                  <span v-for="(d, i) in ['S','S','R','K','J','S','M']" :key="'nh'+i" style="text-align: center; font-size: 10.5px; font-weight: 700; color: var(--text-muted); padding: 2px 0;">{{ d }}</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;">
+                  <span v-for="cell in noteRangeCalCells" :key="cell.key" @click="cell.date ? onNoteRangeCalClick(cell.date) : null"
+                    :style="getNoteRangeCellStyle(cell)"
+                    style="text-align: center; font-size: 13px; padding: 6px 2px; border-radius: 7px; cursor: pointer; user-select: none; transition: background 0.12s;">
+                    {{ cell.label }}
+                  </span>
+                </div>
+                <div style="margin-top: 10px; font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.4;">
+                  <span v-if="!noteFilterStartDate">Klik tanggal mulai</span>
+                  <span v-else-if="!noteFilterEndDate">Klik tanggal akhir</span>
+                  <span v-else style="color: var(--color-terracotta); font-weight: 600;">✓ Rentang dipilih</span>
+                </div>
+                <button v-if="noteFilterStartDate || noteFilterEndDate" type="button" @click="noteFilterStartDate=''; noteFilterEndDate=''; noteShowRangePicker=false"
+                  style="margin-top: 8px; width: 100%; background: var(--bg-cream); border: 1px solid var(--color-sand); color: var(--text-dark); border-radius: 7px; padding: 6px; font-size: 12px; cursor: pointer; font-weight: 600;">
+                  Hapus Rentang
+                </button>
+              </div>
+            </div>
+
+            <!-- Filter Kategori -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 5px;">Kategori</label>
+              <select class="form-input" v-model="noteFilterCategory" style="height: 40px;">
+                <option value="">Semua Kategori</option>
+                <option v-for="cat in noteCategories" :key="'filter-' + cat" :value="cat">{{ cat }}</option>
+              </select>
+            </div>
+
+            <!-- Filter Jadwal -->
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 5px;">Urutkan / Lihat</label>
+              <select class="form-input" v-model="noteFilterSchedule" style="height: 40px;">
+                <option value="">Semua</option>
+                <option value="today">📅 Hari Ini</option>
+                <option value="upcoming">🔜 Akan Datang</option>
+                <option value="overdue">⚠️ Lewat Jadwal</option>
+              </select>
+            </div>
+
+            <!-- Jumlah hasil -->
+            <div style="padding-bottom: 2px;">
+              <span style="font-size: 11.5px; color: var(--text-muted); font-weight: 600; white-space: nowrap;">{{ filteredNotes.length }} note</span>
+            </div>
+          </div>
         </div>
 
         <div v-if="filteredNotes.length === 0" style="text-align: center; padding: 60px 20px; color: var(--text-muted); border: 1.5px dashed var(--color-sand); border-radius: 16px; background: var(--bg-cream);">
@@ -696,6 +792,7 @@ const JobLogbook = {
     return {
       // Data Logbook yang lama
       showAddLog: false,
+      showManageCategories: false,
       syncToContentOnSave: false,
       logs: [],
       plans: [],
@@ -706,6 +803,7 @@ const JobLogbook = {
       taskPlanCollapsed: false,
       editingPlanId: null,
       planFilterPriority: '',
+      planFilterSchedule: '',
       planForm: {
         date: new Date().toISOString().split('T')[0],
         category: 'Administrasi',
@@ -742,6 +840,11 @@ const JobLogbook = {
       newNoteCatInput: '',
       noteFilterCategory: '',
       noteFilterDate: '',
+      noteFilterStartDate: '',
+      noteFilterEndDate: '',
+      noteShowRangePicker: false,
+      noteRangeCalViewDate: new Date().toISOString().slice(0,7),
+      noteFilterSchedule: '',
       notes: [],
       noteCategories: ['Psychology', 'Groceries', 'Work', 'Ideas'],
       editingNoteId: null, // Baru: untuk menyimpan ID note yang sedang di-edit
@@ -815,7 +918,13 @@ const JobLogbook = {
       const priorityOrder = { High: 0, Medium: 1, Low: 2 };
       const today = this.todayStr;
       return [...this.plans]
-        .filter(p => !this.planFilterPriority || p.priority === this.planFilterPriority)
+        .filter(p => {
+          if (this.planFilterPriority && p.priority !== this.planFilterPriority) return false;
+          if (this.planFilterSchedule === 'overdue' && p.date >= today) return false;
+          if (this.planFilterSchedule === 'today' && p.date !== today) return false;
+          if (this.planFilterSchedule === 'upcoming' && p.date <= today) return false;
+          return true;
+        })
         .sort((a, b) => {
           const aOverdue = a.date < today;
           const bOverdue = b.date < today;
@@ -824,11 +933,7 @@ const JobLogbook = {
           const aGroup  = aOverdue ? 0 : aToday ? 1 : 2;
           const bGroup  = bOverdue ? 0 : bToday ? 1 : 2;
           if (aGroup !== bGroup) return aGroup - bGroup;
-          if (aOverdue) {
-            if (a.date !== b.date) return a.date < b.date ? -1 : 1;
-          } else {
-            if (a.date !== b.date) return a.date < b.date ? -1 : 1;
-          }
+          if (a.date !== b.date) return a.date < b.date ? -1 : 1;
           return (priorityOrder[a.priority] ?? 1) - (priorityOrder[b.priority] ?? 1);
         });
     },
@@ -876,11 +981,33 @@ const JobLogbook = {
       return [...this.notes].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3);
     },
     filteredNotes() {
+      const today = this.todayStr;
       return this.notes.filter(n => {
         const matchCat = !this.noteFilterCategory || n.category === this.noteFilterCategory;
-        const matchDate = !this.noteFilterDate || n.date === this.noteFilterDate;
-        return matchCat && matchDate;
+        const matchStart = !this.noteFilterStartDate || n.date >= this.noteFilterStartDate;
+        const matchEnd = !this.noteFilterEndDate || n.date <= this.noteFilterEndDate;
+        let matchSched = true;
+        if (this.noteFilterSchedule === 'today') matchSched = n.date === today;
+        else if (this.noteFilterSchedule === 'upcoming') matchSched = n.date > today;
+        else if (this.noteFilterSchedule === 'overdue') matchSched = n.date < today;
+        return matchCat && matchStart && matchEnd && matchSched;
       }).sort((a, b) => new Date(b.date) - new Date(a.date));
+    },
+    noteRangeCalMonthLabel() {
+      const [y, m] = (this.noteRangeCalViewDate || new Date().toISOString().slice(0,7)).split('-').map(Number);
+      return new Date(y, m - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+    },
+    noteRangeCalCells() {
+      const [y, m] = (this.noteRangeCalViewDate || new Date().toISOString().slice(0,7)).split('-').map(Number);
+      const firstDay = new Date(y, m - 1, 1).getDay();
+      const daysInMonth = new Date(y, m, 0).getDate();
+      const cells = [];
+      for (let i = 0; i < firstDay; i++) cells.push({ key: 'e' + i, label: '', date: null });
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dd = String(d).padStart(2,'0'), mm = String(m).padStart(2,'0');
+        cells.push({ key: `${y}-${mm}-${dd}`, label: d, date: `${y}-${mm}-${dd}` });
+      }
+      return cells;
     }
   },
   created() {
@@ -1020,6 +1147,35 @@ const JobLogbook = {
       if (!cell.date) return { visibility: 'hidden' };
       const isStart = cell.date === this.filterStartDate, isEnd = cell.date === this.filterEndDate;
       const inRange = this.filterStartDate && this.filterEndDate && cell.date > this.filterStartDate && cell.date < this.filterEndDate;
+      const isToday = cell.date === this.todayStr;
+      if (isStart || isEnd) return { background: 'var(--color-terracotta)', color: '#fff', fontWeight: 'bold', borderRadius: '50%' };
+      if (inRange) return { background: 'rgba(214,123,82,0.15)', color: 'var(--text-dark)', borderRadius: '4px' };
+      if (isToday) return { border: '1.5px solid var(--color-terracotta)', color: 'var(--color-terracotta)', fontWeight: 'bold', borderRadius: '50%' };
+      return { color: 'var(--text-dark)' };
+    },
+    noteRangeCalPrevMonth() {
+      const [y, m] = this.noteRangeCalViewDate.split('-').map(Number);
+      const d = new Date(y, m - 2, 1);
+      this.noteRangeCalViewDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    },
+    noteRangeCalNextMonth() {
+      const [y, m] = this.noteRangeCalViewDate.split('-').map(Number);
+      const d = new Date(y, m, 1);
+      this.noteRangeCalViewDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    },
+    onNoteRangeCalClick(dateStr) {
+      if (!this.noteFilterStartDate || (this.noteFilterStartDate && this.noteFilterEndDate)) {
+        this.noteFilterStartDate = dateStr; this.noteFilterEndDate = '';
+      } else {
+        if (dateStr < this.noteFilterStartDate) { this.noteFilterEndDate = this.noteFilterStartDate; this.noteFilterStartDate = dateStr; }
+        else this.noteFilterEndDate = dateStr;
+        this.noteShowRangePicker = false;
+      }
+    },
+    getNoteRangeCellStyle(cell) {
+      if (!cell.date) return { visibility: 'hidden' };
+      const isStart = cell.date === this.noteFilterStartDate, isEnd = cell.date === this.noteFilterEndDate;
+      const inRange = this.noteFilterStartDate && this.noteFilterEndDate && cell.date > this.noteFilterStartDate && cell.date < this.noteFilterEndDate;
       const isToday = cell.date === this.todayStr;
       if (isStart || isEnd) return { background: 'var(--color-terracotta)', color: '#fff', fontWeight: 'bold', borderRadius: '50%' };
       if (inRange) return { background: 'rgba(214,123,82,0.15)', color: 'var(--text-dark)', borderRadius: '4px' };
@@ -1188,7 +1344,7 @@ const JobLogbook = {
     }
   },
   mounted() {
-    this._closeRangePicker = () => { if (this.showRangePicker) this.showRangePicker = false; };
+    this._closeRangePicker = () => { if (this.showRangePicker) this.showRangePicker = false; if (this.noteShowRangePicker) this.noteShowRangePicker = false; };
     document.addEventListener('click', this._closeRangePicker);
   },
   unmounted() {

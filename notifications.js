@@ -13,6 +13,10 @@
 //
 // Database schema (localStorage key: ws_notif_action_status):
 //   { "YYYY-MM-DD": { "logbook_1530": true/false, "memories_2030": true/false } }
+//
+// FITUR BARU:
+//   • Badge berkurang otomatis saat item ditandai selesai
+//   • Pop-up pengingat muncul saat web dibuka jika ada Pengingat Hari Ini yang belum selesai
 // ============================================================================
 
 // ── Web Audio: generate suara pakai AudioContext (no file needed) ──
@@ -111,6 +115,139 @@ const NotifSound = {
   }
 };
 
+// ============================================================================
+// REMINDER POPUP — Muncul otomatis saat web dibuka jika ada pengingat pending
+// ============================================================================
+const ReminderPopup = {
+  template: `
+    <transition name="reminder-popup-fade">
+      <div v-if="visible" class="reminder-popup-overlay" @click.self="dismiss">
+        <div class="reminder-popup-card">
+          <!-- Header -->
+          <div class="reminder-popup-header">
+            <div class="reminder-popup-icon-wrap">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+            </div>
+            <div>
+              <div class="reminder-popup-title">Pengingat Hari Ini</div>
+              <div class="reminder-popup-date">{{ todayLabel }}</div>
+            </div>
+          </div>
+
+          <!-- List Pengingat Pending -->
+          <div class="reminder-popup-body">
+            <p class="reminder-popup-intro">Kamu punya <strong>{{ pendingCount }} pengingat</strong> yang belum selesai hari ini:</p>
+            <div v-for="notif in pendingNotifs" :key="notif.id" class="reminder-popup-item">
+              <div class="reminder-popup-item-time">{{ notif.time }}</div>
+              <div class="reminder-popup-item-info">
+                <div class="reminder-popup-item-title">{{ notif.title }}</div>
+                <div class="reminder-popup-item-sub">{{ notif.subtitle }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer Actions -->
+          <div class="reminder-popup-footer">
+            <button class="reminder-popup-btn-open" @click="openNotifPanel">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              Lihat Notifikasi
+            </button>
+            <button class="reminder-popup-btn-dismiss" @click="dismiss">Nanti saja</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+  `,
+
+  emits: ['open-notif', 'dismiss'],
+
+  data() {
+    return {
+      visible: false,
+      todayStr: '',
+      pendingNotifs: []
+    };
+  },
+
+  computed: {
+    pendingCount() {
+      return this.pendingNotifs.length;
+    },
+    todayLabel() {
+      const now = new Date();
+      const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+      const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+      return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+    }
+  },
+
+  mounted() {
+    const d = new Date();
+    this.todayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+    // Tunda sedikit supaya app sudah siap render, lalu cek
+    setTimeout(() => this.checkAndShow(), 800);
+  },
+
+  methods: {
+    getTodayStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    },
+
+    checkAndShow() {
+      // Cek popup sudah pernah di-dismiss hari ini?
+      try {
+        const dismissed = JSON.parse(localStorage.getItem('ws_reminder_popup_dismissed') || '{}');
+        if (dismissed[this.todayStr]) return; // sudah dismiss hari ini, jangan tampil lagi
+      } catch(e) {}
+
+      // Ambil status actionable
+      let actionStatus = {};
+      try {
+        actionStatus = JSON.parse(localStorage.getItem('ws_notif_action_status') || '{}');
+      } catch(e) {}
+
+      const status = actionStatus[this.todayStr] || {};
+      const allActions = [
+        { id: 'logbook_1530',   title: 'Isi My 8-9 Job Logbook',     subtitle: 'Catat aktivitas & pencapaian kerja hari ini', time: '15:30' },
+        { id: 'memories_2030',  title: 'Isi My Memories & Growth',    subtitle: 'Tambahkan kenangan & refleksi malam ini',    time: '20:30' }
+      ];
+
+      // Hanya tampilkan yang belum selesai
+      this.pendingNotifs = allActions.filter(n => !status[n.id]);
+
+      if (this.pendingNotifs.length > 0) {
+        this.visible = true;
+        NotifSound.playNotif();
+      }
+    },
+
+    openNotifPanel() {
+      this.dismiss();
+      this.$emit('open-notif');
+    },
+
+    dismiss() {
+      this.visible = false;
+      // Simpan bahwa sudah dismiss hari ini
+      try {
+        const dismissed = JSON.parse(localStorage.getItem('ws_reminder_popup_dismissed') || '{}');
+        dismissed[this.todayStr] = true;
+        localStorage.setItem('ws_reminder_popup_dismissed', JSON.stringify(dismissed));
+      } catch(e) {}
+      this.$emit('dismiss');
+    }
+  }
+};
+
+
+// ============================================================================
+// NOTIFICATION PANEL
+// ============================================================================
 const NotificationPanel = {
   template: `
     <transition name="notif-panel-slide">
@@ -205,7 +342,7 @@ const NotificationPanel = {
   props: {
     show: { type: Boolean, default: false }
   },
-  emits: ['close', 'navigate'],
+  emits: ['close', 'navigate', 'unread-count-changed'],
 
   data() {
     return {
@@ -313,7 +450,7 @@ const NotificationPanel = {
       return this.actionNotifs.some(n => n.done);
     },
 
-    // Total badge buat bell icon di navbar
+    // Total badge buat bell icon di navbar — hanya hitung yang belum selesai
     totalUnread() {
       const infoCount = this.infoNotifs.length;
       const undoneCount = this.actionNotifs.filter(n => !n.done).length;
@@ -324,6 +461,10 @@ const NotificationPanel = {
   watch: {
     show(val) {
       if (val) this.loadData();
+    },
+    // Emit ke parent setiap kali totalUnread berubah, supaya badge di bell ikut update
+    totalUnread(val) {
+      this.$emit('unread-count-changed', val);
     }
   },
 
@@ -331,8 +472,10 @@ const NotificationPanel = {
     this.todayStr = this.getTodayStr();
     this.loadData();
 
-    // Setelah data loaded, cek apakah ada notif pending → shake bell + suara
+    // Emit count awal supaya badge langsung benar saat mount
     this.$nextTick(() => {
+      this.$emit('unread-count-changed', this.totalUnread);
+
       const hasPending = this.actionNotifs.some(n => !n.done) || this.infoNotifs.length > 0;
       if (hasPending) {
         this._triggerBellAlert();
@@ -377,6 +520,11 @@ const NotificationPanel = {
         const raw = localStorage.getItem('ws_notif_action_status');
         this.actionStatus = raw ? JSON.parse(raw) : {};
       } catch(e) { this.actionStatus = {}; }
+
+      // Emit count terbaru setelah load
+      this.$nextTick(() => {
+        this.$emit('unread-count-changed', this.totalUnread);
+      });
     },
 
     _triggerBellAlert() {
@@ -411,6 +559,12 @@ const NotificationPanel = {
       }
       this.actionStatus[this.todayStr][notif.id] = true;
       localStorage.setItem('ws_notif_action_status', JSON.stringify(this.actionStatus));
+
+      // Emit count terbaru supaya badge langsung berkurang
+      this.$nextTick(() => {
+        this.$emit('unread-count-changed', this.totalUnread);
+      });
+
       // Navigasi ke halaman
       this.$emit('navigate', notif.page);
       this.$emit('close');
@@ -420,6 +574,10 @@ const NotificationPanel = {
       if (this.actionStatus[this.todayStr]) {
         this.actionStatus[this.todayStr] = {};
         localStorage.setItem('ws_notif_action_status', JSON.stringify(this.actionStatus));
+        // Emit count setelah reset
+        this.$nextTick(() => {
+          this.$emit('unread-count-changed', this.totalUnread);
+        });
       }
     }
   }

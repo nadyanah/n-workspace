@@ -16,6 +16,139 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Font dari Dafont font-family: 'Hack', monospace; -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css">
+  <!-- Reminder Popup Styles -->
+  <style>
+    /* ── Reminder Popup ── */
+    .reminder-popup-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.38);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+    }
+    .reminder-popup-card {
+      background: var(--color-paper, #FAF7F2);
+      border-radius: 18px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.10);
+      width: min(380px, 90vw);
+      overflow: hidden;
+      font-family: inherit;
+    }
+    .reminder-popup-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 20px 20px 14px;
+      border-bottom: 1px solid var(--color-sand-light, #EDE8E1);
+      background: var(--color-terracotta, #D67B52);
+      color: #fff;
+    }
+    .reminder-popup-icon-wrap {
+      width: 40px; height: 40px;
+      background: rgba(255,255,255,0.22);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .reminder-popup-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .reminder-popup-date {
+      font-size: 12px;
+      opacity: 0.82;
+      margin-top: 1px;
+    }
+    .reminder-popup-body {
+      padding: 16px 20px 12px;
+    }
+    .reminder-popup-intro {
+      font-size: 13px;
+      color: var(--text-secondary, #7A6F66);
+      margin: 0 0 12px;
+    }
+    .reminder-popup-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 12px;
+      background: var(--color-cream, #FDF5EB);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      border-left: 3px solid var(--color-terracotta, #D67B52);
+    }
+    .reminder-popup-item-time {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-terracotta, #D67B52);
+      background: rgba(214,123,82,0.12);
+      padding: 3px 8px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      margin-top: 1px;
+      font-family: 'Hack', monospace, sans-serif;
+    }
+    .reminder-popup-item-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary, #3D2E22);
+    }
+    .reminder-popup-item-sub {
+      font-size: 11.5px;
+      color: var(--text-muted, #A09690);
+      margin-top: 2px;
+    }
+    .reminder-popup-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px 18px;
+      justify-content: flex-end;
+    }
+    .reminder-popup-btn-open {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      background: var(--color-terracotta, #D67B52);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.18s, transform 0.12s;
+    }
+    .reminder-popup-btn-open:hover { background: var(--color-terracotta-dark, #B8663F); transform: scale(1.03); }
+    .reminder-popup-btn-dismiss {
+      padding: 9px 14px;
+      background: transparent;
+      border: 1.5px solid var(--color-sand, #C8BDB5);
+      color: var(--text-secondary, #7A6F66);
+      border-radius: 10px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .reminder-popup-btn-dismiss:hover { background: var(--color-sand-light, #EDE8E1); }
+
+    /* Transition */
+    .reminder-popup-fade-enter-active { animation: reminder-pop-in 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .reminder-popup-fade-leave-active { animation: reminder-pop-out 0.18s ease-in; }
+    @keyframes reminder-pop-in {
+      from { opacity: 0; transform: scale(0.88) translateY(16px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @keyframes reminder-pop-out {
+      from { opacity: 1; transform: scale(1); }
+      to   { opacity: 0; transform: scale(0.92) translateY(8px); }
+    }
+  </style>
 </head>
 <body>
   <div id="app" v-cloak>
@@ -330,8 +463,15 @@
         :show="showNotifPanel"
         @close="showNotifPanel = false"
         @navigate="navigateTo"
+        @unread-count-changed="onUnreadCountChanged"
         ref="notifPanelRef">
       </notification-panel>
+
+      <!-- Reminder Popup — muncul otomatis saat web dibuka jika ada pengingat pending -->
+      <reminder-popup
+        @open-notif="showNotifPanel = true"
+        @dismiss="">
+      </reminder-popup>
 
       <!-- Floating Countdown Timer — Global Persistent (muncul di halaman lain saat timer berjalan) -->
       <floating-countdown-timer :active-page="activePage"></floating-countdown-timer>

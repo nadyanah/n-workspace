@@ -300,42 +300,14 @@ const App = {
       });
     });
 
-    // Computed: hitung jumlah notif yang belum selesai untuk badge di bell icon
+    // Badge notif bell — diupdate reactif oleh event 'unread-count-changed' dari NotificationPanel
     const notifPanelRef = ref(null);
-    const notifUnreadCount = computed(() => {
-      const todayStr = (() => {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      })();
+    const notifUnreadCount = ref(0);
 
-      // Hitung task plan hari ini
-      let count = 0;
-      try {
-        const plans = JSON.parse(WorkspaceStorage.getItem('personal_workspace_job_plans') || '[]');
-        count += plans.filter(p => p.date === todayStr).length;
-      } catch(e) {}
-
-      // Hitung content items urgen (hari ini, H-1, H-2, terlambat)
-      try {
-        const items = JSON.parse(WorkspaceStorage.getItem('personal_workspace_content_items') || '[]');
-        const today = new Date(todayStr);
-        items.forEach(item => {
-          if (!item.dueDate) return;
-          const diff = Math.round((new Date(item.dueDate) - today) / 86400000);
-          if (diff <= 2) count++;
-        });
-      } catch(e) {}
-
-      // Hitung actionable yang belum selesai
-      try {
-        const status = JSON.parse(localStorage.getItem('ws_notif_action_status') || '{}');
-        const todayStatus = status[todayStr] || {};
-        if (!todayStatus['logbook_1530']) count++;
-        if (!todayStatus['memories_2030']) count++;
-      } catch(e) { count += 2; }
-
-      return count;
-    });
+    // Handler dipanggil oleh <notification-panel @unread-count-changed="...">
+    const onUnreadCountChanged = (count) => {
+      notifUnreadCount.value = count;
+    };
 
     return {
       activePage,
@@ -361,7 +333,8 @@ const App = {
       navigateTo,
       handleUpdateMapping,
       notifPanelRef,
-      notifUnreadCount
+      notifUnreadCount,
+      onUnreadCountChanged
     };
   }
 };
@@ -598,5 +571,6 @@ app.component('icon-manager', IconManager);
 app.component('floating-countdown-timer', FloatingCountdownTimer);
 app.component('financial-tracker', FinancialTracker);
 app.component('notification-panel', NotificationPanel);
+app.component('reminder-popup', ReminderPopup);
 
 app.mount('#app');
