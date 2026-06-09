@@ -1,23 +1,26 @@
 // ============================================================================
 // NOTIFICATION SYSTEM — notifications.js
 // ============================================================================
-// Dua section notifikasi:
-//   Section 1 — Informational (Hari Ini):
-//     • Task Plan yang target-nya hari ini (dari personal_workspace_job_plans)
-//     • Content Plan dengan dueDate hari ini + urgensi rilis H-1 & H-2
 //
-//   Section 2 — Actionable (Berbasis Waktu & Tindakan):
-//     • Jam 15:30 → isi My 8-9 Job Logbook → navigasi ke jobLogbook
-//     • Jam 20:30 → isi My Memories & Growth → navigasi ke calendarMoment
-//     • Setiap notif punya status selesai (✓) yang tersimpan per-hari di localStorage
+// NotifSound        — Web Audio engine (playNotif, playCheck)
 //
-// Database schema (localStorage key: ws_notif_action_status):
-//   { "YYYY-MM-DD": { "logbook_1530": true/false, "memories_2030": true/false } }
+// ReminderPopup     — Popup otomatis, 3 mode:
+//   • "open"   → buka web, semua jam belum lewat → list semua pending (SELALU muncul)
+//   • "missed" → buka web, ada jam sudah lewat & belum dikerjakan → carousel slide
+//   • "live"   → web sedang buka, jam task tiba tepat waktu (polling 30 detik)
+//   Setelah missed di-dismiss → mode open langsung muncul otomatis (jika ada upcoming)
+//   Bell goyang + bunyi setiap 8 menit selama masih ada notif pending
 //
-// FITUR BARU:
-//   • Badge berkurang otomatis saat item ditandai selesai
-//   • Pop-up pengingat muncul saat web dibuka jika ada Pengingat Hari Ini yang belum selesai
+// NotificationPanel — Panel slide dari kanan, dibuka via bell icon
+//   Section 1: Hari Ini  (Task Plan + Content urgen dari Supabase)
+//   Section 2: Pengingat (action items dengan status done/undone)
+//
+// Storage: WorkspaceStorage (Supabase-synced, cross-device)
+//   ws_notif_action_status  → { "YYYY-MM-DD": { id: true/false } }
+//   ws_timed_popup_shown    → { "YYYY-MM-DD": { id: true } }
 // ============================================================================
+
+// ── Web Audio: generate suara pakai AudioContext (no file needed) ──
 
 // ── Web Audio: generate suara pakai AudioContext (no file needed) ──
 const NotifSound = {
@@ -114,36 +117,6 @@ const NotifSound = {
     sp.start(now + 0.38); sp.stop(now + 0.75);
   }
 };
-
-// ============================================================================
-// REMINDER POPUP — Muncul otomatis saat web dibuka jika ada pengingat pending
-// ============================================================================
-
-// ============================================================================
-// REMINDER POPUP — notifications.js
-// ============================================================================
-// Satu popup dengan dua mode:
-//
-//   Mode "live"   — web sedang buka, jam task baru tiba (polling 30 detik):
-//                   Muncul dengan 1 notif, tombol "Lihat Notifikasi" + "Nanti saja".
-//                   Header: "Waktunya Sekarang!" (terracotta).
-//
-//   Mode "missed" — web baru dibuka & ada jam yang sudah lewat belum dikerjakan:
-//                   Design mirip mode "open" — header "Notifikasi Kelewat" (amber).
-//                   1 item: footer (Lihat Notifikasi + Oke).
-//                   > 1 item: carousel 1 per slide, progress dots,
-//                   tombol Sebelumnya / Berikutnya, Oke di slide terakhir.
-//
-//   Mode "open"   — web baru dibuka, belum ada yang kelewat (sebelum jam pertama):
-//                   Design lama — header "Pengingat Hari Ini", list semua pending,
-//                   tombol "Lihat Notifikasi" + "Nanti saja".
-//                   Hanya tampil sekali per hari (dismiss tersimpan).
-//
-// localStorage keys:
-//   ws_notif_action_status   — { "YYYY-MM-DD": { id: true/false } }  (existing)
-//   ws_reminder_popup_dismissed — { "YYYY-MM-DD": true }              (existing, mode open)
-//   ws_timed_popup_shown     — { "YYYY-MM-DD": { id: true } }         (baru, mode live & missed)
-// ============================================================================
 
 const ReminderPopup = {
   template: `
@@ -336,7 +309,9 @@ const ReminderPopup = {
       queue: [],
       currentIdx: 0,
       slideDir: 'next',
-      _checkInterval: null
+      _checkInterval: null,
+      _bellInterval: null,
+      _pendingOpenAfterMissed: null
     };
   },
 
@@ -362,14 +337,17 @@ const ReminderPopup = {
 
   mounted() {
     this.todayStr = this._getTodayStr();
-    // Cek missed / open saat web dibuka
+    // Cek missed / open saat web dibuka (delay 900ms biar WorkspaceStorage selesai init)
     setTimeout(() => this._checkOnOpen(), 900);
     // Polling live setiap 30 detik
     this._checkInterval = setInterval(() => this._checkLive(), 30000);
+    // Bell reminder: goyang + bunyi setiap 8 menit kalau masih ada notif pending & popup tidak visible
+    this._bellInterval  = setInterval(() => this._checkBellReminder(), 8 * 60 * 1000);
   },
 
   beforeUnmount() {
     clearInterval(this._checkInterval);
+    clearInterval(this._bellInterval);
   },
 
   methods: {
@@ -384,11 +362,21 @@ const ReminderPopup = {
     },
 
     _allActions() {
-      return [
+      const base = [
         { id: 'tahajud_0400',  title: 'Sholat Tahajud',           subtitle: 'Waktunya bangun & sholat tahajud 🌙',          time: '04:00', timeVal:  4*60+0,  page: null },
         { id: 'logbook_1530',  title: 'Isi My 8-9 Job Logbook',   subtitle: 'Catat aktivitas & pencapaian kerja hari ini',  time: '15:30', timeVal: 15*60+30, page: 'jobLogbook' },
         { id: 'memories_2030', title: 'Isi My Memories & Growth',  subtitle: 'Tambahkan kenangan & refleksi malam ini',      time: '20:30', timeVal: 20*60+30, page: 'calendarMoment' }
       ];
+      try {
+        const raw = WorkspaceStorage.getItem('ws_habit_notifs');
+        if (raw) {
+          const habits = JSON.parse(raw);
+          habits.forEach(h => {
+            if (!base.find(b => b.id === h.id)) base.push(h);
+          });
+        }
+      } catch(e) {}
+      return base.sort((a, b) => a.timeVal - b.timeVal);
     },
 
     _isDone(id) {
@@ -418,37 +406,31 @@ const ReminderPopup = {
       const all    = this._allActions();
       const nowMin = this._nowMinutes();
 
-      // Ambil semua yang belum dikerjakan
-      const pendingItems = all.filter(a => !this._isDone(a.id));
-      if (pendingItems.length === 0) return; // semua sudah selesai, skip
+      const pendingItems  = all.filter(a => !this._isDone(a.id));
+      if (pendingItems.length === 0) return; // semua sudah selesai hari ini, skip
 
-      // Pisah: yang jamnya sudah lewat vs belum
       const missedItems   = pendingItems.filter(a => nowMin >= a.timeVal);
       const upcomingItems = pendingItems.filter(a => nowMin  < a.timeVal);
 
-      // PRIORITAS 1 — ada yang kelewat → paksa muncul mode missed (abaikan dismiss)
+      // PRIORITAS 1 — ada yang kelewat → muncul mode missed dulu
       if (missedItems.length > 0) {
         this.mode       = 'missed';
         this.queue      = missedItems;
         this.currentIdx = 0;
+        // Kalau masih ada upcoming juga → antri mode open setelah missed di-dismiss
+        this._pendingOpenAfterMissed = upcomingItems.length > 0 ? upcomingItems : null;
         this.visible    = true;
         this._triggerBellShake();
         NotifSound.playNotif();
         return;
       }
 
-      // PRIORITAS 2 — belum ada yang kelewat → mode open, tapi cek dismiss dulu
-      // (hanya muncul 1x per hari, kecuali ada missed)
+      // PRIORITAS 2 — semua jam belum lewat → mode open (SELALU tampil, tanpa cek dismiss)
       if (upcomingItems.length > 0) {
-        try {
-          const raw = WorkspaceStorage.getItem('ws_reminder_popup_dismissed');
-          const dismissed = JSON.parse(raw || '{}');
-          if (dismissed[this.todayStr]) return; // sudah di-dismiss hari ini
-        } catch(e) {}
-
         this.mode          = 'open';
         this.pendingNotifs = upcomingItems;
         this.infoItems     = this._loadInfoItems();
+        this._pendingOpenAfterMissed = null;
         this.visible       = true;
         this._triggerBellShake();
         NotifSound.playNotif();
@@ -516,6 +498,16 @@ const ReminderPopup = {
       NotifSound.playNotif();
     },
 
+    // ── Bell goyang berkala (setiap 8 menit) kalau masih ada notif pending ──
+    _checkBellReminder() {
+      if (this.visible) return; // popup sedang tampil, skip
+      const all     = this._allActions();
+      const pending = all.filter(a => !this._isDone(a.id));
+      if (pending.length === 0) return; // semua selesai, tidak perlu goyang
+      this._triggerBellShake();
+      NotifSound.playNotif();
+    },
+
     // ── Trigger bell shake on all bell buttons ────────────────────────────
     _triggerBellShake() {
       const bells = document.querySelectorAll('.desk-notif-float-btn, .ws-notif-btn');
@@ -555,16 +547,22 @@ const ReminderPopup = {
 
     dismiss() {
       this.visible = false;
-      if (this.mode === 'open') {
-        try {
-          const raw = WorkspaceStorage.getItem('ws_reminder_popup_dismissed');
-          const dismissed = JSON.parse(raw || '{}');
-          dismissed[this.todayStr] = true;
-          WorkspaceStorage.setItem('ws_reminder_popup_dismissed', JSON.stringify(dismissed));
-        } catch(e) {}
+
+      // Kalau setelah missed ada open yang antri → muncul setelah 600ms
+      if (this.mode === 'missed' && this._pendingOpenAfterMissed) {
+        const upcoming = this._pendingOpenAfterMissed;
+        this._pendingOpenAfterMissed = null;
+        setTimeout(() => {
+          this.mode          = 'open';
+          this.pendingNotifs = upcoming;
+          this.infoItems     = this._loadInfoItems();
+          this.visible       = true;
+          NotifSound.playNotif();
+        }, 600);
       }
+
       this.$emit('dismiss');
-    }
+    },
   }
 };
 
@@ -632,13 +630,20 @@ const NotificationPanel = {
                  class="notif-item notif-item-action"
                  :class="{ 'notif-item-done': notif.done }"
                  @click="handleActionClick(notif)">
-              <div class="notif-item-icon" :class="notif.done ? 'notif-icon-done' : 'notif-icon-action'">
+              <div class="notif-item-icon" :class="notif.done ? 'notif-icon-done' : 'notif-icon-action'" :style="notif.isHabit && !notif.done ? { backgroundColor: notif.color + '22', border: '1.5px solid ' + notif.color + '55' } : {}">
                 <svg v-if="notif.done" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg v-else-if="notif.isHabit" viewBox="0 0 24 24" width="14" height="14" fill="none" :stroke="notif.color" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
                 <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               </div>
               <div class="notif-item-content">
                 <div class="notif-item-title" :style="notif.done ? 'text-decoration: line-through; opacity: 0.55;' : ''">{{ notif.title }}</div>
-                <div class="notif-item-sub">{{ notif.done ? 'Sudah dikerjakan ✓' : notif.subtitle }}</div>
+                <div class="notif-item-sub" style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
+                  <span v-if="notif.isHabit && !notif.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #f0fdf4; color: #16a34a; border: 1px solid #86efac;">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
+                    Habit
+                  </span>
+                  {{ notif.done ? 'Sudah dikerjakan ✓' : notif.subtitle }}
+                </div>
               </div>
               <div class="notif-item-right">
                 <span class="notif-time-badge">{{ notif.time }}</span>
@@ -746,32 +751,60 @@ const NotificationPanel = {
     // Section 2: Actionable
     actionNotifs() {
       const status = this.actionStatus[this.todayStr] || {};
-      return [
+      const base = [
         {
           id: 'tahajud_0400',
           title: 'Sholat Tahajud',
           subtitle: 'Waktunya bangun & sholat tahajud 🌙',
           time: '04:00',
+          timeVal: 4*60,
           page: null,
-          done: !!status['tahajud_0400']
+          done: !!status['tahajud_0400'],
+          isHabit: false
         },
         {
           id: 'logbook_1530',
           title: 'Isi My 8-9 Job Logbook',
           subtitle: 'Catat aktivitas & pencapaian kerja hari ini',
           time: '15:30',
+          timeVal: 15*60+30,
           page: 'jobLogbook',
-          done: !!status['logbook_1530']
+          done: !!status['logbook_1530'],
+          isHabit: false
         },
         {
           id: 'memories_2030',
           title: 'Isi My Memories & Growth',
           subtitle: 'Tambahkan kenangan & refleksi malam ini',
           time: '20:30',
+          timeVal: 20*60+30,
           page: 'calendarMoment',
-          done: !!status['memories_2030']
+          done: !!status['memories_2030'],
+          isHabit: false
         }
       ];
+      try {
+        const raw = WorkspaceStorage.getItem('ws_habit_notifs');
+        if (raw) {
+          const habits = JSON.parse(raw);
+          habits.forEach(h => {
+            if (!base.find(b => b.id === h.id)) {
+              base.push({
+                id: h.id,
+                title: h.title,
+                subtitle: h.subtitle || 'Habit harian',
+                time: h.time,
+                timeVal: h.timeVal,
+                page: 'habitTracker',
+                done: !!status[h.id],
+                isHabit: true,
+                color: h.color || 'var(--color-terracotta)'
+              });
+            }
+          });
+        }
+      } catch(e) {}
+      return base.sort((a, b) => a.timeVal - b.timeVal);
     },
 
     anyDone() {
@@ -844,6 +877,9 @@ const NotificationPanel = {
         this.actionStatus = raw ? JSON.parse(raw) : {};
       } catch(e) { this.actionStatus = {}; }
 
+      // Force re-compute actionNotifs (habits from ws_habit_notifs dibaca langsung di computed)
+      this.actionStatus = { ...this.actionStatus };
+
       // Emit count terbaru setelah load
       this.$nextTick(() => {
         this.$emit('unread-count-changed', this.totalUnread);
@@ -861,12 +897,35 @@ const NotificationPanel = {
       if (notif.done) return;
       // Play suara checklist dulu
       NotifSound.playCheck();
-      // Tandai selesai
+      // Tandai selesai di notif status
       if (!this.actionStatus[this.todayStr]) {
         this.actionStatus[this.todayStr] = {};
       }
       this.actionStatus[this.todayStr][notif.id] = true;
       WorkspaceStorage.setItem('ws_notif_action_status', JSON.stringify(this.actionStatus));
+
+      // Kalau ini adalah habit → centang juga di habit tracker
+      if (notif.isHabit) {
+        try {
+          const habitId = notif.id.replace(/^habit_/, '');
+          const raw = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+          if (raw) {
+            const habits = JSON.parse(raw);
+            const today = new Date();
+            const ym = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+            const day = today.getDate();
+            const updated = habits.map(h => {
+              if (h.id !== habitId) return h;
+              const hist = { ...h.history };
+              const arr = hist[ym] ? [...hist[ym]] : [];
+              if (!arr.includes(day)) arr.push(day);
+              hist[ym] = arr.sort((a, b) => a - b);
+              return { ...h, history: hist };
+            });
+            WorkspaceStorage.setItem('aesthetic_habit_tracker_habits', JSON.stringify(updated));
+          }
+        } catch(e) {}
+      }
 
       // Emit count terbaru supaya badge langsung berkurang
       this.$nextTick(() => {

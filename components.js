@@ -105,9 +105,9 @@ const JobLogbook = {
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h3 style="font-size: 18px; margin: 0; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-                  Catat Logbook Harian
+                  {{ editingLogId ? 'Edit Log Kerja' : 'Catat Logbook Harian' }}
                 </h3>
-                <button @click="showAddLog = false" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:24px; line-height:1;">✕</button>
+                <button @click="showAddLog = false; editingLogId = null" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:24px; line-height:1;">✕</button>
               </div>
 
               <form @submit.prevent="saveLog">
@@ -147,8 +147,8 @@ const JobLogbook = {
                   </label>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                  <button type="button" class="btn" @click="showAddLog = false" style="flex: 1; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); font-weight: bold; cursor: pointer; border-radius: 8px;">Batal</button>
-                  <button type="submit" class="btn btn-primary" style="flex: 2;">Simpan Entri Kerja</button>
+                  <button type="button" class="btn" @click="showAddLog = false; editingLogId = null" style="flex: 1; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); font-weight: bold; cursor: pointer; border-radius: 8px;">Batal</button>
+                  <button type="submit" class="btn btn-primary" style="flex: 2;">{{ editingLogId ? 'Simpan Perubahan' : 'Simpan Entri Kerja' }}</button>
                 </div>
               </form>
             </div>
@@ -568,6 +568,9 @@ const JobLogbook = {
                     </td>
                     <td style="text-align: center; white-space: nowrap;">
                       <div style="display: inline-flex; gap: 6px; align-items: center; justify-content: center;">
+                        <button class="card-nav-btn" @click="startEditLog(log)" title="Edit log" style="font-size: 14px; padding: 6px; color: var(--color-terracotta); display: inline-flex; align-items: center; justify-content: center; background: #FFF4ED; border: 1.5px solid #F5C8A8; border-radius: 6px; cursor: pointer;">
+                          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                        </button>
                         <button class="card-nav-btn" @click="syncToContent(log)" title="Sync Jadi Konten Baru" style="font-size: 14px; padding: 6px; color: #10B981; display: inline-flex; align-items: center; justify-content: center; background: #ECFDF5; border: 1.5px solid #A7F3D0; border-radius: 6px; cursor: pointer;">
                           <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
                         </button>
@@ -792,6 +795,7 @@ const JobLogbook = {
     return {
       // Data Logbook yang lama
       showAddLog: false,
+      editingLogId: null,
       showManageCategories: false,
       syncToContentOnSave: false,
       logs: [],
@@ -1193,7 +1197,34 @@ const JobLogbook = {
       for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash);
       return `hsl(${Math.abs(hash) % 360}, 65%, 45%)`;
     },
+    startEditLog(log) {
+      this.editingLogId = log.id;
+      this.form.date = log.date;
+      this.form.category = this.allCategories.includes(log.category) ? log.category : this.allCategories[0];
+      this.form.tasks = log.tasks;
+      this.form.achievements = log.achievements;
+      this.form.nextAction = log.nextAction;
+      this.form.documentLink = log.documentLink || '';
+      this.showAddLog = true;
+    },
     saveLog() {
+      if (this.editingLogId) {
+        // Edit mode: update the existing log
+        const idx = this.logs.findIndex(l => l.id === this.editingLogId);
+        if (idx !== -1) {
+          this.logs[idx].date = this.form.date;
+          this.logs[idx].category = this.form.category;
+          this.logs[idx].tasks = this.form.tasks;
+          this.logs[idx].achievements = this.form.achievements;
+          this.logs[idx].nextAction = this.form.nextAction;
+          this.logs[idx].documentLink = this.form.documentLink;
+        }
+        this.editingLogId = null;
+        this.saveToStorage();
+        this.form = { date: this.todayStr, category: 'Administrasi', tasks: '', achievements: '', nextAction: '', documentLink: '' };
+        this.showAddLog = false;
+        return;
+      }
       if (this.pendingNextActionSourceLogId) {
         const src = this.logs.find(l => l.id === this.pendingNextActionSourceLogId);
         if (src) src.nextActionCompleted = true;
@@ -5062,13 +5093,14 @@ const HabitTracker = {
           <div class="habit-modal-box">
             <div class="flex-between" style="margin-bottom: 20px;">
               <h3 style="font-size: 17px; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-forest);"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="M12 6v12"></path><path d="M8 10h8"></path></svg>
-                Buat Habit Komitmen Baru
+                <svg v-if="editingHabitId" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                <svg v-else viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-forest);"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="M12 6v12"></path><path d="M8 10h8"></path></svg>
+                {{ editingHabitId ? 'Edit Habit' : 'Buat Habit Komitmen Baru' }}
               </h3>
               <button class="close-btn" @click="closeModal" style="font-size: 18px; line-height: 1; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">x</button>
             </div>
 
-            <form @submit.prevent="createHabit">
+            <form @submit.prevent="saveHabitForm">
               <div class="form-group">
                 <label>Nama Kebiasaan / Habit</label>
                 <input type="text" class="form-input" v-model="form.name" placeholder="cth., Meditasi, Minum Air Putih, Olahraga..." required />
@@ -5156,7 +5188,16 @@ const HabitTracker = {
                 <input type="range" min="1" max="31" v-model.number="form.target" style="width: 100%; margin-top: 6px; cursor: pointer; accent-color: var(--color-terracotta);" />
               </div>
 
-              <button type="submit" class="btn btn-primary" style="width: 100%;">Simpan Komitmen</button>
+              <div class="form-group" style="margin-bottom: 24px;">
+                <label style="display: flex; align-items: center; gap: 6px;">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  Waktu Pengerjaan (Opsional)
+                </label>
+                <input type="time" class="form-input" v-model="form.timeSchedule" style="height: 42px;" />
+                <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">Jam berapa habit ini biasanya dikerjakan?</span>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%;">{{ editingHabitId ? 'Simpan Perubahan' : 'Simpan Komitmen' }}</button>
             </form>
 
             <div style="margin-top: 20px; background-color: var(--bg-cream); border: 1px dashed var(--color-sand); border-radius: 12px; padding: 14px; font-size: 12px; line-height: 1.5; color: var(--text-muted);">
@@ -5233,12 +5274,23 @@ const HabitTracker = {
               <span v-else>Menampilkan progres habit: <strong>{{ selectedChartHabitName }}</strong></span>
             </p>
           </div>
-          <div style="background-color: var(--bg-cream); font-size: 12px; font-weight: 600; color: var(--color-sage); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--color-sand);">
-            Rata-rata Harian: {{ chartCompletionRate }}% Selesai
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="background-color: var(--bg-cream); font-size: 12px; font-weight: 600; color: var(--color-sage); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--color-sand);">
+              Rata-rata Harian: {{ chartCompletionRate }}% Selesai
+            </div>
+            <!-- Toggle collapse button -->
+            <button @click="chartCollapsed = !chartCollapsed"
+              :title="chartCollapsed ? 'Buka grafik' : 'Tutup grafik'"
+              style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 6px 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background 0.15s; flex-shrink: 0;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                :style="{ transition: 'transform 0.25s ease', transform: chartCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
           </div>
         </div>
 
-        <!-- Habit Filter Dropdown -->
+        <div v-show="!chartCollapsed">
         <div v-if="habits.length > 0" style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
           <label style="font-size: 11px; font-weight: 600; color: var(--text-muted); white-space: nowrap;">Filter Habit:</label>
           <div style="position: relative; display: inline-flex; align-items: center;">
@@ -5314,6 +5366,7 @@ const HabitTracker = {
             Letakkan kursor di atas grafik untuk memantau detail harian
           </span>
         </div>
+        </div><!-- end v-show chartCollapsed -->
       </div>
 
       <!-- 3. Habit Table Grid (31 kolom) -->
@@ -5340,11 +5393,14 @@ const HabitTracker = {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="habit in habits" :key="'row-' + habit.id">
+              <tr v-for="habit in habitsTableSorted" :key="'row-' + habit.id">
                 <td class="habit-table-name-cell">
                   <div style="display: flex; align-items: center; gap: 6px;">
                     <span :style="{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: getHabitColor(habit), display: 'inline-block', flexShrink: 0 }"></span>
-                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px;" :title="habit.name">{{ habit.name }}</span>
+                    <div style="display: flex; flex-direction: column; min-width: 0;">
+                      <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px;" :title="habit.name">{{ habit.name }}</span>
+                      <span v-if="habit.timeSchedule" style="font-size: 10px; font-weight: 700; color: var(--color-terracotta); opacity: 0.8; margin-top: 1px;">⏰ {{ habit.timeSchedule }}</span>
+                    </div>
                   </div>
                 </td>
                 <td v-for="day in daysInMonth" :key="'cell-' + habit.id + '-' + day" class="habit-table-day-cell">
@@ -5415,7 +5471,7 @@ const HabitTracker = {
           <p style="font-size: 13px;">Tidak ada habit yang cocok dengan "<strong>{{ habitSearchQuery }}</strong>"</p>
         </div>
 
-        <div v-else class="grid-2" style="grid-template-columns: repeat(2, 1fr); gap: 20px; align-items: start;">
+        <div v-else class="grid-2" style="grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: start;">
           <div v-for="habit in filteredHabitCards" :key="habit.id" class="drawer-section" style="margin-bottom: 0; padding: 20px; display: flex; flex-direction: column; gap: 16px;">
 
             <div class="flex-between">
@@ -5429,10 +5485,29 @@ const HabitTracker = {
                   <span>{{ habit.category }}</span>
                 </span>
                 <h4 style="font-size: 16px; margin-top: 6px; color: var(--text-dark);">{{ habit.name }}</h4>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 5px; flex-wrap: wrap;">
+                  <span v-if="habit.timeSchedule" style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--color-terracotta); background: rgba(214,123,82,0.10); padding: 2px 8px; border-radius: 20px; border: 1px solid rgba(214,123,82,0.25);">
+                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    {{ habit.timeSchedule }}
+                  </span>
+                  <span v-if="!habit.timeSchedule" style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--text-muted); background: var(--bg-cream); padding: 2px 8px; border-radius: 20px; border: 1px dashed var(--color-sand);">
+                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    Tanpa jadwal
+                  </span>
+                  <span v-if="isDoneTodayHabit(habit)" style="display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700; color: #16a34a; background: #dcfce7; padding: 2px 8px; border-radius: 20px; border: 1px solid #86efac;">
+                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Selesai Hari Ini
+                  </span>
+                </div>
               </div>
-              <button class="card-nav-btn" @click="removeHabit(habit.id)" title="Hapus Habit" style="padding: 4px; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: var(--bg-cream); border: 1px solid var(--color-sand);">
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #D67B52;"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-              </button>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <button class="card-nav-btn" @click="openEditHabit(habit)" title="Edit Habit" style="padding: 4px; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: #EFF6FF; border: 1px solid #BFDBFE;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #3B82F6;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                </button>
+                <button class="card-nav-btn" @click="removeHabit(habit.id)" title="Hapus Habit" style="padding: 4px; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: var(--bg-cream); border: 1px solid var(--color-sand);">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #D67B52;"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                </button>
+              </div>
             </div>
 
             <!-- Progress Bar -->
@@ -5466,8 +5541,10 @@ const HabitTracker = {
       habits: [],
       hoveredChartDay: null,
       showModal: false,
+      editingHabitId: null,
       selectedChartHabitId: null,
       habitSearchQuery: '',
+      chartCollapsed: false,
       showAddCategory: false,
       showCategoryList: false,
       newCategoryInput: '',
@@ -5477,18 +5554,37 @@ const HabitTracker = {
         category: 'Kesehatan',
         color: 'emerald',
         customColor: '#10b981',
-        target: 20
+        target: 20,
+        timeSchedule: ''
       }
     };
   },
   computed: {
     filteredHabitCards() {
-      if (!this.habitSearchQuery.trim()) return this.habits;
-      const q = this.habitSearchQuery.trim().toLowerCase();
-      return this.habits.filter(h =>
-        h.name.toLowerCase().includes(q) ||
-        (h.category && h.category.toLowerCase().includes(q))
-      );
+      let list = this.habits;
+      if (this.habitSearchQuery.trim()) {
+        const q = this.habitSearchQuery.trim().toLowerCase();
+        list = list.filter(h =>
+          h.name.toLowerCase().includes(q) ||
+          (h.category && h.category.toLowerCase().includes(q))
+        );
+      }
+      const today = new Date().getDate();
+      const isDoneToday = (h) => {
+        const checked = h.history[this.currentYearMonth] || [];
+        return checked.includes(today);
+      };
+      const parseTime = (t) => {
+        if (!t) return 9999;
+        const [hh, mm] = t.split(':').map(Number);
+        return hh * 60 + (mm || 0);
+      };
+      return [...list].sort((a, b) => {
+        const aDone = isDoneToday(a);
+        const bDone = isDoneToday(b);
+        if (aDone !== bDone) return aDone ? 1 : -1;
+        return parseTime(a.timeSchedule) - parseTime(b.timeSchedule);
+      });
     },
     allCategories() {
       const base = ['Kesehatan', 'Produktivitas', 'Pikiran', 'Rutinitas'];
@@ -5506,6 +5602,14 @@ const HabitTracker = {
       if (this.habits.length === 0) return 0;
       let totalSlots = this.habits.length * this.daysInMonth;
       return Math.round((this.totalChecksThisMonth / totalSlots) * 100);
+    },
+    habitsTableSorted() {
+      const parseTime = (t) => {
+        if (!t) return 9999;
+        const [hh, mm] = t.split(':').map(Number);
+        return hh * 60 + (mm || 0);
+      };
+      return [...this.habits].sort((a, b) => parseTime(a.timeSchedule) - parseTime(b.timeSchedule));
     },
     starHabit() {
       if (this.habits.length === 0) return 'Belum Ada';
@@ -5601,6 +5705,7 @@ const HabitTracker = {
     const saved = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
     if (saved) {
       this.habits = JSON.parse(saved);
+      this.$nextTick(() => this.syncHabitsToNotif());
     } else {
       this.habits = [
         {
@@ -5646,9 +5751,49 @@ const HabitTracker = {
   methods: {
     closeModal() {
       this.showModal = false;
+      this.editingHabitId = null;
       this.showCategoryList = false;
       this.form.category = this.allCategories[0] || 'Kesehatan';
       this.newCategoryInput = '';
+    },
+    openEditHabit(habit) {
+      this.editingHabitId = habit.id;
+      this.form.name = habit.name;
+      this.form.category = habit.category;
+      this.form.color = habit.color || 'emerald';
+      this.form.customColor = habit.customColor || '#10b981';
+      this.form.target = habit.targetDaysPerMonth;
+      this.form.timeSchedule = habit.timeSchedule || '';
+      this.showModal = true;
+    },
+    saveHabitForm() {
+      if (!this.form.name.trim()) return;
+      if (this.editingHabitId) {
+        this.habits = this.habits.map(h => {
+          if (h.id !== this.editingHabitId) return h;
+          return {
+            ...h,
+            name: this.form.name,
+            category: this.form.category,
+            color: this.form.color,
+            customColor: this.form.customColor,
+            targetDaysPerMonth: this.form.target,
+            timeSchedule: this.form.timeSchedule || ''
+          };
+        });
+        this.saveToStorage();
+        this.editingHabitId = null;
+        this.showModal = false;
+        this.showCategoryList = false;
+        this.newCategoryInput = '';
+      } else {
+        this.createHabit();
+      }
+    },
+    isDoneTodayHabit(habit) {
+      const today = new Date().getDate();
+      const checked = habit.history[this.currentYearMonth] || [];
+      return checked.includes(today);
     },
     selectCategory(cat) {
       this.form.category = cat;
@@ -5799,12 +5944,14 @@ const HabitTracker = {
         color: this.form.color,
         customColor: this.form.customColor,
         targetDaysPerMonth: this.form.target,
+        timeSchedule: this.form.timeSchedule || '',
         history: { [this.currentYearMonth]: [] }
       };
       this.habits.unshift(newHabit);
       this.saveToStorage();
       this.form.name = '';
       this.form.target = 20;
+      this.form.timeSchedule = '';
       this.showModal = false;
       this.showCategoryList = false;
       this.newCategoryInput = '';
@@ -5818,6 +5965,26 @@ const HabitTracker = {
     },
     saveToStorage() {
       WorkspaceStorage.setItem('aesthetic_habit_tracker_habits', JSON.stringify(this.habits));
+      this.syncHabitsToNotif();
+    },
+    syncHabitsToNotif() {
+      // Ambil habits yang punya timeSchedule, ekspor ke storage untuk notif
+      const habitsWithTime = this.habits
+        .filter(h => h.timeSchedule && h.timeSchedule.trim())
+        .map(h => ({
+          id: 'habit_' + h.id,
+          title: h.name,
+          subtitle: h.category + ' · Habit harian',
+          time: h.timeSchedule,
+          timeVal: (() => {
+            const [hh, mm] = h.timeSchedule.split(':').map(Number);
+            return hh * 60 + (mm || 0);
+          })(),
+          habitId: h.id,
+          color: h.customColor || '#10b981',
+          page: 'habitTracker'
+        }));
+      WorkspaceStorage.setItem('ws_habit_notifs', JSON.stringify(habitsWithTime));
     },
     prevMonth() {
       this.$emit('prev-month');
