@@ -361,8 +361,8 @@ const ReminderPopup = {
 
     _allActions() {
       return [
-        { id: 'logbook_1530',  title: 'Isi My 8-9 Job Logbook',   subtitle: 'Catat aktivitas & pencapaian kerja hari ini', time: '15:30', timeVal: 15*60+30, page: 'jobLogbook' },
-        { id: 'memories_2030', title: 'Isi My Memories & Growth',  subtitle: 'Tambahkan kenangan & refleksi malam ini',    time: '20:30', timeVal: 20*60+30, page: 'calendarMoment' }
+        { id: 'logbook_1530',  title: 'Isi My 8-9 Job Logbook',   subtitle: 'Catat aktivitas & pencapaian kerja hari ini', time: '22:30', timeVal: 15*60+30, page: 'jobLogbook' },
+        { id: 'memories_2030', title: 'Isi My Memories & Growth',  subtitle: 'Tambahkan kenangan & refleksi malam ini',    time: '22:30', timeVal: 20*60+30, page: 'calendarMoment' }
       ];
     },
 
@@ -387,27 +387,44 @@ const ReminderPopup = {
 
     // ── Dipanggil sekali saat web dibuka ──────────────────────────────────
     _checkOnOpen() {
-      if (this.visible) return;
-      const nowMin  = this._nowMinutes();
-      const shownLog = this._getShownLog()[this.todayStr] || {};
+      // 1. Ambil status dismiss dari localStorage
+      const dismissedData = localStorage.getItem('ws_reminder_popup_dismissed');
+      let isDismissedToday = false;
+      try {
+        if (dismissedData) {
+          const parsed = JSON.parse(dismissedData);
+          if (parsed[this.todayStr]) {
+            isDismissedToday = true;
+          }
+        }
+      } catch (e) {}
 
-      // 1. Cari notif yang JAM-nya sudah lewat, belum selesai, popup belum pernah tampil
-      const missed = this._allActions().filter(a =>
-        a.timeVal < nowMin &&
-        !this._isDone(a.id) &&
-        !shownLog[a.id]
-      );
+      const all = this._allActions();
+      const nowMin = this._nowMinutes();
 
-      if (missed.length > 0) {
-        // Mode missed — carousel
-        missed.forEach(a => this._markShown(a.id));
-        this.mode       = 'missed';
-        this.queue      = missed;
+      // 2. Filter item: cari yang belum dikerjakan
+      const pendingItems = all.filter(a => !this._isDone(a.id));
+      
+      // 3. Cari spesifik item yang JAM-NYA SUDAH LEWAT dan belum dikerjakan
+      const missedItems = pendingItems.filter(a => nowMin >= a.timeVal);
+
+      // 4. LOGIKA BARU: Jika ada yang terlewat, ABAIKAN status dismiss dan paksa muncul!
+      if (missedItems.length > 0) {
+        this.mode = 'missed';
+        this.queue = missedItems;
         this.currentIdx = 0;
-        this.visible    = true;
-        NotifSound.playNotif();
-        return;
+        this.visible = true;
+        
+      } 
+      // 5. Jika TIDAK ADA yang terlewat, baru patuhi aturan dismiss (hanya muncul 1x sehari)
+      else if (pendingItems.length > 0) {
+        if (!isDismissedToday) {
+          this.mode = 'open';
+          this.pendingNotifs = pendingItems;
+          this.visible = true;
+        }
       }
+    
 
       // 2. Belum ada yang kelewat — cek mode "open" (popup pengingat sekali sehari)
       try {
@@ -668,7 +685,7 @@ const NotificationPanel = {
           id: 'logbook_1530',
           title: 'Isi My 8-9 Job Logbook',
           subtitle: 'Catat aktivitas & pencapaian kerja hari ini',
-          time: '15:30',
+          time: '22:30',
           page: 'jobLogbook',
           done: !!status['logbook_1530']
         },
@@ -676,7 +693,7 @@ const NotificationPanel = {
           id: 'memories_2030',
           title: 'Isi My Memories & Growth',
           subtitle: 'Tambahkan kenangan & refleksi malam ini',
-          time: '20:30',
+          time: '22:30',
           page: 'calendarMoment',
           done: !!status['memories_2030']
         }
