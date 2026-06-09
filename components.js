@@ -25,33 +25,31 @@ const JobLogbook = {
           <!-- Title row -->
           <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
             <div>
-              <h2 style="margin: 0 0 4px 0; font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: var(--text-dark);">My 8-9 Job Logbook</h2>
+              <h2 style="margin: 0 0 4px 0; font-size: 24px; font-weight: 800; color: var(--text-dark);">My 8-9 Job Logbook</h2>
               <p style="color: var(--text-muted); font-size: 13px; margin: 0; max-width: 520px; line-height: 1.5;">Perekaman aktivitas harian kerja, kategori dinamis, hasil capaian, rencana aksi selanjutnya, dan koordinasi dokumen pendukung.</p>
             </div>
-            <!-- Primary action -->
-            <button class="btn btn-primary" @click="showAddLog = true" style="flex-shrink: 0; padding: 10px 20px; font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              Catat Hari Baru
-            </button>
-          </div>
-          <!-- Export toolbar -->
-          <div style="display: flex; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap;">
-            <span style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-right: 2px;">Ekspor:</span>
-            <button class="btn text-mono" @click="exportToExcel" style="background-color: #DEF7EC; border: 1.5px solid #31C48D; color: #03543F; font-weight: bold; cursor: pointer; padding: 7px 14px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M8 13h8"></path><path d="M8 17h8"></path><path d="M8 9h1"></path></svg>
-              Excel
-            </button>
-            <button class="btn text-mono" @click="exportToPDF" style="background-color: #FDE8E8; border: 1.5px solid #F05252; color: #9B1C1C; font-weight: bold; cursor: pointer; padding: 7px 14px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>
-              PDF
-            </button>
+            <!-- Actions: Export + Primary -->
+            <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap;">
+              <button class="btn text-mono" @click="exportToExcel" style="background-color: #DEF7EC; border: 1.5px solid #31C48D; color: #03543F; font-weight: bold; cursor: pointer; padding: 7px 14px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M8 13h8"></path><path d="M8 17h8"></path><path d="M8 9h1"></path></svg>
+                Excel
+              </button>
+              <button class="btn text-mono" @click="exportToPDF" style="background-color: #FDE8E8; border: 1.5px solid #F05252; color: #9B1C1C; font-weight: bold; cursor: pointer; padding: 7px 14px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>
+                PDF
+              </button>
+              <button class="btn btn-primary" @click="showAddLog = true" style="padding: 10px 20px; font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Catat Hari Baru
+              </button>
+            </div>
           </div>
         </div>
 
         <!-- ── Quick Notes ── -->
         <div style="margin-bottom: 24px; padding: 18px 20px; border-radius: 12px; background-color: transparent; border: 1.5px dashed var(--color-sand);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-            <h3 style="font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
+            <h3 style="font-size: 14px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
               Quick Notes
               <span style="background: var(--color-terracotta); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px;">{{ notes.length }}</span>
@@ -82,7 +80,7 @@ const JobLogbook = {
               
               <div style="background-color: #ffffff; border-radius: 8px; padding: 9px 10px; min-height: 76px; box-shadow: 0 1px 4px rgba(0,0,0,0.03);">
                 <div style="font-size: 9.5px; color: var(--text-muted); margin-bottom: 3px; font-weight: 600;">{{ formatDate(note.date) }}</div>
-                <h4 style="font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 800; color: var(--text-dark); margin: 0 0 4px 0; line-height: 1.3;">
+                <h4 style="font-size: 12.5px; font-weight: 800; color: var(--text-dark); margin: 0 0 4px 0; line-height: 1.3;">
                   {{ note.title }}
                 </h4>
                 <p style="font-size: 11.5px; color: var(--text-muted); line-height: 1.45; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
@@ -153,7 +151,7 @@ const JobLogbook = {
         <!-- ── Kelola Kategori ── -->
         <div class="drawer-section" style="margin-bottom: 20px; padding: 16px 20px; border-radius: 12px; background: #FDFAF6; border: 1.5px solid var(--color-sand);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h3 style="font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
+            <h3 style="font-size: 14px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 12h6"></path><path d="M9 16h4"></path></svg>
               Kelola Kategori Pekerjaan
             </h3>
@@ -185,7 +183,7 @@ const JobLogbook = {
 
         <div class="drawer-section" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand);">
           <div class="flex-between" style="align-items: center; margin-bottom: 16px;">
-            <h3 style="font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
+            <h3 style="font-size: 14px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M8 6h13"></path><path d="M8 12h13"></path><path d="M8 18h13"></path><path d="M3 6h.01"></path><path d="M3 12h.01"></path><path d="M3 18h.01"></path></svg>
               Task Plan
               <span v-if="plans.length > 0" style="background: var(--color-terracotta); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px;">{{ plans.length }}</span>
@@ -353,7 +351,7 @@ const JobLogbook = {
           </div><!-- end collapse wrapper -->
         </div>
         <div class="drawer-section" style="margin-bottom: 20px; padding: 18px 20px; border-radius: 12px; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand);">
-          <h3 style="font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 14px; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
+          <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 14px; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
             Penyaringan &amp; Pencarian Log Kerja
           </h3>
@@ -421,7 +419,7 @@ const JobLogbook = {
           <!-- Ringkasan Analitik -->
           <div class="drawer-section" style="margin-bottom: 0; padding: 18px 20px; border-radius: 12px; display: flex; flex-direction: column;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid var(--color-sand); padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
-              <h3 style="font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; margin: 0;">
+              <h3 style="font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; margin: 0;">
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
                 Ringkasan Analitik Performa
               </h3>
@@ -451,7 +449,7 @@ const JobLogbook = {
           </div>
           <!-- Distribusi Kategori -->
           <div class="drawer-section" style="margin-bottom: 0; padding: 18px 20px; border-radius: 12px; display: flex; flex-direction: column;">
-            <h3 style="font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 14px; border-bottom: 1.5px solid var(--color-sand); padding-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+            <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 14px; border-bottom: 1.5px solid var(--color-sand); padding-bottom: 10px; display: flex; align-items: center; gap: 6px;">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-sage);"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect width="20" height="14" x="2" y="6" rx="2"></rect></svg>
               Distribusi Kategori
             </h3>
@@ -475,7 +473,7 @@ const JobLogbook = {
         <!-- ── Riwayat Kegiatan Kerja ── -->
         <div class="drawer-section" style="margin-bottom: 0; padding: 20px 22px; border-radius: 12px; min-width: 0; overflow: visible;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h3 style="font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 0;">Riwayat Kegiatan Kerja</h3>
+            <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 0;">Riwayat Kegiatan Kerja</h3>
             <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);">
               <span>Tampilkan</span>
               <select v-model="itemsPerPage" class="form-input" style="width: 80px; padding: 4px 8px; font-size: 13px; height: 34px;">
@@ -573,7 +571,7 @@ const JobLogbook = {
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             </button>
             <div>
-              <h2 style="margin: 0; display: flex; align-items: center; gap: 8px; font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: var(--text-dark);">
+              <h2 style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 24px; font-weight: 800; color: var(--text-dark);">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 All Notes
               </h2>
@@ -626,7 +624,7 @@ const JobLogbook = {
 
             <div style="background-color: #ffffff; border-radius: 12px; padding: 16px; min-height: 120px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
               <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">{{ formatDate(note.date) }}</div>
-              <h3 :style="{ color: getNoteColorStyle(note.color).text }" style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 800; margin: 0 0 8px 0; line-height: 1.3;">
+              <h3 :style="{ color: getNoteColorStyle(note.color).text }" style="font-size: 18px; font-weight: 800; margin: 0 0 8px 0; line-height: 1.3;">
                 {{ note.title }}
               </h3>
               <p :style="{ color: getNoteColorStyle(note.color).text }" style="font-size: 13px; color: var(--text-muted); line-height: 1.5; opacity: 0.9; margin: 0; white-space: pre-wrap;">
@@ -1210,7 +1208,7 @@ const CalendarMoment = {
 
         <!-- Judul -->
         <div style="margin-bottom: 16px;">
-          <h2 style="font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: #3E352F; margin: 0 0 4px 0; line-height: 1.2;">My Memories & Growth</h2>
+          <h2 style="font-size: 24px; font-weight: 800; color: #3E352F; margin: 0 0 4px 0; line-height: 1.2;">My Memories & Growth</h2>
           <p style="color: var(--text-muted); font-size: 13px; margin: 0; line-height: 1.5;">Abadikan jejak perkembangan dirimu, susun peristiwa indah, dan tata kenangan foto harian.</p>
         </div>
 
@@ -1541,7 +1539,7 @@ const CalendarMoment = {
                       </div>
 
                       <!-- Title of memory -->
-                      <h3 class="timeline-moment-title" style="margin: 0 0 8px 0; color: #3E352F; font-size: 18px; font-family: 'Outfit', sans-serif; font-weight: 800; line-height: 1.3; text-align: left;">
+                      <h3 class="timeline-moment-title" style="margin: 0 0 8px 0; color: #3E352F; font-size: 18px; font-weight: 800; line-height: 1.3; text-align: left;">
                         {{ item.title || 'Momen Tanpa Judul' }}
                       </h3>
 
@@ -1649,7 +1647,7 @@ const CalendarMoment = {
               </div>
 
               <!-- Title content - Centered (Judul Momen / Aktivitas) -->
-              <h3 style="font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 850; color: #3E352F; margin: 0 0 10px 0; text-align: center; line-height: 1.3; pointer-events: auto;">
+              <h3 style="font-size: 20px; font-weight: 850; color: #3E352F; margin: 0 0 10px 0; text-align: center; line-height: 1.3; pointer-events: auto;">
                 {{ wheelMoments[wheelActiveIndex].title || 'Momen Tanpa Judul' }}
               </h3>
 
@@ -1670,7 +1668,7 @@ const CalendarMoment = {
         <div class="moment-modal animate-fade-in" style="max-height: 90vh; overflow-y: auto; width: 100%; max-width: 1000px; padding: 24px; border-radius: var(--border-radius-md); box-shadow: var(--shadow-lg); background-color: #FFFFFF;">
           <!-- Modal Header -->
           <div class="flex-between" style="border-bottom: 2px solid var(--color-sand); margin-bottom: 20px; padding-bottom: 14px;">
-            <h3 style="font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 800; color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px; margin: 0;">
+            <h3 style="font-size: 19px; font-weight: 800; color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px; margin: 0;">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--text-dark);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
               <span>Kelola Momen Kenangan</span>
               <span style="font-size: 13.5px; font-weight: 600; color: var(--color-terracotta);">— {{ formatTimelineDate(selectedCell ? selectedCell.dateString : '') }}</span>
@@ -2845,7 +2843,7 @@ const ContentTracker = {
   template: `
     <div class="content-tracker" @click="showPlatDropdown = false; showUserDropdown = false">
       <div class="flex-between">
-        <h2 style="font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: var(--text-dark);">Content Plan & Tracker</h2>
+        <h2 style="font-size: 24px; font-weight: 800; color: var(--text-dark);">Content Plan & Tracker</h2>
         <div style="display: flex; gap: 8px; align-items: center;">
           <button class="btn btn-secondary" style="padding: 10px; display: inline-flex; align-items: center; justify-content: center; height: 38px; border: 1.5px solid #EAE5DD; background-color: #FFFFFF;" @click="showSettingsModal = true" title="Pengaturan Board">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -3004,7 +3002,7 @@ const ContentTracker = {
       <div v-if="showAddModal" class="modal-backdrop" @click.self="showAddModal = false">
         <div class="moment-modal" style="max-height: 90vh; overflow-y: auto; max-width: 500px; width: 100%;">
           <div class="flex-between" style="margin-bottom: 18px;">
-            <h3 style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-dark);">
+            <h3 style="font-size: 18px; font-weight: 700; color: var(--text-dark);">
               {{ isEditing ? 'Ubah Konten Planning' : 'Buat Konten Planning Baru' }}
             </h3>
             <button class="close-btn" @click="showAddModal = false">×</button>
@@ -3131,13 +3129,13 @@ const ContentTracker = {
       <div v-if="showSettingsModal" class="modal-backdrop" @click.self="showSettingsModal = false">
         <div class="moment-modal text-left" style="max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; text-align: left;">
           <div class="flex-between" style="border-bottom: 1.5px solid #EAE5DD; padding-bottom: 12px; margin-bottom: 16px;">
-            <h3 style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-dark); margin: 0;">Pengaturan Kanban & Atribut</h3>
+            <h3 style="font-size: 18px; font-weight: 700; color: var(--text-dark); margin: 0;">Pengaturan Kanban & Atribut</h3>
             <button class="close-btn" @click="showSettingsModal = false">×</button>
           </div>
           
           <!-- Column Management -->
           <div style="margin-bottom: 20px;">
-            <h4 style="font-size: 13.5px; font-family: 'Outfit', sans-serif; font-weight: 700; color: #7A6F66; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Kustom Kolom / Tahapan Status</h4>
+            <h4 style="font-size: 13.5px; font-weight: 700; color: #7A6F66; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Kustom Kolom / Tahapan Status</h4>
             
             <div style="display: flex; gap: 8px; margin-bottom: 12px;">
               <input type="text" class="form-input" v-model="newColumnName" placeholder="Contoh: Review Akhir" style="flex: 1; height: 38px; padding: 6px 10px; font-size: 12.5px;" @keyup.enter="addColumn" />
@@ -3163,7 +3161,7 @@ const ContentTracker = {
 
           <!-- Property Visibility on Card View Settings -->
           <div style="border-top: 1.5px solid #EAE5DD; padding-top: 16px; margin-bottom: 20px;">
-            <h4 style="font-size: 13.5px; font-family: 'Outfit', sans-serif; font-weight: 700; color: #7A6F66; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Atribut Property Visibility (Kartu Depan)</h4>
+            <h4 style="font-size: 13.5px; font-weight: 700; color: #7A6F66; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Atribut Property Visibility (Kartu Depan)</h4>
             <div style="display: flex; flex-direction: column; gap: 8px; background: #FCFAF7; padding: 12px; border-radius: 8px; border: 1.5px solid #EAE5DD;">
               <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: #5D4F43; font-weight: 600;">
                 <input type="checkbox" v-model="visibility.platform" style="accent-color: var(--color-terracotta);" @change="saveVisibility" /> Tampilkan Platform / Channel
@@ -3182,7 +3180,7 @@ const ContentTracker = {
 
           <!-- Kustomisasi Warna Notifikasi Urgensi -->
           <div style="border-top: 1.5px solid #EAE5DD; padding-top: 16px; margin-bottom: 20px;">
-            <h4 style="font-size: 13.5px; font-family: 'Outfit', sans-serif; font-weight: 700; color: #7A6F66; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Warna Visual Notifikasi Urgensi Rilis</h4>
+            <h4 style="font-size: 13.5px; font-weight: 700; color: #7A6F66; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Warna Visual Notifikasi Urgensi Rilis</h4>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #FCFAF7; padding: 12px; border-radius: 8px; border: 1.5px solid #EAE5DD;">
               <!-- Overdue Color Picker -->
               <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -3225,7 +3223,7 @@ const ContentTracker = {
 
       <!-- Legend/Keterangan Warna Visual Notifikasi Rilis di bagian paling bawah -->
       <div style="background-color: #FCFAF7; border: 1.5px solid #EAE5DD; border-radius: 12px; padding: 16px 20px; margin-top: 24px;">
-        <h4 style="font-family: 'Outfit', sans-serif; font-size: 13.5px; font-weight: 700; color: #1C3B34; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <h4 style="font-size: 13.5px; font-weight: 700; color: #1C3B34; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" class="lucide-inline" style="color: var(--color-terracotta)"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
           Keterangan Warna Visual Notifikasi & Urgensi Rilis Konten
         </h4>
@@ -3754,7 +3752,7 @@ const InterviewPractice = {
       <!-- ═══ HEADER ═══ -->
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
         <div>
-          <h2 style="font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: #2C2621; margin: 0; display: flex; align-items: center; gap: 8px;">
+          <h2 style="font-size: 24px; font-weight: 800; color: #2C2621; margin: 0; display: flex; align-items: center; gap: 8px;">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
             Daily Interview Practice
           </h2>
@@ -3809,7 +3807,7 @@ const InterviewPractice = {
 
       <!-- ═══ MANUAL MODE: Question Manager Panel ═══ -->
       <div v-if="activeMode==='manual'" v-show="showManagePanel" class="questions-manage-drawer animate-fade-in" style="margin-bottom: 28px;">
-        <h3 style="font-family:'Outfit',sans-serif; font-size:16px; font-weight:800; color:#1C3B34; margin:0 0 12px 0; display:flex; align-items:center; gap:6px;">
+        <h3 style="font-size:16px; font-weight:800; color:#1C3B34; margin:0 0 12px 0; display:flex; align-items:center; gap:6px;">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:#1C3B34;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
           Kelola & Update Daftar Pertanyaan
         </h3>
@@ -3881,7 +3879,7 @@ const InterviewPractice = {
       <div v-if="activeMode==='ai'" class="animate-fade-in" style="background:#FCFAF7; border:1.5px solid #EAE5DD; border-radius:16px; padding:20px; margin-bottom:24px;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
           <div>
-            <h4 style="font-family:'Outfit',sans-serif; font-size:15px; font-weight:800; color:#1C3B34; margin:0; display:flex; align-items:center; gap:6px;">
+            <h4 style="font-size:15px; font-weight:800; color:#1C3B34; margin:0; display:flex; align-items:center; gap:6px;">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--color-terracotta);"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.28 1.28L3 12l5.8 1.9a2 2 0 0 1 1.28 1.28L12 21l1.9-5.8a2 2 0 0 1 1.28-1.28L21 12l-5.8-1.9a2 2 0 0 1-1.28-1.28Z"></path></svg>
               Konfigurasi AI — Rancang Pertanyaan Otomatis
             </h4>
@@ -4119,7 +4117,7 @@ const InterviewPractice = {
 
           <!-- Quick Custom (Manual only) -->
           <div v-if="activeMode==='manual'" style="display: none; background:#FCFAF7; border:1.5px solid #EAE5DD; border-radius:14px; padding:16px;">
-            <h4 style="font-family:'Outfit',sans-serif; font-size:14px; font-weight:800; color:#1C3B34; margin:0 0 4px 0; display:flex; align-items:center; gap:6px;">
+            <h4 style="font-size:14px; font-weight:800; color:#1C3B34; margin:0 0 4px 0; display:flex; align-items:center; gap:6px;">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#6C5CE7;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
               ✍️ Latih Pertanyaan Kustom Langsung
             </h4>
@@ -4170,7 +4168,7 @@ const InterviewPractice = {
                 </button>
               </div>
               <div v-if="practiceRuns.length > 0" class="audio-list">
-                <h4 style="font-size:13px; font-family:'Outfit',sans-serif; color:#7A6F66; margin-bottom:8px; font-weight:700;">Rekaman Jawaban</h4>
+                <h4 style="font-size:13px; color:#7A6F66; margin-bottom:8px; font-weight:700;">Rekaman Jawaban</h4>
                 <div v-for="(run, idx) in practiceRuns" :key="idx" class="audio-item" style="background:#FFF; border:1.5px solid #EAE5DD; border-radius:12px; padding:10px 14px;">
                   <span class="text-mono" style="font-size:12px; font-weight:bold; color:#1C3B34;">Run #{{ idx + 1 }} ({{ run.duration }}s)</span>
                   <audio :src="run.audioUrl" controls style="height:32px;"></audio>
@@ -4183,7 +4181,7 @@ const InterviewPractice = {
 
             <!-- Notes + Hint -->
             <div class="drawer-section" style="margin-bottom:0; background:#FFFFFF; border:1.5px solid #EAE5DD; border-radius:16px; padding:20px;">
-              <h4 style="font-size:15px; font-family:'Outfit',sans-serif; margin-bottom:12px; font-weight:800; color:#1C3B34;">Poin Kunci & Kerangka Jawaban</h4>
+              <h4 style="font-size:15px; margin-bottom:12px; font-weight:800; color:#1C3B34;">Poin Kunci & Kerangka Jawaban</h4>
               <div style="background:#FCFAF7; padding:14px; border-left:4px solid #D67B52; border-radius:8px; margin-bottom:16px; font-size:13px; line-height:1.5; color:#5A4E42; display:flex; align-items:flex-start; gap:8px;">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#D67B52; flex-shrink:0; margin-top:2px;"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .5 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path></svg>
                 <span><strong>Petunjuk Jawaban:</strong> {{ selectedQ.hints }}</span>
@@ -4198,7 +4196,7 @@ const InterviewPractice = {
           <!-- Empty state -->
           <div v-else class="simulator-locked-placeholder animate-fade-in">
             <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--color-sand); display:block; margin:0 auto 16px auto;"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 9h18"></path><path d="M3 15h18"></path><path d="M9 3v18"></path><path d="M15 3v18"></path></svg>
-            <h3 style="font-family:'Outfit',sans-serif; font-weight:800; color:#1C3B34; margin:0 0 8px 0; font-size:18px;">Simulator Belum Aktif</h3>
+            <h3 style="font-weight:800; color:#1C3B34; margin:0 0 8px 0; font-size:18px;">Simulator Belum Aktif</h3>
             <p style="color:#7A6F66; font-size:13.5px; max-width:460px; margin:0 auto 16px auto; line-height:1.55;">
               <template v-if="activeMode==='manual'">Sesuaikan kategori pertanyaan lalu klik <strong>"Spin!"</strong> atau tarik Tuas untuk mengacak pertanyaan.</template>
               <template v-else-if="aiQuestionBank.length === 0">Isi konfigurasi AI di atas, lalu klik <strong>"Rancang Pertanyaan AI ✨"</strong> untuk mengisi bank soal, kemudian klik Spin!</template>
@@ -4510,7 +4508,7 @@ const DailyNutrition = {
       <!-- HEADER -->
       <div class="flex-between" style="border-bottom: 2px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 24px; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
         <div>
-          <h2 style="font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: var(--text-dark); margin: 0 0 4px 0;">Daily Nutrition & Mind Insights</h2>
+          <h2 style="font-size: 24px; font-weight: 800; color: var(--text-dark); margin: 0 0 4px 0;">Daily Nutrition & Mind Insights</h2>
           <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 4px; max-width: 600px; line-height: 1.6;">
             Nutrisi harian bagi kecerdasan pikiran. Jaga konsistensi belajar dengan mendelegasikan ringkasan konsep, intisari keilmuan, dan kilatan ide kreatif dalam satu timeline teratur.
           </p>
@@ -5014,7 +5012,7 @@ const HabitTracker = {
       <!-- PAGE HEADER -->
       <div class="flex-between" style="border-bottom: 1.5px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 24px;">
         <div>
-          <h2 style="font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: var(--text-dark); margin: 0 0 4px 0;">Aesthetic Habit Tracker</h2>
+          <h2 style="font-size: 24px; font-weight: 800; color: var(--text-dark); margin: 0 0 4px 0;">Aesthetic Habit Tracker</h2>
           <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 4px;">Indikator kedisiplinan log harian pribadi dengan akumulasi data otomatis dan grafik progress terupdate.</p>
         </div>
 
@@ -6026,7 +6024,7 @@ const PomodoroTimer = {
             </svg>
           </div>
           <div>
-            <h2 style="font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: #2C2621; margin: 0; line-height: 1.2; letter-spacing: -0.5px;">Jam Pasir Pomodoro</h2>
+            <h2 style="font-size: 24px; font-weight: 800; color: #2C2621; margin: 0; line-height: 1.2; letter-spacing: -0.5px;">Jam Pasir Pomodoro</h2>
             <p style="color: #8F847A; font-family: 'Outfit', sans-serif; font-size: 13.5px; margin-top: 2px; font-weight: 500; letter-spacing: 0.2px;">Visual Metaphoric Timepiece</p>
           </div>
         </div>
@@ -6264,7 +6262,7 @@ const PomodoroTimer = {
       <transition name="popIn">
         <div v-if="showSuccessBanner" style="position: fixed; top: 24px; left: 50%; transform: translateX(-50%); z-index: 200; background-color: var(--pomo-pill-bg); border: 2.5px solid var(--pomo-primary); border-radius: 16px; padding: 24px; width: 90%; max-width: 450px; box-shadow: var(--shadow-lg); text-align: center;">
           <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--pomo-primary); display: block; margin: 0 auto 12px auto;"><path d="M6 12H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><path d="M6 8h12"></path><path d="M18.5 17.5 22 21"></path><path d="m16 16 2.5 2.5"></path><path d="v13.5a1.5 1.5 0 0 1-3 0V20"></path><path d="M12 16v13.5A1.5 1.5 0 0 1 9 20"></path><path d="M5.5 17.5 2 21"></path><path d="m8 16-2.5 2.5"></path></svg>
-          <h4 style="font-size: 18px; font-weight: bold; color: var(--pomo-primary); font-family: sans-serif;">WAKTU SESI SELESAI!</h4>
+          <h4 style="font-size: 18px; font-weight: bold; color: var(--pomo-primary); ">WAKTU SESI SELESAI!</h4>
           <p style="font-size: 13.5px; margin-top: 6px; color: var(--text-dark);">
             Sesi {{ currentMode === 'focus' ? 'Fokus Kerja' : 'Istirahat' }} Anda telah diselesaikan dengan sangat baik. Terus pertahankan ritme disiplin ini!
           </p>
@@ -6744,7 +6742,7 @@ const GoogleCalendar = {
       <!-- Top Screen Banner / Header -->
       <div class="flex-between" style="border-bottom: 2px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 24px; align-items: center; flex-wrap: wrap; gap: 12px;">
         <div>
-          <h2 style="font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: var(--text-dark); margin: 0 0 4px 0;">Google Calendar Sync</h2>
+          <h2 style="font-size: 24px; font-weight: 800; color: var(--text-dark); margin: 0 0 4px 0;">Google Calendar Sync</h2>
           <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 4px;">Sinkronisasikan agenda kesibukan & jadwal harian Anda secara langsung</p>
         </div>
         <!-- Profile metadata status if signed in -->
@@ -7300,7 +7298,7 @@ const FinancialTracker = {
 
       <div style="border-bottom: 2px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 28px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
         <div>
-          <h2 style="display:flex; align-items:center; gap:10px; font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: var(--text-dark);">
+          <h2 style="display:flex; align-items:center; gap:10px; font-size: 24px; font-weight: 800; color: var(--text-dark);">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
             Financial Tracker
           </h2>

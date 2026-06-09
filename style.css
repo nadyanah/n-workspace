@@ -9,6 +9,13 @@
   font-style: normal;
 }
 
+@font-face {
+  font-family: 'Fontby-n';  /* nama bebas, ini yang kamu pakai di CSS */
+  src: url('fonts/n.otf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
 :root {
   --bg-cream: #FDFBF7;
   --bg-card: #FFFFFF;
@@ -68,14 +75,15 @@ body {
 
 /* Header & Typography */
 h1, h2, h3, h4 {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Hack', monospace;
   font-weight: 700;
   color: var(--text-dark);
 }
 
 /* Page-level headings: uniform size & style across all modules */
+/* ── Edit font judul semua page di sini ── */
 .page-module h2 {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Hack', monospace;
   font-size: 24px;
   font-weight: 800;
   color: var(--text-dark);
@@ -84,7 +92,7 @@ h1, h2, h3, h4 {
 }
 
 .page-module h3 {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Hack', monospace;
   font-size: 16px;
   font-weight: 700;
   color: var(--text-dark);
@@ -4268,8 +4276,10 @@ input:checked + .switch-slider:before {
 
 /* ── Brand / Center ── */
 .ws-nav-brand {
-  font-family: 'Playfair Display', serif;
-  font-size: 17px;
+  /* font-family: 'Playfair Display', serif;
+  font-size: 17px; */
+  font-family: 'Fontby-en', cursive;
+  font-size: 30px;
   font-weight: 700;
   font-style: italic;
   color: var(--text-dark);
