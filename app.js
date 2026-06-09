@@ -304,9 +304,27 @@ const App = {
     const notifPanelRef = ref(null);
     const notifUnreadCount = ref(0);
 
+    // Pending habit trigger — set saat klik habit di notif, dikonsumsi oleh HabitTracker
+    const pendingHabitTrigger = ref(null);
+
     // Handler dipanggil oleh <notification-panel @unread-count-changed="...">
     const onUnreadCountChanged = (count) => {
       notifUnreadCount.value = count;
+    };
+
+    // Handler dipanggil saat klik habit di notif panel / reminder popup
+    const onTriggerHabit = (habitId) => {
+      activePage.value = 'habitTracker';
+      showNotifPanel.value = false;
+      // Beri jeda kecil agar HabitTracker sempat mount sebelum trigger dikirim
+      setTimeout(() => {
+        pendingHabitTrigger.value = habitId;
+      }, 120);
+    };
+
+    // Reset trigger setelah HabitTracker mengonsumsinya
+    const onHabitTriggered = () => {
+      pendingHabitTrigger.value = null;
     };
 
     return {
@@ -334,7 +352,10 @@ const App = {
       handleUpdateMapping,
       notifPanelRef,
       notifUnreadCount,
-      onUnreadCountChanged
+      onUnreadCountChanged,
+      pendingHabitTrigger,
+      onTriggerHabit,
+      onHabitTriggered
     };
   }
 };

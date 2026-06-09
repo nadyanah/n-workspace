@@ -99,7 +99,7 @@ const JobLogbook = {
         </div>
 
         <transition name="modal-fade">
-          <div v-if="showAddLog" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(44, 38, 33, 0.6); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 99999;" @click.self="showAddLog = false">
+          <div v-if="showAddLog" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(44, 38, 33, 0.6); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 99999;" @click.self="cancelAddLog">
             <div style="background: var(--bg-card); max-width: 540px; width: 90%; padding: 28px; border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
               
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -107,7 +107,14 @@ const JobLogbook = {
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
                   {{ editingLogId ? 'Edit Log Kerja' : 'Catat Logbook Harian' }}
                 </h3>
-                <button @click="showAddLog = false; editingLogId = null" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:24px; line-height:1;">✕</button>
+                <button @click="cancelAddLog" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:24px; line-height:1;">✕</button>
+              </div>
+
+              <!-- Banner info: sedang mengkonversi task plan -->
+              <div v-if="pendingConvertPlanId && !editingLogId"
+                   style="display:flex; align-items:center; gap:8px; background:#f0fdf4; border:1.5px solid #86efac; border-radius:8px; padding:8px 12px; margin-bottom:16px; font-size:12px; color:#065f46; font-weight:600;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+                Melanjutkan dari Task Plan — task akan dipindah ke riwayat setelah kamu klik Simpan. Batal untuk kembali.
               </div>
 
               <form @submit.prevent="saveLog">
@@ -147,7 +154,7 @@ const JobLogbook = {
                   </label>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                  <button type="button" class="btn" @click="showAddLog = false; editingLogId = null" style="flex: 1; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); font-weight: bold; cursor: pointer; border-radius: 8px;">Batal</button>
+                  <button type="button" class="btn" @click="cancelAddLog" style="flex: 1; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); font-weight: bold; cursor: pointer; border-radius: 8px;">Batal</button>
                   <button type="submit" class="btn btn-primary" style="flex: 2;">{{ editingLogId ? 'Simpan Perubahan' : 'Simpan Entri Kerja' }}</button>
                 </div>
               </form>
@@ -806,6 +813,7 @@ const JobLogbook = {
       showAddPlan: false,
       taskPlanCollapsed: false,
       editingPlanId: null,
+      pendingConvertPlanId: null,  // ID task plan yang sedang dikonversi ke log (baru dihapus saat save)
       planFilterPriority: '',
       planFilterSchedule: '',
       planForm: {
@@ -1119,15 +1127,23 @@ const JobLogbook = {
       if (this.editingPlanId === id) { this.editingPlanId = null; this.showAddPlan = false; }
       this.savePlansToStorage();
     },
-    convertPlanToLog(plan) {
+    cancelAddLog() {
+      // Batal isi form — kembalikan task plan ke list jika sedang dikonversi
+      this.showAddLog = false;
+      this.editingLogId = null;
+      this.pendingConvertPlanId = null;
+      // Form di-reset (opsional — supaya bersih saat dibuka berikutnya)
+      this.form = { date: this.todayStr, category: 'Administrasi', tasks: '', achievements: '', nextAction: '', documentLink: '' };
+    },
+    convertPlanToLog(plan) { — baru dihapus saat saveLog dipanggil
+      this.pendingConvertPlanId = plan.id;
       this.form.date = plan.date;
       this.form.category = this.allCategories.includes(plan.category) ? plan.category : this.allCategories[0];
       this.form.tasks = plan.tasks;
       this.form.achievements = '';
       this.form.nextAction = '';
       this.form.documentLink = '';
-      this.plans = this.plans.filter(p => p.id !== plan.id);
-      this.savePlansToStorage();
+      // TIDAK hapus plan dulu — baru dihapus di saveLog saat user submit
       this.showAddLog = true;
       this.$nextTick(() => {
         const formEl = document.querySelector('.job-logbook');
@@ -1240,6 +1256,12 @@ const JobLogbook = {
         documentLink: this.form.documentLink
       };
       this.logs.unshift(newLog);
+      // Baru hapus task plan saat log benar-benar disimpan
+      if (this.pendingConvertPlanId) {
+        this.plans = this.plans.filter(p => p.id !== this.pendingConvertPlanId);
+        this.pendingConvertPlanId = null;
+        this.savePlansToStorage();
+      }
       this.saveToStorage();
       const shouldSync = this.syncToContentOnSave;
       this.form = { date: this.todayStr, category: 'Administrasi', tasks: '', achievements: '', nextAction: '', documentLink: '' };
@@ -5393,7 +5415,9 @@ const HabitTracker = {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="habit in habitsTableSorted" :key="'row-' + habit.id">
+              <tr v-for="habit in habitsTableSorted" :key="'row-' + habit.id"
+                  :data-habit-id="habit.id"
+                  :class="{ 'habit-row-notif-flash': notifFlashHabitId === habit.id }">
                 <td class="habit-table-name-cell">
                   <div style="display: flex; align-items: center; gap: 6px;">
                     <span :style="{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: getHabitColor(habit), display: 'inline-block', flexShrink: 0 }"></span>
@@ -5411,7 +5435,10 @@ const HabitTracker = {
                     @touchstart="startPress($event)"
                     @touchend="endPress($event)"
                     class="habit-day-btn"
-                    :class="{ 'habit-day-btn-checked': isDayChecked(habit, day) }"
+                    :class="{
+                      'habit-day-btn-checked': isDayChecked(habit, day),
+                      'habit-day-btn-notif-pop': notifFlashHabitId === habit.id && day === new Date().getDate()
+                    }"
                     :style="isDayChecked(habit, day) ? { backgroundColor: 'transparent', borderColor: 'transparent', color: getHabitColor(habit) } : { color: 'var(--color-sand)' }"
                     :title="'Tanggal ' + day"
                     style="background: none; border: none; padding: 1px;"
@@ -5534,8 +5561,10 @@ const HabitTracker = {
   props: {
     currentYearMonth: String,
     daysInMonth: Number,
-    activeMonthKey: String
+    activeMonthKey: String,
+    pendingHabitTrigger: { type: String, default: null }
   },
+  emits: ['prev-month', 'next-month', 'habit-triggered'],
   data() {
     return {
       habits: [],
@@ -5549,6 +5578,7 @@ const HabitTracker = {
       showCategoryList: false,
       newCategoryInput: '',
       customCategories: [],
+      notifFlashHabitId: null,  // habit yang sedang di-flash dari notif trigger
       form: {
         name: '',
         category: 'Kesehatan',
@@ -5697,6 +5727,12 @@ const HabitTracker = {
       return path;
     }
   },
+  watch: {
+    pendingHabitTrigger(habitId) {
+      if (!habitId) return;
+      this._autoTriggerHabitFromNotif(habitId);
+    }
+  },
   created() {
     const savedCats = WorkspaceStorage.getItem('aesthetic_habit_custom_categories');
     if (savedCats) {
@@ -5746,6 +5782,14 @@ const HabitTracker = {
         }
       ];
       this.saveToStorage();
+    }
+  },
+  mounted() {
+    // Kalau pendingHabitTrigger sudah di-set sebelum komponen mount
+    if (this.pendingHabitTrigger) {
+      this.$nextTick(() => {
+        this._autoTriggerHabitFromNotif(this.pendingHabitTrigger);
+      });
     }
   },
   methods: {
@@ -5966,6 +6010,41 @@ const HabitTracker = {
     saveToStorage() {
       WorkspaceStorage.setItem('aesthetic_habit_tracker_habits', JSON.stringify(this.habits));
       this.syncHabitsToNotif();
+    },
+
+    // ── Auto-trigger habit dari notifikasi ──────────────────────────────
+    _autoTriggerHabitFromNotif(habitId) {
+      const today = new Date().getDate();
+      const habit = this.habits.find(h => h.id === habitId);
+      if (!habit) {
+        this.$emit('habit-triggered');
+        return;
+      }
+
+      const checked = habit.history[this.currentYearMonth] || [];
+      const alreadyChecked = checked.includes(today);
+
+      if (!alreadyChecked) {
+        // Centang hari ini
+        this.playCheckSound(true);
+        this.toggleDayCheck(habitId, today);
+      }
+
+      // Set flash ID untuk animasi visual di tabel
+      this.notifFlashHabitId = habitId;
+
+      // Scroll ke baris habit di tabel
+      this.$nextTick(() => {
+        const tableRow = this.$el.querySelector(`tr[data-habit-id="${habitId}"]`);
+        if (tableRow) {
+          tableRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        // Hapus flash setelah animasi selesai
+        setTimeout(() => {
+          this.notifFlashHabitId = null;
+          this.$emit('habit-triggered');
+        }, 1800);
+      });
     },
     syncHabitsToNotif() {
       // Ambil habits yang punya timeSchedule, ekspor ke storage untuk notif

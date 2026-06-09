@@ -151,7 +151,7 @@ const ReminderPopup = {
                MODE: open  —  review harian: Hari Ini + Pengingat
           ══════════════════════════════════════════════════ -->
           <template v-if="mode === 'open'">
-            <div class="reminder-popup-body">
+            <div class="reminder-popup-body reminder-popup-body-scroll">
 
               <!-- Section 1: Hari Ini (task plan + content urgen) -->
               <template v-if="infoItems.length > 0">
@@ -171,12 +171,18 @@ const ReminderPopup = {
               <div class="reminder-popup-section-label" :style="infoItems.length > 0 ? 'margin-top:14px;' : ''">
                 <span class="reminder-popup-dot reminder-popup-dot-sage"></span> Pengingat Hari Ini
               </div>
-              <div v-for="notif in pendingNotifs" :key="notif.id" class="reminder-popup-item">
+              <div v-for="notif in pendingNotifs" :key="notif.id"
+                   class="reminder-popup-item"
+                   :class="{ 'reminder-popup-item-habit-clickable': notif.isHabit }"
+                   @click="notif.isHabit ? triggerHabitFromPopup(notif) : null"
+                   :style="notif.isHabit ? 'cursor:pointer;' : ''">
                 <div class="reminder-popup-item-time">{{ notif.time }}</div>
-                <div class="reminder-popup-item-info">
+                <div class="reminder-popup-item-info" style="flex:1; min-width:0;">
                   <div class="reminder-popup-item-title">{{ notif.title }}</div>
                   <div class="reminder-popup-item-sub">{{ notif.subtitle }}</div>
                 </div>
+                <!-- Arrow indicator for habit items -->
+                <svg v-if="notif.isHabit" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-sage,#7FA882); flex-shrink:0; margin-left:6px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
               </div>
 
               <!-- Kalau tidak ada keduanya -->
@@ -294,7 +300,7 @@ const ReminderPopup = {
     </transition>
   `,
 
-  emits: ['open-notif', 'dismiss'],
+  emits: ['open-notif', 'dismiss', 'trigger-habit'],
 
   data() {
     return {
@@ -363,16 +369,26 @@ const ReminderPopup = {
 
     _allActions() {
       const base = [
-        { id: 'tahajud_0400',  title: 'Sholat Tahajud',           subtitle: 'Waktunya bangun & sholat tahajud 🌙',          time: '04:00', timeVal:  4*60+0,  page: null },
-        { id: 'logbook_1530',  title: 'Isi My 8-9 Job Logbook',   subtitle: 'Catat aktivitas & pencapaian kerja hari ini',  time: '15:30', timeVal: 15*60+30, page: 'jobLogbook' },
-        { id: 'memories_2030', title: 'Isi My Memories & Growth',  subtitle: 'Tambahkan kenangan & refleksi malam ini',      time: '20:30', timeVal: 20*60+30, page: 'calendarMoment' }
+        { id: 'tahajud_0400',  title: 'Sholat Tahajud',           subtitle: 'Waktunya bangun & sholat tahajud 🌙',          time: '04:00', timeVal:  4*60+0,  page: null,          isHabit: false },
+        { id: 'logbook_1530',  title: 'Isi My 8-9 Job Logbook',   subtitle: 'Catat aktivitas & pencapaian kerja hari ini',  time: '15:30', timeVal: 15*60+30, page: 'jobLogbook',   isHabit: false },
+        { id: 'memories_2030', title: 'Isi My Memories & Growth',  subtitle: 'Tambahkan kenangan & refleksi malam ini',      time: '20:30', timeVal: 20*60+30, page: 'calendarMoment', isHabit: false }
       ];
       try {
         const raw = WorkspaceStorage.getItem('ws_habit_notifs');
         if (raw) {
           const habits = JSON.parse(raw);
           habits.forEach(h => {
-            if (!base.find(b => b.id === h.id)) base.push(h);
+            if (!base.find(b => b.id === h.id)) base.push({ ...h, isHabit: true });
+          });
+        }
+      } catch(e) {}
+      // Manual reminders hari ini
+      try {
+        const raw = WorkspaceStorage.getItem('ws_manual_notifs');
+        if (raw) {
+          const manuals = JSON.parse(raw);
+          manuals.filter(m => m.date === this.todayStr).forEach(m => {
+            if (!base.find(b => b.id === m.id)) base.push({ ...m, isHabit: false, isManual: true });
           });
         }
       } catch(e) {}
@@ -539,6 +555,14 @@ const ReminderPopup = {
       this.currentIdx = i;
     },
 
+    // ── Handle klik habit di popup mode open → navigate + auto-trigger ────
+    triggerHabitFromPopup(notif) {
+      // Emit event ke parent (App) dengan habitId untuk auto-trigger di HabitTracker
+      const habitId = notif.id.replace(/^habit_/, '');
+      this.$emit('trigger-habit', habitId);
+      this.dismiss();
+    },
+
     // ── Actions ──────────────────────────────────────────────────────────
     openNotifPanel() {
       this.dismiss();
@@ -642,12 +666,22 @@ const NotificationPanel = {
                     <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
                     Habit
                   </span>
+                  <span v-if="notif.isManual && !notif.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                    Manual
+                  </span>
                   {{ notif.done ? 'Sudah dikerjakan ✓' : notif.subtitle }}
                 </div>
               </div>
               <div class="notif-item-right">
                 <span class="notif-time-badge">{{ notif.time }}</span>
                 <svg v-if="!notif.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); margin-top: 2px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                <!-- Hapus manual reminder -->
+                <button v-if="notif.isManual" @click.stop="deleteManualReminder(notif.id)"
+                        title="Hapus pengingat ini"
+                        style="background:none; border:none; cursor:pointer; padding:2px; color:#ef4444; display:flex; align-items:center; margin-top:2px;">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
               </div>
             </div>
 
@@ -656,6 +690,65 @@ const NotificationPanel = {
               <button class="notif-reset-btn" @click="resetDoneToday">
                 Tandai ulang semua belum selesai
               </button>
+            </div>
+
+            <!-- ══ TAMBAH PENGINGAT MANUAL ══ -->
+            <div style="margin-top: 18px; border-top: 1.5px dashed var(--color-sand); padding-top: 14px;">
+              <button v-if="!showManualForm"
+                      @click="showManualForm = true"
+                      class="notif-add-manual-btn">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                Set Pengingat Manual Hari Ini
+              </button>
+
+              <!-- Form tambah manual -->
+              <transition name="notif-manual-expand">
+                <div v-if="showManualForm" class="notif-manual-form">
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                    <span style="font-size:12px; font-weight:700; color:var(--text-dark); display:flex; align-items:center; gap:6px;">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-terracotta);"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      Pengingat Manual
+                    </span>
+                    <button @click="cancelManualForm" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:18px; line-height:1; padding:0;">✕</button>
+                  </div>
+
+                  <div style="margin-bottom:8px;">
+                    <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Judul Pengingat *</label>
+                    <input v-model="manualForm.title"
+                           type="text"
+                           placeholder="cth., Minum obat, Hubungi klien..."
+                           maxlength="60"
+                           style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12.5px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;"
+                           @keyup.enter="saveManualReminder" />
+                  </div>
+                  <div style="margin-bottom:8px;">
+                    <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Keterangan (opsional)</label>
+                    <input v-model="manualForm.subtitle"
+                           type="text"
+                           placeholder="Catatan singkat..."
+                           maxlength="80"
+                           style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;" />
+                  </div>
+                  <div style="margin-bottom:12px;">
+                    <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Jam Pengingat *</label>
+                    <input v-model="manualForm.time"
+                           type="time"
+                           style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12.5px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;" />
+                  </div>
+
+                  <div style="display:flex; gap:8px;">
+                    <button @click="cancelManualForm"
+                            style="flex:1; padding:7px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:7px; font-size:12px; font-weight:600; color:var(--text-dark); cursor:pointer;">
+                      Batal
+                    </button>
+                    <button @click="saveManualReminder"
+                            :disabled="!manualForm.title.trim() || !manualForm.time"
+                            style="flex:2; padding:7px; background:var(--color-terracotta,#D67B52); border:none; border-radius:7px; font-size:12px; font-weight:700; color:#fff; cursor:pointer; opacity: (!manualForm.title.trim() || !manualForm.time) ? 0.5 : 1; transition:opacity 0.15s;">
+                      Simpan Pengingat
+                    </button>
+                  </div>
+                </div>
+              </transition>
             </div>
 
           </div>
@@ -667,14 +760,16 @@ const NotificationPanel = {
   props: {
     show: { type: Boolean, default: false }
   },
-  emits: ['close', 'navigate', 'unread-count-changed'],
+  emits: ['close', 'navigate', 'unread-count-changed', 'trigger-habit'],
 
   data() {
     return {
       todayStr: '',
       plans: [],
       contentItems: [],
-      actionStatus: {}
+      actionStatus: {},
+      showManualForm: false,
+      manualForm: { title: '', subtitle: '', time: '' }
     };
   },
 
@@ -799,6 +894,28 @@ const NotificationPanel = {
                 done: !!status[h.id],
                 isHabit: true,
                 color: h.color || 'var(--color-terracotta)'
+              });
+            }
+          });
+        }
+      } catch(e) {}
+      // Tambahkan manual reminders hari ini
+      try {
+        const raw = WorkspaceStorage.getItem('ws_manual_notifs');
+        if (raw) {
+          const manuals = JSON.parse(raw);
+          manuals.filter(m => m.date === this.todayStr).forEach(m => {
+            if (!base.find(b => b.id === m.id)) {
+              base.push({
+                id: m.id,
+                title: m.title,
+                subtitle: m.subtitle || 'Pengingat manual',
+                time: m.time,
+                timeVal: m.timeVal,
+                page: m.page || null,
+                done: !!status[m.id],
+                isHabit: false,
+                isManual: true
               });
             }
           });
@@ -932,6 +1049,15 @@ const NotificationPanel = {
         this.$emit('unread-count-changed', this.totalUnread);
       });
 
+      // Kalau habit → navigate ke habitTracker + trigger animasi otomatis di tabel
+      if (notif.isHabit) {
+        const habitId = notif.id.replace(/^habit_/, '');
+        this.$emit('navigate', 'habitTracker');
+        this.$emit('trigger-habit', habitId);
+        this.$emit('close');
+        return;
+      }
+
       // Navigasi ke halaman (skip kalau null, misal tahajud)
       if (notif.page) this.$emit('navigate', notif.page);
       this.$emit('close');
@@ -946,6 +1072,57 @@ const NotificationPanel = {
           this.$emit('unread-count-changed', this.totalUnread);
         });
       }
+    },
+
+    cancelManualForm() {
+      this.showManualForm = false;
+      this.manualForm = { title: '', subtitle: '', time: '' };
+    },
+
+    deleteManualReminder(id) {
+      try {
+        const raw = WorkspaceStorage.getItem('ws_manual_notifs');
+        let manuals = raw ? JSON.parse(raw) : [];
+        manuals = manuals.filter(m => m.id !== id);
+        WorkspaceStorage.setItem('ws_manual_notifs', JSON.stringify(manuals));
+        this.loadData();
+        this.$nextTick(() => {
+          this.$emit('unread-count-changed', this.totalUnread);
+        });
+      } catch(e) {}
+    },
+
+    saveManualReminder() {
+      if (!this.manualForm.title.trim() || !this.manualForm.time) return;
+      const [hh, mm] = this.manualForm.time.split(':').map(Number);
+      const id = 'manual_' + Date.now();
+      // Baca existing manual reminders dari storage
+      let manuals = [];
+      try {
+        const raw = WorkspaceStorage.getItem('ws_manual_notifs');
+        manuals = raw ? JSON.parse(raw) : [];
+      } catch(e) { manuals = []; }
+      // Bersihkan yang bukan hari ini
+      const today = this.todayStr;
+      manuals = manuals.filter(m => m.date === today);
+      manuals.push({
+        id,
+        date: today,
+        title: this.manualForm.title.trim(),
+        subtitle: this.manualForm.subtitle.trim() || 'Pengingat manual',
+        time: this.manualForm.time,
+        timeVal: hh * 60 + (mm || 0),
+        page: null,
+        isHabit: false,
+        isManual: true
+      });
+      WorkspaceStorage.setItem('ws_manual_notifs', JSON.stringify(manuals));
+      // Reload data supaya item baru langsung muncul
+      this.loadData();
+      this.cancelManualForm();
+      NotifSound.playCheck();
+      this.$nextTick(() => {
+        this.$emit('unread-count-changed', this.totalUnread);
+      });
     }
-  }
 };
