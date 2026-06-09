@@ -118,45 +118,156 @@ const NotifSound = {
 // ============================================================================
 // REMINDER POPUP — Muncul otomatis saat web dibuka jika ada pengingat pending
 // ============================================================================
+
+// ============================================================================
+// REMINDER POPUP — notifications.js
+// ============================================================================
+// Satu popup dengan dua mode:
+//
+//   Mode "live"   — web sedang buka, jam task baru tiba (polling 30 detik):
+//                   Muncul dengan 1 notif, tombol "Lihat Notifikasi" + "Nanti saja".
+//                   Header: "Waktunya Sekarang!" (terracotta).
+//
+//   Mode "missed" — web baru dibuka & ada jam yang sudah lewat belum dikerjakan:
+//                   Carousel notif kelewat, 1 per slide, progress dots,
+//                   tombol Sebelumnya / Berikutnya / Oke Mengerti.
+//                   Header: "Notifikasi Kelewat" (amber).
+//
+//   Mode "open"   — web baru dibuka, belum ada yang kelewat (sebelum jam pertama):
+//                   Design lama — header "Pengingat Hari Ini", list semua pending,
+//                   tombol "Lihat Notifikasi" + "Nanti saja".
+//                   Hanya tampil sekali per hari (dismiss tersimpan).
+//
+// localStorage keys:
+//   ws_notif_action_status   — { "YYYY-MM-DD": { id: true/false } }  (existing)
+//   ws_reminder_popup_dismissed — { "YYYY-MM-DD": true }              (existing, mode open)
+//   ws_timed_popup_shown     — { "YYYY-MM-DD": { id: true } }         (baru, mode live & missed)
+// ============================================================================
+
 const ReminderPopup = {
   template: `
     <transition name="reminder-popup-fade">
       <div v-if="visible" class="reminder-popup-overlay" @click.self="dismiss">
         <div class="reminder-popup-card">
-          <!-- Header -->
-          <div class="reminder-popup-header">
+
+          <!-- ── Header ── -->
+          <div class="reminder-popup-header" :class="headerClass">
             <div class="reminder-popup-icon-wrap">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <!-- mode missed: icon warning -->
+              <svg v-if="mode === 'missed'" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <!-- mode live / open: icon bell -->
+              <svg v-else viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
               </svg>
             </div>
-            <div>
-              <div class="reminder-popup-title">Pengingat Hari Ini</div>
+            <div style="flex:1; min-width:0;">
+              <div class="reminder-popup-title">{{ headerTitle }}</div>
               <div class="reminder-popup-date">{{ todayLabel }}</div>
             </div>
-          </div>
-
-          <!-- List Pengingat Pending -->
-          <div class="reminder-popup-body">
-            <p class="reminder-popup-intro">Kamu punya <strong>{{ pendingCount }} pengingat</strong> yang belum selesai hari ini:</p>
-            <div v-for="notif in pendingNotifs" :key="notif.id" class="reminder-popup-item">
-              <div class="reminder-popup-item-time">{{ notif.time }}</div>
-              <div class="reminder-popup-item-info">
-                <div class="reminder-popup-item-title">{{ notif.title }}</div>
-                <div class="reminder-popup-item-sub">{{ notif.subtitle }}</div>
-              </div>
+            <!-- Counter slide (mode missed, >1 item) -->
+            <div v-if="mode === 'missed' && queue.length > 1" class="reminder-popup-counter">
+              {{ currentIdx + 1 }} / {{ queue.length }}
             </div>
           </div>
 
-          <!-- Footer Actions -->
-          <div class="reminder-popup-footer">
-            <button class="reminder-popup-btn-open" @click="openNotifPanel">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-              Lihat Notifikasi
-            </button>
-            <button class="reminder-popup-btn-dismiss" @click="dismiss">Nanti saja</button>
-          </div>
+          <!-- ══════════════════════════════════════════════════
+               MODE: open  —  list semua pengingat pending
+          ══════════════════════════════════════════════════ -->
+          <template v-if="mode === 'open'">
+            <div class="reminder-popup-body">
+              <p class="reminder-popup-intro">
+                Kamu punya <strong>{{ pendingNotifs.length }} pengingat</strong> yang belum selesai hari ini:
+              </p>
+              <div v-for="notif in pendingNotifs" :key="notif.id" class="reminder-popup-item">
+                <div class="reminder-popup-item-time">{{ notif.time }}</div>
+                <div class="reminder-popup-item-info">
+                  <div class="reminder-popup-item-title">{{ notif.title }}</div>
+                  <div class="reminder-popup-item-sub">{{ notif.subtitle }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="reminder-popup-footer">
+              <button class="reminder-popup-btn-open" @click="openNotifPanel">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Lihat Notifikasi
+              </button>
+              <button class="reminder-popup-btn-dismiss" @click="dismiss">Nanti saja</button>
+            </div>
+          </template>
+
+          <!-- ══════════════════════════════════════════════════
+               MODE: live  —  1 notif, jam tepat waktu
+          ══════════════════════════════════════════════════ -->
+          <template v-else-if="mode === 'live'">
+            <div class="reminder-popup-body">
+              <div class="reminder-popup-item" style="border-left-color: var(--color-terracotta, #D67B52);">
+                <div class="reminder-popup-item-time">{{ currentItem.time }}</div>
+                <div class="reminder-popup-item-info">
+                  <div class="reminder-popup-item-title">{{ currentItem.title }}</div>
+                  <div class="reminder-popup-item-sub">{{ currentItem.subtitle }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="reminder-popup-footer">
+              <button class="reminder-popup-btn-open" @click="openNotifPanel">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Lihat Notifikasi
+              </button>
+              <button class="reminder-popup-btn-dismiss" @click="dismiss">Nanti saja</button>
+            </div>
+          </template>
+
+          <!-- ══════════════════════════════════════════════════
+               MODE: missed  —  carousel notif kelewat
+          ══════════════════════════════════════════════════ -->
+          <template v-else-if="mode === 'missed'">
+            <!-- Slide body dengan transisi -->
+            <transition :name="slideDir === 'next' ? 'rp-slide-left' : 'rp-slide-right'" mode="out-in">
+              <div :key="currentItem.id" class="reminder-popup-body">
+                <div class="reminder-popup-item" style="border-left-color: var(--color-amber, #C8943A);">
+                  <div class="reminder-popup-item-time" style="color: var(--color-amber, #C8943A); background: rgba(200,148,58,0.12);">
+                    {{ currentItem.time }}
+                  </div>
+                  <div class="reminder-popup-item-info">
+                    <div class="reminder-popup-item-title">{{ currentItem.title }}</div>
+                    <div class="reminder-popup-item-sub">{{ currentItem.subtitle }}</div>
+                  </div>
+                </div>
+              </div>
+            </transition>
+
+            <!-- Progress dots (hanya kalau > 1 item) -->
+            <div v-if="queue.length > 1" class="reminder-popup-dots">
+              <span
+                v-for="(_, i) in queue"
+                :key="i"
+                class="reminder-popup-dot"
+                :class="{ 'reminder-popup-dot-active': i === currentIdx }"
+                @click="jumpTo(i)">
+              </span>
+            </div>
+
+            <!-- Footer carousel -->
+            <div class="reminder-popup-footer">
+              <button v-if="currentIdx > 0" class="reminder-popup-btn-nav" @click="prev">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                Sebelumnya
+              </button>
+              <div style="flex:1"></div>
+              <button v-if="currentIdx < queue.length - 1" class="reminder-popup-btn-open reminder-popup-btn-amber" @click="next">
+                Berikutnya
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+              <button v-else class="reminder-popup-btn-open reminder-popup-btn-amber" @click="dismiss">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Oke, Mengerti
+              </button>
+            </div>
+          </template>
+
         </div>
       </div>
     </transition>
@@ -167,65 +278,168 @@ const ReminderPopup = {
   data() {
     return {
       visible: false,
+      mode: 'open',       // 'open' | 'live' | 'missed'
       todayStr: '',
-      pendingNotifs: []
+      // mode open
+      pendingNotifs: [],
+      // mode live & missed
+      queue: [],
+      currentIdx: 0,
+      slideDir: 'next',
+      _checkInterval: null
     };
   },
 
   computed: {
-    pendingCount() {
-      return this.pendingNotifs.length;
+    currentItem() {
+      return this.queue[this.currentIdx] || {};
+    },
+    headerTitle() {
+      if (this.mode === 'missed') return 'Notifikasi Kelewat';
+      if (this.mode === 'live')   return 'Waktunya Sekarang!';
+      return 'Pengingat Hari Ini';
+    },
+    headerClass() {
+      return this.mode === 'missed' ? 'reminder-popup-header-amber' : '';
     },
     todayLabel() {
       const now = new Date();
-      const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+      const days   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
       const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
       return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
     }
   },
 
   mounted() {
-    const d = new Date();
-    this.todayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    this.todayStr = this._getTodayStr();
+    // Cek missed / open saat web dibuka
+    setTimeout(() => this._checkOnOpen(), 900);
+    // Polling live setiap 30 detik
+    this._checkInterval = setInterval(() => this._checkLive(), 30000);
+  },
 
-    // Tunda sedikit supaya app sudah siap render, lalu cek
-    setTimeout(() => this.checkAndShow(), 800);
+  beforeUnmount() {
+    clearInterval(this._checkInterval);
   },
 
   methods: {
-    getTodayStr() {
+    _getTodayStr() {
       const d = new Date();
       return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     },
 
-    checkAndShow() {
-      // Cek popup sudah pernah di-dismiss hari ini?
+    _nowMinutes() {
+      const n = new Date();
+      return n.getHours() * 60 + n.getMinutes();
+    },
+
+    _allActions() {
+      return [
+        { id: 'logbook_1530',  title: 'Isi My 8-9 Job Logbook',   subtitle: 'Catat aktivitas & pencapaian kerja hari ini', time: '15:30', timeVal: 15*60+30, page: 'jobLogbook' },
+        { id: 'memories_2030', title: 'Isi My Memories & Growth',  subtitle: 'Tambahkan kenangan & refleksi malam ini',    time: '20:30', timeVal: 20*60+30, page: 'calendarMoment' }
+      ];
+    },
+
+    _isDone(id) {
+      try {
+        const s = JSON.parse(localStorage.getItem('ws_notif_action_status') || '{}');
+        return !!(s[this.todayStr] || {})[id];
+      } catch(e) { return false; }
+    },
+
+    _getShownLog() {
+      try { return JSON.parse(localStorage.getItem('ws_timed_popup_shown') || '{}'); }
+      catch(e) { return {}; }
+    },
+
+    _markShown(id) {
+      const log = this._getShownLog();
+      if (!log[this.todayStr]) log[this.todayStr] = {};
+      log[this.todayStr][id] = true;
+      localStorage.setItem('ws_timed_popup_shown', JSON.stringify(log));
+    },
+
+    // ── Dipanggil sekali saat web dibuka ──────────────────────────────────
+    _checkOnOpen() {
+      if (this.visible) return;
+      const nowMin  = this._nowMinutes();
+      const shownLog = this._getShownLog()[this.todayStr] || {};
+
+      // 1. Cari notif yang JAM-nya sudah lewat, belum selesai, popup belum pernah tampil
+      const missed = this._allActions().filter(a =>
+        a.timeVal < nowMin &&
+        !this._isDone(a.id) &&
+        !shownLog[a.id]
+      );
+
+      if (missed.length > 0) {
+        // Mode missed — carousel
+        missed.forEach(a => this._markShown(a.id));
+        this.mode       = 'missed';
+        this.queue      = missed;
+        this.currentIdx = 0;
+        this.visible    = true;
+        NotifSound.playNotif();
+        return;
+      }
+
+      // 2. Belum ada yang kelewat — cek mode "open" (popup pengingat sekali sehari)
       try {
         const dismissed = JSON.parse(localStorage.getItem('ws_reminder_popup_dismissed') || '{}');
-        if (dismissed[this.todayStr]) return; // sudah dismiss hari ini, jangan tampil lagi
+        if (dismissed[this.todayStr]) return;
       } catch(e) {}
 
-      // Ambil status actionable
-      let actionStatus = {};
-      try {
-        actionStatus = JSON.parse(localStorage.getItem('ws_notif_action_status') || '{}');
-      } catch(e) {}
+      const pending = this._allActions().filter(a => !this._isDone(a.id));
+      if (pending.length === 0) return;
 
-      const status = actionStatus[this.todayStr] || {};
-      const allActions = [
-        { id: 'logbook_1530',   title: 'Isi My 8-9 Job Logbook',     subtitle: 'Catat aktivitas & pencapaian kerja hari ini', time: '15:30' },
-        { id: 'memories_2030',  title: 'Isi My Memories & Growth',    subtitle: 'Tambahkan kenangan & refleksi malam ini',    time: '20:30' }
-      ];
+      this.mode         = 'open';
+      this.pendingNotifs = pending;
+      this.visible       = true;
+      NotifSound.playNotif();
+    },
 
-      // Hanya tampilkan yang belum selesai
-      this.pendingNotifs = allActions.filter(n => !status[n.id]);
+    // ── Polling live: muncul tepat saat jam task tiba ─────────────────────
+    _checkLive() {
+      if (this.visible) return;
+      const nowMin   = this._nowMinutes();
+      const shownLog = this._getShownLog()[this.todayStr] || {};
 
-      if (this.pendingNotifs.length > 0) {
-        this.visible = true;
-        NotifSound.playNotif();
+      const due = this._allActions().find(a => {
+        const diff = nowMin - a.timeVal;
+        return diff >= 0 && diff < 1 && !this._isDone(a.id) && !shownLog[a.id];
+      });
+
+      if (!due) return;
+
+      this._markShown(due.id);
+      this.mode       = 'live';
+      this.queue      = [due];
+      this.currentIdx = 0;
+      this.visible    = true;
+      NotifSound.playNotif();
+    },
+
+    // ── Carousel navigation (mode missed) ────────────────────────────────
+    next() {
+      if (this.currentIdx < this.queue.length - 1) {
+        this.slideDir = 'next';
+        this.currentIdx++;
       }
     },
 
+    prev() {
+      if (this.currentIdx > 0) {
+        this.slideDir = 'prev';
+        this.currentIdx--;
+      }
+    },
+
+    jumpTo(i) {
+      this.slideDir   = i > this.currentIdx ? 'next' : 'prev';
+      this.currentIdx = i;
+    },
+
+    // ── Actions ──────────────────────────────────────────────────────────
     openNotifPanel() {
       this.dismiss();
       this.$emit('open-notif');
@@ -233,21 +447,18 @@ const ReminderPopup = {
 
     dismiss() {
       this.visible = false;
-      // Simpan bahwa sudah dismiss hari ini
-      try {
-        const dismissed = JSON.parse(localStorage.getItem('ws_reminder_popup_dismissed') || '{}');
-        dismissed[this.todayStr] = true;
-        localStorage.setItem('ws_reminder_popup_dismissed', JSON.stringify(dismissed));
-      } catch(e) {}
+      if (this.mode === 'open') {
+        try {
+          const dismissed = JSON.parse(localStorage.getItem('ws_reminder_popup_dismissed') || '{}');
+          dismissed[this.todayStr] = true;
+          localStorage.setItem('ws_reminder_popup_dismissed', JSON.stringify(dismissed));
+        } catch(e) {}
+      }
       this.$emit('dismiss');
     }
   }
 };
 
-
-// ============================================================================
-// NOTIFICATION PANEL
-// ============================================================================
 const NotificationPanel = {
   template: `
     <transition name="notif-panel-slide">
@@ -579,266 +790,6 @@ const NotificationPanel = {
           this.$emit('unread-count-changed', this.totalUnread);
         });
       }
-    }
-  }
-};
-
-// ============================================================================
-// TIMED TASK POPUP — notifications.js (tambahan)
-// ============================================================================
-// Dua mode popup:
-//   Mode A — "Live": web sedang buka → popup muncul tepat di jam task, 1 notif
-//             per waktu, user dismiss → popup hilang.
-//   Mode B — "Missed": web baru dibuka & jam sudah lewat → notif yang kelewat
-//             muncul satu per satu sebagai carousel/slide (ada progress dot,
-//             tombol prev/next, dan counter "1 dari N").
-//
-// Key localStorage:
-//   ws_notif_action_status  — existing key, reuse
-//   ws_timed_popup_shown    — { "YYYY-MM-DD": { "logbook_1530": true, ... } }
-//                             mencatat popup sudah pernah muncul hari ini
-// ============================================================================
-
-const TimedTaskPopup = {
-  template: `
-    <transition name="timed-popup-fade">
-      <div v-if="visible" class="timed-popup-overlay" @click.self="dismissCurrent">
-        <div class="timed-popup-card" :class="isMissed ? 'timed-popup-missed' : 'timed-popup-live'">
-
-          <!-- Header -->
-          <div class="timed-popup-header">
-            <div class="timed-popup-icon-wrap">
-              <svg v-if="isMissed" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              <svg v-else viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-              </svg>
-            </div>
-            <div style="flex:1; min-width:0;">
-              <div class="timed-popup-label">{{ isMissed ? 'Notifikasi Kelewat' : 'Waktunya Sekarang!' }}</div>
-              <div class="timed-popup-date">{{ todayLabel }}</div>
-            </div>
-            <!-- Counter jika ada banyak missed -->
-            <div v-if="isMissed && queue.length > 1" class="timed-popup-counter">
-              {{ currentIdx + 1 }} / {{ queue.length }}
-            </div>
-          </div>
-
-          <!-- Body — 1 notif at a time -->
-          <transition :name="slideDir === 'next' ? 'slide-left' : 'slide-right'" mode="out-in">
-            <div :key="currentItem.id" class="timed-popup-body">
-              <div class="timed-popup-time-badge">{{ currentItem.time }}</div>
-              <div class="timed-popup-task-title">{{ currentItem.title }}</div>
-              <div class="timed-popup-task-sub">{{ currentItem.subtitle }}</div>
-            </div>
-          </transition>
-
-          <!-- Progress dots (hanya kalau missed > 1) -->
-          <div v-if="isMissed && queue.length > 1" class="timed-popup-dots">
-            <span
-              v-for="(_, i) in queue"
-              :key="i"
-              class="timed-popup-dot"
-              :class="{ 'timed-popup-dot-active': i === currentIdx }"
-              @click="jumpTo(i)">
-            </span>
-          </div>
-
-          <!-- Footer -->
-          <div class="timed-popup-footer">
-            <!-- Missed mode: prev/next atau selesai -->
-            <template v-if="isMissed">
-              <button v-if="currentIdx > 0" class="timed-popup-btn-nav" @click="prev">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                Sebelumnya
-              </button>
-              <div style="flex:1"></div>
-              <button v-if="currentIdx < queue.length - 1" class="timed-popup-btn-primary" @click="next">
-                Berikutnya
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-              </button>
-              <button v-else class="timed-popup-btn-primary" @click="dismissAll">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                Oke, Mengerti
-              </button>
-            </template>
-
-            <!-- Live mode: tombol buka notif + dismiss -->
-            <template v-else>
-              <button class="timed-popup-btn-ghost" @click="dismissCurrent">Nanti saja</button>
-              <button class="timed-popup-btn-primary" @click="openAndNavigate">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                Lihat Notifikasi
-              </button>
-            </template>
-          </div>
-
-        </div>
-      </div>
-    </transition>
-  `,
-
-  emits: ['open-notif', 'navigate'],
-
-  data() {
-    return {
-      visible: false,
-      isMissed: false,
-      queue: [],          // array notif yang perlu ditampilkan
-      currentIdx: 0,
-      slideDir: 'next',   // 'next' | 'prev'
-      todayStr: '',
-      _checkInterval: null
-    };
-  },
-
-  computed: {
-    currentItem() {
-      return this.queue[this.currentIdx] || {};
-    },
-    todayLabel() {
-      const now = new Date();
-      const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-      const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-      return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
-    }
-  },
-
-  mounted() {
-    const d = new Date();
-    this.todayStr = this._getTodayStr(d);
-
-    // Cek missed notifications saat buka (sedikit delay biar app ready)
-    setTimeout(() => this._checkMissed(), 1200);
-
-    // Poll tiap 30 detik untuk live check (pas jam muncul)
-    this._checkInterval = setInterval(() => {
-      this._checkLive();
-    }, 30000);
-  },
-
-  beforeUnmount() {
-    clearInterval(this._checkInterval);
-  },
-
-  methods: {
-    _getTodayStr(d) {
-      d = d || new Date();
-      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    },
-
-    _getShownLog() {
-      try {
-        return JSON.parse(localStorage.getItem('ws_timed_popup_shown') || '{}');
-      } catch(e) { return {}; }
-    },
-
-    _markShown(id) {
-      const log = this._getShownLog();
-      if (!log[this.todayStr]) log[this.todayStr] = {};
-      log[this.todayStr][id] = true;
-      localStorage.setItem('ws_timed_popup_shown', JSON.stringify(log));
-    },
-
-    _isDone(id) {
-      try {
-        const status = JSON.parse(localStorage.getItem('ws_notif_action_status') || '{}');
-        return !!(status[this.todayStr] || {})[id];
-      } catch(e) { return false; }
-    },
-
-    _allActions() {
-      return [
-        { id: 'logbook_1530',  title: 'Isi My 8-9 Job Logbook',    subtitle: 'Catat aktivitas & pencapaian kerja hari ini', time: '15:30', timeVal: 15*60+30, page: 'jobLogbook' },
-        { id: 'memories_2030', title: 'Isi My Memories & Growth',   subtitle: 'Tambahkan kenangan & refleksi malam ini',    time: '20:30', timeVal: 20*60+30, page: 'calendarMoment' }
-      ];
-    },
-
-    _nowMinutes() {
-      const n = new Date();
-      return n.getHours() * 60 + n.getMinutes();
-    },
-
-    // ── Cek notif yang kelewat (dipanggil sekali saat buka web) ──
-    _checkMissed() {
-      if (this.visible) return;
-      const log = this._getShownLog()[this.todayStr] || {};
-      const nowMin = this._nowMinutes();
-
-      const missed = this._allActions().filter(a =>
-        a.timeVal < nowMin &&         // jam sudah lewat
-        !this._isDone(a.id) &&        // belum dikerjakan
-        !log[a.id]                    // popup belum pernah tampil hari ini
-      );
-
-      if (missed.length === 0) return;
-
-      // Tandai semua sebagai "sudah ditampilkan"
-      missed.forEach(a => this._markShown(a.id));
-
-      this.queue = missed;
-      this.currentIdx = 0;
-      this.isMissed = true;
-      this.visible = true;
-      NotifSound.playNotif();
-    },
-
-    // ── Cek live notification (tepat saat jam task tiba) ──
-    _checkLive() {
-      if (this.visible) return; // jangan interrupt popup yang sedang tampil
-      const log = this._getShownLog()[this.todayStr] || {};
-      const nowMin = this._nowMinutes();
-
-      const due = this._allActions().find(a => {
-        const diff = nowMin - a.timeVal;
-        return diff >= 0 && diff < 1 && // dalam window 1 menit
-               !this._isDone(a.id) &&
-               !log[a.id];
-      });
-
-      if (!due) return;
-
-      this._markShown(due.id);
-      this.queue = [due];
-      this.currentIdx = 0;
-      this.isMissed = false;
-      this.visible = true;
-      NotifSound.playNotif();
-    },
-
-    // ── Navigation ──
-    next() {
-      if (this.currentIdx < this.queue.length - 1) {
-        this.slideDir = 'next';
-        this.currentIdx++;
-      }
-    },
-
-    prev() {
-      if (this.currentIdx > 0) {
-        this.slideDir = 'prev';
-        this.currentIdx--;
-      }
-    },
-
-    jumpTo(i) {
-      this.slideDir = i > this.currentIdx ? 'next' : 'prev';
-      this.currentIdx = i;
-    },
-
-    // ── Dismiss ──
-    dismissCurrent() {
-      this.visible = false;
-    },
-
-    dismissAll() {
-      this.visible = false;
-    },
-
-    openAndNavigate() {
-      this.visible = false;
-      this.$emit('open-notif');
     }
   }
 };
