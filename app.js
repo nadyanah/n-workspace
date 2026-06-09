@@ -572,5 +572,6 @@ app.component('floating-countdown-timer', FloatingCountdownTimer);
 app.component('financial-tracker', FinancialTracker);
 app.component('notification-panel', NotificationPanel);
 app.component('reminder-popup', ReminderPopup);
+app.component('timed-task-popup', TimedTaskPopup);
 
 app.mount('#app');

@@ -582,3 +582,263 @@ const NotificationPanel = {
     }
   }
 };
+
+// ============================================================================
+// TIMED TASK POPUP — notifications.js (tambahan)
+// ============================================================================
+// Dua mode popup:
+//   Mode A — "Live": web sedang buka → popup muncul tepat di jam task, 1 notif
+//             per waktu, user dismiss → popup hilang.
+//   Mode B — "Missed": web baru dibuka & jam sudah lewat → notif yang kelewat
+//             muncul satu per satu sebagai carousel/slide (ada progress dot,
+//             tombol prev/next, dan counter "1 dari N").
+//
+// Key localStorage:
+//   ws_notif_action_status  — existing key, reuse
+//   ws_timed_popup_shown    — { "YYYY-MM-DD": { "logbook_1530": true, ... } }
+//                             mencatat popup sudah pernah muncul hari ini
+// ============================================================================
+
+const TimedTaskPopup = {
+  template: `
+    <transition name="timed-popup-fade">
+      <div v-if="visible" class="timed-popup-overlay" @click.self="dismissCurrent">
+        <div class="timed-popup-card" :class="isMissed ? 'timed-popup-missed' : 'timed-popup-live'">
+
+          <!-- Header -->
+          <div class="timed-popup-header">
+            <div class="timed-popup-icon-wrap">
+              <svg v-if="isMissed" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <svg v-else viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div class="timed-popup-label">{{ isMissed ? 'Notifikasi Kelewat' : 'Waktunya Sekarang!' }}</div>
+              <div class="timed-popup-date">{{ todayLabel }}</div>
+            </div>
+            <!-- Counter jika ada banyak missed -->
+            <div v-if="isMissed && queue.length > 1" class="timed-popup-counter">
+              {{ currentIdx + 1 }} / {{ queue.length }}
+            </div>
+          </div>
+
+          <!-- Body — 1 notif at a time -->
+          <transition :name="slideDir === 'next' ? 'slide-left' : 'slide-right'" mode="out-in">
+            <div :key="currentItem.id" class="timed-popup-body">
+              <div class="timed-popup-time-badge">{{ currentItem.time }}</div>
+              <div class="timed-popup-task-title">{{ currentItem.title }}</div>
+              <div class="timed-popup-task-sub">{{ currentItem.subtitle }}</div>
+            </div>
+          </transition>
+
+          <!-- Progress dots (hanya kalau missed > 1) -->
+          <div v-if="isMissed && queue.length > 1" class="timed-popup-dots">
+            <span
+              v-for="(_, i) in queue"
+              :key="i"
+              class="timed-popup-dot"
+              :class="{ 'timed-popup-dot-active': i === currentIdx }"
+              @click="jumpTo(i)">
+            </span>
+          </div>
+
+          <!-- Footer -->
+          <div class="timed-popup-footer">
+            <!-- Missed mode: prev/next atau selesai -->
+            <template v-if="isMissed">
+              <button v-if="currentIdx > 0" class="timed-popup-btn-nav" @click="prev">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                Sebelumnya
+              </button>
+              <div style="flex:1"></div>
+              <button v-if="currentIdx < queue.length - 1" class="timed-popup-btn-primary" @click="next">
+                Berikutnya
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+              <button v-else class="timed-popup-btn-primary" @click="dismissAll">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Oke, Mengerti
+              </button>
+            </template>
+
+            <!-- Live mode: tombol buka notif + dismiss -->
+            <template v-else>
+              <button class="timed-popup-btn-ghost" @click="dismissCurrent">Nanti saja</button>
+              <button class="timed-popup-btn-primary" @click="openAndNavigate">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Lihat Notifikasi
+              </button>
+            </template>
+          </div>
+
+        </div>
+      </div>
+    </transition>
+  `,
+
+  emits: ['open-notif', 'navigate'],
+
+  data() {
+    return {
+      visible: false,
+      isMissed: false,
+      queue: [],          // array notif yang perlu ditampilkan
+      currentIdx: 0,
+      slideDir: 'next',   // 'next' | 'prev'
+      todayStr: '',
+      _checkInterval: null
+    };
+  },
+
+  computed: {
+    currentItem() {
+      return this.queue[this.currentIdx] || {};
+    },
+    todayLabel() {
+      const now = new Date();
+      const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+      const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+      return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+    }
+  },
+
+  mounted() {
+    const d = new Date();
+    this.todayStr = this._getTodayStr(d);
+
+    // Cek missed notifications saat buka (sedikit delay biar app ready)
+    setTimeout(() => this._checkMissed(), 1200);
+
+    // Poll tiap 30 detik untuk live check (pas jam muncul)
+    this._checkInterval = setInterval(() => {
+      this._checkLive();
+    }, 30000);
+  },
+
+  beforeUnmount() {
+    clearInterval(this._checkInterval);
+  },
+
+  methods: {
+    _getTodayStr(d) {
+      d = d || new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    },
+
+    _getShownLog() {
+      try {
+        return JSON.parse(localStorage.getItem('ws_timed_popup_shown') || '{}');
+      } catch(e) { return {}; }
+    },
+
+    _markShown(id) {
+      const log = this._getShownLog();
+      if (!log[this.todayStr]) log[this.todayStr] = {};
+      log[this.todayStr][id] = true;
+      localStorage.setItem('ws_timed_popup_shown', JSON.stringify(log));
+    },
+
+    _isDone(id) {
+      try {
+        const status = JSON.parse(localStorage.getItem('ws_notif_action_status') || '{}');
+        return !!(status[this.todayStr] || {})[id];
+      } catch(e) { return false; }
+    },
+
+    _allActions() {
+      return [
+        { id: 'logbook_1530',  title: 'Isi My 8-9 Job Logbook',    subtitle: 'Catat aktivitas & pencapaian kerja hari ini', time: '15:30', timeVal: 15*60+30, page: 'jobLogbook' },
+        { id: 'memories_2030', title: 'Isi My Memories & Growth',   subtitle: 'Tambahkan kenangan & refleksi malam ini',    time: '20:30', timeVal: 20*60+30, page: 'calendarMoment' }
+      ];
+    },
+
+    _nowMinutes() {
+      const n = new Date();
+      return n.getHours() * 60 + n.getMinutes();
+    },
+
+    // ── Cek notif yang kelewat (dipanggil sekali saat buka web) ──
+    _checkMissed() {
+      if (this.visible) return;
+      const log = this._getShownLog()[this.todayStr] || {};
+      const nowMin = this._nowMinutes();
+
+      const missed = this._allActions().filter(a =>
+        a.timeVal < nowMin &&         // jam sudah lewat
+        !this._isDone(a.id) &&        // belum dikerjakan
+        !log[a.id]                    // popup belum pernah tampil hari ini
+      );
+
+      if (missed.length === 0) return;
+
+      // Tandai semua sebagai "sudah ditampilkan"
+      missed.forEach(a => this._markShown(a.id));
+
+      this.queue = missed;
+      this.currentIdx = 0;
+      this.isMissed = true;
+      this.visible = true;
+      NotifSound.playNotif();
+    },
+
+    // ── Cek live notification (tepat saat jam task tiba) ──
+    _checkLive() {
+      if (this.visible) return; // jangan interrupt popup yang sedang tampil
+      const log = this._getShownLog()[this.todayStr] || {};
+      const nowMin = this._nowMinutes();
+
+      const due = this._allActions().find(a => {
+        const diff = nowMin - a.timeVal;
+        return diff >= 0 && diff < 1 && // dalam window 1 menit
+               !this._isDone(a.id) &&
+               !log[a.id];
+      });
+
+      if (!due) return;
+
+      this._markShown(due.id);
+      this.queue = [due];
+      this.currentIdx = 0;
+      this.isMissed = false;
+      this.visible = true;
+      NotifSound.playNotif();
+    },
+
+    // ── Navigation ──
+    next() {
+      if (this.currentIdx < this.queue.length - 1) {
+        this.slideDir = 'next';
+        this.currentIdx++;
+      }
+    },
+
+    prev() {
+      if (this.currentIdx > 0) {
+        this.slideDir = 'prev';
+        this.currentIdx--;
+      }
+    },
+
+    jumpTo(i) {
+      this.slideDir = i > this.currentIdx ? 'next' : 'prev';
+      this.currentIdx = i;
+    },
+
+    // ── Dismiss ──
+    dismissCurrent() {
+      this.visible = false;
+    },
+
+    dismissAll() {
+      this.visible = false;
+    },
+
+    openAndNavigate() {
+      this.visible = false;
+      this.$emit('open-notif');
+    }
+  }
+};
