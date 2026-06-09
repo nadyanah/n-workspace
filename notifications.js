@@ -175,13 +175,29 @@ const ReminderPopup = {
           </div>
 
           <!-- ══════════════════════════════════════════════════
-               MODE: open  —  list semua pengingat pending
+               MODE: open  —  review harian: Hari Ini + Pengingat
           ══════════════════════════════════════════════════ -->
           <template v-if="mode === 'open'">
             <div class="reminder-popup-body">
-              <p class="reminder-popup-intro">
-                Kamu punya <strong>{{ pendingNotifs.length }} pengingat</strong> yang belum selesai hari ini:
-              </p>
+
+              <!-- Section 1: Hari Ini (task plan + content urgen) -->
+              <template v-if="infoItems.length > 0">
+                <div class="reminder-popup-section-label">
+                  <span class="reminder-popup-dot reminder-popup-dot-terra"></span> Hari Ini
+                </div>
+                <div v-for="item in infoItems" :key="item.id" class="reminder-popup-item reminder-popup-item-info">
+                  <div class="reminder-popup-item-icon">{{ item.icon }}</div>
+                  <div class="reminder-popup-item-info-text">
+                    <div class="reminder-popup-item-title">{{ item.title }}</div>
+                    <div class="reminder-popup-item-sub">{{ item.sub }}</div>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Section 2: Pengingat Hari Ini (actionable pending) -->
+              <div class="reminder-popup-section-label" :style="infoItems.length > 0 ? 'margin-top:14px;' : ''">
+                <span class="reminder-popup-dot reminder-popup-dot-sage"></span> Pengingat Hari Ini
+              </div>
               <div v-for="notif in pendingNotifs" :key="notif.id" class="reminder-popup-item">
                 <div class="reminder-popup-item-time">{{ notif.time }}</div>
                 <div class="reminder-popup-item-info">
@@ -189,6 +205,12 @@ const ReminderPopup = {
                   <div class="reminder-popup-item-sub">{{ notif.subtitle }}</div>
                 </div>
               </div>
+
+              <!-- Kalau tidak ada keduanya -->
+              <p v-if="infoItems.length === 0 && pendingNotifs.length === 0"
+                 style="font-size:12px; color:var(--text-muted); text-align:center; padding:8px 0;">
+                Tidak ada agenda hari ini 🎉
+              </p>
             </div>
             <div class="reminder-popup-footer">
               <button class="reminder-popup-btn-open" @click="openNotifPanel">
@@ -306,8 +328,10 @@ const ReminderPopup = {
       visible: false,
       mode: 'open',       // 'open' | 'live' | 'missed'
       todayStr: '',
-      // mode open
+      // mode open — Section 2 (actionable pending)
       pendingNotifs: [],
+      // mode open — Section 1 (task plan + content hari ini)
+      infoItems: [],
       // mode live & missed
       queue: [],
       currentIdx: 0,
@@ -361,84 +385,113 @@ const ReminderPopup = {
 
     _allActions() {
       return [
-        { id: 'logbook_1530',  title: 'Isi My 8-9 Job Logbook',   subtitle: 'Catat aktivitas & pencapaian kerja hari ini', time: '22:30', timeVal: 15*60+30, page: 'jobLogbook' },
-        { id: 'memories_2030', title: 'Isi My Memories & Growth',  subtitle: 'Tambahkan kenangan & refleksi malam ini',    time: '22:30', timeVal: 20*60+30, page: 'calendarMoment' }
+        { id: 'tahajud_0400',  title: 'Sholat Tahajud',           subtitle: 'Waktunya bangun & sholat tahajud 🌙',          time: '04:00', timeVal:  4*60+0,  page: null },
+        { id: 'logbook_1530',  title: 'Isi My 8-9 Job Logbook',   subtitle: 'Catat aktivitas & pencapaian kerja hari ini',  time: '15:30', timeVal: 15*60+30, page: 'jobLogbook' },
+        { id: 'memories_2030', title: 'Isi My Memories & Growth',  subtitle: 'Tambahkan kenangan & refleksi malam ini',      time: '20:30', timeVal: 20*60+30, page: 'calendarMoment' }
       ];
     },
 
     _isDone(id) {
       try {
-        const s = JSON.parse(localStorage.getItem('ws_notif_action_status') || '{}');
+        const raw = WorkspaceStorage.getItem('ws_notif_action_status');
+        const s = JSON.parse(raw || '{}');
         return !!(s[this.todayStr] || {})[id];
       } catch(e) { return false; }
     },
 
     _getShownLog() {
-      try { return JSON.parse(localStorage.getItem('ws_timed_popup_shown') || '{}'); }
-      catch(e) { return {}; }
+      try {
+        const raw = WorkspaceStorage.getItem('ws_timed_popup_shown');
+        return JSON.parse(raw || '{}');
+      } catch(e) { return {}; }
     },
 
     _markShown(id) {
       const log = this._getShownLog();
       if (!log[this.todayStr]) log[this.todayStr] = {};
       log[this.todayStr][id] = true;
-      localStorage.setItem('ws_timed_popup_shown', JSON.stringify(log));
+      WorkspaceStorage.setItem('ws_timed_popup_shown', JSON.stringify(log));
     },
 
     // ── Dipanggil sekali saat web dibuka ──────────────────────────────────
     _checkOnOpen() {
-      // 1. Ambil status dismiss dari localStorage
-      const dismissedData = localStorage.getItem('ws_reminder_popup_dismissed');
-      let isDismissedToday = false;
-      try {
-        if (dismissedData) {
-          const parsed = JSON.parse(dismissedData);
-          if (parsed[this.todayStr]) {
-            isDismissedToday = true;
-          }
-        }
-      } catch (e) {}
-
-      const all = this._allActions();
+      const all    = this._allActions();
       const nowMin = this._nowMinutes();
 
-      // 2. Filter item: cari yang belum dikerjakan
+      // Ambil semua yang belum dikerjakan
       const pendingItems = all.filter(a => !this._isDone(a.id));
-      
-      // 3. Cari spesifik item yang JAM-NYA SUDAH LEWAT dan belum dikerjakan
-      const missedItems = pendingItems.filter(a => nowMin >= a.timeVal);
+      if (pendingItems.length === 0) return; // semua sudah selesai, skip
 
-      // 4. LOGIKA BARU: Jika ada yang terlewat, ABAIKAN status dismiss dan paksa muncul!
+      // Pisah: yang jamnya sudah lewat vs belum
+      const missedItems   = pendingItems.filter(a => nowMin >= a.timeVal);
+      const upcomingItems = pendingItems.filter(a => nowMin  < a.timeVal);
+
+      // PRIORITAS 1 — ada yang kelewat → paksa muncul mode missed (abaikan dismiss)
       if (missedItems.length > 0) {
-        this.mode = 'missed';
-        this.queue = missedItems;
+        this.mode       = 'missed';
+        this.queue      = missedItems;
         this.currentIdx = 0;
-        this.visible = true;
-        
-      } 
-      // 5. Jika TIDAK ADA yang terlewat, baru patuhi aturan dismiss (hanya muncul 1x sehari)
-      else if (pendingItems.length > 0) {
-        if (!isDismissedToday) {
-          this.mode = 'open';
-          this.pendingNotifs = pendingItems;
-          this.visible = true;
-        }
+        this.visible    = true;
+        this._triggerBellShake();
+        NotifSound.playNotif();
+        return;
       }
-    
 
-      // 2. Belum ada yang kelewat — cek mode "open" (popup pengingat sekali sehari)
+      // PRIORITAS 2 — belum ada yang kelewat → mode open, tapi cek dismiss dulu
+      // (hanya muncul 1x per hari, kecuali ada missed)
+      if (upcomingItems.length > 0) {
+        try {
+          const raw = WorkspaceStorage.getItem('ws_reminder_popup_dismissed');
+          const dismissed = JSON.parse(raw || '{}');
+          if (dismissed[this.todayStr]) return; // sudah di-dismiss hari ini
+        } catch(e) {}
+
+        this.mode          = 'open';
+        this.pendingNotifs = upcomingItems;
+        this.infoItems     = this._loadInfoItems();
+        this.visible       = true;
+        this._triggerBellShake();
+        NotifSound.playNotif();
+      }
+    },
+
+    // ── Load Section 1 items (Task Plan + Content urgen) untuk mode open ──
+    _loadInfoItems() {
+      const items = [];
+      const today = this.todayStr;
+
+      // Task Plan hari ini
       try {
-        const dismissed = JSON.parse(localStorage.getItem('ws_reminder_popup_dismissed') || '{}');
-        if (dismissed[this.todayStr]) return;
+        const plans = JSON.parse(WorkspaceStorage.getItem('personal_workspace_job_plans') || '[]');
+        plans.filter(p => p.date === today).forEach(p => {
+          items.push({
+            id: 'task-' + p.id,
+            icon: '📋',
+            title: p.tasks,
+            sub: `Task Plan · ${p.category || 'Umum'}`
+          });
+        });
       } catch(e) {}
 
-      const pending = this._allActions().filter(a => !this._isDone(a.id));
-      if (pending.length === 0) return;
+      // Content Plan urgen (hari ini, H-1, H-2, terlambat)
+      try {
+        const contents = JSON.parse(WorkspaceStorage.getItem('personal_workspace_content_items') || '[]');
+        const todayDate = new Date(today);
+        contents.forEach(item => {
+          if (!item.dueDate) return;
+          const diff = Math.round((new Date(item.dueDate) - todayDate) / 86400000);
+          if (diff > 2) return;
+          const label = diff < 0 ? `Terlambat ${Math.abs(diff)}h` : diff === 0 ? 'Rilis Hari Ini' : `H-${diff}`;
+          items.push({
+            id: 'content-' + item.id,
+            icon: '🎬',
+            title: item.title,
+            sub: `Content · ${item.platform || ''} · ${label}`
+          });
+        });
+      } catch(e) {}
 
-      this.mode         = 'open';
-      this.pendingNotifs = pending;
-      this.visible       = true;
-      NotifSound.playNotif();
+      return items;
     },
 
     // ── Polling live: muncul tepat saat jam task tiba ─────────────────────
@@ -459,7 +512,19 @@ const ReminderPopup = {
       this.queue      = [due];
       this.currentIdx = 0;
       this.visible    = true;
+      this._triggerBellShake();
       NotifSound.playNotif();
+    },
+
+    // ── Trigger bell shake on all bell buttons ────────────────────────────
+    _triggerBellShake() {
+      const bells = document.querySelectorAll('.desk-notif-float-btn, .ws-notif-btn');
+      bells.forEach(btn => {
+        btn.classList.remove('bell-has-notif');
+        void btn.offsetWidth;
+        btn.classList.add('bell-has-notif');
+        setTimeout(() => btn.classList.remove('bell-has-notif'), 4000);
+      });
     },
 
     // ── Carousel navigation (mode missed) ────────────────────────────────
@@ -492,9 +557,10 @@ const ReminderPopup = {
       this.visible = false;
       if (this.mode === 'open') {
         try {
-          const dismissed = JSON.parse(localStorage.getItem('ws_reminder_popup_dismissed') || '{}');
+          const raw = WorkspaceStorage.getItem('ws_reminder_popup_dismissed');
+          const dismissed = JSON.parse(raw || '{}');
           dismissed[this.todayStr] = true;
-          localStorage.setItem('ws_reminder_popup_dismissed', JSON.stringify(dismissed));
+          WorkspaceStorage.setItem('ws_reminder_popup_dismissed', JSON.stringify(dismissed));
         } catch(e) {}
       }
       this.$emit('dismiss');
@@ -682,10 +748,18 @@ const NotificationPanel = {
       const status = this.actionStatus[this.todayStr] || {};
       return [
         {
+          id: 'tahajud_0400',
+          title: 'Sholat Tahajud',
+          subtitle: 'Waktunya bangun & sholat tahajud 🌙',
+          time: '04:00',
+          page: null,
+          done: !!status['tahajud_0400']
+        },
+        {
           id: 'logbook_1530',
           title: 'Isi My 8-9 Job Logbook',
           subtitle: 'Catat aktivitas & pencapaian kerja hari ini',
-          time: '22:30',
+          time: '15:30',
           page: 'jobLogbook',
           done: !!status['logbook_1530']
         },
@@ -693,7 +767,7 @@ const NotificationPanel = {
           id: 'memories_2030',
           title: 'Isi My Memories & Growth',
           subtitle: 'Tambahkan kenangan & refleksi malam ini',
-          time: '22:30',
+          time: '20:30',
           page: 'calendarMoment',
           done: !!status['memories_2030']
         }
@@ -729,11 +803,6 @@ const NotificationPanel = {
     // Emit count awal supaya badge langsung benar saat mount
     this.$nextTick(() => {
       this.$emit('unread-count-changed', this.totalUnread);
-
-      const hasPending = this.actionNotifs.some(n => !n.done) || this.infoNotifs.length > 0;
-      if (hasPending) {
-        this._triggerBellAlert();
-      }
     });
 
     // Refresh data setiap menit (kalau panel terbuka lama)
@@ -769,9 +838,9 @@ const NotificationPanel = {
         this.contentItems = raw ? JSON.parse(raw) : [];
       } catch(e) { this.contentItems = []; }
 
-      // Action Status
+      // Action Status — pakai WorkspaceStorage biar cross-device
       try {
-        const raw = localStorage.getItem('ws_notif_action_status');
+        const raw = WorkspaceStorage.getItem('ws_notif_action_status');
         this.actionStatus = raw ? JSON.parse(raw) : {};
       } catch(e) { this.actionStatus = {}; }
 
@@ -779,21 +848,6 @@ const NotificationPanel = {
       this.$nextTick(() => {
         this.$emit('unread-count-changed', this.totalUnread);
       });
-    },
-
-    _triggerBellAlert() {
-      // Shake + suara semua bell button yang ada di halaman
-      const bells = document.querySelectorAll('.desk-notif-float-btn, .ws-notif-btn');
-      bells.forEach(btn => {
-        btn.classList.remove('bell-has-notif');
-        // Force reflow biar animasi re-trigger
-        void btn.offsetWidth;
-        btn.classList.add('bell-has-notif');
-        // Hapus class setelah animasi selesai
-        setTimeout(() => btn.classList.remove('bell-has-notif'), 3200);
-      });
-      // Play notif sound
-      NotifSound.playNotif();
     },
 
     handleInfoClick(notif) {
@@ -812,22 +866,22 @@ const NotificationPanel = {
         this.actionStatus[this.todayStr] = {};
       }
       this.actionStatus[this.todayStr][notif.id] = true;
-      localStorage.setItem('ws_notif_action_status', JSON.stringify(this.actionStatus));
+      WorkspaceStorage.setItem('ws_notif_action_status', JSON.stringify(this.actionStatus));
 
       // Emit count terbaru supaya badge langsung berkurang
       this.$nextTick(() => {
         this.$emit('unread-count-changed', this.totalUnread);
       });
 
-      // Navigasi ke halaman
-      this.$emit('navigate', notif.page);
+      // Navigasi ke halaman (skip kalau null, misal tahajud)
+      if (notif.page) this.$emit('navigate', notif.page);
       this.$emit('close');
     },
 
     resetDoneToday() {
       if (this.actionStatus[this.todayStr]) {
         this.actionStatus[this.todayStr] = {};
-        localStorage.setItem('ws_notif_action_status', JSON.stringify(this.actionStatus));
+        WorkspaceStorage.setItem('ws_notif_action_status', JSON.stringify(this.actionStatus));
         // Emit count setelah reset
         this.$nextTick(() => {
           this.$emit('unread-count-changed', this.totalUnread);
