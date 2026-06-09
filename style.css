@@ -2,6 +2,12 @@
 /* Warm Retro Palette: Warm Cream, Dark Chocolate, Terracotta, Warm Gold, Sage Green. ZERO BLUE. */
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Space+Mono&display=swap');
+@font-face {
+  font-family: 'Fontby-en';  /* nama bebas, ini yang kamu pakai di CSS */
+  src: url('fonts/Fontby-en.otf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
 
 :root {
   --bg-cream: #FDFBF7;
@@ -159,12 +165,12 @@ h1, h2, h3, h4 {
 
 .desk-title {
   /* ── DESK TITLE FONT — bebas kamu kreasikan sendiri ── */
-  font-family: 'Outfit', sans-serif;  /* ganti font di sini */
+  font-family: 'Fontby-en', cursive;  /* ganti font di sini */
   font-weight: 700;                   /* 300 / 400 / 500 / 600 / 700 */
   font-style: normal;                 /* normal / italic */
   letter-spacing: 0px;               /* tambah/kurangi spasi huruf */
   /* ─────────────────────────────────────────────────── */
-  font-size: 52px;
+  font-size: 70px;
   line-height: 1.1;
   margin-bottom: 12px;
   color: var(--text-dark);
@@ -173,7 +179,7 @@ h1, h2, h3, h4 {
 .desk-subtitle {
   font-family: 'Outfit', sans-serif;
   font-style: italic;
-  font-size: 20px;
+  font-size: 18px;
   color: var(--text-muted);
 }
 
@@ -4262,7 +4268,7 @@ input:checked + .switch-slider:before {
 
 /* ── Brand / Center ── */
 .ws-nav-brand {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Playfair Display', serif;
   font-size: 17px;
   font-weight: 700;
   font-style: italic;
