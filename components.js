@@ -148,6 +148,62 @@ const JobLogbook = {
           </div>
         </transition>
 
+         <!-- ── Analytics + Distribusi ── -->
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-bottom: 20px; align-items: stretch;">
+          <!-- Ringkasan Analitik -->
+          <div class="drawer-section" style="margin-bottom: 0; padding: 18px 20px; border-radius: 12px; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid var(--color-sand); padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+              <h3 style="font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; margin: 0;">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                Ringkasan Analitik Performa
+              </h3>
+              <div style="display: flex; gap: 3px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 2px;">
+                <button class="btn" :style="analyticsPeriod === 'semua' ? { background: 'var(--color-terracotta)', color: '#fff', fontSize: '11px', padding: '4px 10px', borderRadius: '6px' } : { background: 'transparent', color: 'var(--text-dark)', fontSize: '11px', padding: '4px 10px' }" @click="analyticsPeriod = 'semua'">Semua</button>
+                <button class="btn" :style="analyticsPeriod === 'today' ? { background: 'var(--color-terracotta)', color: '#fff', fontSize: '11px', padding: '4px 10px', borderRadius: '6px' } : { background: 'transparent', color: 'var(--text-dark)', fontSize: '11px', padding: '4px 10px' }" @click="analyticsPeriod = 'today'">Hari Ini</button>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; flex: 1;">
+              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 10px; padding: 14px 10px; text-align: center;">
+                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; display: block; line-height: 1.3; margin-bottom: 8px;">Pekerjaan</span>
+                <p class="text-mono" style="font-size: 22px; font-weight: bold; color: var(--text-dark); margin: 0;">{{ filteredLogs.length }}</p>
+              </div>
+              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 10px; padding: 14px 10px; text-align: center;">
+                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; display: block; line-height: 1.3; margin-bottom: 8px;">Task Plan</span>
+                <p class="text-mono" style="font-size: 22px; font-weight: bold; color: var(--text-dark); margin: 0;">{{ plans.length }}</p>
+              </div>
+              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 10px; padding: 14px 10px; text-align: center;">
+                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; display: block; line-height: 1.3; margin-bottom: 8px;">Rentang</span>
+                <p class="text-mono" style="font-size: 22px; font-weight: bold; color: var(--text-dark); margin: 0;">{{ selectedRangeDaysCount }} <span style="font-size: 11px; font-weight: normal;">hr</span></p>
+              </div>
+              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 10px; padding: 14px 10px; text-align: center;">
+                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; display: block; line-height: 1.3; margin-bottom: 8px;">Penyelesaian</span>
+                <p class="text-mono" style="font-size: 22px; font-weight: bold; color: var(--text-dark); margin: 0;">{{ nextActionCompletionRate }}</p>
+              </div>
+            </div>
+          </div>
+          <!-- Distribusi Kategori -->
+          <div class="drawer-section" style="margin-bottom: 0; padding: 18px 20px; border-radius: 12px; display: flex; flex-direction: column;">
+            <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 14px; border-bottom: 1.5px solid var(--color-sand); padding-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-sage);"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect width="20" height="14" x="2" y="6" rx="2"></rect></svg>
+              Distribusi Kategori
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 9px; flex: 1; overflow-y: auto; max-height: 130px; padding-right: 4px;">
+              <div v-for="(pct, cat) in categoryPercentages" :key="cat">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; margin-bottom: 4px;">
+                  <span style="font-weight: 600; color: var(--text-dark);">{{ cat }}</span>
+                  <span class="text-mono" style="font-weight: bold; color: var(--text-muted);">{{ pct.count }}x ({{ pct.percentage }}%)</span>
+                </div>
+                <div style="width: 100%; background-color: var(--color-sand); height: 5px; border-radius: 10px; overflow: hidden;">
+                  <div :style="{ width: pct.percentage + '%', backgroundColor: getCategoryColor(cat) }" style="height: 100%; border-radius: 10px; transition: width 0.3s ease;"></div>
+                </div>
+              </div>
+              <div v-if="filteredLogs.length === 0" style="text-align: center; font-size: 12px; color: var(--text-muted); font-style: italic; margin-top: 10px;">
+                Tidak ada data dalam filter aktif ini.
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- ── Kelola Kategori ── -->
         <div class="drawer-section" style="margin-bottom: 20px; padding: 16px 20px; border-radius: 12px; background: #FDFAF6; border: 1.5px solid var(--color-sand);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -414,61 +470,6 @@ const JobLogbook = {
           </div>
         </div>
 
-        <!-- ── Analytics + Distribusi ── -->
-        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-bottom: 20px; align-items: stretch;">
-          <!-- Ringkasan Analitik -->
-          <div class="drawer-section" style="margin-bottom: 0; padding: 18px 20px; border-radius: 12px; display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid var(--color-sand); padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
-              <h3 style="font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; margin: 0;">
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                Ringkasan Analitik Performa
-              </h3>
-              <div style="display: flex; gap: 3px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 2px;">
-                <button class="btn" :style="analyticsPeriod === 'semua' ? { background: 'var(--color-terracotta)', color: '#fff', fontSize: '11px', padding: '4px 10px', borderRadius: '6px' } : { background: 'transparent', color: 'var(--text-dark)', fontSize: '11px', padding: '4px 10px' }" @click="analyticsPeriod = 'semua'">Semua</button>
-                <button class="btn" :style="analyticsPeriod === 'today' ? { background: 'var(--color-terracotta)', color: '#fff', fontSize: '11px', padding: '4px 10px', borderRadius: '6px' } : { background: 'transparent', color: 'var(--text-dark)', fontSize: '11px', padding: '4px 10px' }" @click="analyticsPeriod = 'today'">Hari Ini</button>
-              </div>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; flex: 1;">
-              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 10px; padding: 14px 10px; text-align: center;">
-                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; display: block; line-height: 1.3; margin-bottom: 8px;">Pekerjaan</span>
-                <p class="text-mono" style="font-size: 22px; font-weight: bold; color: var(--text-dark); margin: 0;">{{ filteredLogs.length }}</p>
-              </div>
-              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 10px; padding: 14px 10px; text-align: center;">
-                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; display: block; line-height: 1.3; margin-bottom: 8px;">Task Plan</span>
-                <p class="text-mono" style="font-size: 22px; font-weight: bold; color: var(--text-dark); margin: 0;">{{ plans.length }}</p>
-              </div>
-              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 10px; padding: 14px 10px; text-align: center;">
-                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; display: block; line-height: 1.3; margin-bottom: 8px;">Rentang</span>
-                <p class="text-mono" style="font-size: 22px; font-weight: bold; color: var(--text-dark); margin: 0;">{{ selectedRangeDaysCount }} <span style="font-size: 11px; font-weight: normal;">hr</span></p>
-              </div>
-              <div style="background-color: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 10px; padding: 14px 10px; text-align: center;">
-                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; display: block; line-height: 1.3; margin-bottom: 8px;">Penyelesaian</span>
-                <p class="text-mono" style="font-size: 22px; font-weight: bold; color: var(--text-dark); margin: 0;">{{ nextActionCompletionRate }}</p>
-              </div>
-            </div>
-          </div>
-          <!-- Distribusi Kategori -->
-          <div class="drawer-section" style="margin-bottom: 0; padding: 18px 20px; border-radius: 12px; display: flex; flex-direction: column;">
-            <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 14px; border-bottom: 1.5px solid var(--color-sand); padding-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-sage);"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect width="20" height="14" x="2" y="6" rx="2"></rect></svg>
-              Distribusi Kategori
-            </h3>
-            <div style="display: flex; flex-direction: column; gap: 9px; flex: 1; overflow-y: auto; max-height: 130px; padding-right: 4px;">
-              <div v-for="(pct, cat) in categoryPercentages" :key="cat">
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; margin-bottom: 4px;">
-                  <span style="font-weight: 600; color: var(--text-dark);">{{ cat }}</span>
-                  <span class="text-mono" style="font-weight: bold; color: var(--text-muted);">{{ pct.count }}x ({{ pct.percentage }}%)</span>
-                </div>
-                <div style="width: 100%; background-color: var(--color-sand); height: 5px; border-radius: 10px; overflow: hidden;">
-                  <div :style="{ width: pct.percentage + '%', backgroundColor: getCategoryColor(cat) }" style="height: 100%; border-radius: 10px; transition: width 0.3s ease;"></div>
-                </div>
-              </div>
-              <div v-if="filteredLogs.length === 0" style="text-align: center; font-size: 12px; color: var(--text-muted); font-style: italic; margin-top: 10px;">
-                Tidak ada data dalam filter aktif ini.
-              </div>
-            </div>
-          </div>
-        </div>
 
         <!-- ── Riwayat Kegiatan Kerja ── -->
         <div class="drawer-section" style="margin-bottom: 0; padding: 20px 22px; border-radius: 12px; min-width: 0; overflow: visible;">
