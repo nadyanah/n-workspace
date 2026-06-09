@@ -6,7 +6,7 @@
 // Semua data otomatis tersimpan di penyimpanan lokal browser Anda (localStorage).
 // Sangat sederhana, tanpa kompilasi rumit, sehingga Anda bisa langsung edit file ini!
 
-const { createApp, ref, reactive, onMounted, computed } = Vue;
+    const { createApp, ref, reactive, onMounted, computed } = Vue;
 
 const App = {
   setup() {
@@ -15,6 +15,7 @@ const App = {
     const activePage = ref('dashboard');
     const showSettings = ref(false);
     const showNavDrawer = ref(false);
+    const showNotifPanel = ref(false);
 
     // Color customization variables
     const showColorPicker = ref(false);
@@ -293,16 +294,54 @@ const App = {
         setDominantColor('#D67B52');
       }
 
-      // Handle navigation triggered by other components (e.g. sync from Logbook)
+    // Handle navigation triggered by other components (e.g. sync from Logbook)
       window.addEventListener('navigate-to-page', (e) => {
         navigateTo(e.detail);
       });
+    });
+
+    // Computed: hitung jumlah notif yang belum selesai untuk badge di bell icon
+    const notifPanelRef = ref(null);
+    const notifUnreadCount = computed(() => {
+      const todayStr = (() => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      })();
+
+      // Hitung task plan hari ini
+      let count = 0;
+      try {
+        const plans = JSON.parse(WorkspaceStorage.getItem('personal_workspace_job_plans') || '[]');
+        count += plans.filter(p => p.date === todayStr).length;
+      } catch(e) {}
+
+      // Hitung content items urgen (hari ini, H-1, H-2, terlambat)
+      try {
+        const items = JSON.parse(WorkspaceStorage.getItem('personal_workspace_content_items') || '[]');
+        const today = new Date(todayStr);
+        items.forEach(item => {
+          if (!item.dueDate) return;
+          const diff = Math.round((new Date(item.dueDate) - today) / 86400000);
+          if (diff <= 2) count++;
+        });
+      } catch(e) {}
+
+      // Hitung actionable yang belum selesai
+      try {
+        const status = JSON.parse(localStorage.getItem('ws_notif_action_status') || '{}');
+        const todayStatus = status[todayStr] || {};
+        if (!todayStatus['logbook_1530']) count++;
+        if (!todayStatus['memories_2030']) count++;
+      } catch(e) { count += 2; }
+
+      return count;
     });
 
     return {
       activePage,
       showSettings,
       showNavDrawer,
+      showNotifPanel,
       showColorPicker,
       dominantColor,
       presetColors,
@@ -320,7 +359,9 @@ const App = {
       startDrag,
       resetLayout,
       navigateTo,
-      handleUpdateMapping
+      handleUpdateMapping,
+      notifPanelRef,
+      notifUnreadCount
     };
   }
 };
@@ -556,5 +597,6 @@ app.component('google-calendar', GoogleCalendar);
 app.component('icon-manager', IconManager);
 app.component('floating-countdown-timer', FloatingCountdownTimer);
 app.component('financial-tracker', FinancialTracker);
+app.component('notification-panel', NotificationPanel);
 
 app.mount('#app');
