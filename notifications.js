@@ -129,9 +129,10 @@ const NotifSound = {
 //                   Header: "Waktunya Sekarang!" (terracotta).
 //
 //   Mode "missed" — web baru dibuka & ada jam yang sudah lewat belum dikerjakan:
-//                   Carousel notif kelewat, 1 per slide, progress dots,
-//                   tombol Sebelumnya / Berikutnya / Oke Mengerti.
-//                   Header: "Notifikasi Kelewat" (amber).
+//                   Design mirip mode "open" — header "Notifikasi Kelewat" (amber).
+//                   1 item: footer (Lihat Notifikasi + Oke).
+//                   > 1 item: carousel 1 per slide, progress dots,
+//                   tombol Sebelumnya / Berikutnya, Oke di slide terakhir.
 //
 //   Mode "open"   — web baru dibuka, belum ada yang kelewat (sebelum jam pertama):
 //                   Design lama — header "Pengingat Hari Ini", list semua pending,
@@ -221,51 +222,76 @@ const ReminderPopup = {
           </template>
 
           <!-- ══════════════════════════════════════════════════
-               MODE: missed  —  carousel notif kelewat
+               MODE: missed  —  mirip mode open, slide nav kalau > 1 item
           ══════════════════════════════════════════════════ -->
           <template v-else-if="mode === 'missed'">
-            <!-- Slide body dengan transisi -->
-            <transition :name="slideDir === 'next' ? 'rp-slide-left' : 'rp-slide-right'" mode="out-in">
-              <div :key="currentItem.id" class="reminder-popup-body">
-                <div class="reminder-popup-item" style="border-left-color: var(--color-amber, #C8943A);">
-                  <div class="reminder-popup-item-time" style="color: var(--color-amber, #C8943A); background: rgba(200,148,58,0.12);">
-                    {{ currentItem.time }}
-                  </div>
+
+            <!-- 1 item: langsung tampil, footer mirip mode open -->
+            <template v-if="queue.length === 1">
+              <div class="reminder-popup-body">
+                <p class="reminder-popup-intro">
+                  Kamu punya <strong>1 pengingat</strong> yang kelewat hari ini:
+                </p>
+                <div class="reminder-popup-item reminder-popup-item-missed">
+                  <div class="reminder-popup-item-time reminder-popup-item-time-missed">{{ queue[0].time }}</div>
                   <div class="reminder-popup-item-info">
-                    <div class="reminder-popup-item-title">{{ currentItem.title }}</div>
-                    <div class="reminder-popup-item-sub">{{ currentItem.subtitle }}</div>
+                    <div class="reminder-popup-item-title">{{ queue[0].title }}</div>
+                    <div class="reminder-popup-item-sub">{{ queue[0].subtitle }}</div>
                   </div>
                 </div>
               </div>
-            </transition>
+              <div class="reminder-popup-footer">
+                <button class="reminder-popup-btn-open reminder-popup-btn-amber" @click="openNotifPanel">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                  Lihat Notifikasi
+                </button>
+                <button class="reminder-popup-btn-dismiss" @click="dismiss">Oke</button>
+              </div>
+            </template>
 
-            <!-- Progress dots (hanya kalau > 1 item) -->
-            <div v-if="queue.length > 1" class="reminder-popup-dots">
-              <span
-                v-for="(_, i) in queue"
-                :key="i"
-                class="reminder-popup-dot"
-                :class="{ 'reminder-popup-dot-active': i === currentIdx }"
-                @click="jumpTo(i)">
-              </span>
-            </div>
+            <!-- > 1 item: carousel dengan slide nav, footer ada Sebelumnya/Berikutnya/Oke -->
+            <template v-else>
+              <transition :name="slideDir === 'next' ? 'rp-slide-left' : 'rp-slide-right'" mode="out-in">
+                <div :key="currentItem.id" class="reminder-popup-body">
+                  <p class="reminder-popup-intro">
+                    Kamu punya <strong>{{ queue.length }} pengingat</strong> yang kelewat hari ini:
+                  </p>
+                  <div class="reminder-popup-item reminder-popup-item-missed">
+                    <div class="reminder-popup-item-time reminder-popup-item-time-missed">{{ currentItem.time }}</div>
+                    <div class="reminder-popup-item-info">
+                      <div class="reminder-popup-item-title">{{ currentItem.title }}</div>
+                      <div class="reminder-popup-item-sub">{{ currentItem.subtitle }}</div>
+                    </div>
+                  </div>
+                </div>
+              </transition>
 
-            <!-- Footer carousel -->
-            <div class="reminder-popup-footer">
-              <button v-if="currentIdx > 0" class="reminder-popup-btn-nav" @click="prev">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                Sebelumnya
-              </button>
-              <div style="flex:1"></div>
-              <button v-if="currentIdx < queue.length - 1" class="reminder-popup-btn-open reminder-popup-btn-amber" @click="next">
-                Berikutnya
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-              </button>
-              <button v-else class="reminder-popup-btn-open reminder-popup-btn-amber" @click="dismiss">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                Oke, Mengerti
-              </button>
-            </div>
+              <!-- Progress dots -->
+              <div class="reminder-popup-dots">
+                <span
+                  v-for="(_, i) in queue"
+                  :key="i"
+                  class="reminder-popup-dot"
+                  :class="{ 'reminder-popup-dot-active': i === currentIdx }"
+                  @click="jumpTo(i)">
+                </span>
+              </div>
+
+              <!-- Footer: slide nav, Oke di slide terakhir -->
+              <div class="reminder-popup-footer">
+                <button v-if="currentIdx > 0" class="reminder-popup-btn-nav" @click="prev">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                  Sebelumnya
+                </button>
+                <div style="flex:1"></div>
+                <button v-if="currentIdx < queue.length - 1" class="reminder-popup-btn-open reminder-popup-btn-amber" @click="next">
+                  Berikutnya
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+                <button v-else class="reminder-popup-btn-dismiss" @click="dismiss">Oke</button>
+              </div>
+            </template>
+
           </template>
 
         </div>
