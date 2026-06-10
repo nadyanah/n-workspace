@@ -25,6 +25,7 @@
 // ── Web Audio: generate suara pakai AudioContext (no file needed) ──
 const NotifSound = {
   _ctx: null,
+  _pendingSound: false,  // flag: ada suara pending menunggu interaksi user
   _get() {
     if (!this._ctx) {
       try { this._ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
@@ -32,6 +33,32 @@ const NotifSound = {
     // Resume context kalau suspended (browser autoplay policy)
     if (this._ctx && this._ctx.state === 'suspended') this._ctx.resume();
     return this._ctx;
+  },
+
+  // Versi aman: kalau AudioContext masih suspended (belum ada interaksi user),
+  // tandai _pendingSound supaya suara diputar saat user pertama kali klik popup.
+  playNotifSafe() {
+    const ctx = this._get();
+    if (!ctx || ctx.state === 'suspended') {
+      // AudioContext belum bisa dimainkan, tandai pending
+      this._pendingSound = true;
+      return;
+    }
+    this._pendingSound = false;
+    this.playNotif();
+  },
+
+  // Dipanggil saat user berinteraksi dengan popup (klik tombol apapun)
+  // Mainkan suara pending jika ada
+  flushPendingSound() {
+    if (!this._pendingSound) return;
+    this._pendingSound = false;
+    const ctx = this._get();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().then(() => this.playNotif()).catch(() => {});
+    } else {
+      this.playNotif();
+    }
   },
 
   // Suara notif: karakter "marimba warm" — 3 nada naik dengan reverb tail
@@ -192,11 +219,11 @@ const ReminderPopup = {
               </p>
             </div>
             <div class="reminder-popup-footer">
-              <button class="reminder-popup-btn-open" @click="openNotifPanel">
+              <button class="reminder-popup-btn-open" @click="flushSoundThenOpenNotif">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 Lihat Notifikasi
               </button>
-              <button class="reminder-popup-btn-dismiss" @click="dismiss">Nanti saja</button>
+              <button class="reminder-popup-btn-dismiss" @click="flushSoundThenDismiss">Nanti saja</button>
             </div>
           </template>
 
@@ -436,22 +463,26 @@ const ReminderPopup = {
         this.queue      = missedItems;
         this.currentIdx = 0;
         // Kalau masih ada upcoming juga → antri mode open setelah missed di-dismiss
-        this._pendingOpenAfterMissed = upcomingItems.length > 0 ? upcomingItems : null;
+        // Kalau tidak ada upcoming, tetap tampilkan mode open dengan semua pendingItems
+        // supaya user tetap bisa lihat ringkasan hari ini (fix: muncul di malam hari)
+        this._pendingOpenAfterMissed = pendingItems;
         this.visible    = true;
         this._triggerBellShake();
-        NotifSound.playNotif();
+        NotifSound.playNotifSafe();
         return;
       }
 
       // PRIORITAS 2 — semua jam belum lewat → mode open (SELALU tampil, tanpa cek dismiss)
-      if (upcomingItems.length > 0) {
+      // Juga muncul kalau semua sudah missed tapi ada yang pending (fix malam hari sudah ditangani di atas)
+      if (pendingItems.length > 0) {
         this.mode          = 'open';
-        this.pendingNotifs = upcomingItems;
+        // Tampilkan semua pending (upcoming dulu, lalu missed) supaya muncul di semua jam
+        this.pendingNotifs = pendingItems;
         this.infoItems     = this._loadInfoItems();
         this._pendingOpenAfterMissed = null;
         this.visible       = true;
         this._triggerBellShake();
-        NotifSound.playNotif();
+        NotifSound.playNotifSafe();
       }
     },
 
@@ -571,6 +602,18 @@ const ReminderPopup = {
       this.$emit('open-notif');
     },
 
+    // Flush suara pending (akibat autoplay policy) sebelum dismiss/open panel
+    // Dipanggil saat user klik tombol di mode open — ini adalah "interaksi pertama"
+    flushSoundThenDismiss() {
+      NotifSound.flushPendingSound();
+      this.dismiss();
+    },
+
+    flushSoundThenOpenNotif() {
+      NotifSound.flushPendingSound();
+      this.openNotifPanel();
+    },
+
     dismiss() {
       const wasMissed = this.mode === 'missed';
       this.visible = false;
@@ -581,20 +624,20 @@ const ReminderPopup = {
         const savedPending = this._pendingOpenAfterMissed;
         this._pendingOpenAfterMissed = null;
         setTimeout(() => {
-          // Re-check langsung: ambil semua actions, filter yang belum done & belum lewat
-          const nowMin = this._nowMinutes();
+          // Re-check langsung: ambil semua actions yang belum done (termasuk yang sudah missed)
+          // supaya mode open tetap muncul di malam hari meski semua jam sudah lewat
           const all    = this._allActions();
-          const upcomingItems = all.filter(a => !this._isDone(a.id) && nowMin < a.timeVal);
+          const allPendingItems = all.filter(a => !this._isDone(a.id));
 
           // Gunakan hasil re-check; fallback ke savedPending kalau re-check kosong
-          const pendingToShow = upcomingItems.length > 0 ? upcomingItems : (savedPending || []);
+          const pendingToShow = allPendingItems.length > 0 ? allPendingItems : (savedPending || []);
 
           if (pendingToShow.length > 0) {
             this.mode          = 'open';
             this.pendingNotifs = pendingToShow;
             this.infoItems     = this._loadInfoItems();
             this.visible       = true;
-            NotifSound.playNotif();
+            NotifSound.playNotifSafe();
           }
         }, 600);
       }
