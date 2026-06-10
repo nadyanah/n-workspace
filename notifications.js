@@ -425,8 +425,10 @@ const ReminderPopup = {
       const pendingItems  = all.filter(a => !this._isDone(a.id));
       if (pendingItems.length === 0) return; // semua sudah selesai hari ini, skip
 
-      const missedItems   = pendingItems.filter(a => nowMin >= a.timeVal);
-      const upcomingItems = pendingItems.filter(a => nowMin  < a.timeVal);
+      // Gunakan > (bukan >=) agar item yang waktunya TEPAT saat ini masuk upcoming,
+      // beri grace 1 menit sebelum dianggap missed.
+      const missedItems   = pendingItems.filter(a => nowMin > a.timeVal);
+      const upcomingItems = pendingItems.filter(a => nowMin <= a.timeVal);
 
       // PRIORITAS 1 — ada yang kelewat → muncul mode missed dulu
       if (missedItems.length > 0) {
@@ -570,18 +572,30 @@ const ReminderPopup = {
     },
 
     dismiss() {
+      const wasMissed = this.mode === 'missed';
       this.visible = false;
 
-      // Kalau setelah missed ada open yang antri → muncul setelah 600ms
-      if (this.mode === 'missed' && this._pendingOpenAfterMissed) {
-        const upcoming = this._pendingOpenAfterMissed;
+      // Kalau setelah missed → selalu cek ulang upcoming secara langsung,
+      // jangan hanya andalkan _pendingOpenAfterMissed (bisa null kalau race condition).
+      if (wasMissed) {
+        const savedPending = this._pendingOpenAfterMissed;
         this._pendingOpenAfterMissed = null;
         setTimeout(() => {
-          this.mode          = 'open';
-          this.pendingNotifs = upcoming;
-          this.infoItems     = this._loadInfoItems();
-          this.visible       = true;
-          NotifSound.playNotif();
+          // Re-check langsung: ambil semua actions, filter yang belum done & belum lewat
+          const nowMin = this._nowMinutes();
+          const all    = this._allActions();
+          const upcomingItems = all.filter(a => !this._isDone(a.id) && nowMin < a.timeVal);
+
+          // Gunakan hasil re-check; fallback ke savedPending kalau re-check kosong
+          const pendingToShow = upcomingItems.length > 0 ? upcomingItems : (savedPending || []);
+
+          if (pendingToShow.length > 0) {
+            this.mode          = 'open';
+            this.pendingNotifs = pendingToShow;
+            this.infoItems     = this._loadInfoItems();
+            this.visible       = true;
+            NotifSound.playNotif();
+          }
         }, 600);
       }
 
