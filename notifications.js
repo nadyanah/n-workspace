@@ -1125,4 +1125,5 @@ const NotificationPanel = {
         this.$emit('unread-count-changed', this.totalUnread);
       });
     }
+  }
 };

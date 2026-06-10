@@ -1135,7 +1135,7 @@ const JobLogbook = {
       // Form di-reset (opsional — supaya bersih saat dibuka berikutnya)
       this.form = { date: this.todayStr, category: 'Administrasi', tasks: '', achievements: '', nextAction: '', documentLink: '' };
     },
-    convertPlanToLog(plan) { — baru dihapus saat saveLog dipanggil
+    convertPlanToLog(plan) { // baru dihapus saat saveLog dipanggil
       this.pendingConvertPlanId = plan.id;
       this.form.date = plan.date;
       this.form.category = this.allCategories.includes(plan.category) ? plan.category : this.allCategories[0];
