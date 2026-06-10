@@ -355,7 +355,7 @@ const App = {
       onUnreadCountChanged,
       pendingHabitTrigger,
       onTriggerHabit,
-      onHabitTriggered,
+      onHabitTriggered
 
 
     };
