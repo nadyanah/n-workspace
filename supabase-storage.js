@@ -318,13 +318,15 @@ const WorkspaceStorage = {
   },
 
   getItem(key) {
+    // Kalau cache sudah diisi dari Supabase (init selesai), pakai itu
     if (this._cache.hasOwnProperty(key)) return this._cache[key];
-    const localVal = localStorage.getItem(key);
-    if (localVal !== null) {
-      this._cache[key] = localVal;
-      this._scheduleSave(key, localVal);
-    }
-    return localVal;
+
+    // Kalau init sudah selesai tapi key tidak ada di cache → memang tidak ada data
+    // Jangan fallback ke localStorage supaya data device lain tidak terpakai
+    if (this._initialized) return null;
+
+    // Init belum selesai (jarang terjadi) → fallback sementara ke localStorage
+    return localStorage.getItem(key);
   },
 
   setItem(key, value) {
@@ -385,6 +387,13 @@ const WorkspaceStorage = {
   },
 
   async migrateFromLocalStorage() {
+    // Hanya migrasi kalau Supabase benar-benar kosong (first time setup)
+    // Kalau Supabase sudah punya data, skip — jangan timpa dengan localStorage device ini
+    if (Object.keys(this._cache).length > 0) {
+      console.log('[WorkspaceStorage] Data Supabase sudah ada, skip migrasi localStorage');
+      return 0;
+    }
+
     const keys = [
       'personal_workspace_assigned_icons','aesthetic_workspace_dominant_color',
       'personal_workspace_job_categories','personal_workspace_job_logs',
@@ -399,13 +408,13 @@ const WorkspaceStorage = {
     let count = 0;
     for (const key of keys) {
       const val = localStorage.getItem(key);
-      if (val !== null && !this._cache.hasOwnProperty(key)) {
+      if (val !== null) {
         this._cache[key] = val;
         await this._saveToSupabase(key, val);
         count++;
       }
     }
-    if (count > 0) console.log(`[WorkspaceStorage] Migrasi ${count} key selesai`);
+    if (count > 0) console.log(`[WorkspaceStorage] Migrasi ${count} key dari localStorage ke Supabase`);
     return count;
   }
 };
