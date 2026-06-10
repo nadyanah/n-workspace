@@ -575,6 +575,17 @@
                 <span class="ws-drawer-num">09</span>
               </button>
 
+            <button class="ws-drawer-item" :class="{ active: activePage === 'missedTasksPage' }" @click="navigateTo('missedTasksPage'); showNavDrawer = false">
+              <span class="ws-drawer-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </span>
+              <div class="ws-drawer-item-text">
+                <span class="ws-drawer-label">Tugas Terlewat</span>
+                <span class="ws-drawer-sub">riwayat pengingat yang belum dikerjakan</span>
+              </div>
+              <span class="ws-drawer-num">10</span>
+            </button>
+
             <!-- Drawer footer -->
             <div class="ws-drawer-footer">
               <span>✦ my personal workspace ✦</span>
@@ -615,6 +626,8 @@
         <google-calendar v-if="activePage === 'googleCalendar'"></google-calendar>
         <financial-tracker v-if="activePage === 'financialTracker'"></financial-tracker>
         <!-- Dynamic Month state passed to Habit Tracker component -->
+        <missed-tasks-page v-if="activePage === 'missedTasksPage'"></missed-tasks-page>
+
         <habit-tracker v-if="activePage === 'habitTracker'"
                        :current-year-month="habitYearMonth"
                        :days-in-month="habitDaysInMonth"

@@ -590,6 +590,52 @@ const ReminderPopup = {
   }
 };
 
+
+// ── Helper: ambil notif belum dikerjakan dari hari tertentu ──
+function _snapshotMissedForDate(dateStr) {
+  try {
+    const statusRaw = WorkspaceStorage.getItem('ws_notif_action_status');
+    const actionStatus = statusRaw ? JSON.parse(statusRaw) : {};
+    const status = actionStatus[dateStr] || {};
+
+    const base = [
+      { id: 'tahajud_0400',  title: 'Sholat Tahajud',          subtitle: 'Waktunya bangun & sholat tahajud 🌙', time: '04:00', type: 'reminder' },
+      { id: 'logbook_1530',  title: 'Isi My 8-9 Job Logbook',  subtitle: 'Catat aktivitas & pencapaian kerja',   time: '15:30', type: 'reminder' },
+      { id: 'memories_2030', title: 'Isi My Memories & Growth', subtitle: 'Tambahkan kenangan & refleksi malam', time: '20:30', type: 'reminder' }
+    ];
+    try {
+      const raw = WorkspaceStorage.getItem('ws_habit_notifs');
+      if (raw) JSON.parse(raw).forEach(h => {
+        if (!base.find(b => b.id === h.id))
+          base.push({ id: h.id, title: h.title, subtitle: h.subtitle || 'Habit harian', time: h.time, type: 'habit', color: h.color });
+      });
+    } catch(e) {}
+    try {
+      const raw = WorkspaceStorage.getItem('ws_manual_notifs');
+      if (raw) JSON.parse(raw).filter(m => m.date === dateStr).forEach(m => {
+        if (!base.find(b => b.id === m.id))
+          base.push({ id: m.id, title: m.title, subtitle: m.subtitle || 'Pengingat manual', time: m.time, type: 'manual' });
+      });
+    } catch(e) {}
+    return base.filter(n => !status[n.id]);
+  } catch(e) { return []; }
+}
+
+// ── Simpan snapshot missed tasks untuk satu hari tertentu ──
+function saveMissedTasksSnapshot(yesterdayStr) {
+  const missed = _snapshotMissedForDate(yesterdayStr);
+  if (missed.length === 0) return;
+  try {
+    const raw = WorkspaceStorage.getItem('ws_missed_tasks');
+    let log = raw ? JSON.parse(raw) : [];
+    const idx = log.findIndex(e => e.date === yesterdayStr);
+    if (idx !== -1) { log[idx].tasks = missed; }
+    else { log.unshift({ date: yesterdayStr, tasks: missed }); }
+    if (log.length > 60) log = log.slice(0, 60);
+    WorkspaceStorage.setItem('ws_missed_tasks', JSON.stringify(log));
+  } catch(e) {}
+}
+
 const NotificationPanel = {
   template: `
     <transition name="notif-panel-slide">
@@ -607,13 +653,36 @@ const NotificationPanel = {
                 <div class="notif-panel-date">{{ todayLabel }}</div>
               </div>
             </div>
-            <button class="notif-close-btn" @click="$emit('close')" aria-label="Tutup notifikasi">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <!-- See All → buka Google Calendar -->
+              <button class="notif-see-all-btn" @click="goToCalendar" title="Lihat di Google Calendar">
+                See All
+              </button>
+              <button class="notif-close-btn" @click="$emit('close')" aria-label="Tutup notifikasi">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div class="notif-tabs">
+            <button class="notif-tab" :class="{ active: activeTab === 'today' }" @click="activeTab = 'today'">
+              Hari Ini
+              <span v-if="totalUnread > 0" class="notif-tab-badge">{{ totalUnread }}</span>
+            </button>
+            <button class="notif-tab" :class="{ active: activeTab === 'missed' }" @click="activeTab = 'missed'; loadMissedLog()">
+              Terlewat
+              <span v-if="totalMissedCount > 0" class="notif-tab-badge notif-tab-badge-red">{{ totalMissedCount }}</span>
             </button>
           </div>
 
           <!-- Body -->
           <div class="notif-panel-body">
+
+            <!-- ══════════════════════════════
+                 TAB: HARI INI
+            ══════════════════════════════ -->
+            <template v-if="activeTab === 'today'">
 
             <!-- ══ SECTION 1: INFORMATIONAL ══ -->
             <div class="notif-section-label">
@@ -751,6 +820,86 @@ const NotificationPanel = {
               </transition>
             </div>
 
+            </template>
+
+            <!-- ══════════════════════════════
+                 TAB: TERLEWAT
+            ══════════════════════════════ -->
+            <template v-if="activeTab === 'missed'">
+
+              <!-- Empty state -->
+              <div v-if="missedLog.length === 0" class="notif-empty" style="padding: 32px 0; flex-direction: column;">
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-sand); margin-bottom:8px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <span style="font-size:12.5px; font-weight:700; color:var(--text-dark); margin-bottom:3px;">Semua pengingat sudah dikerjakan! 🎉</span>
+                <span style="font-size:11px; color:var(--text-muted);">Tidak ada tugas yang terlewat</span>
+              </div>
+
+              <!-- Summary chips -->
+              <div v-else style="display:flex; gap:7px; margin-bottom:14px; flex-wrap:wrap;">
+                <div class="notif-missed-chip notif-missed-chip-total">
+                  <span style="font-size:15px; font-weight:800; line-height:1;">{{ missedLog.length }}</span>
+                  <span style="font-size:10px; color:var(--text-muted);">hari terlewat</span>
+                </div>
+                <div class="notif-missed-chip notif-missed-chip-total">
+                  <span style="font-size:15px; font-weight:800; line-height:1;">{{ totalMissedCount }}</span>
+                  <span style="font-size:10px; color:var(--text-muted);">total item</span>
+                </div>
+              </div>
+
+              <!-- Log entries per day -->
+              <div v-for="entry in missedLog" :key="entry.date" class="notif-missed-day">
+                <div class="notif-missed-day-header" @click="toggleMissedDay(entry.date)">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <div class="notif-missed-dot" :style="{ background: missedSeverityColor(entry.tasks.length) }"></div>
+                    <div>
+                      <div style="font-size:12.5px; font-weight:700; color:var(--text-dark);">{{ formatMissedDate(entry.date) }}</div>
+                      <div style="font-size:11px; color:var(--text-muted);">{{ daysAgo(entry.date) }}</div>
+                    </div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:7px;">
+                    <span class="notif-missed-count" :style="{ background: missedSeverityColor(entry.tasks.length) + '22', color: missedSeverityColor(entry.tasks.length), border: '1.5px solid ' + missedSeverityColor(entry.tasks.length) + '44' }">
+                      {{ entry.tasks.length }} item
+                    </span>
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                         :style="{ transition:'transform 0.2s', transform: expandedMissedDays.includes(entry.date) ? 'rotate(180deg)' : 'rotate(0deg)', color:'var(--text-muted)' }">
+                      <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                  </div>
+                </div>
+
+                <transition name="notif-missed-expand">
+                  <div v-if="expandedMissedDays.includes(entry.date)" class="notif-missed-tasks">
+                    <div v-for="task in entry.tasks" :key="task.id" class="notif-missed-task-row">
+                      <div class="notif-missed-task-icon" :class="'notif-missed-icon-' + (task.type || 'reminder')">
+                        <svg v-if="task.type === 'habit'" viewBox="0 0 24 24" width="11" height="11" fill="none" :stroke="task.color || 'var(--color-terracotta)'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
+                        <svg v-else-if="task.type === 'manual'" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                        <svg v-else viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      </div>
+                      <div style="flex:1; min-width:0;">
+                        <div style="font-size:12px; font-weight:700; color:var(--text-dark); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ task.title }}</div>
+                        <div style="font-size:10.5px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ task.subtitle }}</div>
+                      </div>
+                      <span style="font-size:10px; font-weight:700; padding:2px 7px; border-radius:7px; background:var(--bg-cream); border:1px solid var(--color-sand); color:var(--text-dark); flex-shrink:0; white-space:nowrap;">{{ task.time }}</span>
+                    </div>
+                    <!-- Delete day -->
+                    <div style="padding: 8px 0 2px; text-align:right;">
+                      <button @click.stop="deleteMissedEntry(entry.date)"
+                              style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:7px; border:1px solid #fecaca; background:#fef2f2; color:#ef4444; font-size:10.5px; font-weight:600; cursor:pointer;">
+                        <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        Hapus
+                      </button>
+                    </div>
+                  </div>
+                </transition>
+              </div>
+
+              <!-- Clear all -->
+              <div v-if="missedLog.length > 0" style="margin-top:12px; text-align:center;">
+                <button class="notif-reset-btn" @click="clearAllMissed">Hapus semua riwayat</button>
+              </div>
+
+            </template>
+
           </div>
         </div>
       </div>
@@ -769,7 +918,10 @@ const NotificationPanel = {
       contentItems: [],
       actionStatus: {},
       showManualForm: false,
-      manualForm: { title: '', subtitle: '', time: '' }
+      manualForm: { title: '', subtitle: '', time: '' },
+      activeTab: 'today',
+      missedLog: [],
+      expandedMissedDays: []
     };
   },
 
@@ -933,12 +1085,19 @@ const NotificationPanel = {
       const infoCount = this.infoNotifs.length;
       const undoneCount = this.actionNotifs.filter(n => !n.done).length;
       return infoCount + undoneCount;
+    },
+
+    totalMissedCount() {
+      return this.missedLog.reduce((s, e) => s + e.tasks.length, 0);
     }
   },
 
   watch: {
     show(val) {
-      if (val) this.loadData();
+      if (val) {
+        this.loadData();
+        this.activeTab = 'today'; // reset ke hari ini tiap kali panel dibuka
+      }
     },
     // Emit ke parent setiap kali totalUnread berubah, supaya badge di bell ikut update
     totalUnread(val) {
@@ -947,17 +1106,45 @@ const NotificationPanel = {
   },
 
   mounted() {
-    this.todayStr = this.getTodayStr();
+    const today = this.getTodayStr();
+
+    // ── Deteksi hari baru: kalau lastSeenDate != hari ini, snapshot missed kemarin ──
+    try {
+      const lastSeen = WorkspaceStorage.getItem('ws_last_seen_date');
+      if (lastSeen && lastSeen !== today) {
+        // Snapshot setiap hari yang terlewat sejak lastSeen sampai kemarin
+        let cursor = new Date(lastSeen);
+        const todayDate = new Date(today);
+        while (cursor < todayDate) {
+          const ds = cursor.toISOString().slice(0, 10);
+          saveMissedTasksSnapshot(ds);
+          cursor.setDate(cursor.getDate() + 1);
+        }
+        window.dispatchEvent(new CustomEvent('snapshot-missed-tasks'));
+        this.loadMissedLog();
+      }
+    } catch(e) {}
+    // Selalu update lastSeenDate ke hari ini
+    WorkspaceStorage.setItem('ws_last_seen_date', today);
+
+    this.todayStr = today;
     this.loadData();
+    this.loadMissedLog();
 
     // Emit count awal supaya badge langsung benar saat mount
     this.$nextTick(() => {
       this.$emit('unread-count-changed', this.totalUnread);
     });
 
-    // Refresh data setiap menit (kalau panel terbuka lama)
+    // Refresh data setiap menit — deteksi jika tengah malam lewat saat web masih buka
     this._interval = setInterval(() => {
-      this.todayStr = this.getTodayStr();
+      const newDay = this.getTodayStr();
+      if (newDay !== this.todayStr) {
+        saveMissedTasksSnapshot(this.todayStr);
+        window.dispatchEvent(new CustomEvent('snapshot-missed-tasks'));
+        WorkspaceStorage.setItem('ws_last_seen_date', newDay);
+      }
+      this.todayStr = newDay;
       this.loadData();
     }, 60000);
   },
@@ -1092,6 +1279,62 @@ const NotificationPanel = {
       } catch(e) {}
     },
 
+    goToCalendar() {
+      this.$emit('navigate', 'googleCalendar');
+      this.$emit('close');
+    },
+
+    loadMissedLog() {
+      try {
+        const raw = WorkspaceStorage.getItem('ws_missed_tasks');
+        this.missedLog = raw ? JSON.parse(raw) : [];
+      } catch(e) { this.missedLog = []; }
+    },
+
+    toggleMissedDay(date) {
+      const i = this.expandedMissedDays.indexOf(date);
+      if (i === -1) this.expandedMissedDays.push(date);
+      else this.expandedMissedDays.splice(i, 1);
+    },
+
+    deleteMissedEntry(date) {
+      this.missedLog = this.missedLog.filter(e => e.date !== date);
+      WorkspaceStorage.setItem('ws_missed_tasks', JSON.stringify(this.missedLog));
+      this.expandedMissedDays = this.expandedMissedDays.filter(d => d !== date);
+    },
+
+    clearAllMissed() {
+      this.missedLog = [];
+      WorkspaceStorage.setItem('ws_missed_tasks', JSON.stringify([]));
+      this.expandedMissedDays = [];
+    },
+
+    formatMissedDate(dateStr) {
+      try {
+        const d = new Date(dateStr);
+        const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+      } catch(e) { return dateStr; }
+    },
+
+    daysAgo(dateStr) {
+      try {
+        const today = new Date(); today.setHours(0,0,0,0);
+        const d = new Date(dateStr); d.setHours(0,0,0,0);
+        const diff = Math.round((today - d) / (1000 * 60 * 60 * 24));
+        if (diff === 0) return 'Hari ini';
+        if (diff === 1) return 'Kemarin';
+        return `${diff} hari lalu`;
+      } catch(e) { return ''; }
+    },
+
+    missedSeverityColor(count) {
+      if (count >= 4) return '#ef4444';
+      if (count >= 2) return '#f59e0b';
+      return '#10b981';
+    },
+
     saveManualReminder() {
       if (!this.manualForm.title.trim() || !this.manualForm.time) return;
       const [hh, mm] = this.manualForm.time.split(':').map(Number);
@@ -1124,6 +1367,228 @@ const NotificationPanel = {
       this.$nextTick(() => {
         this.$emit('unread-count-changed', this.totalUnread);
       });
+    }
+  }
+};
+
+
+// ============================================================================
+// MISSED TASKS PAGE — Full page view untuk riwayat pengingat terlewat
+// ============================================================================
+const MissedTasksPage = {
+  template: `
+    <div class="page-module" style="max-width: 680px; margin: 0 auto; padding: 0 16px 48px;">
+
+      <!-- Page Header -->
+      <div style="margin-bottom: 28px; padding-top: 8px;">
+        <h2 style="margin: 0 0 4px;">Tugas Terlewat</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+          Riwayat pengingat yang belum sempat dikerjakan
+        </p>
+      </div>
+
+      <!-- Summary chips -->
+      <div v-if="missedLog.length > 0" style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+        <div class="notif-missed-chip notif-missed-chip-total">
+          <span style="font-size:18px; font-weight:800; line-height:1; color:var(--text-dark);">{{ missedLog.length }}</span>
+          <span style="font-size:11px; color:var(--text-muted);">hari terlewat</span>
+        </div>
+        <div class="notif-missed-chip notif-missed-chip-total">
+          <span style="font-size:18px; font-weight:800; line-height:1; color:var(--text-dark);">{{ totalMissedCount }}</span>
+          <span style="font-size:11px; color:var(--text-muted);">total item</span>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div v-if="missedLog.length === 0"
+           style="display:flex; flex-direction:column; align-items:center; justify-content:center;
+                  padding: 64px 24px; background:#fff; border:1.5px solid var(--color-sand);
+                  border-radius:16px; text-align:center;">
+        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor"
+             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+             style="color:var(--color-sand); margin-bottom:12px;">
+          <polyline points="9 11 12 14 22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        <div style="font-size:15px; font-weight:700; color:var(--text-dark); margin-bottom:6px;">
+          Semua bersih! 🎉
+        </div>
+        <div style="font-size:13px; color:var(--text-muted);">
+          Tidak ada tugas yang terlewat. Keren banget!
+        </div>
+      </div>
+
+      <!-- Log entries per day -->
+      <div v-for="entry in missedLog" :key="entry.date" class="notif-missed-day" style="margin-bottom:10px;">
+        <div class="notif-missed-day-header" @click="toggleDay(entry.date)">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="notif-missed-dot" :style="{ background: severityColor(entry.tasks.length) }"></div>
+            <div>
+              <div style="font-size:13px; font-weight:700; color:var(--text-dark);">{{ formatDate(entry.date) }}</div>
+              <div style="font-size:11.5px; color:var(--text-muted);">{{ daysAgo(entry.date) }}</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="notif-missed-count"
+                  :style="{ background: severityColor(entry.tasks.length) + '22',
+                             color: severityColor(entry.tasks.length),
+                             border: '1.5px solid ' + severityColor(entry.tasks.length) + '44' }">
+              {{ entry.tasks.length }} item
+            </span>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                 :style="{ transition:'transform 0.2s', transform: expandedDays.includes(entry.date) ? 'rotate(180deg)' : 'rotate(0deg)', color:'var(--text-muted)' }">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+        </div>
+
+        <transition name="notif-missed-expand">
+          <div v-if="expandedDays.includes(entry.date)" class="notif-missed-tasks">
+            <div v-for="task in entry.tasks" :key="task.id" class="notif-missed-task-row">
+              <div class="notif-missed-task-icon" :class="'notif-missed-icon-' + (task.type || 'reminder')">
+                <svg v-if="task.type === 'habit'" viewBox="0 0 24 24" width="12" height="12" fill="none"
+                     :stroke="task.color || 'var(--color-terracotta)'" stroke-width="2.5"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/>
+                  <path d="M12 19v3"/>
+                </svg>
+                <svg v-else-if="task.type === 'manual'" viewBox="0 0 24 24" width="12" height="12" fill="none"
+                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/>
+                  <line x1="8" y1="12" x2="16" y2="12"/>
+                </svg>
+                <svg v-else viewBox="0 0 24 24" width="12" height="12" fill="none"
+                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:13px; font-weight:700; color:var(--text-dark); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                  {{ task.title }}
+                </div>
+                <div style="font-size:11px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                  {{ task.subtitle }}
+                </div>
+              </div>
+              <span style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:8px;
+                           background:var(--bg-cream); border:1px solid var(--color-sand);
+                           color:var(--text-dark); flex-shrink:0; white-space:nowrap;">
+                {{ task.time }}
+              </span>
+            </div>
+
+            <!-- Delete button -->
+            <div style="padding:8px 0 2px; text-align:right;">
+              <button @click.stop="deleteEntry(entry.date)"
+                      style="display:inline-flex; align-items:center; gap:4px; padding:4px 10px;
+                             border-radius:8px; border:1px solid #fecaca; background:#fef2f2;
+                             color:#ef4444; font-size:11px; font-weight:600; cursor:pointer;">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor"
+                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                </svg>
+                Hapus hari ini
+              </button>
+            </div>
+          </div>
+        </transition>
+      </div>
+
+      <!-- Clear all -->
+      <div v-if="missedLog.length > 0" style="margin-top:16px; text-align:center;">
+        <button @click="clearAll"
+                style="display:inline-flex; align-items:center; gap:6px; padding:9px 20px;
+                       border-radius:10px; border:1.5px solid #fecaca; background:#fff;
+                       color:#ef4444; font-size:13px; font-weight:600; cursor:pointer;
+                       transition: background 0.15s;"
+                onmouseover="this.style.background='#fef2f2'"
+                onmouseout="this.style.background='#fff'">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+          </svg>
+          Hapus semua riwayat
+        </button>
+      </div>
+    </div>
+  `,
+
+  data() {
+    return {
+      missedLog: [],
+      expandedDays: []
+    };
+  },
+
+  computed: {
+    totalMissedCount() {
+      return this.missedLog.reduce((s, e) => s + e.tasks.length, 0);
+    }
+  },
+
+  mounted() {
+    this.loadData();
+    // Refresh saat ada snapshot baru dari NotificationPanel
+    window.addEventListener('snapshot-missed-tasks', this.loadData);
+  },
+
+  beforeUnmount() {
+    window.removeEventListener('snapshot-missed-tasks', this.loadData);
+  },
+
+  methods: {
+    loadData() {
+      try {
+        const raw = WorkspaceStorage.getItem('ws_missed_tasks');
+        this.missedLog = raw ? JSON.parse(raw) : [];
+      } catch(e) { this.missedLog = []; }
+    },
+
+    toggleDay(date) {
+      const i = this.expandedDays.indexOf(date);
+      if (i === -1) this.expandedDays.push(date);
+      else this.expandedDays.splice(i, 1);
+    },
+
+    deleteEntry(date) {
+      this.missedLog = this.missedLog.filter(e => e.date !== date);
+      WorkspaceStorage.setItem('ws_missed_tasks', JSON.stringify(this.missedLog));
+      this.expandedDays = this.expandedDays.filter(d => d !== date);
+    },
+
+    clearAll() {
+      this.missedLog = [];
+      WorkspaceStorage.setItem('ws_missed_tasks', JSON.stringify([]));
+      this.expandedDays = [];
+    },
+
+    formatDate(dateStr) {
+      try {
+        const d = new Date(dateStr);
+        const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+      } catch(e) { return dateStr; }
+    },
+
+    daysAgo(dateStr) {
+      try {
+        const today = new Date(); today.setHours(0,0,0,0);
+        const d = new Date(dateStr); d.setHours(0,0,0,0);
+        const diff = Math.round((today - d) / (1000 * 60 * 60 * 24));
+        if (diff === 0) return 'Hari ini';
+        if (diff === 1) return 'Kemarin';
+        return `${diff} hari lalu`;
+      } catch(e) { return ''; }
+    },
+
+    severityColor(count) {
+      if (count >= 4) return '#ef4444';
+      if (count >= 2) return '#f59e0b';
+      return '#10b981';
     }
   }
 };

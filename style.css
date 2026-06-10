@@ -5056,3 +5056,155 @@ input:checked + .switch-slider:before {
   display: inline-block;
   transform-origin: top center;
 }
+
+/* ============================================================
+   NOTIFICATION PANEL — TABS & MISSED TAB
+   ============================================================ */
+
+/* See All button */
+.notif-see-all-btn {
+  padding: 4px 11px;
+  border-radius: 8px;
+  border: 1.5px solid var(--color-sand, #E8DDD4);
+  background: var(--bg-cream, #FAF7F2);
+  color: var(--text-muted, #8C7B6B);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.01em;
+}
+.notif-see-all-btn:hover {
+  border-color: var(--color-terracotta, #D67B52);
+  color: var(--color-terracotta, #D67B52);
+  background: #fff;
+}
+
+/* Tab bar */
+.notif-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 10px 16px 0;
+  border-bottom: 1.5px solid var(--color-sand, #E8DDD4);
+  background: #fff;
+}
+
+.notif-tab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  background: none;
+  color: var(--text-muted, #8C7B6B);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: -1.5px;
+  border-radius: 4px 4px 0 0;
+}
+.notif-tab:hover { color: var(--text-dark, #2D2D2D); background: var(--bg-cream, #FAF7F2); }
+.notif-tab.active {
+  color: var(--color-terracotta, #D67B52);
+  border-bottom-color: var(--color-terracotta, #D67B52);
+  font-weight: 700;
+}
+
+.notif-tab-badge {
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--color-terracotta, #D67B52);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+.notif-tab-badge-red {
+  background: #ef4444;
+}
+
+/* Missed tab — summary chips */
+.notif-missed-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-sand, #E8DDD4);
+  background: #fff;
+  min-width: 70px;
+}
+.notif-missed-chip-total { border-color: var(--color-sand, #E8DDD4); }
+
+/* Missed day card */
+.notif-missed-day {
+  background: #fff;
+  border: 1.5px solid var(--color-sand, #E8DDD4);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.notif-missed-day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 13px;
+  cursor: pointer;
+  gap: 8px;
+  transition: background 0.12s;
+}
+.notif-missed-day-header:hover { background: var(--bg-cream, #FAF7F2); }
+
+.notif-missed-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.notif-missed-count {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+/* Task list inside missed day */
+.notif-missed-tasks {
+  border-top: 1.5px solid var(--color-sand, #E8DDD4);
+  padding: 4px 13px 10px;
+}
+
+.notif-missed-task-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(232,221,212,0.45);
+}
+.notif-missed-task-row:last-of-type { border-bottom: none; }
+
+.notif-missed-task-icon {
+  width: 24px; height: 24px;
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.notif-missed-icon-reminder { background: #fff7ed; border: 1.5px solid #fed7aa; color: #ea580c; }
+.notif-missed-icon-habit    { background: #f0fdf4; border: 1.5px solid #86efac; }
+.notif-missed-icon-manual   { background: #eff6ff; border: 1.5px solid #bfdbfe; color: #1d4ed8; }
+
+/* Expand transition for missed day tasks */
+.notif-missed-expand-enter-active,
+.notif-missed-expand-leave-active {
+  transition: all 0.18s ease;
+  overflow: hidden;
+}
+.notif-missed-expand-enter-from,
+.notif-missed-expand-leave-to { opacity: 0; max-height: 0; }
+.notif-missed-expand-enter-to,
+.notif-missed-expand-leave-from { opacity: 1; max-height: 500px; }
