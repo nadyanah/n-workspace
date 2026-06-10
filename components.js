@@ -4723,82 +4723,194 @@ const DailyNutrition = {
             Nutrisi harian bagi kecerdasan pikiran. Jaga konsistensi belajar dengan mendelegasikan ringkasan konsep, intisari keilmuan, dan kilatan ide kreatif dalam satu timeline teratur.
           </p>
         </div>
-        <button class="btn btn-primary" @click="showAddLog = !showAddLog" style="flex-shrink: 0;">
-          {{ showAddLog ? 'Tutup Form' : '+ Tambah Insight' }}
+        <button class="btn btn-primary" @click="showAddLog = true" style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px;">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Tambah Insight
         </button>
       </div>
 
-      <!-- FORM TAMBAH INSIGHT -->
-      <div v-if="showAddLog" class="drawer-section" style="margin-bottom: 24px; padding: 22px; border-radius: 12px; animation: popIn 0.2s ease;">
-        <h3 style="font-size: 17px; margin-bottom: 18px; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-          {{ editingInsightId ? 'Edit Insight' : 'Catat Pembelajaran / Insight Baru' }}
-        </h3>
-        <form @submit.prevent="saveInsight">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
-            <div class="form-group" style="margin: 0;">
-              <label>Tanggal</label>
-              <input type="date" class="form-input" v-model="form.date" required />
-            </div>
-            <!-- KATEGORI DROPDOWN + KELOLA -->
-            <div class="form-group" style="margin: 0;">
-              <label>Topik / Kategori</label>
-              <div style="display: flex; gap: 8px; align-items: center;">
-                <select class="form-input" v-model="form.category" required style="flex: 1;">
-                  <option v-for="cat in allInsightCategories" :key="cat" :value="cat">{{ cat }}</option>
-                </select>
-                <button type="button" @click="showCatManager = !showCatManager"
-                  style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 0 10px; height: 42px; cursor: pointer; font-size: 18px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;"
-                  title="Kelola kategori">⚙️</button>
-              </div>
-              <!-- Mini category manager -->
-              <div v-if="showCatManager" style="margin-top: 8px; background: #FDFBF7; border: 1.5px solid var(--color-sand); border-radius: 10px; padding: 12px; animation: popIn 0.15s ease;">
-                <p style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em;">Kelola Kategori Insight</p>
-                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;">
-                  <span v-for="cat in customInsightCategories" :key="cat"
-                    style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 20px; padding: 3px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; color: var(--text-dark);">
-                    {{ cat }}
-                    <button type="button" @click="deleteInsightCategory(cat)"
-                      style="background: none; border: none; cursor: pointer; font-size: 13px; line-height: 1; color: var(--color-rose); padding: 0;">✕</button>
-                  </span>
-                  <span v-if="customInsightCategories.length === 0" style="font-size: 12px; color: var(--text-muted); font-style: italic;">Belum ada kategori kustom</span>
-                </div>
-                <div style="display: flex; gap: 8px;">
-                  <input type="text" class="form-input" v-model="newInsightCatInput" placeholder="Nama kategori baru..."
-                    @keydown.enter.prevent="addInsightCategory" style="flex: 1; height: 36px; font-size: 13px;" />
-                  <button type="button" @click="addInsightCategory"
-                    style="background: var(--color-terracotta); color: #fff; border: none; border-radius: 8px; padding: 0 14px; height: 36px; cursor: pointer; font-size: 13px; font-weight: 600; flex-shrink: 0;">
-                    Tambah
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+      <!-- FLOATING POPUP MODAL: FORM TAMBAH / EDIT INSIGHT -->
+      <transition name="insight-modal-fade">
+        <div v-if="showAddLog"
+          style="position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; background: rgba(30,22,16,0.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 16px;"
+          @click.self="cancelEditInsight">
+          <div style="background: var(--color-paper, #FAF7F2); width: min(820px, 96vw); max-height: 94vh; border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.12); display: flex; flex-direction: column; overflow: hidden; animation: insightPopIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
 
-          <!-- SUMBER / SOURCE -->
-          <div class="form-group">
-            <label>Sumber / Source</label>
-            <input type="text" class="form-input" v-model="form.source" placeholder="cth., Buku, Artikel, Podcast, Kursus, YouTube..." />
-          </div>
+            <!-- Modal Header -->
+            <div style="display: flex; align-items: center; gap: 12px; padding: 18px 24px 15px; background: var(--color-terracotta, #D67B52); color: #fff; flex-shrink: 0;">
+              <div style="width: 38px; height: 38px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 15px; font-weight: 800; letter-spacing: 0.2px;">{{ editingInsightId ? 'Edit Insight' : 'Catat Pembelajaran / Insight Baru' }}</div>
+                <div style="font-size: 11.5px; opacity: 0.82; margin-top: 1px;">Nutrisi pikiran harianmu ✦</div>
+              </div>
+              <button @click="cancelEditInsight"
+                style="background: rgba(255,255,255,0.18); border: none; border-radius: 10px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 17px; flex-shrink: 0; transition: background 0.15s;"
+                onmouseover="this.style.background='rgba(255,255,255,0.32)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">✕</button>
+            </div>
 
-          <div class="form-group">
-            <label>Intisari Pemikiran / Judul</label>
-            <input type="text" class="form-input" v-model="form.title" placeholder="cth., Strategi Desain Nol-Warna Biru" required />
+            <!-- Modal Body (scrollable) -->
+            <div style="overflow-y: auto; padding: 22px 26px 4px; flex: 1;">
+              <form @submit.prevent="saveInsight" id="insight-popup-form">
+
+                <!-- ROW 1: Tanggal + Kategori + Sumber (3 cols) -->
+                <div style="display: grid; grid-template-columns: 1fr 1.4fr 1.6fr; gap: 14px; margin-bottom: 14px;">
+                  <div class="form-group" style="margin: 0;">
+                    <label>Tanggal</label>
+                    <input type="date" class="form-input" v-model="form.date" required />
+                  </div>
+                  <!-- KATEGORI DROPDOWN + KELOLA -->
+                  <div class="form-group" style="margin: 0;">
+                    <label>Topik / Kategori</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                      <select class="form-input" v-model="form.category" required style="flex: 1;">
+                        <option v-for="cat in allInsightCategories" :key="cat" :value="cat">{{ cat }}</option>
+                      </select>
+                      <button type="button" @click="showCatManager = !showCatManager"
+                        style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 0 10px; height: 42px; cursor: pointer; font-size: 18px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;"
+                        title="Kelola kategori">⚙️</button>
+                    </div>
+                  </div>
+                  <!-- SUMBER / SOURCE -->
+                  <div class="form-group" style="margin: 0;">
+                    <label>Sumber / Source</label>
+                    <input type="text" class="form-input" v-model="form.source" placeholder="cth., Buku, Artikel, Podcast, YouTube..." />
+                  </div>
+                </div>
+
+                <!-- Mini category manager -->
+                <div v-if="showCatManager" style="margin-bottom: 14px; background: #FDFBF7; border: 1.5px solid var(--color-sand); border-radius: 10px; padding: 12px; animation: popIn 0.15s ease;">
+                  <p style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em;">Kelola Kategori Insight</p>
+                  <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;">
+                    <span v-for="cat in customInsightCategories" :key="cat"
+                      style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 20px; padding: 3px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; color: var(--text-dark);">
+                      {{ cat }}
+                      <button type="button" @click="deleteInsightCategory(cat)"
+                        style="background: none; border: none; cursor: pointer; font-size: 13px; line-height: 1; color: var(--color-rose); padding: 0;">✕</button>
+                    </span>
+                    <span v-if="customInsightCategories.length === 0" style="font-size: 12px; color: var(--text-muted); font-style: italic;">Belum ada kategori kustom</span>
+                  </div>
+                  <div style="display: flex; gap: 8px;">
+                    <input type="text" class="form-input" v-model="newInsightCatInput" placeholder="Nama kategori baru..."
+                      @keydown.enter.prevent="addInsightCategory" style="flex: 1; height: 36px; font-size: 13px;" />
+                    <button type="button" @click="addInsightCategory"
+                      style="background: var(--color-terracotta); color: #fff; border: none; border-radius: 8px; padding: 0 14px; height: 36px; cursor: pointer; font-size: 13px; font-weight: 600; flex-shrink: 0;">Tambah</button>
+                  </div>
+                </div>
+
+                <!-- Judul -->
+                <div class="form-group">
+                  <label>Intisari Pemikiran / Judul</label>
+                  <input type="text" class="form-input" v-model="form.title" placeholder="cth., Strategi Desain Nol-Warna Biru" required />
+                </div>
+
+                <!-- RANGKUMAN DETAIL — Rich Text Editor -->
+                <div class="form-group">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; gap: 8px; flex-wrap: wrap;">
+                    <label style="margin: 0;">Rangkuman Detail (Konsep)</label>
+                    <span style="font-size: 11px; color: var(--text-muted); font-style: italic;">Enter = baris baru • Shift+Enter = baris baru</span>
+                  </div>
+                  <!-- Rich Text Toolbar -->
+                  <div style="display: flex; flex-wrap: wrap; gap: 4px; padding: 7px 10px; background: #F5F0EB; border: 1.5px solid var(--color-sand); border-bottom: none; border-radius: 10px 10px 0 0; align-items: center;">
+                    <button type="button" @click="rtExec('bold')" title="Bold (Ctrl+B)"
+                      style="width:30px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; color:var(--text-dark); font-family:serif; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'"><b>B</b></button>
+                    <button type="button" @click="rtExec('italic')" title="Italic (Ctrl+I)"
+                      style="width:30px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--text-dark); font-family:serif; font-style:italic; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'"><i>I</i></button>
+                    <button type="button" @click="rtExec('underline')" title="Underline (Ctrl+U)"
+                      style="width:30px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--text-dark); text-decoration:underline; font-family:serif; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'"><u>U</u></button>
+                    <button type="button" @click="rtExec('strikeThrough')" title="Strikethrough"
+                      style="width:30px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--text-dark); font-family:serif; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'"><s>S</s></button>
+                    <div style="width:1px; height:20px; background:var(--color-sand); margin:0 3px; flex-shrink:0;"></div>
+                    <button type="button" @click="rtExec('insertUnorderedList')" title="Bullet List"
+                      style="width:30px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:15px; color:var(--text-dark); transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
+                    </button>
+                    <button type="button" @click="rtExec('insertOrderedList')" title="Numbered List"
+                      style="width:30px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:15px; color:var(--text-dark); transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 10h2" stroke-linecap="round"/><path d="M4 14c0-1 2-1 2-2s-2-1-2 0" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18h2l-2 2h2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <div style="width:1px; height:20px; background:var(--color-sand); margin:0 3px; flex-shrink:0;"></div>
+                    <button type="button" @click="rtExec('formatBlock','h3')" title="Heading"
+                      style="height:28px; padding:0 8px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; font-size:11px; font-weight:800; color:var(--text-dark); white-space:nowrap; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">H3</button>
+                    <button type="button" @click="rtExec('formatBlock','p')" title="Paragraf normal"
+                      style="height:28px; padding:0 8px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; font-size:11px; font-weight:600; color:var(--text-muted); white-space:nowrap; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">¶</button>
+                    <div style="width:1px; height:20px; background:var(--color-sand); margin:0 3px; flex-shrink:0;"></div>
+                    <!-- Highlight color -->
+                    <button type="button" @click="rtExec('hiliteColor','#FEF9C3')" title="Highlight Kuning"
+                      style="width:28px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">
+                      <span style="font-size:12px; font-weight:800; color:#854D0E; background:#FEF9C3; padding:1px 4px; border-radius:3px;">A</span>
+                    </button>
+                    <button type="button" @click="rtExec('hiliteColor','#FCE7F3')" title="Highlight Pink"
+                      style="width:28px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">
+                      <span style="font-size:12px; font-weight:800; color:#9D174D; background:#FCE7F3; padding:1px 4px; border-radius:3px;">A</span>
+                    </button>
+                    <button type="button" @click="rtExec('hiliteColor','#D1FAE5')" title="Highlight Hijau"
+                      style="width:28px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">
+                      <span style="font-size:12px; font-weight:800; color:#065F46; background:#D1FAE5; padding:1px 4px; border-radius:3px;">A</span>
+                    </button>
+                    <button type="button" @click="rtExec('hiliteColor','transparent')" title="Hapus Highlight"
+                      style="width:28px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                  <!-- ContentEditable Editor Area -->
+                  <div
+                    ref="detailsEditor"
+                    contenteditable="true"
+                    @input="onDetailsInput"
+                    @paste="onDetailsPaste"
+                    style="width: 100%; min-height: 220px; max-height: 400px; overflow-y: auto; padding: 14px 16px; border: 1.5px solid var(--color-sand); border-top: none; border-radius: 0 0 10px 10px; background: #fff; font-size: 14px; color: var(--text-dark); line-height: 1.7; outline: none; resize: vertical; box-sizing: border-box; font-family: inherit; white-space: pre-wrap;"
+                    :style="{ minHeight: '220px' }"
+                    data-placeholder="Sederhanakan pemahaman materi tersebut dengan kalimatmu sendiri... Bisa pakai Enter untuk paragraf baru, bullet list, heading, bold, dll."
+                  ></div>
+                  <p v-if="!form.details" style="font-size: 11px; color: #EF4444; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Rangkuman detail wajib diisi
+                  </p>
+                </div>
+
+                <!-- Takeaway -->
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label>Poin Keberlanjutan / Takeaway Utama</label>
+                  <input type="text" class="form-input" v-model="form.takeaway" placeholder="Garis besar satu kalimat actionable lesson..." required />
+                </div>
+
+              </form>
+            </div>
+
+            <!-- Modal Footer (sticky) -->
+            <div style="display: flex; gap: 10px; padding: 14px 26px 18px; border-top: 1.5px solid var(--color-sand-light, #EDE8E1); flex-shrink: 0; background: var(--color-paper, #FAF7F2); align-items: center;">
+              <span style="font-size: 11px; color: var(--text-muted); margin-right: auto; display: flex; align-items: center; gap: 5px;">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Klik di luar popup untuk menutup
+              </span>
+              <button type="button" @click="cancelEditInsight"
+                style="padding: 10px 20px; background: transparent; border: 1.5px solid var(--color-sand); color: var(--text-secondary, #7A6F66); border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; white-space: nowrap;"
+                onmouseover="this.style.background='var(--bg-cream)'" onmouseout="this.style.background='transparent'">Batal</button>
+              <button type="button" @click="saveInsightFromModal"
+                style="padding: 10px 28px; background: var(--color-terracotta, #D67B52); color: #fff; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: background 0.18s, transform 0.12s; box-shadow: 0 4px 12px rgba(214,123,82,0.25); white-space: nowrap;"
+                onmouseover="this.style.background='var(--color-terracotta-dark, #B8663F)'; this.style.transform='scale(1.02)'" onmouseout="this.style.background='var(--color-terracotta, #D67B52)'; this.style.transform='scale(1)'">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                {{ editingInsightId ? 'Simpan Perubahan' : 'Simpan Nutrisi Pikiran' }}
+              </button>
+            </div>
+
           </div>
-          <div class="form-group">
-            <label>Rangkuman Detail (Konsep)</label>
-            <textarea class="form-input" v-model="form.details" rows="3" placeholder="Sederhanakan pemahaman materi tersebut dengan kalimatmu sendiri..." required></textarea>
-          </div>
-          <div class="form-group" style="margin-bottom: 20px;">
-            <label>Poin Keberlanjutan / Takeaway Utama</label>
-            <input type="text" class="form-input" v-model="form.takeaway" placeholder="Garis besar satu kalimat actionable lesson..." required />
-          </div>
-          <div style="display: flex; gap: 10px;">
-            <button type="button" class="btn" @click="cancelEditInsight" style="flex: 1; background: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); cursor: pointer; border-radius: 8px; font-weight: 600;">Batal</button>
-            <button type="submit" class="btn btn-primary" style="flex: 2;">{{ editingInsightId ? 'Simpan Perubahan' : 'Simpan Nutrisi Pikiran' }}</button>
-          </div>
-        </form>
-      </div>
+        </div>
+      </transition>
 
       <!-- FILTER BAR -->
       <div class="drawer-section" style="margin-bottom: 24px; padding: 18px 20px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 12px;">
@@ -4916,7 +5028,7 @@ const DailyNutrition = {
                 </div>
               </div>
               <h3 class="timeline-title">{{ ins.title }}</h3>
-              <p style="font-size: 14px; color: var(--text-dark); line-height: 1.6; margin-bottom: 12px;">{{ ins.details }}</p>
+              <div style="font-size: 14px; color: var(--text-dark); line-height: 1.7; margin-bottom: 12px;" v-html="ins.details"></div>
               <div class="timeline-takeaway">
                 <strong>💡 Takeaway:</strong> {{ ins.takeaway }}
               </div>
@@ -5043,6 +5155,38 @@ const DailyNutrition = {
       for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash);
       return `hsl(${Math.abs(hash) % 360}, 60%, 45%)`;
     },
+    // ── Rich Text Editor helpers ──
+    rtExec(cmd, val) {
+      const editor = this.$refs.detailsEditor;
+      if (editor) editor.focus();
+      document.execCommand(cmd, false, val || null);
+      if (editor) this.form.details = editor.innerHTML;
+    },
+    onDetailsInput(e) {
+      this.form.details = e.target.innerHTML;
+    },
+    onDetailsPaste(e) {
+      // Paste sebagai plain text supaya tidak bawa styling dari luar
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      document.execCommand('insertText', false, text);
+    },
+    syncEditorContent() {
+      this.$nextTick(() => {
+        const editor = this.$refs.detailsEditor;
+        if (editor) editor.innerHTML = this.form.details || '';
+      });
+    },
+    saveInsightFromModal() {
+      // Validasi manual karena pakai contenteditable, bukan form native
+      if (!this.form.date) return alert('Tanggal wajib diisi!');
+      if (!this.form.title || !this.form.title.trim()) return alert('Judul/Intisari wajib diisi!');
+      if (!this.form.details || this.form.details.replace(/<[^>]*>/g,'').trim() === '') {
+        return alert('Rangkuman Detail wajib diisi!');
+      }
+      if (!this.form.takeaway || !this.form.takeaway.trim()) return alert('Takeaway utama wajib diisi!');
+      this.saveInsight();
+    },
     addInsightCategory() {
       const name = this.newInsightCatInput.trim();
       if (!name || this.allInsightCategories.includes(name)) return;
@@ -5076,6 +5220,7 @@ const DailyNutrition = {
       this.saveToStorage();
       this.form = { date: new Date().toISOString().split('T')[0], category: this.form.category, source: '', title: '', details: '', takeaway: '' };
       this.showAddLog = false;
+      this.$nextTick(() => { const ed = this.$refs.detailsEditor; if (ed) ed.innerHTML = ''; });
     },
     startEditInsight(idx) {
       const ins = this.filteredInsights[idx];
@@ -5083,12 +5228,13 @@ const DailyNutrition = {
       this.editingInsightId = ins.id;
       this.form = { date: ins.date, category: ins.category, source: ins.source || '', title: ins.title, details: ins.details, takeaway: ins.takeaway };
       this.showAddLog = true;
-      this.$nextTick(() => { document.querySelector('.drawer-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+      this.syncEditorContent();
     },
     cancelEditInsight() {
       this.editingInsightId = null;
       this.form = { date: new Date().toISOString().split('T')[0], category: 'Teknologi', source: '', title: '', details: '', takeaway: '' };
       this.showAddLog = false;
+      this.$nextTick(() => { const ed = this.$refs.detailsEditor; if (ed) ed.innerHTML = ''; });
     },
     deleteInsight(idx) {
       if (!confirm('Hapus insight ini?')) return;

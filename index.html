@@ -137,6 +137,33 @@
     }
     .reminder-popup-btn-dismiss:hover { background: var(--color-sand-light, #EDE8E1); }
 
+    /* ── Rich Text Editor (Insight) ── */
+    [contenteditable][data-placeholder]:empty:before {
+      content: attr(data-placeholder);
+      color: #A09690;
+      pointer-events: none;
+      font-style: italic;
+      font-size: 13.5px;
+    }
+    [contenteditable]:focus {
+      border-color: var(--color-terracotta, #D67B52) !important;
+      box-shadow: 0 0 0 3px rgba(214,123,82,0.12);
+    }
+    /* Styling hasil rich text di editor dan timeline */
+    [contenteditable] h3, .insight-rich-content h3 { font-size: 15px; font-weight: 800; color: var(--text-dark); margin: 10px 0 5px; }
+    [contenteditable] ul, .insight-rich-content ul { padding-left: 20px; margin: 6px 0; }
+    [contenteditable] ol, .insight-rich-content ol { padding-left: 20px; margin: 6px 0; }
+    [contenteditable] li, .insight-rich-content li { margin-bottom: 3px; line-height: 1.6; }
+    [contenteditable] p, .insight-rich-content p { margin: 4px 0; line-height: 1.7; }
+
+    /* ── Insight Modal Popup Animation ── */
+    @keyframes insightPopIn {
+      from { opacity: 0; transform: scale(0.88) translateY(18px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .insight-modal-fade-enter-active { animation: insightPopIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .insight-modal-fade-leave-active { animation: insightPopIn 0.18s ease-in reverse; }
+
     /* Transition */
     .reminder-popup-fade-enter-active { animation: reminder-pop-in 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     .reminder-popup-fade-leave-active { animation: reminder-pop-out 0.18s ease-in; }
