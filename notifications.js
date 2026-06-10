@@ -761,63 +761,12 @@ const NotificationPanel = {
               </button>
             </div>
 
-            <!-- ══ TAMBAH PENGINGAT MANUAL ══ -->
+            <!-- ══ LINK KE GOOGLE CALENDAR ══ -->
             <div style="margin-top: 18px; border-top: 1.5px dashed var(--color-sand); padding-top: 14px;">
-              <button v-if="!showManualForm"
-                      @click="showManualForm = true"
-                      class="notif-add-manual-btn">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                Set Pengingat Manual Hari Ini
+              <button @click="goToCalendar" class="notif-add-manual-btn" style="width:100%; justify-content:center; gap:7px; background:linear-gradient(135deg,#FAF0EC,#FFF5F0); border:1.5px solid #F3D8CC;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span style="color:#5D4F43; font-weight:700; font-size:12px;">Lihat & Tambah Agenda di Kalender →</span>
               </button>
-
-              <!-- Form tambah manual -->
-              <transition name="notif-manual-expand">
-                <div v-if="showManualForm" class="notif-manual-form">
-                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-                    <span style="font-size:12px; font-weight:700; color:var(--text-dark); display:flex; align-items:center; gap:6px;">
-                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-terracotta);"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                      Pengingat Manual
-                    </span>
-                    <button @click="cancelManualForm" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:18px; line-height:1; padding:0;">✕</button>
-                  </div>
-
-                  <div style="margin-bottom:8px;">
-                    <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Judul Pengingat *</label>
-                    <input v-model="manualForm.title"
-                           type="text"
-                           placeholder="cth., Minum obat, Hubungi klien..."
-                           maxlength="60"
-                           style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12.5px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;"
-                           @keyup.enter="saveManualReminder" />
-                  </div>
-                  <div style="margin-bottom:8px;">
-                    <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Keterangan (opsional)</label>
-                    <input v-model="manualForm.subtitle"
-                           type="text"
-                           placeholder="Catatan singkat..."
-                           maxlength="80"
-                           style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;" />
-                  </div>
-                  <div style="margin-bottom:12px;">
-                    <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Jam Pengingat *</label>
-                    <input v-model="manualForm.time"
-                           type="time"
-                           style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12.5px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;" />
-                  </div>
-
-                  <div style="display:flex; gap:8px;">
-                    <button @click="cancelManualForm"
-                            style="flex:1; padding:7px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:7px; font-size:12px; font-weight:600; color:var(--text-dark); cursor:pointer;">
-                      Batal
-                    </button>
-                    <button @click="saveManualReminder"
-                            :disabled="!manualForm.title.trim() || !manualForm.time"
-                            style="flex:2; padding:7px; background:var(--color-terracotta,#D67B52); border:none; border-radius:7px; font-size:12px; font-weight:700; color:#fff; cursor:pointer; opacity: (!manualForm.title.trim() || !manualForm.time) ? 0.5 : 1; transition:opacity 0.15s;">
-                      Simpan Pengingat
-                    </button>
-                  </div>
-                </div>
-              </transition>
             </div>
 
             </template>
@@ -918,7 +867,7 @@ const NotificationPanel = {
       contentItems: [],
       actionStatus: {},
       showManualForm: false,
-      manualForm: { title: '', subtitle: '', time: '' },
+      manualForm: { title: '', subtitle: '', time: '', date: '' },
       activeTab: 'today',
       missedLog: [],
       expandedMissedDays: []
@@ -1263,7 +1212,7 @@ const NotificationPanel = {
 
     cancelManualForm() {
       this.showManualForm = false;
-      this.manualForm = { title: '', subtitle: '', time: '' };
+      this.manualForm = { title: '', subtitle: '', time: '', date: this.todayStr };
     },
 
     deleteManualReminder(id) {
@@ -1336,7 +1285,7 @@ const NotificationPanel = {
     },
 
     saveManualReminder() {
-      if (!this.manualForm.title.trim() || !this.manualForm.time) return;
+      if (!this.manualForm.title.trim() || !this.manualForm.time || !this.manualForm.date) return;
       const [hh, mm] = this.manualForm.time.split(':').map(Number);
       const id = 'manual_' + Date.now();
       // Baca existing manual reminders dari storage
@@ -1345,12 +1294,11 @@ const NotificationPanel = {
         const raw = WorkspaceStorage.getItem('ws_manual_notifs');
         manuals = raw ? JSON.parse(raw) : [];
       } catch(e) { manuals = []; }
-      // Bersihkan yang bukan hari ini
-      const today = this.todayStr;
-      manuals = manuals.filter(m => m.date === today);
+      // Hapus duplikat dari tanggal yang sama dengan id sama (bukan filter hari ini saja)
+      const targetDate = this.manualForm.date;
       manuals.push({
         id,
-        date: today,
+        date: targetDate,
         title: this.manualForm.title.trim(),
         subtitle: this.manualForm.subtitle.trim() || 'Pengingat manual',
         time: this.manualForm.time,
