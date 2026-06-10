@@ -1580,6 +1580,90 @@ const CalendarMoment = {
       <!-- VIEW A: CALENDAR GRID VIEW -->
       <div v-if="currentView === 'calendar'" class="calendar-wrapper animate-fade-in">
 
+        <!-- ── TASK & NOTIFICATION SUMMARY PANEL ─────────────────────────── -->
+        <div style="margin-bottom: 20px; background: #FFFFFF; border: 1.5px solid var(--color-sand); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.04);">
+
+          <!-- Panel Header -->
+          <div style="padding: 14px 18px 12px; border-bottom: 1px solid #FAF0E8; display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #FDF8F4 0%, #FFF9F5 100%);">
+            <div style="width: 32px; height: 32px; background: var(--color-terracotta); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(214,123,82,0.25);">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 13.5px; font-weight: 800; color: #3E352F; line-height: 1.2;">Ringkasan Task & Notifikasi</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 1px;">{{ currentMonthName }} — dari semua modul aktifmu</div>
+            </div>
+            <!-- Stats chips -->
+            <div style="display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end;">
+              <div style="background: #FAF0EC; border: 1px solid #F3D8CC; border-radius: 8px; padding: 4px 10px; text-align: center;">
+                <div style="font-size: 14px; font-weight: 800; color: var(--color-terracotta); line-height: 1;">{{ calendarMonthTaskSummary.totalTasks }}</div>
+                <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 600;">total task</div>
+              </div>
+              <div style="background: #F0F9F0; border: 1px solid #C6E6C8; border-radius: 8px; padding: 4px 10px; text-align: center;">
+                <div style="font-size: 14px; font-weight: 800; color: #16a34a; line-height: 1;">{{ calendarMonthTaskSummary.totalDays }}</div>
+                <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 600;">hari aktif</div>
+              </div>
+              <div v-if="calendarMonthTaskSummary.totalToday > 0" style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 4px 10px; text-align: center;">
+                <div style="font-size: 14px; font-weight: 800; color: #2563eb; line-height: 1;">{{ calendarMonthTaskSummary.doneToday }}/{{ calendarMonthTaskSummary.totalToday }}</div>
+                <div style="font-size: 9.5px; color: var(--text-muted); font-weight: 600;">selesai hari ini</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Today's Tasks (if any) -->
+          <div v-if="calendarMonthTaskSummary.tasksByDate[calendarMonthTaskSummary.todayStr] && calendarMonthTaskSummary.tasksByDate[calendarMonthTaskSummary.todayStr].length > 0"
+               style="padding: 12px 18px; border-bottom: 1px solid #FAF0E8;">
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 5px;">
+              <span style="width: 6px; height: 6px; background: var(--color-terracotta); border-radius: 50%; display: inline-block;"></span>
+              Hari Ini
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              <div v-for="task in calendarMonthTaskSummary.tasksByDate[calendarMonthTaskSummary.todayStr]" :key="task.id"
+                   style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; border: 1.5px solid; max-width: 220px;"
+                   :style="{ background: task.color + '15', borderColor: task.color + '40', color: '#3E352F' }">
+                <!-- Icon by type -->
+                <span v-if="task.type === 'task'" style="font-size: 9px;">📋</span>
+                <span v-else-if="task.type === 'habit'" style="font-size: 9px;">🌿</span>
+                <span v-else-if="task.type === 'content'" style="font-size: 9px;">🎬</span>
+                <span v-else style="font-size: 9px;">⏰</span>
+                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px;" :title="task.title">{{ task.title }}</span>
+                <span v-if="task.time" style="font-size: 10px; opacity: 0.6; flex-shrink: 0;">{{ task.time }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upcoming Tasks this month (non-today) -->
+          <div v-if="Object.keys(calendarMonthTaskSummary.tasksByDate).filter(d => d !== calendarMonthTaskSummary.todayStr).length > 0"
+               style="padding: 12px 18px;">
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 5px;">
+              <span style="width: 6px; height: 6px; background: #6366f1; border-radius: 50%; display: inline-block;"></span>
+              Bulan Ini
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px; max-height: 140px; overflow-y: auto; padding-right: 4px;">
+              <div v-for="(tasks, dateStr) in Object.fromEntries(Object.entries(calendarMonthTaskSummary.tasksByDate).filter(([d]) => d !== calendarMonthTaskSummary.todayStr).sort(([a],[b]) => a.localeCompare(b)))"
+                   :key="dateStr"
+                   style="display: flex; align-items: flex-start; gap: 8px; padding: 5px 8px; border-radius: 8px; background: #FAF8F5;">
+                <span style="font-size: 10.5px; font-weight: 800; color: var(--color-terracotta); white-space: nowrap; flex-shrink: 0; padding-top: 1px; min-width: 60px;">{{ dateStr.slice(8,10) }} {{ ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][parseInt(dateStr.slice(5,7))-1] }}</span>
+                <div style="display: flex; flex-wrap: wrap; gap: 4px; flex: 1; min-width: 0;">
+                  <span v-for="task in tasks" :key="task.id"
+                        style="font-size: 10.5px; font-weight: 600; padding: 1px 7px; border-radius: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; border: 1px solid;"
+                        :style="{ background: task.color + '12', borderColor: task.color + '35', color: '#3E352F' }"
+                        :title="task.title">
+                    {{ task.title }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty state -->
+          <div v-if="calendarMonthTaskSummary.totalTasks === 0"
+               style="padding: 24px; text-align: center; color: var(--text-muted);">
+            <div style="font-size: 22px; margin-bottom: 6px;">📭</div>
+            <div style="font-size: 12.5px; font-weight: 700; color: #8F8175; margin-bottom: 3px;">Tidak ada task bulan ini</div>
+            <div style="font-size: 11px;">Tambahkan task di Job Logbook, Habit Tracker, atau set Pengingat Manual</div>
+          </div>
+        </div>
+
         <!-- Instructions warning of the awesome dragging functionality -->
         <div style="background-color: #FFFDF0; border: 1.2px dashed #FCECB6; padding: 10px 14px; border-radius: 10px; margin-bottom: 18px; font-size: 12px; color: #8C7864; display: flex; align-items: center; gap: 8px;">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #D67B52;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -2262,6 +2346,124 @@ const CalendarMoment = {
         });
       });
       return list;
+    },
+
+    // ── Ringkasan Task & Notifikasi untuk bulan kalender aktif ──────────────
+    calendarMonthTaskSummary() {
+      const year = this.currentDate.getFullYear();
+      const month = this.currentDate.getMonth();
+      const monthStr = String(month + 1).padStart(2, '0');
+      const prefix = `${year}-${monthStr}`;
+      const todayStr = new Date().toISOString().slice(0, 10);
+
+      // Kumpulkan semua task dari berbagai sumber
+      const tasksByDate = {};
+
+      const addTask = (dateStr, task) => {
+        if (!dateStr || !dateStr.startsWith(prefix)) return;
+        if (!tasksByDate[dateStr]) tasksByDate[dateStr] = [];
+        tasksByDate[dateStr].push(task);
+      };
+
+      // 1. Job Plans (dari personal_workspace_job_plans)
+      try {
+        const raw = WorkspaceStorage.getItem('personal_workspace_job_plans');
+        if (raw) {
+          const plans = JSON.parse(raw);
+          plans.forEach(p => {
+            if (!p.date) return;
+            addTask(p.date, {
+              id: 'plan-' + p.id,
+              title: p.tasks,
+              time: '',
+              type: 'task',
+              priority: p.priority || 'Medium',
+              source: 'Job Logbook',
+              color: p.priority === 'High' ? '#ef4444' : p.priority === 'Low' ? '#10b981' : '#f59e0b'
+            });
+          });
+        }
+      } catch(e) {}
+
+      // 2. Habit Notifs (dari ws_habit_notifs — hanya recurring, tidak per-tanggal)
+      // Habit bersifat harian, jadi kita tampilkan sebagai info di hari-hari dalam bulan ini
+      // (hanya untuk tanggal hari ini & ke depan dalam bulan ini agar tidak membanjiri)
+      try {
+        const raw = WorkspaceStorage.getItem('ws_habit_notifs');
+        if (raw) {
+          const habits = JSON.parse(raw);
+          habits.forEach(h => {
+            // Tampilkan habit untuk hari ini saja (sebagai pengingat di kalender)
+            if (todayStr.startsWith(prefix)) {
+              addTask(todayStr, {
+                id: h.id,
+                title: h.title,
+                time: h.time || '',
+                type: 'habit',
+                source: 'Habit Tracker',
+                color: h.color || '#10b981'
+              });
+            }
+          });
+        }
+      } catch(e) {}
+
+      // 3. Manual Reminders (ws_manual_notifs — per tanggal)
+      try {
+        const raw = WorkspaceStorage.getItem('ws_manual_notifs');
+        if (raw) {
+          const manuals = JSON.parse(raw);
+          manuals.forEach(m => {
+            addTask(m.date, {
+              id: m.id,
+              title: m.title,
+              time: m.time || '',
+              type: 'manual',
+              source: 'Pengingat Manual',
+              color: '#6366f1'
+            });
+          });
+        }
+      } catch(e) {}
+
+      // 4. Content Plan (personal_workspace_content_items — by dueDate)
+      try {
+        const raw = WorkspaceStorage.getItem('personal_workspace_content_items');
+        if (raw) {
+          const items = JSON.parse(raw);
+          items.forEach(item => {
+            if (!item.dueDate) return;
+            addTask(item.dueDate, {
+              id: 'content-' + item.id,
+              title: item.title,
+              time: '',
+              type: 'content',
+              source: 'Content Plan',
+              platform: item.platform || '',
+              color: '#8b5cf6'
+            });
+          });
+        }
+      } catch(e) {}
+
+      // Hitung statistik bulan
+      const totalDays = Object.keys(tasksByDate).length;
+      const totalTasks = Object.values(tasksByDate).reduce((s, arr) => s + arr.length, 0);
+
+      // Cek status done hari ini
+      let doneToday = 0;
+      let totalToday = 0;
+      try {
+        const statusRaw = WorkspaceStorage.getItem('ws_notif_action_status');
+        const status = statusRaw ? JSON.parse(statusRaw) : {};
+        const todayStatus = status[todayStr] || {};
+        if (tasksByDate[todayStr]) {
+          totalToday = tasksByDate[todayStr].length;
+          doneToday = tasksByDate[todayStr].filter(t => todayStatus[t.id]).length;
+        }
+      } catch(e) {}
+
+      return { tasksByDate, totalDays, totalTasks, doneToday, totalToday, todayStr, prefix };
     }
   },
   created() {
@@ -7163,54 +7365,194 @@ const GoogleCalendar = {
         </div>
       </div>
 
-      <!-- Unauthorized / Connect Akun view as card -->
-      <div class="calendar-card" style="text-align: center; padding: 48px 24px;" v-if="needsAuth">
-        <div style="margin-bottom: 24px;">
-          <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta); margin: 0 auto 16px auto; display: block;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          <h3 style="font-size: 22px; font-weight: 700; color: var(--text-dark);">Hubungkan Akun Google Anda</h3>
-          <p style="color: var(--text-muted); max-width: 480px; margin: 10px auto; font-size: 14px; line-height: 1.6;">
-            Untuk melihat dan mengelola kegiatan harian Anda secara live, silakan hubungkan workspace ini dengan Google Calendar Anda menggunakan akun login.
-          </p>
-        </div>
+      <!-- LOCAL CALENDAR VIEW (always shown, no auth needed) -->
+      <div v-if="needsAuth">
 
-        <div v-if="error" style="background-color: #FDF2F2; color: #DC2626; padding: 14px; border-radius: 8px; margin-bottom: 24px; font-size: 13.5px; display: inline-block; width: 100%; max-width: 580px; border: 1.5px solid #F87171; text-align: left; line-height: 1.5;">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #DC2626; display: inline-block; margin-right: 4px; vertical-align: text-bottom;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          <strong>Kesalahan Login:</strong> {{ error }}
-        </div>
-
-        <div>
-          <button class="gsi-material-button" @click="handleGoogleSignIn" :disabled="loading" style="margin-bottom: 12px;">
-            <div class="gsi-material-button-content-wrapper">
-              <div class="gsi-material-button-icon">
-                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style="display: block;">
-                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
-                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
-                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
-                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
-                </svg>
-              </div>
-              <span class="gsi-material-button-contents" style="margin-left: 10px;">{{ loading ? 'Sedang menghubungkan...' : 'Masuk dengan Google (Popup)' }}</span>
+        <!-- Toolbar: month nav + view toggle + "Buat Acara" -->
+        <div class="gcal-toolbar">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <button class="gcal-today-btn" @click="localGoToday()">Hari ini</button>
+            <button class="gcal-nav-btn" @click="localPrevMonth()">&#8249;</button>
+            <button class="gcal-nav-btn" @click="localNextMonth()">&#8250;</button>
+            <span style="font-size:18px; font-weight:700; color:#3c4043; min-width:180px;">{{ localMonthLabel }}</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="gcal-view-toggle">
+              <button :class="['gcal-view-btn', localView==='month' && 'active']" @click="localView='month'">Bulan</button>
+              <button :class="['gcal-view-btn', localView==='week' && 'active']" @click="localView='week'">Minggu</button>
+              <button :class="['gcal-view-btn', localView==='agenda' && 'active']" @click="localView='agenda'">Agenda</button>
             </div>
-          </button>
+            <button class="gcal-create-btn" @click="localShowForm=true">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"/></svg>
+              Buat Acara
+            </button>
+          </div>
+        </div>
 
-          <!-- Alternative login options to fix iframe browser sandboxing constraint -->
-          <div style="margin-top: 24px; border-top: 1.5px dashed var(--color-sand); padding-top: 20px; max-width: 540px; margin-left: auto; margin-right: auto;">
-            <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
-              💡 <strong>Mengalami gangguan popup/sandbox di browser?</strong><br>
-              Aplikasi ini berada di dalam bingkai (iframe) preview AI Studio yang sering membatasi login popup. Pilih opsi stabil berikut:
-            </p>
-            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-              <button class="btn btn-secondary" @click="openInNewTab" style="font-size: 13px; padding: 8px 16px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                Buka di Tab Baru (Sangat Direkomendasikan)
-              </button>
-              <button class="btn btn-secondary" @click="handleGoogleRedirectSignIn" :disabled="loading" style="font-size: 13px; padding: 8px 16px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M3 12a9 9 0 0 1 9-9 9.75 10 10 0 0 1 6.74 2.74L21 8"></path><path d="M16 3h5v5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 10 10 0 0 1-6.74-2.74L3 16"></path><path d="M8 21H3v-5"></path></svg>
-                Coba Metode Redirect
-              </button>
+        <!-- Success / Error toast -->
+        <div v-if="localSuccess" class="gcal-toast gcal-toast-success">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          {{ localSuccess }}
+          <button @click="localSuccess=null" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:16px;color:#15803d;">&#215;</button>
+        </div>
+        <div v-if="localError" class="gcal-toast gcal-toast-error">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          {{ localError }}
+          <button @click="localError=null" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:16px;color:#dc2626;">&#215;</button>
+        </div>
+
+        <!-- ========== MONTH VIEW ========== -->
+        <div v-if="localView==='month'" class="gcal-month-wrap">
+          <div class="gcal-month-head">
+            <div v-for="d in ['MIN','SEN','SEL','RAB','KAM','JUM','SAB']" :key="d" class="gcal-dow">{{ d }}</div>
+          </div>
+          <div class="gcal-month-grid">
+            <div
+              v-for="cell in localMonthCells"
+              :key="cell.key"
+              :class="['gcal-cell', cell.isToday && 'gcal-cell-today', !cell.inMonth && 'gcal-cell-dim', localSelectedDate===cell.dateStr && 'gcal-cell-selected']"
+              @click="localSelectedDate=cell.dateStr; localView='agenda'"
+            >
+              <div class="gcal-cell-num">{{ cell.day }}</div>
+              <div v-for="ev in localEventsForDate(cell.dateStr).slice(0,2)" :key="ev.id" class="gcal-ev-chip" :style="{background: ev.color || '#4285F4'}">
+                <span class="gcal-ev-time">{{ ev.startTime }}</span> {{ ev.title }}
+              </div>
+              <div v-if="localEventsForDate(cell.dateStr).length > 2" class="gcal-ev-more">+{{ localEventsForDate(cell.dateStr).length - 2 }} lagi</div>
             </div>
           </div>
         </div>
+
+        <!-- ========== WEEK VIEW ========== -->
+        <div v-if="localView==='week'" class="gcal-week-wrap">
+          <div class="gcal-week-head">
+            <div class="gcal-week-time-col"></div>
+            <div
+              v-for="d in localWeekDays"
+              :key="d.dateStr"
+              :class="['gcal-week-day-hdr', d.isToday && 'gcal-week-day-today']"
+            >
+              <span class="gcal-week-dow">{{ d.dowLabel }}</span>
+              <span :class="['gcal-week-num', d.isToday && 'gcal-week-num-today']">{{ d.dayNum }}</span>
+            </div>
+          </div>
+          <div class="gcal-week-body">
+            <div class="gcal-week-time-col">
+              <div v-for="h in localHours" :key="h" class="gcal-hour-label">{{ h }}</div>
+            </div>
+            <div v-for="d in localWeekDays" :key="d.dateStr" class="gcal-week-col">
+              <div v-for="h in localHours" :key="h" :class="['gcal-hour-cell', d.isToday && h===localCurrentHourLabel && 'gcal-hour-now']"></div>
+              <div
+                v-for="ev in localEventsForDate(d.dateStr)"
+                :key="ev.id"
+                class="gcal-week-ev"
+                :style="{ top: localEvTop(ev)+'px', height: localEvHeight(ev)+'px', background: ev.color || '#4285F4' }"
+                @click.stop="localDeleteEvent(ev)"
+                title="Klik untuk hapus"
+              >
+                <span style="font-weight:700;font-size:11px;">{{ ev.startTime }}</span> {{ ev.title }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== AGENDA VIEW ========== -->
+        <div v-if="localView==='agenda'" class="gcal-agenda-wrap">
+          <div v-if="localAgendaItems.length===0" class="gcal-agenda-empty">
+            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.4" style="color:#bdc1c6; margin:0 auto 12px; display:block;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <p style="font-size:15px;color:#5f6368;font-weight:600;">Tidak ada acara mendatang</p>
+            <p style="font-size:13px;color:#9aa0a6;margin-top:4px;">Klik "Buat Acara" untuk menambahkan jadwal baru.</p>
+          </div>
+          <div v-for="group in localAgendaItems" :key="group.dateStr" class="gcal-agenda-group">
+            <div :class="['gcal-agenda-date', group.isToday && 'gcal-agenda-date-today']">
+              <span class="gcal-agenda-dow">{{ group.dow }}</span>
+              <span class="gcal-agenda-day">{{ group.day }}</span>
+              <span class="gcal-agenda-mon">{{ group.mon }}</span>
+            </div>
+            <div class="gcal-agenda-events">
+              <div v-for="ev in group.events" :key="ev.id" class="gcal-agenda-ev" :style="{'border-left-color': ev.color || '#4285F4'}">
+                <div class="gcal-agenda-ev-time">
+                  <span v-if="ev.allDay" style="color:#70757a;font-size:12px;">Sepanjang hari</span>
+                  <span v-else style="color:#70757a;font-size:12px;">{{ ev.startTime }} &#8211; {{ ev.endTime }}</span>
+                </div>
+                <div class="gcal-agenda-ev-body">
+                  <div class="gcal-agenda-ev-title">{{ ev.title }}</div>
+                  <div v-if="ev.location" class="gcal-agenda-ev-loc">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                    {{ ev.location }}
+                  </div>
+                  <div v-if="ev.desc" class="gcal-agenda-ev-desc">{{ ev.desc }}</div>
+                </div>
+                <button class="gcal-agenda-del-btn" @click="localDeleteEvent(ev)" title="Hapus acara">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== MODAL: FORM BUAT ACARA ========== -->
+        <div v-if="localShowForm" class="gcal-modal-overlay" @click.self="localShowForm=false">
+          <div class="gcal-modal">
+            <div class="gcal-modal-header">
+              <span style="font-size:16px;font-weight:700;color:#3c4043;">Tambah Acara Baru</span>
+              <button @click="localShowForm=false" class="gcal-modal-close">&#215;</button>
+            </div>
+            <div class="gcal-modal-body">
+              <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;">
+                <span style="font-size:12px;color:#70757a;font-weight:600;">Warna:</span>
+                <button v-for="c in localColors" :key="c.val"
+                  @click="localNewEv.color=c.val"
+                  :style="{width:'20px',height:'20px',borderRadius:'50%',background:c.val,border: localNewEv.color===c.val ? '3px solid #3c4043' : '2px solid transparent', cursor:'pointer'}"
+                ></button>
+              </div>
+              <div style="margin-bottom:14px;">
+                <input type="text" class="gcal-input" v-model="localNewEv.title" placeholder="Tambahkan judul acara" style="font-size:18px;font-weight:600;border:none;border-bottom:2px solid #4285f4;border-radius:0;padding-left:0;" />
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+                <div>
+                  <label class="gcal-label">Tanggal Mulai *</label>
+                  <input type="date" class="gcal-input" v-model="localNewEv.startDate" />
+                </div>
+                <div>
+                  <label class="gcal-label">Waktu Mulai</label>
+                  <input type="time" class="gcal-input" v-model="localNewEv.startTime" />
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+                <div>
+                  <label class="gcal-label">Tanggal Selesai</label>
+                  <input type="date" class="gcal-input" v-model="localNewEv.endDate" />
+                </div>
+                <div>
+                  <label class="gcal-label">Waktu Selesai</label>
+                  <input type="time" class="gcal-input" v-model="localNewEv.endTime" />
+                </div>
+              </div>
+              <div style="margin-bottom:14px;">
+                <label class="gcal-label">Lokasi</label>
+                <input type="text" class="gcal-input" v-model="localNewEv.location" placeholder="Tambahkan lokasi atau link" />
+              </div>
+              <div style="margin-bottom:20px;">
+                <label class="gcal-label">Deskripsi</label>
+                <textarea class="gcal-input" v-model="localNewEv.desc" rows="2" style="resize:none;" placeholder="Tambahkan deskripsi..."></textarea>
+              </div>
+              <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="gcal-btn-ghost" @click="localShowForm=false">Batal</button>
+                <button class="gcal-btn-save" @click="localAddEvent()">Simpan</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom connect banner (subtle) -->
+        <div class="gcal-sync-banner">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M16 3h5v5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 21H3v-5"/></svg>
+          Acara tersimpan lokal. Hubungkan akun Google untuk sinkronisasi real-time.
+          <button class="gcal-sync-link" @click="handleGoogleSignIn" :disabled="loading">
+            {{ loading ? 'Menghubungkan...' : 'Hubungkan sekarang →' }}
+          </button>
+        </div>
+
       </div>
 
       <!-- Main Authorized View panels -->
@@ -7391,7 +7733,23 @@ const GoogleCalendar = {
         endTime: '',
         location: ''
       },
-      filterGroup: 'all' // 'all', 'today', 'week'
+      filterGroup: 'all', // 'all', 'today', 'week'
+      // --- Local Calendar State ---
+      localView: 'month',
+      localCurDate: new Date(),
+      localSelectedDate: new Date().toISOString().split('T')[0],
+      localEvents: JSON.parse(localStorage.getItem('gcal_local_events') || '[]'),
+      localShowForm: false,
+      localNewEv: { title:'', startDate:'', startTime:'', endDate:'', endTime:'', location:'', desc:'', color:'#4285F4', allDay: false },
+      localSuccess: null,
+      localError: null,
+      localColors: [
+        { val: '#4285F4' }, { val: '#EA4335' }, { val: '#34A853' },
+        { val: '#FBBC05' }, { val: '#8E24AA' }, { val: '#F6BF26' },
+        { val: '#3F9142' }, { val: '#0B8043' }, { val: '#D50000' },
+        { val: '#E67C73' }, { val: '#039BE5' }
+      ],
+      localHours: ['00:00','01:00','02:00','03:00','04:00','05:00','06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00','23:00']
     };
   },
   computed: {
@@ -7416,12 +7774,160 @@ const GoogleCalendar = {
         });
       }
       return this.events;
+    },
+    // --- Local Calendar Computeds ---
+    localMonthLabel() {
+      const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+      return months[this.localCurDate.getMonth()] + ' ' + this.localCurDate.getFullYear();
+    },
+    localMonthCells() {
+      const yr = this.localCurDate.getFullYear();
+      const mo = this.localCurDate.getMonth();
+      const today = new Date(); const todayStr = today.toISOString().split('T')[0];
+      const firstDay = new Date(yr, mo, 1);
+      const startDow = firstDay.getDay(); // 0=Sun
+      const daysInMonth = new Date(yr, mo + 1, 0).getDate();
+      const prevDays = new Date(yr, mo, 0).getDate();
+      const cells = [];
+      // prev month filler
+      for (let i = startDow - 1; i >= 0; i--) {
+        const d = prevDays - i;
+        const dt = new Date(yr, mo - 1, d);
+        const ds = dt.toISOString().split('T')[0];
+        cells.push({ key: 'p'+d, day: d, inMonth: false, isToday: ds===todayStr, dateStr: ds });
+      }
+      // current month
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dt = new Date(yr, mo, d);
+        const ds = dt.toISOString().split('T')[0];
+        cells.push({ key: 'c'+d, day: d, inMonth: true, isToday: ds===todayStr, dateStr: ds });
+      }
+      // next month filler
+      const remaining = 42 - cells.length;
+      for (let d = 1; d <= remaining; d++) {
+        const dt = new Date(yr, mo + 1, d);
+        const ds = dt.toISOString().split('T')[0];
+        cells.push({ key: 'n'+d, day: d, inMonth: false, isToday: ds===todayStr, dateStr: ds });
+      }
+      return cells;
+    },
+    localWeekDays() {
+      const dow = ['MIN','SEN','SEL','RAB','KAM','JUM','SAB'];
+      const today = new Date(); const todayStr = today.toISOString().split('T')[0];
+      // Start of week from localCurDate (Sunday)
+      const d = new Date(this.localCurDate);
+      d.setDate(d.getDate() - d.getDay());
+      const days = [];
+      for (let i = 0; i < 7; i++) {
+        const dt = new Date(d); dt.setDate(d.getDate() + i);
+        const ds = dt.toISOString().split('T')[0];
+        days.push({ dateStr: ds, dowLabel: dow[i], dayNum: dt.getDate(), isToday: ds===todayStr });
+      }
+      return days;
+    },
+    localCurrentHourLabel() {
+      const h = new Date().getHours();
+      return (h < 10 ? '0' : '') + h + ':00';
+    },
+    localAgendaItems() {
+      const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+      const dows = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+      const today = new Date(); const todayStr = today.toISOString().split('T')[0];
+      // get all events sorted by date
+      const sorted = [...this.localEvents].sort((a,b) => (a.startDate+a.startTime).localeCompare(b.startDate+b.startTime));
+      const grouped = {};
+      sorted.forEach(ev => {
+        if (!grouped[ev.startDate]) grouped[ev.startDate] = [];
+        grouped[ev.startDate].push(ev);
+      });
+      return Object.keys(grouped).sort().map(ds => {
+        const dt = new Date(ds + 'T12:00:00');
+        return {
+          dateStr: ds, isToday: ds===todayStr,
+          dow: dows[dt.getDay()], day: dt.getDate(), mon: months[dt.getMonth()],
+          events: grouped[ds]
+        };
+      });
     }
   },
   mounted() {
     this.initFirebase();
+    // init localCurDate fresh
+    this.localCurDate = new Date();
   },
   methods: {
+    // ============ LOCAL CALENDAR METHODS ============
+    localSaveEvents() {
+      try { localStorage.setItem('gcal_local_events', JSON.stringify(this.localEvents)); } catch(e){}
+    },
+    localEventsForDate(dateStr) {
+      return this.localEvents.filter(ev => ev.startDate === dateStr);
+    },
+    localGoToday() {
+      this.localCurDate = new Date();
+      this.localSelectedDate = new Date().toISOString().split('T')[0];
+    },
+    localPrevMonth() {
+      const d = new Date(this.localCurDate);
+      if (this.localView === 'week') { d.setDate(d.getDate() - 7); }
+      else { d.setMonth(d.getMonth() - 1); }
+      this.localCurDate = d;
+    },
+    localNextMonth() {
+      const d = new Date(this.localCurDate);
+      if (this.localView === 'week') { d.setDate(d.getDate() + 7); }
+      else { d.setMonth(d.getMonth() + 1); }
+      this.localCurDate = d;
+    },
+    localAddEvent() {
+      if (!this.localNewEv.title.trim()) { this.localError = 'Judul acara tidak boleh kosong!'; return; }
+      if (!this.localNewEv.startDate) { this.localError = 'Tanggal mulai harus diisi!'; return; }
+      const ev = {
+        id: 'local_' + Date.now(),
+        title: this.localNewEv.title.trim(),
+        startDate: this.localNewEv.startDate,
+        startTime: this.localNewEv.startTime || '00:00',
+        endDate: this.localNewEv.endDate || this.localNewEv.startDate,
+        endTime: this.localNewEv.endTime || (this.localNewEv.startTime ? this.addHour(this.localNewEv.startTime) : '01:00'),
+        location: this.localNewEv.location || '',
+        desc: this.localNewEv.desc || '',
+        color: this.localNewEv.color || '#4285F4',
+        allDay: !this.localNewEv.startTime
+      };
+      this.localEvents.push(ev);
+      this.localSaveEvents();
+      this.localSuccess = 'Acara "' + ev.title + '" berhasil ditambahkan!';
+      this.localError = null;
+      this.localShowForm = false;
+      this.localNewEv = { title:'', startDate:'', startTime:'', endDate:'', endTime:'', location:'', desc:'', color:'#4285F4', allDay:false };
+      // Switch to agenda view for the date
+      this.localSelectedDate = ev.startDate;
+      this.localView = 'agenda';
+      setTimeout(() => { this.localSuccess = null; }, 3000);
+    },
+    localDeleteEvent(ev) {
+      if (!confirm('Hapus acara "' + ev.title + '"?')) return;
+      this.localEvents = this.localEvents.filter(e => e.id !== ev.id);
+      this.localSaveEvents();
+      this.localSuccess = 'Acara berhasil dihapus.';
+      setTimeout(() => { this.localSuccess = null; }, 2500);
+    },
+    addHour(timeStr) {
+      const [h, m] = timeStr.split(':').map(Number);
+      const nh = (h + 1) % 24;
+      return (nh < 10 ? '0' : '') + nh + ':' + (m < 10 ? '0' : '') + m;
+    },
+    localEvTop(ev) {
+      const [h, m] = (ev.startTime || '00:00').split(':').map(Number);
+      return (h * 60 + m);
+    },
+    localEvHeight(ev) {
+      const [sh, sm] = (ev.startTime || '00:00').split(':').map(Number);
+      const [eh, em] = (ev.endTime || '01:00').split(':').map(Number);
+      const diff = (eh * 60 + em) - (sh * 60 + sm);
+      return Math.max(diff, 30);
+    },
+    // ============ END LOCAL CALENDAR METHODS ============
     async initFirebase() {
       if (typeof firebase === 'undefined') {
         this.error = 'Firebase SDK gagal dimuat dari CDN. Silakan muat ulang halaman.';
