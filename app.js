@@ -169,6 +169,7 @@ const App = {
     // Drag and Drop tracking state
     let draggingKey = null;
     let dragStartOffset = { x: 0, y: 0 };
+    let hasDragged = false;
     const deskViewport = ref(null);
 
     // Load configs from storage or use defaults
@@ -211,14 +212,19 @@ const App = {
       showNavDrawer.value = false;
     };
 
+    // Click handler for desk icons — skip navigation if it was a drag
+    const handleIconClick = (pageKey) => {
+      if (hasDragged) return;
+      navigateTo(pageKey);
+    };
+
     // Drag-and-drop mechanics
     const startDrag = (event, pageKey) => {
       // Don't drag if clicking buttons/inputs inside label, only handle main element
       if (event.target.tagName === 'BUTTON' || event.target.tagName === 'INPUT') return;
       
       draggingKey = pageKey;
-      
-      // Handle touch and mouse events
+      hasDragged = false;
       const clientX = event.type.startsWith('touch') ? event.touches[0].clientX : event.clientX;
       const clientY = event.type.startsWith('touch') ? event.touches[0].clientY : event.clientY;
 
@@ -238,6 +244,7 @@ const App = {
     const onDrag = (event) => {
       if (!draggingKey) return;
       event.preventDefault();
+      hasDragged = true;
 
       const clientX = event.type.startsWith('touch') ? event.touches[0].clientX : event.clientX;
       const clientY = event.type.startsWith('touch') ? event.touches[0].clientY : event.clientY;
@@ -265,6 +272,9 @@ const App = {
         saveConfig();
         draggingKey = null;
       }
+      // hasDragged stays true briefly so the @click handler can read it,
+      // then reset after a microtask (click fires after mouseup)
+      setTimeout(() => { hasDragged = false; }, 0);
       window.removeEventListener('mousemove', onDrag);
       window.removeEventListener('touchmove', onDrag);
       window.removeEventListener('mouseup', endDrag);
@@ -297,6 +307,11 @@ const App = {
     // Handle navigation triggered by other components (e.g. sync from Logbook)
       window.addEventListener('navigate-to-page', (e) => {
         navigateTo(e.detail);
+      });
+
+      // Handle navigation from MissedTasksPage (ws-navigate event)
+      window.addEventListener('ws-navigate', (e) => {
+        if (e.detail && e.detail.page) navigateTo(e.detail.page);
       });
     });
 
@@ -349,6 +364,7 @@ const App = {
       startDrag,
       resetLayout,
       navigateTo,
+      handleIconClick,
       handleUpdateMapping,
       notifPanelRef,
       notifUnreadCount,

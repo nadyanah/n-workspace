@@ -395,11 +395,7 @@ const ReminderPopup = {
     },
 
     _allActions() {
-      const base = [
-        { id: 'tahajud_0400',  title: 'Sholat Tahajud',           subtitle: 'Waktunya bangun & sholat tahajud 🌙',          time: '04:00', timeVal:  4*60+0,  page: null,          isHabit: false },
-        { id: 'logbook_1530',  title: 'Isi My 8-9 Job Logbook',   subtitle: 'Catat aktivitas & pencapaian kerja hari ini',  time: '15:30', timeVal: 15*60+30, page: 'jobLogbook',   isHabit: false },
-        { id: 'memories_2030', title: 'Isi My Memories & Growth',  subtitle: 'Tambahkan kenangan & refleksi malam ini',      time: '20:30', timeVal: 20*60+30, page: 'calendarMoment', isHabit: false }
-      ];
+      const base = [];
       try {
         const raw = WorkspaceStorage.getItem('ws_habit_notifs');
         if (raw) {
@@ -655,11 +651,7 @@ function _snapshotMissedForDate(dateStr) {
     const actionStatus = statusRaw ? JSON.parse(statusRaw) : {};
     const status = actionStatus[dateStr] || {};
 
-    const base = [
-      { id: 'tahajud_0400',  title: 'Sholat Tahajud',          subtitle: 'Waktunya bangun & sholat tahajud 🌙', time: '04:00', type: 'reminder' },
-      { id: 'logbook_1530',  title: 'Isi My 8-9 Job Logbook',  subtitle: 'Catat aktivitas & pencapaian kerja',   time: '15:30', type: 'reminder' },
-      { id: 'memories_2030', title: 'Isi My Memories & Growth', subtitle: 'Tambahkan kenangan & refleksi malam', time: '20:30', type: 'reminder' }
-    ];
+    const base = [];
     try {
       const raw = WorkspaceStorage.getItem('ws_habit_notifs');
       if (raw) JSON.parse(raw).forEach(h => {
@@ -862,6 +854,23 @@ const NotificationPanel = {
                            style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12.5px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;" />
                   </div>
 
+                  <div style="margin-bottom:12px;">
+                    <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Arahkan ke Halaman (opsional)</label>
+                    <select v-model="manualForm.page"
+                            style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12.5px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box; cursor:pointer;">
+                      <option value="">— Tidak ada tujuan —</option>
+                      <option value="jobLogbook">📓 Job Logbook</option>
+                      <option value="calendarMoment">🌍 Calendar Moment</option>
+                      <option value="contentTracker">📱 Content Tracker</option>
+                      <option value="interviewPractice">📞 Interview Practice</option>
+                      <option value="dailyNutrition">🍅 Daily Nutrition</option>
+                      <option value="habitTracker">✅ Habit Tracker</option>
+                      <option value="pomodoroTimer">⏳ Pomodoro Timer</option>
+                      <option value="googleCalendar">📅 Google Calendar</option>
+                      <option value="financialTracker">💳 Financial Tracker</option>
+                    </select>
+                  </div>
+
                   <div style="display:flex; gap:8px;">
                     <button @click="cancelManualForm"
                             style="flex:1; padding:7px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:7px; font-size:12px; font-weight:600; color:var(--text-dark); cursor:pointer;">
@@ -926,7 +935,10 @@ const NotificationPanel = {
 
                 <transition name="notif-missed-expand">
                   <div v-if="expandedMissedDays.includes(entry.date)" class="notif-missed-tasks">
-                    <div v-for="task in entry.tasks" :key="task.id" class="notif-missed-task-row">
+                    <div v-for="task in entry.tasks" :key="task.id" class="notif-missed-task-row"
+                         :class="{ 'notif-missed-task-clickable': taskHasPage(task) }"
+                         :title="taskHasPage(task) ? 'Klik untuk buka halaman' : ''"
+                         @click="handleMissedTaskClick(task)">
                       <div class="notif-missed-task-icon" :class="'notif-missed-icon-' + (task.type || 'reminder')">
                         <svg v-if="task.type === 'habit'" viewBox="0 0 24 24" width="11" height="11" fill="none" :stroke="task.color || 'var(--color-terracotta)'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
                         <svg v-else-if="task.type === 'manual'" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
@@ -936,7 +948,10 @@ const NotificationPanel = {
                         <div style="font-size:12px; font-weight:700; color:var(--text-dark); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ task.title }}</div>
                         <div style="font-size:10.5px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ task.subtitle }}</div>
                       </div>
-                      <span style="font-size:10px; font-weight:700; padding:2px 7px; border-radius:7px; background:var(--bg-cream); border:1px solid var(--color-sand); color:var(--text-dark); flex-shrink:0; white-space:nowrap;">{{ task.time }}</span>
+                      <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
+                        <span style="font-size:10px; font-weight:700; padding:2px 7px; border-radius:7px; background:var(--bg-cream); border:1px solid var(--color-sand); color:var(--text-dark); white-space:nowrap;">{{ task.time }}</span>
+                        <svg v-if="taskHasPage(task)" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                      </div>
                     </div>
                     <!-- Delete day -->
                     <div style="padding: 8px 0 2px; text-align:right;">
@@ -975,7 +990,7 @@ const NotificationPanel = {
       contentItems: [],
       actionStatus: {},
       showManualForm: false,
-      manualForm: { title: '', subtitle: '', time: '' },
+      manualForm: { title: '', subtitle: '', time: '', page: '' },
       activeTab: 'today',
       missedLog: [],
       expandedMissedDays: []
@@ -1055,38 +1070,7 @@ const NotificationPanel = {
     // Section 2: Actionable
     actionNotifs() {
       const status = this.actionStatus[this.todayStr] || {};
-      const base = [
-        {
-          id: 'tahajud_0400',
-          title: 'Sholat Tahajud',
-          subtitle: 'Waktunya bangun & sholat tahajud 🌙',
-          time: '04:00',
-          timeVal: 4*60,
-          page: null,
-          done: !!status['tahajud_0400'],
-          isHabit: false
-        },
-        {
-          id: 'logbook_1530',
-          title: 'Isi My 8-9 Job Logbook',
-          subtitle: 'Catat aktivitas & pencapaian kerja hari ini',
-          time: '15:30',
-          timeVal: 15*60+30,
-          page: 'jobLogbook',
-          done: !!status['logbook_1530'],
-          isHabit: false
-        },
-        {
-          id: 'memories_2030',
-          title: 'Isi My Memories & Growth',
-          subtitle: 'Tambahkan kenangan & refleksi malam ini',
-          time: '20:30',
-          timeVal: 20*60+30,
-          page: 'calendarMoment',
-          done: !!status['memories_2030'],
-          isHabit: false
-        }
-      ];
+      const base = [];
       try {
         const raw = WorkspaceStorage.getItem('ws_habit_notifs');
         if (raw) {
@@ -1320,7 +1304,7 @@ const NotificationPanel = {
 
     cancelManualForm() {
       this.showManualForm = false;
-      this.manualForm = { title: '', subtitle: '', time: '' };
+      this.manualForm = { title: '', subtitle: '', time: '', page: '' };
     },
 
     deleteManualReminder(id) {
@@ -1364,6 +1348,41 @@ const NotificationPanel = {
       this.missedLog = [];
       WorkspaceStorage.setItem('ws_missed_tasks', JSON.stringify([]));
       this.expandedMissedDays = [];
+    },
+
+    taskHasPage(task) {
+      if (task.type === 'habit') return true;
+      if (task.type === 'manual') return true;
+      return !!task.page;
+    },
+
+    handleMissedTaskClick(task) {
+      if (task.type === 'habit') {
+        const habitId = task.id.replace(/^habit_/, '');
+        this.$emit('navigate', 'habitTracker');
+        this.$emit('trigger-habit', habitId);
+        this.$emit('close');
+        return;
+      }
+      if (task.type === 'manual') {
+        // Buka panel hari ini + tampilkan form reschedule
+        this.activeTab = 'today';
+        this.showManualForm = true;
+        // Pre-fill dengan data task terlewat
+        this.manualForm = {
+          title: task.title,
+          subtitle: task.subtitle || '',
+          time: task.time || '',
+          page: task.page || ''
+        };
+        return;
+      }
+      // reminder
+      const page = task.page;
+      if (page) {
+        this.$emit('navigate', page);
+        this.$emit('close');
+      }
     },
 
     formatMissedDate(dateStr) {
@@ -1412,7 +1431,7 @@ const NotificationPanel = {
         subtitle: this.manualForm.subtitle.trim() || 'Pengingat manual',
         time: this.manualForm.time,
         timeVal: hh * 60 + (mm || 0),
-        page: null,
+        page: this.manualForm.page || null,
         isHabit: false,
         isManual: true
       });
@@ -1502,7 +1521,10 @@ const MissedTasksPage = {
 
         <transition name="notif-missed-expand">
           <div v-if="expandedDays.includes(entry.date)" class="notif-missed-tasks">
-            <div v-for="task in entry.tasks" :key="task.id" class="notif-missed-task-row">
+            <div v-for="task in entry.tasks" :key="task.id" class="notif-missed-task-row"
+                 :class="{ 'notif-missed-task-clickable': taskHasAction(task) }"
+                 :title="taskActionLabel(task)"
+                 @click="handleTaskClick(task)">
               <div class="notif-missed-task-icon" :class="'notif-missed-icon-' + (task.type || 'reminder')">
                 <svg v-if="task.type === 'habit'" viewBox="0 0 24 24" width="12" height="12" fill="none"
                      :stroke="task.color || 'var(--color-terracotta)'" stroke-width="2.5"
@@ -1528,11 +1550,24 @@ const MissedTasksPage = {
                   {{ task.subtitle }}
                 </div>
               </div>
-              <span style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:8px;
-                           background:var(--bg-cream); border:1px solid var(--color-sand);
-                           color:var(--text-dark); flex-shrink:0; white-space:nowrap;">
-                {{ task.time }}
-              </span>
+              <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                <span style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:8px;
+                             background:var(--bg-cream); border:1px solid var(--color-sand);
+                             color:var(--text-dark); white-space:nowrap;">
+                  {{ task.time }}
+                </span>
+                <!-- Action hint -->
+                <span v-if="task.type === 'manual'"
+                      style="font-size:10px; font-weight:600; padding:2px 7px; border-radius:7px;
+                             background: rgba(214,123,82,0.1); border:1px solid rgba(214,123,82,0.3);
+                             color:var(--color-terracotta); white-space:nowrap; cursor:pointer;">
+                  Jadwal ulang
+                </span>
+                <svg v-else-if="taskHasAction(task)" viewBox="0 0 24 24" width="12" height="12" fill="none"
+                     stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </div>
             </div>
 
             <!-- Delete button -->
@@ -1570,13 +1605,69 @@ const MissedTasksPage = {
           Hapus semua riwayat
         </button>
       </div>
+
+      <!-- RESCHEDULE MODAL (untuk task manual) -->
+      <transition name="insight-modal-fade">
+        <div v-if="showReschedule"
+             style="position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center; background:rgba(30,22,16,0.45); backdrop-filter:blur(4px); padding:16px;"
+             @click.self="showReschedule = false">
+          <div style="background:var(--color-paper,#FAF7F2); width:min(400px,95vw); border-radius:18px; box-shadow:0 24px 64px rgba(0,0,0,0.28); overflow:hidden; animation: insightPopIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <!-- Modal header -->
+            <div style="display:flex; align-items:center; gap:12px; padding:16px 20px 13px; background:var(--color-terracotta,#D67B52); color:#fff;">
+              <div style="width:36px; height:36px; background:rgba(255,255,255,0.2); border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:14px; font-weight:800;">Jadwal Ulang Pengingat</div>
+                <div style="font-size:11px; opacity:0.82; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ rescheduleTask ? rescheduleTask.title : '' }}</div>
+              </div>
+              <button @click="showReschedule = false"
+                style="background:rgba(255,255,255,0.18); border:none; border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; font-size:16px; flex-shrink:0;"
+                onmouseover="this.style.background='rgba(255,255,255,0.32)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">✕</button>
+            </div>
+            <!-- Modal body -->
+            <div style="padding:18px 20px 20px;">
+              <p style="font-size:12px; color:var(--text-muted); margin:0 0 14px;">
+                Pengingat <strong style="color:var(--text-dark);">{{ rescheduleTask ? rescheduleTask.title : '' }}</strong> akan dijadwalkan ulang ke hari & waktu baru.
+              </p>
+              <div style="margin-bottom:10px;">
+                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:5px;">Tanggal Baru</label>
+                <input v-model="rescheduleDate" type="date"
+                       style="width:100%; padding:8px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;" />
+              </div>
+              <div style="margin-bottom:16px;">
+                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:5px;">Jam Baru</label>
+                <input v-model="rescheduleTime" type="time"
+                       style="width:100%; padding:8px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;" />
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button @click="showReschedule = false"
+                        style="flex:1; padding:9px; background:transparent; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; font-weight:600; color:var(--text-muted); cursor:pointer;">
+                  Batal
+                </button>
+                <button @click="confirmReschedule"
+                        :disabled="!rescheduleDate || !rescheduleTime"
+                        style="flex:2; padding:9px; background:var(--color-terracotta,#D67B52); border:none; border-radius:8px; font-size:13px; font-weight:700; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;"
+                        :style="{ opacity: (!rescheduleDate || !rescheduleTime) ? 0.5 : 1 }">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  Simpan Jadwal Baru
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
     </div>
   `,
 
   data() {
     return {
       missedLog: [],
-      expandedDays: []
+      expandedDays: [],
+      showReschedule: false,
+      rescheduleTask: null,
+      rescheduleDate: '',
+      rescheduleTime: ''
     };
   },
 
@@ -1620,6 +1711,67 @@ const MissedTasksPage = {
       this.missedLog = [];
       WorkspaceStorage.setItem('ws_missed_tasks', JSON.stringify([]));
       this.expandedDays = [];
+    },
+
+    taskHasAction(task) {
+      if (task.type === 'habit') return true;
+      if (task.type === 'manual') return true;
+      return !!task.page;
+    },
+
+    taskActionLabel(task) {
+      if (task.type === 'habit') return 'Klik untuk buka Habit Tracker';
+      if (task.type === 'manual') return 'Klik untuk jadwal ulang';
+      const pageMap = { 'logbook_1530': 'Job Logbook', 'memories_2030': 'Calendar Moment' };
+      const pageName = task.page || pageMap[task.id];
+      return pageName ? `Klik untuk buka halaman` : '';
+    },
+
+    handleTaskClick(task) {
+      if (task.type === 'manual') {
+        this.rescheduleTask = task;
+        // Default: hari ini, jam yang sama
+        const today = new Date();
+        this.rescheduleDate = today.toISOString().split('T')[0];
+        this.rescheduleTime = task.time || '';
+        this.showReschedule = true;
+        return;
+      }
+      if (task.type === 'habit') {
+        // Navigasi ke halaman habitTracker via event global
+        window.dispatchEvent(new CustomEvent('ws-navigate', { detail: { page: 'habitTracker' } }));
+        return;
+      }
+      // reminder → navigate
+      const page = task.page;
+      if (page) {
+        window.dispatchEvent(new CustomEvent('ws-navigate', { detail: { page } }));
+      }
+    },
+
+    confirmReschedule() {
+      if (!this.rescheduleTask || !this.rescheduleDate || !this.rescheduleTime) return;
+      try {
+        const raw = WorkspaceStorage.getItem('ws_manual_notifs');
+        let manuals = raw ? JSON.parse(raw) : [];
+        // Hapus entri lama dengan id yang sama (jika ada)
+        manuals = manuals.filter(m => m.id !== this.rescheduleTask.id);
+        // Tambah jadwal baru
+        const newId = 'manual_' + Date.now();
+        manuals.push({
+          id: newId,
+          title: this.rescheduleTask.title,
+          subtitle: this.rescheduleTask.subtitle || '',
+          time: this.rescheduleTime,
+          date: this.rescheduleDate
+        });
+        WorkspaceStorage.setItem('ws_manual_notifs', JSON.stringify(manuals));
+        // Dispatch event agar NotificationPanel reload
+        window.dispatchEvent(new CustomEvent('ws-manual-notif-updated'));
+        alert(`✓ Pengingat "${this.rescheduleTask.title}" dijadwalkan ulang ke ${this.rescheduleDate} pukul ${this.rescheduleTime}`);
+      } catch(e) {}
+      this.showReschedule = false;
+      this.rescheduleTask = null;
     },
 
     formatDate(dateStr) {

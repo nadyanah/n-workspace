@@ -384,7 +384,7 @@
              :style="{ left: cfg.x + '%', top: cfg.y + '%' }"
              @mousedown="startDrag($event, pageKey)"
              @touchstart="startDrag($event, pageKey)"
-             @click="navigateTo(pageKey)"> <span class="desk-item-number text-mono">({{ cfg.num }})</span>
+             @click="handleIconClick(pageKey)"> <span class="desk-item-number text-mono">({{ cfg.num }})</span>
           
           <div class="desk-item-svg" :style="{ width: iconPool[cfg.iconId]?.width + 'px', height: iconPool[cfg.iconId]?.width + 'px' }">
             <img v-if="cfg.customUrl" :src="cfg.customUrl" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none;" alt="Icon">

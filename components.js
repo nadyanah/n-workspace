@@ -4754,29 +4754,50 @@ const DailyNutrition = {
             <div style="overflow-y: auto; padding: 22px 26px 4px; flex: 1;">
               <form @submit.prevent="saveInsight" id="insight-popup-form">
 
-                <!-- ROW 1: Tanggal + Kategori + Sumber (3 cols) -->
-                <div style="display: grid; grid-template-columns: 1fr 1.4fr 1.6fr; gap: 14px; margin-bottom: 14px;">
+                <!-- ROW 1: Tanggal + Sumber (2 cols) -->
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px; margin-bottom: 12px;">
                   <div class="form-group" style="margin: 0;">
-                    <label>Tanggal</label>
-                    <input type="date" class="form-input" v-model="form.date" required />
+                    <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; display: block;">Tanggal</label>
+                    <input type="date" class="form-input" v-model="form.date" required style="height: 40px;" />
                   </div>
-                  <!-- KATEGORI DROPDOWN + KELOLA -->
                   <div class="form-group" style="margin: 0;">
-                    <label>Topik / Kategori</label>
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                      <select class="form-input" v-model="form.category" required style="flex: 1;">
-                        <option v-for="cat in allInsightCategories" :key="cat" :value="cat">{{ cat }}</option>
-                      </select>
-                      <button type="button" @click="showCatManager = !showCatManager"
-                        style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 0 10px; height: 42px; cursor: pointer; font-size: 18px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;"
-                        title="Kelola kategori">⚙️</button>
+                    <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; display: block;">Sumber / Source</label>
+                    <input type="text" class="form-input" v-model="form.source" placeholder="cth., Buku, Artikel, Podcast, YouTube..." style="height: 40px;" />
+                  </div>
+                </div>
+
+                <!-- ROW 1b: Link URL -->
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; display: block;">Link URL Sumber <span style="font-weight: 400; font-style: italic; text-transform: none; letter-spacing: 0;">(opsional — bisa dibuka langsung dari card)</span></label>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="position: relative; flex: 1;">
+                      <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                      </span>
+                      <input type="url" class="form-input" v-model="form.url" placeholder="https://..." style="height: 40px; padding-left: 34px;" />
                     </div>
+                    <a v-if="form.url && form.url.startsWith('http')" :href="form.url" target="_blank" rel="noopener"
+                       style="height: 40px; padding: 0 14px; background: var(--color-terracotta,#D67B52); color: #fff; border-radius: 8px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; flex-shrink: 0;">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                      Buka
+                    </a>
                   </div>
-                  <!-- SUMBER / SOURCE -->
-                  <div class="form-group" style="margin: 0;">
-                    <label>Sumber / Source</label>
-                    <input type="text" class="form-input" v-model="form.source" placeholder="cth., Buku, Artikel, Podcast, YouTube..." />
+                </div>
+
+                <!-- ROW 2: Kategori + tombol kelola -->
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Topik / Kategori</label>
+                    <button type="button" @click="showCatManager = !showCatManager"
+                      style="background: none; border: none; cursor: pointer; font-size: 11.5px; font-weight: 600; color: var(--color-terracotta); display: inline-flex; align-items: center; gap: 4px; padding: 0;"
+                      title="Kelola kategori">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                      Kelola Kategori
+                    </button>
                   </div>
+                  <select class="form-input" v-model="form.category" required style="width: 100%; height: 40px;">
+                    <option v-for="cat in allInsightCategories" :key="cat" :value="cat">{{ cat }}</option>
+                  </select>
                 </div>
 
                 <!-- Mini category manager -->
@@ -4800,16 +4821,16 @@ const DailyNutrition = {
                 </div>
 
                 <!-- Judul -->
-                <div class="form-group">
-                  <label>Intisari Pemikiran / Judul</label>
-                  <input type="text" class="form-input" v-model="form.title" placeholder="cth., Strategi Desain Nol-Warna Biru" required />
+                <div class="form-group" style="margin-bottom: 14px;">
+                  <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; display: block;">Intisari Pemikiran / Judul</label>
+                  <input type="text" class="form-input" v-model="form.title" placeholder="cth., Strategi Desain Nol-Warna Biru" required style="height: 40px;" />
                 </div>
 
                 <!-- RANGKUMAN DETAIL — Rich Text Editor -->
-                <div class="form-group">
+                <div class="form-group" style="margin-bottom: 14px;">
                   <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; gap: 8px; flex-wrap: wrap;">
-                    <label style="margin: 0;">Rangkuman Detail (Konsep)</label>
-                    <span style="font-size: 11px; color: var(--text-muted); font-style: italic;">Enter = baris baru • Shift+Enter = baris baru</span>
+                    <label style="margin: 0; font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Rangkuman Detail (Konsep)</label>
+                    <span style="font-size: 11px; color: var(--text-muted); font-style: italic;">Format teks bebas, bullet, heading tersedia di toolbar</span>
                   </div>
                   <!-- Rich Text Toolbar -->
                   <div style="display: flex; flex-wrap: wrap; gap: 4px; padding: 7px 10px; background: #F5F0EB; border: 1.5px solid var(--color-sand); border-bottom: none; border-radius: 10px 10px 0 0; align-items: center;">
@@ -4886,8 +4907,8 @@ const DailyNutrition = {
                 <!-- TAKEAWAY — Rich Text Editor -->
                 <div class="form-group" style="margin-bottom: 10px;">
                   <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; gap: 8px; flex-wrap: wrap;">
-                    <label style="margin: 0;">Poin Keberlanjutan / Takeaway Utama</label>
-                    <span style="font-size: 11px; color: var(--text-muted); font-style: italic;">Enter = baris baru</span>
+                    <label style="margin: 0; font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Poin Keberlanjutan / Takeaway Utama</label>
+                    <span style="font-size: 11px; color: var(--text-muted); font-style: italic;">Ringkas & actionable</span>
                   </div>
                   <!-- Toolbar Takeaway -->
                   <div style="display: flex; flex-wrap: wrap; gap: 4px; padding: 7px 10px; background: #F5F0EB; border: 1.5px solid var(--color-sand); border-bottom: none; border-radius: 10px 10px 0 0; align-items: center;">
@@ -5066,30 +5087,52 @@ const DailyNutrition = {
             <div class="timeline-dot"></div>
             <div class="timeline-date">{{ formatDate(ins.date) }}</div>
             <div class="timeline-card">
-              <div class="flex-between" style="margin-bottom: 8px; align-items: flex-start; gap: 8px;">
-                <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+
+              <!-- Card Header: kategori + source + actions -->
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px;">
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0;">
                   <span class="timeline-category" :style="{ background: getCatColor(ins.category) + '18', color: getCatColor(ins.category), border: '1.5px solid ' + getCatColor(ins.category) + '40' }">
                     {{ ins.category }}
                   </span>
-                  <span v-if="ins.source" style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-muted); border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
-                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                  <span v-if="ins.source" style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-muted); border-radius: 20px; padding: 2px 9px; font-size: 10.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                     {{ ins.source }}
                   </span>
+                  <a v-if="ins.url && ins.url.startsWith('http')" :href="ins.url" target="_blank" rel="noopener"
+                     style="background: rgba(214,123,82,0.1); border: 1.5px solid rgba(214,123,82,0.3); color: var(--color-terracotta,#D67B52); border-radius: 20px; padding: 2px 9px; font-size: 10.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; transition: background 0.15s;"
+                     onmouseover="this.style.background='rgba(214,123,82,0.2)'" onmouseout="this.style.background='rgba(214,123,82,0.1)'">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    Buka Link
+                  </a>
                 </div>
-                <div style="display: inline-flex; gap: 6px; flex-shrink: 0; align-items: center;">
+                <div style="display: inline-flex; gap: 5px; flex-shrink: 0; align-items: center;">
                   <button class="card-nav-btn" @click="startEditInsight(idx)" title="Edit insight" style="background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
                   <button class="card-nav-btn" @click="deleteInsight(idx)" title="Hapus insight" style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                   </button>
                 </div>
               </div>
-              <h3 class="timeline-title">{{ ins.title }}</h3>
-              <div style="font-size: 14px; color: var(--text-dark); line-height: 1.7; margin-bottom: 12px;" v-html="ins.details"></div>
-              <div class="timeline-takeaway">
-                <strong>💡 Takeaway:</strong> <span v-html="ins.takeaway"></span>
+
+              <!-- Judul -->
+              <h3 class="timeline-title" style="font-size: 15.5px; font-weight: 800; color: var(--text-dark); margin: 0 0 10px 0; line-height: 1.4;">{{ ins.title }}</h3>
+
+              <!-- Divider -->
+              <div style="height: 1px; background: var(--color-sand); margin-bottom: 12px;"></div>
+
+              <!-- Detail / rangkuman -->
+              <div class="insight-rich-content" style="font-size: 13.5px; color: var(--text-dark); line-height: 1.75; margin-bottom: 14px;" v-html="ins.details"></div>
+
+              <!-- Takeaway -->
+              <div class="timeline-takeaway" style="display: flex; gap: 10px; align-items: flex-start;">
+                <span style="font-size: 16px; flex-shrink: 0; margin-top: 1px;">💡</span>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-sage); margin-bottom: 4px;">Takeaway</div>
+                  <div style="font-size: 13px; color: var(--text-dark); line-height: 1.65;" v-html="ins.takeaway"></div>
+                </div>
               </div>
+
             </div>
           </div>
         </div>
@@ -5115,6 +5158,7 @@ const DailyNutrition = {
         date: new Date().toISOString().split('T')[0],
         category: 'Teknologi',
         source: '',
+        url: '',
         title: '',
         details: '',
         takeaway: ''
@@ -5293,7 +5337,7 @@ const DailyNutrition = {
         this.insights.push(newIns);
       }
       this.saveToStorage();
-      this.form = { date: new Date().toISOString().split('T')[0], category: this.form.category, source: '', title: '', details: '', takeaway: '' };
+      this.form = { date: new Date().toISOString().split('T')[0], category: this.form.category, source: '', url: '', title: '', details: '', takeaway: '' };
       this.showAddLog = false;
       this.$nextTick(() => {
         const ed = this.$refs.detailsEditor; if (ed) ed.innerHTML = '';
@@ -5304,13 +5348,13 @@ const DailyNutrition = {
       const ins = this.filteredInsights[idx];
       if (!ins) return;
       this.editingInsightId = ins.id;
-      this.form = { date: ins.date, category: ins.category, source: ins.source || '', title: ins.title, details: ins.details, takeaway: ins.takeaway };
+      this.form = { date: ins.date, category: ins.category, source: ins.source || '', url: ins.url || '', title: ins.title, details: ins.details, takeaway: ins.takeaway };
       this.showAddLog = true;
       this.syncEditorContent();
     },
     cancelEditInsight() {
       this.editingInsightId = null;
-      this.form = { date: new Date().toISOString().split('T')[0], category: 'Teknologi', source: '', title: '', details: '', takeaway: '' };
+      this.form = { date: new Date().toISOString().split('T')[0], category: 'Teknologi', source: '', url: '', title: '', details: '', takeaway: '' };
       this.showAddLog = false;
       this.$nextTick(() => {
         const ed = this.$refs.detailsEditor; if (ed) ed.innerHTML = '';
