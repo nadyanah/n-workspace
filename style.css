@@ -5240,164 +5240,173 @@ input:checked + .switch-slider:before {
   flex-wrap: wrap;
   gap: 12px;
   padding: 10px 0 16px 0;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1.5px solid var(--color-sand);
   margin-bottom: 0;
 }
 .gcal-today-btn {
   padding: 6px 16px;
   font-size: 13.5px;
   font-weight: 600;
-  border: 1px solid #dadce0;
-  background: #fff;
-  border-radius: 4px;
+  border: 1.5px solid var(--color-sand);
+  background: var(--bg-card);
+  border-radius: 8px;
   cursor: pointer;
-  color: #3c4043;
-  transition: background 0.15s;
+  color: var(--text-dark);
+  font-family: 'Outfit', sans-serif;
+  transition: background 0.15s, border-color 0.15s;
 }
-.gcal-today-btn:hover { background: #f1f3f4; }
+.gcal-today-btn:hover { background: var(--color-sand); border-color: var(--color-gold); }
 .gcal-nav-btn {
   width: 32px; height: 32px;
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 22px; font-weight: 400;
   border: none; background: none; cursor: pointer;
-  color: #5f6368; border-radius: 50%;
-  transition: background 0.15s;
+  color: var(--text-muted); border-radius: 50%;
+  transition: background 0.15s, color 0.15s;
 }
-.gcal-nav-btn:hover { background: #f1f3f4; }
+.gcal-nav-btn:hover { background: var(--color-sand); color: var(--text-dark); }
 .gcal-view-toggle {
   display: flex;
-  border: 1px solid #dadce0;
-  border-radius: 4px;
+  border: 1.5px solid var(--color-sand);
+  border-radius: 8px;
   overflow: hidden;
 }
 .gcal-view-btn {
   padding: 6px 14px;
   font-size: 13px;
   font-weight: 500;
-  background: #fff;
+  background: var(--bg-card);
   border: none;
-  border-right: 1px solid #dadce0;
+  border-right: 1.5px solid var(--color-sand);
   cursor: pointer;
-  color: #3c4043;
-  transition: background 0.15s;
+  color: var(--text-muted);
+  font-family: 'Outfit', sans-serif;
+  transition: background 0.15s, color 0.15s;
 }
 .gcal-view-btn:last-child { border-right: none; }
-.gcal-view-btn:hover { background: #f1f3f4; }
-.gcal-view-btn.active { background: #e8f0fe; color: #1a73e8; font-weight: 700; }
+.gcal-view-btn:hover { background: var(--color-sand); color: var(--text-dark); }
+.gcal-view-btn.active { background: rgba(214,123,82,0.12); color: var(--color-terracotta); font-weight: 700; }
 .gcal-create-btn {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 8px 18px;
-  background: #fff;
-  border: 1px solid #dadce0;
+  background: var(--color-terracotta);
+  border: none;
   border-radius: 24px;
   font-size: 13.5px;
   font-weight: 600;
-  color: #3c4043;
+  color: #fff;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  transition: box-shadow 0.15s, background 0.15s;
+  font-family: 'Outfit', sans-serif;
+  box-shadow: 0 2px 8px rgba(214,123,82,0.25);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.12s;
 }
-.gcal-create-btn:hover { background: #f6f8ff; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+.gcal-create-btn:hover { background: #c06844; box-shadow: 0 4px 14px rgba(214,123,82,0.35); transform: translateY(-1px); }
 
 /* Toasts */
 .gcal-toast {
   display: flex; align-items: center; gap: 8px;
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 13.5px;
   font-weight: 500;
   margin-bottom: 12px;
+  font-family: 'Outfit', sans-serif;
 }
-.gcal-toast-success { background: #f0fdf4; color: #15803d; border-left: 4px solid #22c55e; }
-.gcal-toast-error   { background: #fef2f2; color: #dc2626; border-left: 4px solid #ef4444; }
+.gcal-toast-success { background: rgba(163,177,138,0.15); color: #3a5a2a; border-left: 4px solid var(--color-sage); }
+.gcal-toast-error   { background: rgba(214,123,82,0.10); color: #8c3a20; border-left: 4px solid var(--color-terracotta); }
 
 /* ---- MONTH VIEW ---- */
-.gcal-month-wrap { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; margin-top: 0; }
+.gcal-month-wrap { background: var(--bg-card); border: 1.5px solid var(--color-sand); border-radius: 12px; overflow: hidden; margin-top: 0; }
 .gcal-month-head {
   display: grid; grid-template-columns: repeat(7, 1fr);
-  background: #fff;
-  border-bottom: 1px solid #e0e0e0;
+  background: var(--bg-cream);
+  border-bottom: 1.5px solid var(--color-sand);
 }
 .gcal-dow {
   text-align: center;
   padding: 8px 0;
   font-size: 11px;
-  font-weight: 600;
-  color: #70757a;
-  letter-spacing: 0.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.8px;
+  font-family: 'Hack', monospace;
 }
 .gcal-month-grid {
   display: grid; grid-template-columns: repeat(7, 1fr);
   grid-auto-rows: minmax(90px, auto);
 }
 .gcal-cell {
-  border-right: 1px solid #e0e0e0;
-  border-bottom: 1px solid #e0e0e0;
+  border-right: 1px solid var(--color-sand);
+  border-bottom: 1px solid var(--color-sand);
   padding: 4px 4px 2px 4px;
   cursor: pointer;
   transition: background 0.12s;
   min-height: 90px;
   vertical-align: top;
 }
-.gcal-cell:hover { background: #f8f9fa; }
-.gcal-cell-dim { background: #fafafa; }
-.gcal-cell-dim .gcal-cell-num { color: #ccc; }
+.gcal-cell:hover { background: rgba(232,223,216,0.4); }
+.gcal-cell-dim { background: rgba(253,251,247,0.6); }
+.gcal-cell-dim .gcal-cell-num { color: var(--color-sand); }
 .gcal-cell-today .gcal-cell-num {
-  background: #1a73e8;
+  background: var(--color-terracotta);
   color: #fff;
   border-radius: 50%;
   width: 24px; height: 24px;
   display: inline-flex; align-items: center; justify-content: center;
   font-weight: 700;
 }
-.gcal-cell-selected { background: #e8f0fe; }
+.gcal-cell-selected { background: rgba(214,123,82,0.08); }
 .gcal-cell-num {
   font-size: 12px;
   font-weight: 500;
-  color: #3c4043;
+  color: var(--text-dark);
   display: inline-block;
   padding: 2px;
   line-height: 1;
   margin-bottom: 2px;
+  font-family: 'Hack', monospace;
 }
 .gcal-ev-chip {
   display: block;
-  background: #4285F4;
+  background: var(--color-terracotta);
   color: #fff;
   font-size: 10.5px;
   font-weight: 500;
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 1px 5px;
   margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
+  font-family: 'Outfit', sans-serif;
 }
 .gcal-ev-time { font-size: 9px; opacity: 0.85; margin-right: 3px; }
-.gcal-ev-more { font-size: 10px; color: #70757a; padding: 1px 4px; }
+.gcal-ev-more { font-size: 10px; color: var(--text-muted); padding: 1px 4px; }
 
 /* ---- WEEK VIEW ---- */
-.gcal-week-wrap { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; margin-top: 0; }
+.gcal-week-wrap { background: var(--bg-card); border: 1.5px solid var(--color-sand); border-radius: 12px; overflow: hidden; margin-top: 0; }
 .gcal-week-head {
   display: grid; grid-template-columns: 52px repeat(7, 1fr);
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1.5px solid var(--color-sand);
+  background: var(--bg-cream);
 }
 .gcal-week-time-col { width: 52px; flex-shrink: 0; }
 .gcal-week-day-hdr {
   text-align: center;
   padding: 8px 4px;
-  border-left: 1px solid #e0e0e0;
+  border-left: 1px solid var(--color-sand);
 }
-.gcal-week-day-today { background: #f0f6ff; }
-.gcal-week-dow { display: block; font-size: 10px; font-weight: 600; color: #70757a; letter-spacing: 0.5px; }
+.gcal-week-day-today { background: rgba(214,123,82,0.07); }
+.gcal-week-dow { display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.8px; font-family: 'Hack', monospace; }
 .gcal-week-num {
   display: inline-flex; align-items: center; justify-content: center;
   width: 28px; height: 28px;
-  font-size: 18px; font-weight: 400; color: #3c4043;
+  font-size: 18px; font-weight: 400; color: var(--text-dark);
   border-radius: 50%;
+  font-family: 'Outfit', sans-serif;
 }
-.gcal-week-num-today { background: #1a73e8; color: #fff; font-weight: 700; }
+.gcal-week-num-today { background: var(--color-terracotta); color: #fff; font-weight: 700; }
 .gcal-week-body {
   display: grid;
   grid-template-columns: 52px repeat(7, 1fr);
@@ -5405,43 +5414,45 @@ input:checked + .switch-slider:before {
   overflow-y: auto;
 }
 .gcal-week-col {
-  border-left: 1px solid #e0e0e0;
+  border-left: 1px solid var(--color-sand);
   position: relative;
 }
 .gcal-hour-cell {
   height: 60px;
-  border-bottom: 1px solid #f1f3f4;
+  border-bottom: 1px solid rgba(232,223,216,0.6);
 }
-.gcal-hour-now { background: #fff8e1; }
+.gcal-hour-now { background: rgba(221,161,94,0.10); }
 .gcal-hour-label {
   height: 60px;
   font-size: 10px;
-  color: #70757a;
+  color: var(--text-muted);
   text-align: right;
   padding-right: 6px;
   padding-top: 4px;
   box-sizing: border-box;
-  border-bottom: 1px solid #f1f3f4;
+  border-bottom: 1px solid rgba(232,223,216,0.6);
+  font-family: 'Hack', monospace;
 }
 .gcal-week-ev {
   position: absolute;
   left: 2px; right: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
   color: #fff;
   font-size: 11px;
   padding: 2px 5px;
   cursor: pointer;
   overflow: hidden;
   z-index: 2;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 6px rgba(44,38,33,0.15);
+  font-family: 'Outfit', sans-serif;
 }
 
 /* ---- AGENDA VIEW ---- */
-.gcal-agenda-wrap { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; margin-top: 0; }
+.gcal-agenda-wrap { background: var(--bg-card); border: 1.5px solid var(--color-sand); border-radius: 12px; overflow: hidden; margin-top: 0; }
 .gcal-agenda-empty { text-align: center; padding: 56px 24px; }
 .gcal-agenda-group {
   display: flex;
-  border-bottom: 1px solid #f1f3f4;
+  border-bottom: 1px solid rgba(232,223,216,0.7);
 }
 .gcal-agenda-group:last-child { border-bottom: none; }
 .gcal-agenda-date {
@@ -5449,140 +5460,130 @@ input:checked + .switch-slider:before {
   flex-shrink: 0;
   padding: 16px 12px;
   text-align: center;
-  border-right: 1px solid #e0e0e0;
+  border-right: 1px solid var(--color-sand);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   gap: 2px;
+  background: var(--bg-cream);
 }
 .gcal-agenda-date-today .gcal-agenda-day {
-  background: #1a73e8;
+  background: var(--color-terracotta);
   color: #fff;
   border-radius: 50%;
   width: 32px; height: 32px;
   display: inline-flex; align-items: center; justify-content: center;
 }
-.gcal-agenda-dow { font-size: 11px; font-weight: 600; color: #70757a; text-transform: uppercase; }
-.gcal-agenda-day { font-size: 22px; font-weight: 400; color: #3c4043; line-height: 1; margin: 4px 0; }
-.gcal-agenda-mon { font-size: 11px; color: #70757a; }
+.gcal-agenda-dow { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; font-family: 'Hack', monospace; }
+.gcal-agenda-day { font-size: 22px; font-weight: 400; color: var(--text-dark); line-height: 1; margin: 4px 0; font-family: 'Outfit', sans-serif; }
+.gcal-agenda-mon { font-size: 10px; color: var(--text-muted); font-family: 'Outfit', sans-serif; }
 .gcal-agenda-events { flex: 1; padding: 8px 0; }
 .gcal-agenda-ev {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   padding: 10px 16px;
-  border-left: 4px solid #4285F4;
+  border-left: 4px solid var(--color-terracotta);
   margin: 6px 12px 6px 16px;
-  border-radius: 0 6px 6px 0;
-  background: #f8f9fa;
+  border-radius: 0 8px 8px 0;
+  background: var(--bg-cream);
   transition: background 0.12s;
 }
-.gcal-agenda-ev:hover { background: #e8f0fe; }
+.gcal-agenda-ev:hover { background: rgba(214,123,82,0.08); }
 .gcal-agenda-ev-time { width: 100px; flex-shrink: 0; padding-top: 2px; }
 .gcal-agenda-ev-body { flex: 1; }
-.gcal-agenda-ev-title { font-size: 14px; font-weight: 600; color: #3c4043; }
+.gcal-agenda-ev-title { font-size: 14px; font-weight: 600; color: var(--text-dark); font-family: 'Outfit', sans-serif; }
 .gcal-agenda-ev-loc {
   display: flex; align-items: center; gap: 4px;
-  font-size: 12px; color: #70757a; margin-top: 4px;
+  font-size: 12px; color: var(--text-muted); margin-top: 4px;
+  font-family: 'Outfit', sans-serif;
 }
-.gcal-agenda-ev-desc { font-size: 12px; color: #5f6368; margin-top: 4px; line-height: 1.4; }
+.gcal-agenda-ev-desc { font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.4; font-family: 'Outfit', sans-serif; }
 .gcal-agenda-del-btn {
   background: none; border: none; cursor: pointer;
   padding: 4px; border-radius: 50%;
-  color: #9aa0a6;
+  color: var(--color-sand);
   display: inline-flex; align-items: center; justify-content: center;
   transition: background 0.12s, color 0.12s;
 }
-.gcal-agenda-del-btn:hover { background: #fce8e6; color: #d93025; }
+.gcal-agenda-del-btn:hover { background: rgba(214,123,82,0.12); color: var(--color-terracotta); }
 
 /* ---- MODAL ---- */
 .gcal-modal-overlay {
   position: fixed; inset: 0; z-index: 9999;
-  background: rgba(0,0,0,0.32);
+  background: rgba(44,38,33,0.38);
+  backdrop-filter: blur(3px);
   display: flex; align-items: center; justify-content: center;
 }
 .gcal-modal {
-  background: #fff;
-  border-radius: 12px;
+  background: var(--bg-cream);
+  border-radius: 18px;
   width: 480px;
   max-width: 95vw;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  box-shadow: 0 16px 48px rgba(44,38,33,0.2);
   overflow: hidden;
 }
 .gcal-modal-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1.5px solid var(--color-sand);
+  background: var(--bg-card);
 }
 .gcal-modal-close {
   width: 32px; height: 32px;
   font-size: 20px;
   background: none; border: none; cursor: pointer;
-  color: #5f6368; border-radius: 50%;
+  color: var(--text-muted); border-radius: 50%;
   display: inline-flex; align-items: center; justify-content: center;
-  transition: background 0.12s;
+  transition: background 0.12s, color 0.12s;
 }
-.gcal-modal-close:hover { background: #f1f3f4; }
+.gcal-modal-close:hover { background: var(--color-sand); color: var(--text-dark); }
 .gcal-modal-body { padding: 20px; }
 .gcal-label {
   display: block;
-  font-size: 11px;
-  font-weight: 600;
-  color: #70757a;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
   margin-bottom: 5px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
+  font-family: 'Hack', monospace;
 }
 .gcal-input {
   width: 100%;
   padding: 9px 12px;
-  border: 1.5px solid #dadce0;
-  background: #fff;
-  border-radius: 6px;
-  color: #3c4043;
+  border: 1.5px solid var(--color-sand);
+  background: var(--bg-card);
+  border-radius: 8px;
+  color: var(--text-dark);
   font-size: 14px;
-  font-family: inherit;
+  font-family: 'Outfit', sans-serif;
   box-sizing: border-box;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-.gcal-input:focus { outline: none; border-color: #1a73e8; }
+.gcal-input:focus { outline: none; border-color: var(--color-terracotta); box-shadow: 0 0 0 3px rgba(214,123,82,0.12); }
 .gcal-btn-ghost {
   padding: 8px 18px;
   font-size: 13.5px; font-weight: 600;
-  background: none; border: none;
-  color: #1a73e8; cursor: pointer;
-  border-radius: 6px;
-  transition: background 0.12s;
+  background: none; border: 1.5px solid var(--color-sand);
+  color: var(--text-muted); cursor: pointer;
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  transition: background 0.12s, color 0.12s;
 }
-.gcal-btn-ghost:hover { background: #e8f0fe; }
+.gcal-btn-ghost:hover { background: var(--color-sand); color: var(--text-dark); }
 .gcal-btn-save {
   padding: 8px 20px;
   font-size: 13.5px; font-weight: 600;
-  background: #1a73e8; color: #fff;
-  border: none; border-radius: 6px;
+  background: var(--color-terracotta); color: #fff;
+  border: none; border-radius: 8px;
   cursor: pointer;
-  transition: background 0.15s;
+  font-family: 'Outfit', sans-serif;
+  transition: background 0.15s, transform 0.12s;
 }
-.gcal-btn-save:hover { background: #1765cc; }
+.gcal-btn-save:hover { background: #c06844; transform: translateY(-1px); }
 
-/* ---- SYNC BANNER ---- */
-.gcal-sync-banner {
-  display: flex; align-items: center; gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 16px;
-  padding: 10px 14px;
-  background: #f8f9fa;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 12.5px;
-  color: #5f6368;
-}
-.gcal-sync-link {
-  background: none; border: none;
-  color: #1a73e8; font-size: 12.5px; font-weight: 600;
-  cursor: pointer; padding: 0; margin-left: 4px;
-  text-decoration: underline;
-}
-.gcal-sync-link:hover { color: #1558b0; }
-.gcal-sync-link:disabled { color: #9aa0a6; cursor: default; text-decoration: none; }
+/* ---- SYNC BANNER (kept for legacy, hidden) ---- */
+.gcal-sync-banner { display: none; }
+.gcal-sync-link { display: none; }

@@ -6415,7 +6415,7 @@ const IconManager = {
         { id: 5, key: 'dailyNutrition', num: 5, name: 'daily nutrition' },
         { id: 6, key: 'habitTracker', num: 6, name: 'personal habit tracker' },
         { id: 7, key: 'pomodoroTimer', num: 7, name: 'jam pasir pomodoro' },
-        { id: 8, key: 'googleCalendar', num: 8, name: 'google calendar sync' },
+        { id: 8, key: 'googleCalendar', num: 8, name: 'daily n' },
         { id: 9, key: 'financialTracker', num: 9, name: 'financial tracker' }
       ]
     };
@@ -7416,7 +7416,7 @@ const GoogleCalendar = {
       <!-- Top Screen Banner / Header -->
       <div class="flex-between" style="border-bottom: 2px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 24px; align-items: center; flex-wrap: wrap; gap: 12px;">
         <div>
-          <h2 style="font-size: 24px; font-weight: 800; color: var(--text-dark); margin: 0 0 4px 0;">Google Calendar Sync</h2>
+          <h2 style="font-size: 24px; font-weight: 800; color: var(--text-dark); margin: 0 0 4px 0;">daily n</h2>
           <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 4px;">Sinkronisasikan agenda kesibukan & jadwal harian Anda secara langsung</p>
         </div>
         <!-- Profile metadata status if signed in -->
