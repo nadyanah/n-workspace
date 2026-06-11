@@ -349,14 +349,23 @@ const JobLogbook = {
               <button @click="cancelPlanForm" style="background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 20px; line-height: 1; padding: 0 2px;" title="Tutup">✕</button>
             </div>
             <div style="padding: 0 18px 18px;">
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+              <!-- Baris 1: Tanggal -->
+              <div style="margin-bottom: 10px;">
                 <div class="form-group" style="margin: 0;">
                   <label>Plan Tanggal</label>
-                  <input type="date" class="form-input" v-model="planForm.date" style="height: 38px;" />
+                  <input type="date" class="form-input" v-model="planForm.date" style="height: 38px; width: 100%;" />
                 </div>
-                <div class="form-group" style="margin: 0;">
-                  <label>Plan Waktu</label>
-                  <input type="time" class="form-input" v-model="planForm.time" style="height: 38px;" />
+              </div>
+              <!-- Baris 2: Waktu Mulai & Berakhir dengan separator dash -->
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                <div class="form-group" style="margin: 0; flex: 1;">
+                  <label>Waktu Mulai</label>
+                  <input type="time" class="form-input" v-model="planForm.time" style="height: 38px; width: 100%;" />
+                </div>
+                <span style="color: var(--text-muted); font-size: 18px; font-weight: 400; margin-top: 18px; flex-shrink: 0;">–</span>
+                <div class="form-group" style="margin: 0; flex: 1;">
+                  <label>Waktu Berakhir</label>
+                  <input type="time" class="form-input" v-model="planForm.timeEnd" style="height: 38px; width: 100%;" />
                 </div>
               </div>
               <div class="form-group" style="margin: 0 0 10px;">
@@ -483,7 +492,7 @@ const JobLogbook = {
                   </span>
                   <span v-if="plan.time" style="font-size: 11.5px; font-weight: 700; color: var(--color-terracotta); background: rgba(214,123,82,0.10); padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
                     <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    {{ plan.time }}
+                    {{ plan.time }}<span v-if="plan.timeEnd"> – {{ plan.timeEnd }}</span>
                   </span>
                   <span :style="{ backgroundColor: getCategoryColor(plan.category) + '15', color: getCategoryColor(plan.category), borderColor: getCategoryColor(plan.category) + '40' }"
                     style="padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1.5px solid;">
@@ -847,6 +856,7 @@ const JobLogbook = {
       planForm: {
         date: new Date().toISOString().split('T')[0],
         time: '',
+        timeEnd: '',
         category: 'Administrasi',
         tasks: '',
         priority: 'Medium',
@@ -1101,6 +1111,8 @@ const JobLogbook = {
       this.editingPlanId = null;
       this.planForm.tasks = '';
       this.planForm.date = this.todayStr;
+      this.planForm.time = '';
+      this.planForm.timeEnd = '';
       this.planForm.category = this.allCategories[0] || 'Administrasi';
       this.planForm.priority = 'Medium';
       this.planForm.requester = '';
@@ -1114,6 +1126,7 @@ const JobLogbook = {
       this.planForm.priority = plan.priority || 'Medium';
       this.planForm.requester = plan.requester || '';
       this.planForm.time = plan.time || '';
+      this.planForm.timeEnd = plan.timeEnd || '';
       this.showAddPlan = true;
       this.$nextTick(() => {
         const el = document.querySelector('.job-logbook');
@@ -1126,6 +1139,7 @@ const JobLogbook = {
       this.planForm.tasks = '';
       this.planForm.date = this.todayStr;
       this.planForm.time = '';
+      this.planForm.timeEnd = '';
       this.planForm.priority = 'Medium';
       this.planForm.requester = '';
     },
@@ -1136,6 +1150,7 @@ const JobLogbook = {
         if (idx !== -1) {
           this.plans[idx].date = this.planForm.date;
           this.plans[idx].time = this.planForm.time;
+          this.plans[idx].timeEnd = this.planForm.timeEnd;
           this.plans[idx].category = this.planForm.category;
           this.plans[idx].tasks = this.planForm.tasks.trim();
           this.plans[idx].priority = this.planForm.priority;
@@ -1147,6 +1162,7 @@ const JobLogbook = {
           id: 'plan-' + Date.now(),
           date: this.planForm.date,
           time: this.planForm.time,
+          timeEnd: this.planForm.timeEnd,
           category: this.planForm.category,
           tasks: this.planForm.tasks.trim(),
           priority: this.planForm.priority,
@@ -1158,6 +1174,7 @@ const JobLogbook = {
       this.planForm.tasks = '';
       this.planForm.date = this.todayStr;
       this.planForm.time = '';
+      this.planForm.timeEnd = '';
       this.planForm.priority = 'Medium';
       this.planForm.requester = '';
       this.showAddPlan = false;
