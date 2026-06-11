@@ -218,8 +218,29 @@ const JobLogbook = {
                   <textarea class="form-input" v-model="form.achievements" rows="2" placeholder="Apa hasil konkrit atau output dari tugas di atas?..." required></textarea>
                 </div>
                 <div class="form-group" style="margin-bottom: 16px;">
-                  <label>Langkah Selanjutnya (Next Action)</label>
-                  <textarea class="form-input" v-model="form.nextAction" rows="2" placeholder="Apa rencana kelanjutan terkait tugas ini?..." required></textarea>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label style="margin: 0;">Langkah Selanjutnya (Next Action)</label>
+                    <button type="button" @click="addNextActionItem"
+                      style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; color: var(--color-terracotta); background: #FFF4ED; border: 1.5px solid #F5C8A8; border-radius: 6px; padding: 3px 9px; cursor: pointer;">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Tambah Langkah
+                    </button>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div v-for="(item, naIdx) in form.nextActions" :key="item.id"
+                         style="display: flex; align-items: center; gap: 6px;">
+                      <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); min-width: 18px; text-align: right;">{{ naIdx + 1 }}.</span>
+                      <input type="text" class="form-input"
+                             v-model="item.text"
+                             :placeholder="'Langkah selanjutnya ' + (naIdx + 1) + '...'"
+                             style="flex: 1; padding: 8px 10px; font-size: 13px;" />
+                      <button type="button" @click="removeNextActionItem(naIdx)"
+                              v-if="form.nextActions.length > 1"
+                              style="flex-shrink: 0; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; cursor: pointer; color: var(--color-rose);">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                  </div>
                 </div>
                 <div class="form-group" style="margin-bottom: 16px;">
                   <label>Tautan Dokumen, Link (Opsional)</label>
@@ -410,7 +431,7 @@ const JobLogbook = {
               <span v-if="plans.length > 0" style="background: var(--color-terracotta); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px;">{{ plans.length }}</span>
             </h3>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <button class="btn" @click="showAddLog = true; editingLogId = null; pendingConvertPlanId = null; form = { date: todayStr, category: 'Administrasi', tasks: '', achievements: '', nextAction: '', documentLink: '' }; $nextTick(() => { const el = document.querySelector('.job-logbook'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); })"
+              <button class="btn" @click="showAddLog = true; editingLogId = null; pendingConvertPlanId = null; form = { date: todayStr, category: 'Administrasi', tasks: '', achievements: '', nextActions: [{ id: 'na-' + Date.now(), text: '', completed: false }], documentLink: '' }; $nextTick(() => { const el = document.querySelector('.job-logbook'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); })"
                 style="font-family: 'Outfit', sans-serif; font-size: 12.5px; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; background: #FFF4ED; border: 1.5px solid #D67B52; color: #8C4B2D;">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
                 Catat Logbook Harian
@@ -589,18 +610,24 @@ const JobLogbook = {
                     </td>
                     <td style="max-width: 250px; font-size: 13.5px; line-height: 1.4;" :title="log.tasks">{{ log.tasks }}</td>
                     <td style="max-width: 200px; font-size: 13.5px; line-height: 1.4; color: var(--text-dark);" :title="log.achievements">{{ log.achievements }}</td>
-                    <td style="min-width: 180px; max-width: 220px; font-size: 13.5px; line-height: 1.4;">
-                      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;">
-                        <span :style="log.nextActionCompleted ? { textDecoration: 'line-through', opacity: 0.5, color: '#10B981' } : {}" style="font-style: italic; color: var(--text-muted); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;" :title="log.nextAction">{{ log.nextAction }}</span>
-                        <button v-if="log.nextAction && log.nextAction.trim().length > 0"
-                                @click="logNextAction(log)"
-                                :disabled="log.nextActionCompleted"
-                                :title="log.nextActionCompleted ? 'Tindakan Selesai!' : 'Catat Tindakan ini ke Hari Baru'"
-                                style="border-radius: 6px; padding: 4px 6px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid; font-size: 11px; font-weight: bold; cursor: pointer; min-width: 28px; height: 24px; transition: all 0.2s; flex-shrink: 0;"
-                                :style="log.nextActionCompleted ? { backgroundColor: '#DEF7EC', color: '#0E9F6E', borderColor: '#81E3B4', cursor: 'default' } : { backgroundColor: '#EBF5FF', color: '#1C64F2', borderColor: '#A4CAFE' }">
-                          <svg v-if="log.nextActionCompleted" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                          <svg v-else viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        </button>
+                    <td style="min-width: 200px; max-width: 240px; font-size: 13px; line-height: 1.4; padding: 6px 8px;">
+                      <div v-if="getNextActions(log).length === 0" style="font-style: italic; color: var(--text-muted); font-size: 12px;">—</div>
+                      <div v-else style="display: flex; flex-direction: column; gap: 5px;">
+                        <div v-for="(na, naIdx) in getNextActions(log)" :key="na.id || naIdx"
+                             style="display: flex; align-items: flex-start; gap: 6px;">
+                          <span style="font-size: 10.5px; font-weight: 700; color: var(--text-muted); opacity: 0.6; min-width: 14px; padding-top: 2px;">{{ naIdx + 1 }}.</span>
+                          <span :style="na.completed ? { textDecoration: 'line-through', opacity: 0.45, color: '#10B981' } : {}"
+                                style="flex: 1; font-style: italic; color: var(--text-muted); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;"
+                                :title="na.text">{{ na.text }}</span>
+                          <button @click="logNextActionItem(log, naIdx)"
+                                  :disabled="na.completed"
+                                  :title="na.completed ? 'Tindakan Selesai!' : 'Tambah ke Task Plan'"
+                                  style="border-radius: 5px; padding: 3px 5px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid; font-size: 10px; cursor: pointer; width: 22px; height: 22px; flex-shrink: 0; transition: all 0.2s;"
+                                  :style="na.completed ? { backgroundColor: '#DEF7EC', color: '#0E9F6E', borderColor: '#81E3B4', cursor: 'default' } : { backgroundColor: '#EBF5FF', color: '#1C64F2', borderColor: '#A4CAFE' }">
+                            <svg v-if="na.completed" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <svg v-else viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                          </button>
+                        </div>
                       </div>
                     </td>
                     <td style="text-align: center; white-space: nowrap;">
@@ -875,12 +902,13 @@ const JobLogbook = {
       itemsPerPage: 5,
       analyticsPeriod: 'semua',
       pendingNextActionSourceLogId: null,
+      pendingNextActionItemIdx: -1,
       form: {
         date: new Date().toISOString().split('T')[0],
         category: 'Administrasi',
         tasks: '',
         achievements: '',
-        nextAction: '',
+        nextActions: [{ id: 'na-' + Date.now(), text: '', completed: false }],
         documentLink: ''
       },
       
@@ -938,7 +966,7 @@ const JobLogbook = {
     filteredLogs() {
       return this.logs.filter(log => {
         const q = this.searchQuery.toLowerCase().trim();
-        const matchesQuery = !q || ['category','tasks','achievements','nextAction','documentLink'].some(k => log[k] && log[k].toLowerCase().includes(q));
+        const matchesQuery = !q || ['category','tasks','achievements','documentLink'].some(k => log[k] && log[k].toLowerCase().includes(q)) || (log.nextActions || []).some(na => na.text && na.text.toLowerCase().includes(q)) || (log.nextAction && log.nextAction.toLowerCase().includes(q));
         const matchesCategory = !this.filterCategory || log.category === this.filterCategory;
         const matchesDates = (!this.filterStartDate || log.date >= this.filterStartDate) && (!this.filterEndDate || log.date <= this.filterEndDate);
         const matchesPeriod = this.analyticsPeriod !== 'today' || log.date === this.todayStr;
@@ -960,10 +988,13 @@ const JobLogbook = {
       return Math.ceil((Math.max(...dates) - Math.min(...dates)) / (1000*60*60*24)) + 1;
     },
     nextActionCompletionRate() {
-      const logsWithNextAction = this.filteredLogs.filter(l => l.nextAction && l.nextAction.trim().length > 0);
-      if (logsWithNextAction.length === 0) return '0%';
-      const completedCount = logsWithNextAction.filter(l => l.nextActionCompleted).length;
-      return Math.round((completedCount / logsWithNextAction.length) * 100) + '%';
+      let total = 0, completed = 0;
+      this.filteredLogs.forEach(l => {
+        const actions = this.getNextActions ? this.getNextActions(l) : (l.nextActions || (l.nextAction ? [{ text: l.nextAction, completed: !!l.nextActionCompleted }] : []));
+        actions.forEach(na => { if (na.text && na.text.trim()) { total++; if (na.completed) completed++; } });
+      });
+      if (total === 0) return '0%';
+      return Math.round((completed / total) * 100) + '%';
     },
     sortedFilteredPlans() {
       const priorityOrder = { High: 0, Medium: 1, Low: 2 };
@@ -998,7 +1029,7 @@ const JobLogbook = {
     filteredAndSortedLogs() {
       const sorted = [...this.logs.filter(log => {
         const q = this.searchQuery.toLowerCase().trim();
-        const matchesQuery = !q || ['category','tasks','achievements','nextAction','documentLink'].some(k => log[k] && log[k].toLowerCase().includes(q));
+        const matchesQuery = !q || ['category','tasks','achievements','documentLink'].some(k => log[k] && log[k].toLowerCase().includes(q)) || (log.nextActions || []).some(na => na.text && na.text.toLowerCase().includes(q)) || (log.nextAction && log.nextAction.toLowerCase().includes(q));
         const matchesCategory = !this.filterCategory || log.category === this.filterCategory;
         const matchesDates = (!this.filterStartDate || new Date(log.date) >= new Date(this.filterStartDate)) && (!this.filterEndDate || new Date(log.date) <= new Date(this.filterEndDate));
         return matchesQuery && matchesCategory && matchesDates;
@@ -1136,6 +1167,8 @@ const JobLogbook = {
     cancelPlanForm() {
       this.showAddPlan = false;
       this.editingPlanId = null;
+      this.pendingNextActionSourceLogId = null;
+      this.pendingNextActionItemIdx = -1;
       this.planForm.tasks = '';
       this.planForm.date = this.todayStr;
       this.planForm.time = '';
@@ -1170,6 +1203,23 @@ const JobLogbook = {
         };
         this.plans.unshift(newPlan);
       }
+      // Tandai item next action yang spesifik sebagai selesai
+      if (this.pendingNextActionSourceLogId) {
+        const src = this.logs.find(l => l.id === this.pendingNextActionSourceLogId);
+        if (src) {
+          const actions = this.getNextActions(src);
+          const idx2 = this.pendingNextActionItemIdx;
+          if (src.nextActions && idx2 >= 0 && idx2 < src.nextActions.length) {
+            src.nextActions[idx2].completed = true;
+          } else if (src.nextAction) {
+            // Legacy: tandai whole log
+            src.nextActionCompleted = true;
+          }
+        }
+        this.pendingNextActionSourceLogId = null;
+        this.pendingNextActionItemIdx = -1;
+        this.saveToStorage();
+      }
       this.savePlansToStorage();
       this.planForm.tasks = '';
       this.planForm.date = this.todayStr;
@@ -1191,7 +1241,7 @@ const JobLogbook = {
       this.editingLogId = null;
       this.pendingConvertPlanId = null;
       // Form di-reset (opsional — supaya bersih saat dibuka berikutnya)
-      this.form = { date: this.todayStr, category: 'Administrasi', tasks: '', achievements: '', nextAction: '', documentLink: '' };
+      this.form = { date: this.todayStr, category: 'Administrasi', tasks: '', achievements: '', nextActions: [{ id: 'na-' + Date.now(), text: '', completed: false }], documentLink: '' };
     },
     convertPlanToLog(plan) { // baru dihapus saat saveLog dipanggil
       this.pendingConvertPlanId = plan.id;
@@ -1199,7 +1249,7 @@ const JobLogbook = {
       this.form.category = this.allCategories.includes(plan.category) ? plan.category : this.allCategories[0];
       this.form.tasks = plan.tasks;
       this.form.achievements = '';
-      this.form.nextAction = '';
+      this.form.nextActions = [{ id: 'na-' + Date.now(), text: '', completed: false }];
       this.form.documentLink = '';
       // TIDAK hapus plan dulu — baru dihapus di saveLog saat user submit
       this.showAddLog = true;
@@ -1277,7 +1327,14 @@ const JobLogbook = {
       this.form.category = this.allCategories.includes(log.category) ? log.category : this.allCategories[0];
       this.form.tasks = log.tasks;
       this.form.achievements = log.achievements;
-      this.form.nextAction = log.nextAction;
+      // Backward compat: migrasi nextAction string lama ke nextActions array
+      if (log.nextActions && log.nextActions.length > 0) {
+        this.form.nextActions = log.nextActions.map(na => ({ ...na }));
+      } else if (log.nextAction && log.nextAction.trim()) {
+        this.form.nextActions = [{ id: 'na-' + Date.now(), text: log.nextAction, completed: !!log.nextActionCompleted }];
+      } else {
+        this.form.nextActions = [{ id: 'na-' + Date.now(), text: '', completed: false }];
+      }
       this.form.documentLink = log.documentLink || '';
       this.showAddLog = true;
     },
@@ -1290,12 +1347,12 @@ const JobLogbook = {
           this.logs[idx].category = this.form.category;
           this.logs[idx].tasks = this.form.tasks;
           this.logs[idx].achievements = this.form.achievements;
-          this.logs[idx].nextAction = this.form.nextAction;
+          this.logs[idx].nextActions = this.form.nextActions.filter(na => na.text.trim());
           this.logs[idx].documentLink = this.form.documentLink;
         }
         this.editingLogId = null;
         this.saveToStorage();
-        this.form = { date: this.todayStr, category: 'Administrasi', tasks: '', achievements: '', nextAction: '', documentLink: '' };
+        this.form = { date: this.todayStr, category: 'Administrasi', tasks: '', achievements: '', nextActions: [{ id: 'na-' + Date.now(), text: '', completed: false }], documentLink: '' };
         this.showAddLog = false;
         return;
       }
@@ -1310,7 +1367,7 @@ const JobLogbook = {
         category: this.form.category,
         tasks: this.form.tasks,
         achievements: this.form.achievements,
-        nextAction: this.form.nextAction,
+        nextActions: this.form.nextActions.filter(na => na.text.trim()),
         documentLink: this.form.documentLink
       };
       this.logs.unshift(newLog);
@@ -1322,21 +1379,48 @@ const JobLogbook = {
       }
       this.saveToStorage();
       const shouldSync = this.syncToContentOnSave;
-      this.form = { date: this.todayStr, category: 'Administrasi', tasks: '', achievements: '', nextAction: '', documentLink: '' };
+      this.form = { date: this.todayStr, category: 'Administrasi', tasks: '', achievements: '', nextActions: [{ id: 'na-' + Date.now(), text: '', completed: false }], documentLink: '' };
       this.showAddLog = false;
       this.currentPage = 1;
       if (shouldSync) { this.syncToContent(newLog); this.syncToContentOnSave = false; }
     },
-    logNextAction(log) {
-      this.form.tasks = log.nextAction;
-      this.form.category = this.allCategories.includes(log.category) ? log.category : 'Administrasi';
-      this.form.date = this.todayStr;
-      this.form.achievements = '';
-      this.form.nextAction = '';
-      this.form.documentLink = '';
+    // Helper: normalisasi data log lama (string) atau baru (array) ke array
+    getNextActions(log) {
+      if (log.nextActions && log.nextActions.length > 0) return log.nextActions;
+      if (log.nextAction && log.nextAction.trim()) {
+        return [{ id: 'legacy', text: log.nextAction, completed: !!log.nextActionCompleted }];
+      }
+      return [];
+    },
+    // Form helpers
+    addNextActionItem() {
+      this.form.nextActions.push({ id: 'na-' + Date.now(), text: '', completed: false });
+    },
+    removeNextActionItem(idx) {
+      if (this.form.nextActions.length > 1) this.form.nextActions.splice(idx, 1);
+    },
+    // Tombol tambah task dari item next action tertentu
+    logNextActionItem(log, naIdx) {
+      const actions = this.getNextActions(log);
+      const na = actions[naIdx];
+      if (!na || na.completed) return;
+      this.editingPlanId = null;
+      this.planForm.tasks = na.text;
+      this.planForm.category = this.allCategories.includes(log.category) ? log.category : 'Administrasi';
+      this.planForm.date = this.todayStr;
+      this.planForm.time = '';
+      this.planForm.timeEnd = '';
+      this.planForm.priority = 'Medium';
+      this.planForm.requester = '';
+      // Simpan referensi: log id + index item
       this.pendingNextActionSourceLogId = log.id;
-      this.showAddLog = true;
-      this.$nextTick(() => { const el = document.querySelector('.job-logbook'); if (el) el.scrollIntoView({ behavior: 'smooth' }); });
+      this.pendingNextActionItemIdx = naIdx;
+      this.showAddPlan = true;
+      this.$nextTick(() => { const el = document.querySelector('.job-logbook'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    },
+    logNextAction(log) {
+      // Legacy — tidak dipakai lagi, tapi tetap ada untuk safety
+      this.logNextActionItem(log, 0);
     },
     syncToContent(log) {
       window.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'contentTracker' }));
@@ -1349,7 +1433,7 @@ const JobLogbook = {
     resetFilters() { this.searchQuery = ''; this.filterStartDate = ''; this.filterEndDate = ''; this.filterCategory = ''; this.showRangePicker = false; },
     saveToStorage() { WorkspaceStorage.setItem('personal_workspace_job_logs', JSON.stringify(this.logs)); },
     exportToExcel() {
-      const dataToExport = this.logs.map(log => ({ Tanggal: log.date, Kategori: log.category, 'Tugas / Pekerjaan': log.tasks, Capaian: log.achievements, 'Aksi Selanjutnya': log.nextAction, 'Tautan Dokumen': log.documentLink }));
+      const dataToExport = this.logs.map(log => ({ Tanggal: log.date, Kategori: log.category, 'Tugas / Pekerjaan': log.tasks, Capaian: log.achievements, 'Aksi Selanjutnya': (log.nextActions && log.nextActions.length ? log.nextActions.map((na,i) => (i+1)+'. '+na.text).join('; ') : (log.nextAction || '')), 'Tautan Dokumen': log.documentLink }));
       const worksheet = XLSX.utils.json_to_sheet(dataToExport);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Job Logbook');
@@ -1365,7 +1449,7 @@ const JobLogbook = {
       doc.autoTable({
         startY: 28,
         head: [['Tanggal', 'Kategori', 'Tugas / Aktivitas', 'Hasil Capaian', 'Aksi Selanjutnya']],
-        body: this.logs.map(log => [log.date, log.category, log.tasks || '-', log.achievements || '-', log.nextAction || '-']),
+        body: this.logs.map(log => [log.date, log.category, log.tasks || '-', log.achievements || '-', (log.nextActions && log.nextActions.length ? log.nextActions.map((na,i) => (i+1)+'. '+na.text).join('; ') : (log.nextAction || '-'))]),
         headStyles: { fillColor: [141, 110, 99], textColor: [255, 255, 255], fontStyle: 'bold' },
         bodyStyles: { textColor: [44, 38, 33], fontSize: 9 },
         alternateRowStyles: { fillColor: [253, 251, 247] },
