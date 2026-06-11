@@ -31,10 +31,41 @@ const App = {
       { label: 'Cherry Red', hex: '#C23939' }
     ]);
 
+    // Helper: hex -> { r, g, b }
+    const hexToRgb = (hex) => {
+      const h = hex.replace('#', '');
+      return {
+        r: parseInt(h.substring(0,2), 16),
+        g: parseInt(h.substring(2,4), 16),
+        b: parseInt(h.substring(4,6), 16)
+      };
+    };
+    // Helper: { r, g, b } -> hex
+    const rgbToHex = ({ r, g, b }) =>
+      '#' + [r, g, b].map(v => Math.min(255, Math.max(0, Math.round(v))).toString(16).padStart(2,'0')).join('');
+    // Darken: kurangi brightness sekian persen
+    const darkenColor = (hex, amount) => {
+      const { r, g, b } = hexToRgb(hex);
+      return rgbToHex({ r: r * (1 - amount), g: g * (1 - amount), b: b * (1 - amount) });
+    };
+    // Lighten: naikkan brightness
+    const lightenColor = (hex, amount) => {
+      const { r, g, b } = hexToRgb(hex);
+      return rgbToHex({ r: r + (255 - r) * amount, g: g + (255 - g) * amount, b: b + (255 - b) * amount });
+    };
+
     const setDominantColor = (colorHex) => {
       dominantColor.value = colorHex;
       WorkspaceStorage.setItem('aesthetic_workspace_dominant_color', colorHex);
+      // Warna utama tema
       document.documentElement.style.setProperty('--color-terracotta', colorHex);
+      // --color-amber: versi lebih gelap dari tema, dipakai mode missed popup
+      const amberColor = darkenColor(colorHex, 0.18);
+      document.documentElement.style.setProperty('--color-amber', amberColor);
+      // --color-amber-bg: background item missed (sangat transparan)
+      const { r, g, b } = hexToRgb(amberColor);
+      document.documentElement.style.setProperty('--color-amber-bg', `rgba(${r},${g},${b},0.10)`);
+      document.documentElement.style.setProperty('--color-amber-bg-light', `rgba(${r},${g},${b},0.06)`);
     };
 
     // Global Date State for Month Trackers (Habit & Calendar)
