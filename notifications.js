@@ -187,10 +187,16 @@ const ReminderPopup = {
                 </div>
                 <div v-for="item in infoItems" :key="item.id" class="reminder-popup-item reminder-popup-item-info">
                   <div class="reminder-popup-item-icon">{{ item.icon }}</div>
-                  <div class="reminder-popup-item-info-text">
+                  <div class="reminder-popup-item-info-text" style="flex:1; min-width:0;">
                     <div class="reminder-popup-item-title">{{ item.title }}</div>
                     <div class="reminder-popup-item-sub">{{ item.sub }}</div>
                   </div>
+                  <!-- Badge waktu mulai–selesai kalau ada -->
+                  <span v-if="item.time"
+                    style="flex-shrink:0; margin-left:8px; display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; color:var(--color-terracotta,#D67B52); background:rgba(214,123,82,0.10); padding:3px 8px; border-radius:7px; white-space:nowrap;">
+                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    {{ item.time }}
+                  </span>
                 </div>
               </template>
 
@@ -527,11 +533,13 @@ const ReminderPopup = {
       try {
         const plans = JSON.parse(WorkspaceStorage.getItem('personal_workspace_job_plans') || '[]');
         plans.filter(p => p.date === today).forEach(p => {
+          const timeLabel = p.time ? (p.timeEnd ? p.time + ' – ' + p.timeEnd : p.time) : null;
           items.push({
             id: 'task-' + p.id,
             icon: '📋',
             title: p.tasks,
-            sub: `Task Plan · ${p.category || 'Umum'}`
+            sub: `Task Plan · ${p.category || 'Umum'}`,
+            time: timeLabel
           });
         });
       } catch(e) {}
