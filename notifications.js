@@ -784,22 +784,24 @@ const NotificationPanel = {
                     <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
                     Habit
                   </span>
-                  <span v-if="notif.isManual && !notif.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">
-                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                    Manual
+                  <span v-if="notif.isManual && !notif.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #fefce8; color: #a16207; border: 1px solid #fde68a;">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    edit by n
                   </span>
                   {{ notif.done ? 'Sudah dikerjakan ✓' : notif.subtitle }}
                 </div>
               </div>
-              <div class="notif-item-right">
+              <div class="notif-item-right" style="align-items: center;">
                 <span class="notif-time-badge">{{ notif.time }}</span>
-                <svg v-if="!notif.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); margin-top: 2px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                <!-- Hapus manual reminder -->
-                <button v-if="notif.isManual" @click.stop="deleteManualReminder(notif.id)"
-                        title="Hapus pengingat ini"
-                        style="background:none; border:none; cursor:pointer; padding:2px; color:#ef4444; display:flex; align-items:center; margin-top:2px;">
-                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                </button>
+                <div style="display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+                  <!-- Hapus manual reminder -->
+                  <button v-if="notif.isManual && !notif.done" @click.stop="deleteManualReminder(notif.id)"
+                          title="Hapus pengingat ini"
+                          style="background:none; border:none; cursor:pointer; padding:2px; color:#ef4444; display:flex; align-items:center;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  </button>
+                  <svg v-if="!notif.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </div>
               </div>
             </div>
 
@@ -853,7 +855,6 @@ const NotificationPanel = {
                            type="time"
                            style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12.5px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;" />
                   </div>
-
                   <div style="margin-bottom:12px;">
                     <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Arahkan ke Halaman (opsional)</label>
                     <select v-model="manualForm.page"
@@ -1722,9 +1723,7 @@ const MissedTasksPage = {
     taskActionLabel(task) {
       if (task.type === 'habit') return 'Klik untuk buka Habit Tracker';
       if (task.type === 'manual') return 'Klik untuk jadwal ulang';
-      const pageMap = { 'logbook_1530': 'Job Logbook', 'memories_2030': 'Calendar Moment' };
-      const pageName = task.page || pageMap[task.id];
-      return pageName ? `Klik untuk buka halaman` : '';
+      return task.page ? 'Klik untuk buka halaman' : '';
     },
 
     handleTaskClick(task) {
