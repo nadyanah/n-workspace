@@ -233,7 +233,12 @@ const ReminderPopup = {
           <template v-else-if="mode === 'live'">
             <div class="reminder-popup-body">
               <div class="reminder-popup-item" style="border-left-color: var(--color-terracotta, #D67B52);">
-                <div class="reminder-popup-item-time">{{ currentItem.time }}</div>
+                <!-- Icon: task plan vs pengingat biasa -->
+                <div v-if="currentItem.isTaskPlan" class="reminder-popup-item-time" style="display:flex; flex-direction:column; align-items:center; gap:3px; min-width:38px;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                  <span style="font-size:10px; font-weight:700; color:var(--color-terracotta,#D67B52); white-space:nowrap;">{{ currentItem.time }}</span>
+                </div>
+                <div v-else class="reminder-popup-item-time">{{ currentItem.time }}</div>
                 <div class="reminder-popup-item-info">
                   <div class="reminder-popup-item-title">{{ currentItem.title }}</div>
                   <div class="reminder-popup-item-sub">{{ currentItem.subtitle }}</div>
@@ -245,7 +250,7 @@ const ReminderPopup = {
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 Lihat Notifikasi
               </button>
-              <button class="reminder-popup-btn-dismiss" @click="dismiss">Nanti saja</button>
+              <button class="reminder-popup-btn-dismiss" @click="dismiss">Oke, Siap!</button>
             </div>
           </template>
 
@@ -354,7 +359,11 @@ const ReminderPopup = {
     },
     headerTitle() {
       if (this.mode === 'missed') return 'Notifikasi Kelewat';
-      if (this.mode === 'live')   return 'Waktunya Sekarang!';
+      if (this.mode === 'live') {
+        return this.currentItem && this.currentItem.isTaskPlan
+          ? '⏰ Task Plan Dimulai!'
+          : 'Waktunya Sekarang!';
+      }
       return 'Pengingat Hari Ini';
     },
     headerClass() {
@@ -373,7 +382,7 @@ const ReminderPopup = {
     // Cek missed / open saat web dibuka (delay 900ms biar WorkspaceStorage selesai init)
     setTimeout(() => this._checkOnOpen(), 900);
     // Polling live setiap 30 detik
-    this._checkInterval = setInterval(() => this._checkLive(), 30000);
+    this._checkInterval = setInterval(() => this._checkLive(), 20000);
     // Bell reminder: goyang + bunyi setiap 8 menit kalau masih ada notif pending & popup tidak visible
     this._bellInterval  = setInterval(() => this._checkBellReminder(), 8 * 60 * 1000);
   },
@@ -416,6 +425,33 @@ const ReminderPopup = {
         }
       } catch(e) {}
       return base.sort((a, b) => a.timeVal - b.timeVal);
+    },
+
+    // ── Task Plan hari ini yang punya waktu mulai (TERPISAH dari _allActions) ──
+    // Tidak masuk pendingNotifs/actionable — hanya untuk live polling jam mulai
+    _allTaskPlanActions() {
+      const list = [];
+      try {
+        const raw = WorkspaceStorage.getItem('personal_workspace_job_plans');
+        if (raw) {
+          const plans = JSON.parse(raw);
+          plans.filter(p => p.date === this.todayStr && p.time).forEach(p => {
+            const id = 'taskplan-' + p.id;
+            const [hh, mm] = p.time.split(':').map(Number);
+            const timeVal  = hh * 60 + mm;
+            const timeLabel = p.timeEnd ? p.time + ' – ' + p.timeEnd : p.time;
+            list.push({
+              id,
+              title: p.tasks,
+              subtitle: 'Task Plan · ' + (p.category || 'Umum') + (p.requester ? ' · dari ' + p.requester : ''),
+              time: timeLabel,
+              timeVal,
+              isTaskPlan: true
+            });
+          });
+        }
+      } catch(e) {}
+      return list.sort((a, b) => a.timeVal - b.timeVal);
     },
 
     _isDone(id) {
@@ -527,10 +563,19 @@ const ReminderPopup = {
       const nowMin   = this._nowMinutes();
       const shownLog = this._getShownLog()[this.todayStr] || {};
 
-      const due = this._allActions().find(a => {
+      // Cek habit/manual reminders
+      let due = this._allActions().find(a => {
         const diff = nowMin - a.timeVal;
-        return diff >= 0 && diff < 1 && !this._isDone(a.id) && !shownLog[a.id];
+        return diff >= 0 && diff < 2 && !this._isDone(a.id) && !shownLog[a.id];
       });
+
+      // Cek task plans (terpisah, tidak ada done-state)
+      if (!due) {
+        due = this._allTaskPlanActions().find(a => {
+          const diff = nowMin - a.timeVal;
+          return diff >= 0 && diff < 2 && !shownLog[a.id];
+        });
+      }
 
       if (!due) return;
 
@@ -664,6 +709,16 @@ function _snapshotMissedForDate(dateStr) {
       if (raw) JSON.parse(raw).filter(m => m.date === dateStr).forEach(m => {
         if (!base.find(b => b.id === m.id))
           base.push({ id: m.id, title: m.title, subtitle: m.subtitle || 'Pengingat manual', time: m.time, type: 'manual' });
+      });
+    } catch(e) {}
+    // Task Plan hari itu yang punya waktu -> snapshot juga sebagai missed
+    try {
+      const raw = WorkspaceStorage.getItem('personal_workspace_job_plans');
+      if (raw) JSON.parse(raw).filter(p => p.date === dateStr && p.time).forEach(p => {
+        const id = 'taskplan-' + p.id;
+        if (base.find(b => b.id === id)) return;
+        const timeLabel = p.timeEnd ? p.time + ' – ' + p.timeEnd : p.time;
+        base.push({ id, title: p.tasks, subtitle: 'Task Plan · ' + (p.category || 'Umum'), time: timeLabel, type: 'taskplan' });
       });
     } catch(e) {}
     return base.filter(n => !status[n.id]);
