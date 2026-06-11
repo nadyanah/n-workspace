@@ -4883,9 +4883,67 @@ const DailyNutrition = {
                 </div>
 
                 <!-- Takeaway -->
+                <!-- TAKEAWAY — Rich Text Editor -->
                 <div class="form-group" style="margin-bottom: 10px;">
-                  <label>Poin Keberlanjutan / Takeaway Utama</label>
-                  <input type="text" class="form-input" v-model="form.takeaway" placeholder="Garis besar satu kalimat actionable lesson..." required />
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; gap: 8px; flex-wrap: wrap;">
+                    <label style="margin: 0;">Poin Keberlanjutan / Takeaway Utama</label>
+                    <span style="font-size: 11px; color: var(--text-muted); font-style: italic;">Enter = baris baru</span>
+                  </div>
+                  <!-- Toolbar Takeaway -->
+                  <div style="display: flex; flex-wrap: wrap; gap: 4px; padding: 7px 10px; background: #F5F0EB; border: 1.5px solid var(--color-sand); border-bottom: none; border-radius: 10px 10px 0 0; align-items: center;">
+                    <button type="button" @click="rtExecTw('bold')" title="Bold"
+                      style="width:30px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; color:var(--text-dark); font-family:serif; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'"><b>B</b></button>
+                    <button type="button" @click="rtExecTw('italic')" title="Italic"
+                      style="width:30px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--text-dark); font-family:serif; font-style:italic; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'"><i>I</i></button>
+                    <button type="button" @click="rtExecTw('underline')" title="Underline"
+                      style="width:30px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--text-dark); text-decoration:underline; font-family:serif; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'"><u>U</u></button>
+                    <button type="button" @click="rtExecTw('strikeThrough')" title="Strikethrough"
+                      style="width:30px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--text-dark); font-family:serif; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'"><s>S</s></button>
+                    <div style="width:1px; height:20px; background:var(--color-sand); margin:0 3px;"></div>
+                    <button type="button" @click="rtExecTw('insertUnorderedList')" title="Bullet List"
+                      style="width:30px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
+                    </button>
+                    <div style="width:1px; height:20px; background:var(--color-sand); margin:0 3px;"></div>
+                    <button type="button" @click="rtExecTw('hiliteColor','#FEF9C3')" title="Highlight Kuning"
+                      style="width:28px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">
+                      <span style="font-size:12px; font-weight:800; color:#854D0E; background:#FEF9C3; padding:1px 4px; border-radius:3px;">A</span>
+                    </button>
+                    <button type="button" @click="rtExecTw('hiliteColor','#FCE7F3')" title="Highlight Pink"
+                      style="width:28px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">
+                      <span style="font-size:12px; font-weight:800; color:#9D174D; background:#FCE7F3; padding:1px 4px; border-radius:3px;">A</span>
+                    </button>
+                    <button type="button" @click="rtExecTw('hiliteColor','#D1FAE5')" title="Highlight Hijau"
+                      style="width:28px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">
+                      <span style="font-size:12px; font-weight:800; color:#065F46; background:#D1FAE5; padding:1px 4px; border-radius:3px;">A</span>
+                    </button>
+                    <button type="button" @click="rtExecTw('hiliteColor','transparent')" title="Hapus Highlight"
+                      style="width:28px; height:28px; border:1.5px solid transparent; border-radius:6px; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.12s;"
+                      onmouseover="this.style.background='#EDE6DE';this.style.borderColor='var(--color-sand)'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent'">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                  <!-- ContentEditable Takeaway -->
+                  <div
+                    ref="takeawayEditor"
+                    contenteditable="true"
+                    @input="onTakeawayInput"
+                    @paste="onTakeawayPaste"
+                    style="width: 100%; min-height: 80px; max-height: 200px; overflow-y: auto; padding: 12px 16px; border: 1.5px solid var(--color-sand); border-top: none; border-radius: 0 0 10px 10px; background: #fff; font-size: 14px; color: var(--text-dark); line-height: 1.7; outline: none; box-sizing: border-box; font-family: inherit; white-space: pre-wrap;"
+                    data-placeholder="Garis besar actionable lesson, poin penting, atau hal yang ingin diingat..."
+                  ></div>
+                  <p v-if="!form.takeaway" style="font-size: 11px; color: #EF4444; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Takeaway wajib diisi
+                  </p>
                 </div>
 
               </form>
@@ -5030,7 +5088,7 @@ const DailyNutrition = {
               <h3 class="timeline-title">{{ ins.title }}</h3>
               <div style="font-size: 14px; color: var(--text-dark); line-height: 1.7; margin-bottom: 12px;" v-html="ins.details"></div>
               <div class="timeline-takeaway">
-                <strong>💡 Takeaway:</strong> {{ ins.takeaway }}
+                <strong>💡 Takeaway:</strong> <span v-html="ins.takeaway"></span>
               </div>
             </div>
           </div>
@@ -5175,17 +5233,34 @@ const DailyNutrition = {
       this.$nextTick(() => {
         const editor = this.$refs.detailsEditor;
         if (editor) editor.innerHTML = this.form.details || '';
+        const twEditor = this.$refs.takeawayEditor;
+        if (twEditor) twEditor.innerHTML = this.form.takeaway || '';
       });
     },
     saveInsightFromModal() {
-      // Validasi manual karena pakai contenteditable, bukan form native
       if (!this.form.date) return alert('Tanggal wajib diisi!');
       if (!this.form.title || !this.form.title.trim()) return alert('Judul/Intisari wajib diisi!');
       if (!this.form.details || this.form.details.replace(/<[^>]*>/g,'').trim() === '') {
         return alert('Rangkuman Detail wajib diisi!');
       }
-      if (!this.form.takeaway || !this.form.takeaway.trim()) return alert('Takeaway utama wajib diisi!');
+      if (!this.form.takeaway || this.form.takeaway.replace(/<[^>]*>/g,'').trim() === '') {
+        return alert('Takeaway utama wajib diisi!');
+      }
       this.saveInsight();
+    },
+    rtExecTw(cmd, val) {
+      const editor = this.$refs.takeawayEditor;
+      if (editor) editor.focus();
+      document.execCommand(cmd, false, val || null);
+      if (editor) this.form.takeaway = editor.innerHTML;
+    },
+    onTakeawayInput(e) {
+      this.form.takeaway = e.target.innerHTML;
+    },
+    onTakeawayPaste(e) {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      document.execCommand('insertText', false, text);
     },
     addInsightCategory() {
       const name = this.newInsightCatInput.trim();
@@ -5220,7 +5295,10 @@ const DailyNutrition = {
       this.saveToStorage();
       this.form = { date: new Date().toISOString().split('T')[0], category: this.form.category, source: '', title: '', details: '', takeaway: '' };
       this.showAddLog = false;
-      this.$nextTick(() => { const ed = this.$refs.detailsEditor; if (ed) ed.innerHTML = ''; });
+      this.$nextTick(() => {
+        const ed = this.$refs.detailsEditor; if (ed) ed.innerHTML = '';
+        const tw = this.$refs.takeawayEditor; if (tw) tw.innerHTML = '';
+      });
     },
     startEditInsight(idx) {
       const ins = this.filteredInsights[idx];
@@ -5234,7 +5312,10 @@ const DailyNutrition = {
       this.editingInsightId = null;
       this.form = { date: new Date().toISOString().split('T')[0], category: 'Teknologi', source: '', title: '', details: '', takeaway: '' };
       this.showAddLog = false;
-      this.$nextTick(() => { const ed = this.$refs.detailsEditor; if (ed) ed.innerHTML = ''; });
+      this.$nextTick(() => {
+        const ed = this.$refs.detailsEditor; if (ed) ed.innerHTML = '';
+        const tw = this.$refs.takeawayEditor; if (tw) tw.innerHTML = '';
+      });
     },
     deleteInsight(idx) {
       if (!confirm('Hapus insight ini?')) return;
