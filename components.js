@@ -109,13 +109,49 @@ const JobLogbook = {
             </div>
           </div>
 
-          <!-- Category Filter -->
-          <select v-model="filterCategory" @click.stop
-            :style="filterCategory ? { borderColor: 'var(--color-terracotta)', background: '#FFF4ED', color: 'var(--color-terracotta)' } : { borderColor: 'var(--color-sand)', background: 'var(--bg-cream)', color: 'var(--text-dark)' }"
-            style="height: 34px; padding: 0 10px; border: 1.5px solid; border-radius: 8px; font-size: 12.5px; font-family: 'Outfit', sans-serif; font-weight: 600; cursor: pointer; min-width: 140px; outline: none; flex-shrink: 0; transition: all 0.15s;">
-            <option value="">Semua Kategori</option>
-            <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
-          </select>
+          <!-- Category Filter — custom dropdown -->
+          <div style="position: relative; flex-shrink: 0;" @click.stop>
+            <button @click.stop="showFilterCategoryDD = !showFilterCategoryDD"
+              :style="filterCategory ? { borderColor: 'var(--color-terracotta)', background: '#FFF4ED', color: 'var(--color-terracotta)' } : { borderColor: 'var(--color-sand)', background: 'var(--bg-cream)', color: 'var(--text-dark)' }"
+              style="height: 34px; padding: 0 28px 0 10px; border: 1.5px solid; border-radius: 8px; font-size: 12.5px; font-family: 'Outfit', sans-serif; font-weight: 600; cursor: pointer; min-width: 140px; outline: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; white-space: nowrap; position: relative;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+              {{ filterCategory || 'Semua Kategori' }}
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                style="position: absolute; right: 8px;"
+                :style="{ transform: showFilterCategoryDD ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div v-if="showFilterCategoryDD" @click.stop
+              style="position: absolute; top: calc(100% + 5px); left: 0; z-index: 99999;
+                     background: var(--color-paper, #FAF7F2);
+                     border: 1.5px solid var(--color-sand-light, #EDE8E1);
+                     border-radius: 14px;
+                     box-shadow: 0 8px 32px rgba(61,46,34,0.16), 0 2px 8px rgba(61,46,34,0.08);
+                     padding: 6px; min-width: 170px; max-height: 240px; overflow-y: auto;
+                     scrollbar-width: thin; scrollbar-color: var(--color-sand) transparent;">
+              <button @click.stop="filterCategory = ''; showFilterCategoryDD = false"
+                :style="!filterCategory ? { background: 'var(--color-sand-light,#EDE8E1)' } : {}"
+                style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                onmouseover="this.style.background='var(--color-cream,#FDF5EB)'" onmouseout="this.style.background='transparent'">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-sand,#C8BDB5)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+                <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-secondary,#7A6F66);">Semua Kategori</span>
+                <svg v-if="!filterCategory" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </button>
+              <div style="height: 1px; background: var(--color-sand-light,#EDE8E1); margin: 3px 6px;"></div>
+              <button v-for="cat in allCategories" :key="cat"
+                @click.stop="filterCategory = cat; showFilterCategoryDD = false"
+                :style="filterCategory === cat ? { background: 'rgba(214,123,82,0.08)' } : {}"
+                style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                onmouseover="this.style.background='rgba(214,123,82,0.07)'" onmouseout="this.style.background='transparent'">
+                <span :style="{ color: getCategoryColor(cat) }" style="flex-shrink: 0; display: inline-flex; align-items: center;">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                </span>
+                <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-dark,#3D2E22); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ cat }}</span>
+                <svg v-if="filterCategory === cat" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </button>
+            </div>
+          </div>
 
           <!-- Spacer + Active badge + Reset -->
           <div style="display: flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0;">
@@ -462,23 +498,133 @@ const JobLogbook = {
           </div>
 
           <div v-if="plans.length > 0" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+            <!-- Prioritas custom dropdown -->
             <div style="display: flex; align-items: center; gap: 8px;">
               <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;">Prioritas:</label>
-              <select v-model="planFilterPriority" class="form-input" style="height: 36px; padding: 0 10px; font-size: 12.5px; font-weight: 600; min-width: 130px;">
-                <option value="">Semua ({{ plans.length }})</option>
-                <option value="High">🔴 High ({{ plans.filter(p => p.priority === 'High').length }})</option>
-                <option value="Medium">🟡 Medium ({{ plans.filter(p => p.priority === 'Medium').length }})</option>
-                <option value="Low">🟢 Low ({{ plans.filter(p => p.priority === 'Low').length }})</option>
-              </select>
+              <div style="position: relative;" @click.stop>
+                <button @click.stop="showPriorityDD = !showPriorityDD; showJadwalDD = false"
+                  :style="planFilterPriority ? { borderColor: 'var(--color-terracotta)', background: '#FFF4ED', color: 'var(--color-terracotta)' } : { borderColor: 'var(--color-sand)', background: 'var(--bg-cream)', color: 'var(--text-dark)' }"
+                  style="height: 36px; padding: 0 28px 0 10px; border: 1.5px solid; border-radius: 8px; font-size: 12.5px; font-family: inherit; font-weight: 600; cursor: pointer; min-width: 130px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: all 0.15s; position: relative;">
+                  <span v-if="!planFilterPriority">Semua ({{ plans.length }})</span>
+                  <span v-else>{{ planFilterPriority === 'High' ? '🔴' : planFilterPriority === 'Medium' ? '🟡' : '🟢' }} {{ planFilterPriority }}</span>
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                    style="position: absolute; right: 8px;"
+                    :style="{ transform: showPriorityDD ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                <div v-if="showPriorityDD" @click.stop
+                  style="position: absolute; top: calc(100% + 5px); left: 0; z-index: 99999;
+                         background: var(--color-paper, #FAF7F2);
+                         border: 1.5px solid var(--color-sand-light, #EDE8E1);
+                         border-radius: 14px;
+                         box-shadow: 0 8px 32px rgba(61,46,34,0.16), 0 2px 8px rgba(61,46,34,0.08);
+                         padding: 6px; min-width: 175px;">
+                  <button @click.stop="planFilterPriority = ''; showPriorityDD = false"
+                    :style="!planFilterPriority ? { background: 'var(--color-sand-light,#EDE8E1)' } : {}"
+                    style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                    onmouseover="this.style.background='var(--color-cream,#FDF5EB)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size: 13px;">—</span>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-secondary,#7A6F66);">Semua ({{ plans.length }})</span>
+                    <svg v-if="!planFilterPriority" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                  <div style="height: 1px; background: var(--color-sand-light,#EDE8E1); margin: 3px 6px;"></div>
+                  <button @click.stop="planFilterPriority = 'High'; showPriorityDD = false"
+                    :style="planFilterPriority === 'High' ? { background: 'rgba(185,28,28,0.06)' } : {}"
+                    style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                    onmouseover="this.style.background='rgba(185,28,28,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size: 13px;">🔴</span>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: #B91C1C;">High ({{ plans.filter(p => p.priority === 'High').length }})</span>
+                    <svg v-if="planFilterPriority === 'High'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                  <button @click.stop="planFilterPriority = 'Medium'; showPriorityDD = false"
+                    :style="planFilterPriority === 'Medium' ? { background: 'rgba(133,77,14,0.06)' } : {}"
+                    style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                    onmouseover="this.style.background='rgba(133,77,14,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size: 13px;">🟡</span>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: #854D0E;">Medium ({{ plans.filter(p => p.priority === 'Medium').length }})</span>
+                    <svg v-if="planFilterPriority === 'Medium'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                  <button @click.stop="planFilterPriority = 'Low'; showPriorityDD = false"
+                    :style="planFilterPriority === 'Low' ? { background: 'rgba(22,101,52,0.06)' } : {}"
+                    style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                    onmouseover="this.style.background='rgba(22,101,52,0.05)'" onmouseout="this.style.background='transparent'">
+                    <span style="font-size: 13px;">🟢</span>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: #166534;">Low ({{ plans.filter(p => p.priority === 'Low').length }})</span>
+                    <svg v-if="planFilterPriority === 'Low'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                </div>
+              </div>
             </div>
+
+            <!-- Jadwal custom dropdown -->
             <div style="display: flex; align-items: center; gap: 8px;">
               <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;">Jadwal:</label>
-              <select v-model="planFilterSchedule" class="form-input" style="height: 36px; padding: 0 10px; font-size: 12.5px; font-weight: 600; min-width: 155px;">
-                <option value="">Semua Jadwal</option>
-                <option value="overdue">⚠️ Lewat Jadwal ({{ plans.filter(p => p.date < todayStr).length }})</option>
-                <option value="today">✦ Hari Ini ({{ plans.filter(p => p.date === todayStr).length }})</option>
-                <option value="upcoming">🔜 Akan Datang ({{ plans.filter(p => p.date > todayStr).length }})</option>
-              </select>
+              <div style="position: relative;" @click.stop>
+                <button @click.stop="showJadwalDD = !showJadwalDD; showPriorityDD = false"
+                  :style="planFilterSchedule ? { borderColor: 'var(--color-terracotta)', background: '#FFF4ED', color: 'var(--color-terracotta)' } : { borderColor: 'var(--color-sand)', background: 'var(--bg-cream)', color: 'var(--text-dark)' }"
+                  style="height: 36px; padding: 0 28px 0 10px; border: 1.5px solid; border-radius: 8px; font-size: 12.5px; font-family: inherit; font-weight: 600; cursor: pointer; min-width: 155px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: all 0.15s; position: relative;">
+                  <span v-if="!planFilterSchedule">Semua Jadwal</span>
+                  <span v-else-if="planFilterSchedule === 'overdue'" style="display:inline-flex;align-items:center;gap:5px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Lewat Jadwal</span>
+                  <span v-else-if="planFilterSchedule === 'today'" style="display:inline-flex;align-items:center;gap:5px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Hari Ini</span>
+                  <span v-else-if="planFilterSchedule === 'tomorrow'" style="display:inline-flex;align-items:center;gap:5px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Besok</span>
+                  <span v-else style="display:inline-flex;align-items:center;gap:5px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline><path d="M17 12h2"></path></svg> Akan Datang</span>
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                    style="position: absolute; right: 8px;"
+                    :style="{ transform: showJadwalDD ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                <div v-if="showJadwalDD" @click.stop
+                  style="position: absolute; top: calc(100% + 5px); left: 0; z-index: 99999;
+                         background: var(--color-paper, #FAF7F2);
+                         border: 1.5px solid var(--color-sand-light, #EDE8E1);
+                         border-radius: 14px;
+                         box-shadow: 0 8px 32px rgba(61,46,34,0.16), 0 2px 8px rgba(61,46,34,0.08);
+                         padding: 6px; min-width: 200px;">
+                  <button @click.stop="planFilterSchedule = ''; showJadwalDD = false"
+                    :style="!planFilterSchedule ? { background: 'var(--color-sand-light,#EDE8E1)' } : {}"
+                    style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                    onmouseover="this.style.background='var(--color-cream,#FDF5EB)'" onmouseout="this.style.background='transparent'">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-sand,#C8BDB5)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-secondary,#7A6F66);">Semua Jadwal</span>
+                    <svg v-if="!planFilterSchedule" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                  <div style="height: 1px; background: var(--color-sand-light,#EDE8E1); margin: 3px 6px;"></div>
+                  <button @click.stop="planFilterSchedule = 'overdue'; showJadwalDD = false"
+                    :style="planFilterSchedule === 'overdue' ? { background: 'rgba(185,28,28,0.06)' } : {}"
+                    style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                    onmouseover="this.style.background='rgba(185,28,28,0.05)'" onmouseout="this.style.background='transparent'">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: #B91C1C;">Lewat Jadwal ({{ plans.filter(p => p.date < todayStr).length }})</span>
+                    <svg v-if="planFilterSchedule === 'overdue'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                  <button @click.stop="planFilterSchedule = 'today'; showJadwalDD = false"
+                    :style="planFilterSchedule === 'today' ? { background: 'rgba(214,123,82,0.08)' } : {}"
+                    style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                    onmouseover="this.style.background='rgba(214,123,82,0.07)'" onmouseout="this.style.background='transparent'">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--color-terracotta,#D67B52);">Hari Ini ({{ plans.filter(p => p.date === todayStr).length }})</span>
+                    <svg v-if="planFilterSchedule === 'today'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                  <button @click.stop="planFilterSchedule = 'tomorrow'; showJadwalDD = false"
+                    :style="planFilterSchedule === 'tomorrow' ? { background: 'rgba(5,150,105,0.07)' } : {}"
+                    style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                    onmouseover="this.style.background='rgba(5,150,105,0.06)'" onmouseout="this.style.background='transparent'">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: #059669;">Besok ({{ plans.filter(p => p.date === tomorrowStr).length }})</span>
+                    <svg v-if="planFilterSchedule === 'tomorrow'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                  <button @click.stop="planFilterSchedule = 'upcoming'; showJadwalDD = false"
+                    :style="planFilterSchedule === 'upcoming' ? { background: 'rgba(29,78,216,0.06)' } : {}"
+                    style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                    onmouseover="this.style.background='rgba(29,78,216,0.05)'" onmouseout="this.style.background='transparent'">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline><path d="M17 12h2"></path></svg>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: #1D4ED8;">Akan Datang ({{ plans.filter(p => p.date > todayStr).length }})</span>
+                    <svg v-if="planFilterSchedule === 'upcoming'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                </div>
+              </div>
             </div>
             <button v-if="planFilterPriority || planFilterSchedule" class="btn btn-secondary" @click="planFilterPriority = ''; planFilterSchedule = ''" style="height: 36px; padding: 0 12px; font-size: 12px; cursor: pointer; color: var(--color-terracotta); border-color: var(--color-terracotta);">Reset</button>
           </div>
@@ -542,25 +688,75 @@ const JobLogbook = {
                 </div>
                 
                 <div style="display: flex; gap: 6px; flex-shrink: 0; align-items: center;">
+                  <!-- ── Custom Phase Dropdown ── -->
                   <div style="position: relative; display: inline-flex; align-items: center;">
-                    <select
-                      :value="plan.phase || 'Plan'"
-                      @change="updatePlanPhase(plan.id, $event.target.value)"
+                    <!-- Trigger pill -->
+                    <button
+                      @click.stop="openPhaseDropdownId = (openPhaseDropdownId === plan.id ? null : plan.id)"
                       :style="{
-                        background: (plan.phase === 'Done') ? '#ECFDF5' : (plan.phase === 'Progress') ? '#EFF6FF' : '#FFF4ED',
-                        color: (plan.phase === 'Done') ? '#065F46' : (plan.phase === 'Progress') ? '#1D4ED8' : '#92400E',
-                        borderColor: (plan.phase === 'Done') ? '#6EE7B7' : (plan.phase === 'Progress') ? '#93C5FD' : '#FCD34D'
+                        background: (plan.phase === 'Completed') ? 'rgba(74,160,100,0.12)' : (plan.phase === 'In Progress') ? 'rgba(214,123,82,0.12)' : 'rgba(160,150,144,0.10)',
+                        color:      (plan.phase === 'Completed') ? '#2D7A4F'               : (plan.phase === 'In Progress') ? 'var(--color-terracotta,#D67B52)' : 'var(--text-secondary,#7A6F66)',
+                        borderColor:(plan.phase === 'Completed') ? 'rgba(74,160,100,0.35)' : (plan.phase === 'In Progress') ? 'rgba(214,123,82,0.35)'           : 'var(--color-sand,#C8BDB5)'
                       }"
-                      style="appearance: none; -webkit-appearance: none; border: 1.5px solid; border-radius: 8px; padding: 4px 28px 4px 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; outline: none; min-width: 95px;">
-                      <option value="Plan">Plan</option>
-                      <option value="Progress">Progress</option>
-                      <option value="Done">Done</option>
-                    </select>
-                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                      style="position: absolute; right: 8px; pointer-events: none;"
-                      :style="{ color: (plan.phase === 'Done') ? '#065F46' : (plan.phase === 'Progress') ? '#1D4ED8' : '#92400E' }">
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
+                      style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 8px; border: 1.5px solid; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; background: none; white-space: nowrap; transition: box-shadow 0.15s;"
+                    >
+                      <!-- Status icon -->
+                      <svg v-if="plan.phase === 'Completed'" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" fill="rgba(74,160,100,0.18)" stroke="#2D7A4F"/><polyline points="8 12 11 15 16 9" stroke="#2D7A4F"/></svg>
+                      <svg v-else-if="plan.phase === 'In Progress'" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" fill="rgba(214,123,82,0.15)" stroke="var(--color-terracotta,#D67B52)"/><line x1="12" y1="8" x2="12" y2="12" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5"/><circle cx="12" cy="15.5" r="1" fill="var(--color-terracotta,#D67B52)"/></svg>
+                      <svg v-else viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" stroke="var(--color-sand,#C8BDB5)"/></svg>
+                      {{ plan.phase || 'To-do' }}
+                      <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                        :style="{ transform: openPhaseDropdownId === plan.id ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </button>
+
+                    <!-- Floating dropdown panel -->
+                    <div v-if="openPhaseDropdownId === plan.id"
+                      @click.stop
+                      style="position: absolute; top: calc(100% + 6px); right: 0; z-index: 99999;
+                             background: var(--color-paper, #FAF7F2);
+                             border: 1.5px solid var(--color-sand-light, #EDE8E1);
+                             border-radius: 14px;
+                             box-shadow: 0 8px 32px rgba(61,46,34,0.16), 0 2px 8px rgba(61,46,34,0.08);
+                             padding: 6px;
+                             min-width: 170px;
+                             overflow: hidden;">
+
+                      <!-- To-do -->
+                      <button @click.stop="updatePlanPhase(plan.id, 'To-do'); openPhaseDropdownId = null"
+                        :style="(plan.phase === 'To-do' || !plan.phase) ? { background: 'var(--color-sand-light,#EDE8E1)' } : {}"
+                        style="width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; transition: background 0.13s; background: transparent;"
+                        onmouseover="this.style.background='var(--color-cream,#FDF5EB)'" onmouseout="if(!this.dataset.active) this.style.background='transparent'">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" stroke="var(--color-sand,#C8BDB5)"/></svg>
+                        <span style="flex: 1; font-size: 13px; font-weight: 600; color: var(--text-secondary,#7A6F66);">To-do</span>
+                        <svg v-if="plan.phase === 'To-do' || !plan.phase" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      </button>
+
+                      <!-- In Progress -->
+                      <button @click.stop="updatePlanPhase(plan.id, 'In Progress'); openPhaseDropdownId = null"
+                        :style="plan.phase === 'In Progress' ? { background: 'rgba(214,123,82,0.08)' } : {}"
+                        style="width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; transition: background 0.13s; background: transparent;"
+                        onmouseover="this.style.background='rgba(214,123,82,0.07)'" onmouseout="this.style.background='transparent'">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" fill="rgba(214,123,82,0.15)" stroke="var(--color-terracotta,#D67B52)"/><line x1="12" y1="8" x2="12" y2="12" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5"/><circle cx="12" cy="15.5" r="1" fill="var(--color-terracotta,#D67B52)"/></svg>
+                        <span style="flex: 1; font-size: 13px; font-weight: 600; color: var(--color-terracotta,#D67B52);">In Progress</span>
+                        <svg v-if="plan.phase === 'In Progress'" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      </button>
+
+                      <!-- Divider -->
+                      <div style="height: 1px; background: var(--color-sand-light,#EDE8E1); margin: 4px 6px;"></div>
+
+                      <!-- Completed -->
+                      <button @click.stop="updatePlanPhase(plan.id, 'Completed'); openPhaseDropdownId = null"
+                        :style="plan.phase === 'Completed' ? { background: 'rgba(74,160,100,0.08)' } : {}"
+                        style="width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; transition: background 0.13s; background: transparent;"
+                        onmouseover="this.style.background='rgba(74,160,100,0.07)'" onmouseout="this.style.background='transparent'">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" fill="rgba(74,160,100,0.18)" stroke="#2D7A4F"/><polyline points="8 12 11 15 16 9" stroke="#2D7A4F" stroke-width="2.5"/></svg>
+                        <span style="flex: 1; font-size: 13px; font-weight: 600; color: #2D7A4F;">Completed</span>
+                        <svg v-if="plan.phase === 'Completed'" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#2D7A4F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      </button>
+
+                    </div>
                   </div>
                   <button @click="startEditPlan(plan)"
                     title="Edit task plan ini"
@@ -588,12 +784,34 @@ const JobLogbook = {
             <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 0;">Riwayat Kegiatan Kerja</h3>
             <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);">
               <span>Tampilkan</span>
-              <select v-model="itemsPerPage" class="form-input" style="width: 80px; padding: 4px 8px; font-size: 13px; height: 34px;">
-                <option :value="5">5</option>
-                <option :value="10">10</option>
-                <option :value="20">20</option>
-              </select>
-              <span>entri</span>
+              <div style="position: relative;" @click.stop>
+                <button @click.stop="showTampilkanDD = !showTampilkanDD"
+                  style="height: 34px; padding: 0 26px 0 10px; border: 1.5px solid var(--color-sand,#C8BDB5); border-radius: 8px; font-size: 13px; font-family: inherit; font-weight: 600; cursor: pointer; background: var(--bg-cream); color: var(--text-dark); display: inline-flex; align-items: center; white-space: nowrap; transition: all 0.15s; position: relative;"
+                  :style="showTampilkanDD ? { borderColor: 'var(--color-terracotta)', background: '#FFF4ED' } : {}">
+                  {{ itemsPerPage }}
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                    style="position: absolute; right: 7px;"
+                    :style="{ transform: showTampilkanDD ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                <div v-if="showTampilkanDD" @click.stop
+                  style="position: absolute; top: calc(100% + 5px); right: 0; z-index: 99999;
+                         background: var(--color-paper, #FAF7F2);
+                         border: 1.5px solid var(--color-sand-light, #EDE8E1);
+                         border-radius: 14px;
+                         box-shadow: 0 8px 32px rgba(61,46,34,0.16), 0 2px 8px rgba(61,46,34,0.08);
+                         padding: 6px; min-width: 100px;">
+                  <button v-for="n in [5, 10, 20]" :key="n"
+                    @click.stop="itemsPerPage = n; showTampilkanDD = false"
+                    :style="itemsPerPage === n ? { background: 'rgba(214,123,82,0.10)', color: 'var(--color-terracotta,#D67B52)' } : {}"
+                    style="width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; text-align: left; background: transparent; color: var(--text-dark); transition: background 0.13s;"
+                    onmouseover="this.style.background='rgba(214,123,82,0.07)'" onmouseout="this.style.background='transparent'">
+                    {{ n }} entri
+                    <svg v-if="itemsPerPage === n" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -711,9 +929,9 @@ const JobLogbook = {
             <button v-if="noteFilterStartDate || noteFilterEndDate || noteFilterCategory || noteFilterSchedule" class="btn btn-secondary" @click="noteFilterStartDate=''; noteFilterEndDate=''; noteFilterCategory=''; noteFilterSchedule=''; noteShowRangePicker=false" style="margin-left: auto; height: 30px; font-size: 12px; padding: 0 12px; cursor: pointer; color: var(--color-terracotta); border-color: var(--color-terracotta);">Reset Semua</button>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr auto; gap: 10px; align-items: end;">
+          <div style="display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap;">
             <!-- Rentang Tanggal -->
-            <div class="form-group" style="margin-bottom: 0; position: relative;">
+            <div class="form-group" style="margin-bottom: 0; position: relative; flex: 1.5; min-width: 160px;">
               <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 5px;">Rentang Tanggal</label>
               <button type="button" class="form-input" @click.stop="noteShowRangePicker = !noteShowRangePicker"
                 style="width: 100%; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px; background: #fff; height: 40px; box-sizing: border-box; white-space: nowrap; overflow: hidden;">
@@ -754,28 +972,97 @@ const JobLogbook = {
               </div>
             </div>
 
-            <!-- Filter Kategori -->
-            <div class="form-group" style="margin-bottom: 0;">
+            <!-- Filter Kategori — custom dropdown -->
+            <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 140px;">
               <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 5px;">Kategori</label>
-              <select class="form-input" v-model="noteFilterCategory" style="height: 40px;">
-                <option value="">Semua Kategori</option>
-                <option v-for="cat in noteCategories" :key="'filter-' + cat" :value="cat">{{ cat }}</option>
-              </select>
+              <div style="position: relative;" @click.stop>
+                <button @click.stop="showNoteFilterCatDD = !showNoteFilterCatDD"
+                  :style="noteFilterCategory ? { borderColor: 'var(--color-terracotta)', background: '#FFF4ED', color: 'var(--color-terracotta)' } : { borderColor: 'var(--color-sand)', background: '#fff', color: 'var(--text-dark)' }"
+                  style="width: 100%; height: 40px; padding: 0 28px 0 10px; border: 1.5px solid; border-radius: 8px; font-size: 12.5px; font-family: inherit; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: all 0.15s; position: relative; box-sizing: border-box;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+                  <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">{{ noteFilterCategory || 'Semua Kategori' }}</span>
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; right:8px;" :style="{ transform: showNoteFilterCatDD ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div v-if="showNoteFilterCatDD" @click.stop
+                  style="position: absolute; top: calc(100% + 5px); left: 0; z-index: 99999; background: var(--color-paper,#FAF7F2); border: 1.5px solid var(--color-sand-light,#EDE8E1); border-radius: 14px; box-shadow: 0 8px 32px rgba(61,46,34,0.16); padding: 6px; min-width: 180px; max-height: 220px; overflow-y: auto;">
+                  <button @click.stop="noteFilterCategory = ''; showNoteFilterCatDD = false"
+                    :style="!noteFilterCategory ? { background: 'var(--color-sand-light,#EDE8E1)' } : {}"
+                    style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                    onmouseover="this.style.background='var(--color-cream,#FDF5EB)'" onmouseout="this.style.background='transparent'">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-sand,#C8BDB5)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-secondary,#7A6F66);">Semua Kategori</span>
+                    <svg v-if="!noteFilterCategory" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                  <div style="height:1px; background:var(--color-sand-light,#EDE8E1); margin:3px 6px;"></div>
+                  <button v-for="cat in noteCategories" :key="'nfcat-'+cat"
+                    @click.stop="noteFilterCategory = cat; showNoteFilterCatDD = false"
+                    :style="noteFilterCategory === cat ? { background: 'rgba(214,123,82,0.08)' } : {}"
+                    style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                    onmouseover="this.style.background='rgba(214,123,82,0.07)'" onmouseout="this.style.background='transparent'">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-dark,#3D2E22);">{{ cat }}</span>
+                    <svg v-if="noteFilterCategory === cat" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                </div>
+              </div>
             </div>
 
-            <!-- Filter Jadwal -->
-            <div class="form-group" style="margin-bottom: 0;">
-              <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 5px;">Urutkan / Lihat</label>
-              <select class="form-input" v-model="noteFilterSchedule" style="height: 40px;">
-                <option value="">Semua</option>
-                <option value="today">📅 Hari Ini</option>
-                <option value="upcoming">🔜 Akan Datang</option>
-                <option value="overdue">⚠️ Lewat Jadwal</option>
-              </select>
+            <!-- Filter Jadwal — custom dropdown -->
+            <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 140px;">
+              <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 5px;">Jadwal</label>
+              <div style="position: relative;" @click.stop>
+                <button @click.stop="showNoteJadwalDD = !showNoteJadwalDD"
+                  :style="noteFilterSchedule ? { borderColor: 'var(--color-terracotta)', background: '#FFF4ED', color: 'var(--color-terracotta)' } : { borderColor: 'var(--color-sand)', background: '#fff', color: 'var(--text-dark)' }"
+                  style="width: 100%; height: 40px; padding: 0 28px 0 10px; border: 1.5px solid; border-radius: 8px; font-size: 12.5px; font-family: inherit; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: all 0.15s; position: relative; box-sizing: border-box;">
+                  <span v-if="!noteFilterSchedule" style="display:inline-flex;align-items:center;gap:5px;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg> Semua Jadwal
+                  </span>
+                  <span v-else-if="noteFilterSchedule === 'overdue'" style="display:inline-flex;align-items:center;gap:5px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Lewat Jadwal</span>
+                  <span v-else-if="noteFilterSchedule === 'today'" style="display:inline-flex;align-items:center;gap:5px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Hari Ini</span>
+                  <span v-else style="display:inline-flex;align-items:center;gap:5px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline><path d="M17 12h2"></path></svg> Akan Datang</span>
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; right:8px;" :style="{ transform: showNoteJadwalDD ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div v-if="showNoteJadwalDD" @click.stop
+                  style="position: absolute; top: calc(100% + 5px); left: 0; z-index: 99999; background: var(--color-paper,#FAF7F2); border: 1.5px solid var(--color-sand-light,#EDE8E1); border-radius: 14px; box-shadow: 0 8px 32px rgba(61,46,34,0.16); padding: 6px; min-width: 200px;">
+                  <button @click.stop="noteFilterSchedule = ''; showNoteJadwalDD = false"
+                    :style="!noteFilterSchedule ? { background: 'var(--color-sand-light,#EDE8E1)' } : {}"
+                    style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                    onmouseover="this.style.background='var(--color-cream,#FDF5EB)'" onmouseout="this.style.background='transparent'">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-sand,#C8BDB5)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-secondary,#7A6F66);">Semua Jadwal</span>
+                    <svg v-if="!noteFilterSchedule" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                  <div style="height:1px; background:var(--color-sand-light,#EDE8E1); margin:3px 6px;"></div>
+                  <button @click.stop="noteFilterSchedule = 'overdue'; showNoteJadwalDD = false"
+                    :style="noteFilterSchedule === 'overdue' ? { background: 'rgba(185,28,28,0.06)' } : {}"
+                    style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                    onmouseover="this.style.background='rgba(185,28,28,0.05)'" onmouseout="this.style.background='transparent'">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: #B91C1C;">Lewat Jadwal</span>
+                    <svg v-if="noteFilterSchedule === 'overdue'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                  <button @click.stop="noteFilterSchedule = 'today'; showNoteJadwalDD = false"
+                    :style="noteFilterSchedule === 'today' ? { background: 'rgba(214,123,82,0.08)' } : {}"
+                    style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                    onmouseover="this.style.background='rgba(214,123,82,0.07)'" onmouseout="this.style.background='transparent'">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--color-terracotta,#D67B52);">Hari Ini</span>
+                    <svg v-if="noteFilterSchedule === 'today'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                  <button @click.stop="noteFilterSchedule = 'upcoming'; showNoteJadwalDD = false"
+                    :style="noteFilterSchedule === 'upcoming' ? { background: 'rgba(29,78,216,0.06)' } : {}"
+                    style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                    onmouseover="this.style.background='rgba(29,78,216,0.05)'" onmouseout="this.style.background='transparent'">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline><path d="M17 12h2"></path></svg>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: #1D4ED8;">Akan Datang</span>
+                    <svg v-if="noteFilterSchedule === 'upcoming'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                </div>
+              </div>
             </div>
 
             <!-- Jumlah hasil -->
-            <div style="padding-bottom: 2px;">
+            <div style="padding-bottom: 10px; flex-shrink: 0;">
               <span style="font-size: 11.5px; color: var(--text-muted); font-weight: 600; white-space: nowrap;">{{ filteredNotes.length }} note</span>
             </div>
           </div>
@@ -786,35 +1073,57 @@ const JobLogbook = {
           <p style="font-size: 15px; font-weight: 600;">Belum ada catatan yang ditemukan.</p>
         </div>
 
-        <div v-else style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+        <div v-else style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px;">
           <div v-for="note in filteredNotes" :key="note.id" 
-               :style="{ backgroundColor: getNoteColorStyle(note.color).bg }"
-               style="border-radius: 16px; padding: 16px; position: relative; transition: all 0.2s;"
-               onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 10px 24px rgba(0,0,0,0.06)'" 
+               :style="{ backgroundColor: getNoteColorStyle(note.color).bg, borderRadius: '20px', padding: '22px 20px 18px', position: 'relative', transition: 'all 0.22s', cursor: 'default', border: '1.5px solid ' + getNoteColorStyle(note.color).border }"
+               onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 16px 36px rgba(0,0,0,0.10)'" 
                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
             
-            <div class="flex-between" style="margin-bottom: 12px; padding: 0 4px;">
-              <span :style="{ color: getNoteColorStyle(note.color).headerText }" style="font-size: 15px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+            <!-- Top row: category label + actions -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <span :style="{ color: getNoteColorStyle(note.color).headerText }"
+                style="font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; display: inline-flex; align-items: center; gap: 5px;">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"></circle></svg>
                 {{ note.category }}
               </span>
-              <div style="display: flex; gap: 4px;">
-                <button @click="editNote(note)" title="Edit Note" style="background: none; border: none; cursor: pointer; padding: 4px; opacity: 0.6;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" :stroke="getNoteColorStyle(note.color).headerText" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              <div style="display: flex; gap: 2px;">
+                <button @click="editNote(note)" title="Edit" style="background: none; border: none; cursor: pointer; padding: 5px; border-radius: 6px; opacity: 0.55; transition: opacity 0.15s, background 0.15s;" onmouseover="this.style.opacity='1'; this.style.background='rgba(0,0,0,0.06)'" onmouseout="this.style.opacity='0.55'; this.style.background='none'">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" :stroke="getNoteColorStyle(note.color).headerText" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                 </button>
-                <button @click="deleteNote(note.id)" title="Hapus Note" style="background: none; border: none; cursor: pointer; padding: 4px; opacity: 0.6;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" :stroke="getNoteColorStyle(note.color).headerText" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                <button @click="deleteNote(note.id)" title="Hapus" style="background: none; border: none; cursor: pointer; padding: 5px; border-radius: 6px; opacity: 0.55; transition: opacity 0.15s, background 0.15s;" onmouseover="this.style.opacity='1'; this.style.background='rgba(185,28,28,0.08)'" onmouseout="this.style.opacity='0.55'; this.style.background='none'">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" :stroke="getNoteColorStyle(note.color).headerText" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                 </button>
               </div>
             </div>
 
-            <div style="background-color: #ffffff; border-radius: 12px; padding: 16px; min-height: 120px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">{{ formatDate(note.date) }}</div>
-              <h3 :style="{ color: getNoteColorStyle(note.color).text }" style="font-size: 18px; font-weight: 800; margin: 0 0 8px 0; line-height: 1.3;">
-                {{ note.title }}
-              </h3>
-              <p :style="{ color: getNoteColorStyle(note.color).text }" style="font-size: 13px; color: var(--text-muted); line-height: 1.5; opacity: 0.9; margin: 0; white-space: pre-wrap;">
-                {{ note.body }}
-              </p>
+            <!-- Big title -->
+            <h3 :style="{ color: getNoteColorStyle(note.color).headerText }"
+              style="font-size: 19px; font-weight: 800; margin: 0 0 10px 0; line-height: 1.25; letter-spacing: -0.01em;">
+              {{ note.title }}
+            </h3>
+
+            <!-- Body preview -->
+            <p style="font-size: 13px; line-height: 1.55; margin: 0 0 16px 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"
+              :style="{ color: getNoteColorStyle(note.color).headerText, opacity: '0.72' }">
+              {{ note.body }}
+            </p>
+
+            <!-- Bottom row: date tag -->
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+              <span :style="{ background: getNoteColorStyle(note.color).headerText + '15', color: getNoteColorStyle(note.color).headerText }"
+                style="font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px;">
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                {{ formatDate(note.date) }}
+              </span>
+              <span v-if="note.date < todayStr" :style="{ background: getNoteColorStyle(note.color).headerText + '15', color: getNoteColorStyle(note.color).headerText }"
+                style="font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px;">
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                Lewat
+              </span>
+              <span v-else-if="note.date === todayStr" :style="{ background: getNoteColorStyle(note.color).headerText + '20', color: getNoteColorStyle(note.color).headerText }"
+                style="font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 20px;">
+                Hari Ini
+              </span>
             </div>
           </div>
         </div>
@@ -859,9 +1168,61 @@ const JobLogbook = {
                   </div>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 24px;">
+                <div class="form-group" style="margin-bottom: 20px;">
                   <label>Isi Note</label>
                   <textarea class="form-input" v-model="noteForm.body" rows="6" placeholder="Ketik isi catatan di sini..." required></textarea>
+                </div>
+
+                <!-- Color Picker -->
+                <div style="margin-bottom: 20px;">
+                  <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 8px;">Warna Kartu</label>
+                  <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <button v-for="c in noteColorOptions" :key="c.key" type="button"
+                      @click="noteForm.color = c.key"
+                      :title="c.label"
+                      :style="{
+                        width: '30px', height: '30px', borderRadius: '50%',
+                        background: c.bg,
+                        border: noteForm.color === c.key ? '3px solid ' + c.headerText : '2px solid transparent',
+                        boxShadow: noteForm.color === c.key ? '0 0 0 2px #fff, 0 0 0 4px ' + c.headerText : 'none',
+                        cursor: 'pointer', transition: 'all 0.15s', flexShrink: '0',
+                        outline: 'none', padding: '0',
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
+                      }">
+                      <svg v-if="noteForm.color === c.key" viewBox="0 0 24 24" width="13" height="13" fill="none" :stroke="c.headerText" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </button>
+                    <!-- Custom hex color picker -->
+                    <div style="position:relative; flex-shrink:0;">
+                      <button type="button" @click.stop="showNoteCustomColor = !showNoteCustomColor"
+                        :style="{
+                          width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer',
+                          background: noteForm.color && noteForm.color.startsWith('#') ? noteForm.color : 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)',
+                          border: (noteForm.color && noteForm.color.startsWith('#')) ? '3px solid #555' : '2px dashed #bbb',
+                          boxShadow: (noteForm.color && noteForm.color.startsWith('#')) ? '0 0 0 2px #fff, 0 0 0 4px #555' : 'none',
+                          outline: 'none', padding: '0', display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
+                        }" title="Warna kustom">
+                        <svg v-if="!(noteForm.color && noteForm.color.startsWith('#'))" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
+                      </button>
+                      <div v-if="showNoteCustomColor" @click.stop
+                        style="position:absolute; top:calc(100% + 6px); left:0; z-index:9999; background:#fff; border:1.5px solid var(--color-sand); border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.12); padding:12px; min-width:180px;">
+                        <div style="font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:8px;">Pilih warna kustom</div>
+                        <input type="color" v-model="noteCustomColorInput"
+                          style="width:100%; height:36px; border:none; border-radius:6px; cursor:pointer; padding:2px;" />
+                        <div style="display:flex; gap:6px; margin-top:8px;">
+                          <button type="button" @click="noteForm.color = noteCustomColorInput; showNoteCustomColor = false"
+                            style="flex:1; background:var(--color-terracotta); color:#fff; border:none; border-radius:7px; padding:6px; font-size:12px; font-weight:700; cursor:pointer;">Pilih</button>
+                          <button type="button" @click="showNoteCustomColor=false"
+                            style="flex:1; background:var(--bg-cream); border:1px solid var(--color-sand); color:var(--text-dark); border-radius:7px; padding:6px; font-size:12px; font-weight:600; cursor:pointer;">Batal</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Preview pill -->
+                  <div v-if="noteForm.color" style="margin-top:10px; display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:20px; font-size:11.5px; font-weight:600;"
+                    :style="{ background: getNoteColorStyle(noteForm.color).bg, color: getNoteColorStyle(noteForm.color).headerText, border: '1.5px solid ' + getNoteColorStyle(noteForm.color).border }">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>
+                    Preview kartu
+                  </div>
                 </div>
                 
                 <div style="display: flex; gap: 10px;">
@@ -874,6 +1235,54 @@ const JobLogbook = {
         </transition>
 
       </div>
+
+      <!-- ── Done Celebration Modal ── -->
+      <transition name="reminder-popup-fade">
+        <div v-if="showDoneModal" class="reminder-popup-overlay" @click.self="closeDoneModal" style="z-index: 10000;">
+          <div class="reminder-popup-card">
+
+            <!-- Header — struktur identik reminder popup live/open -->
+            <div class="reminder-popup-header">
+              <div class="reminder-popup-icon-wrap">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <div class="reminder-popup-title">Task Selesai! ✦</div>
+                <div class="reminder-popup-date">Kerja bagus — task plan berhasil diselesaikan</div>
+              </div>
+              <span style="font-size: 17px; animation: doneConfetti 1.3s ease infinite; flex-shrink: 0;">🎊</span>
+            </div>
+
+            <!-- Body -->
+            <div class="reminder-popup-body">
+              <p class="reminder-popup-intro">Task yang baru saja kamu tandai selesai:</p>
+
+              <div class="reminder-popup-item">
+                <div class="reminder-popup-item-time">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div>
+                  <div class="reminder-popup-item-title">{{ pendingDonePlan ? pendingDonePlan.tasks : '' }}</div>
+                  <div v-if="pendingDonePlan && pendingDonePlan.category" class="reminder-popup-item-sub">{{ pendingDonePlan.category }}</div>
+                </div>
+              </div>
+
+              <p class="reminder-popup-intro" style="margin-top: 12px; margin-bottom: 0;">Mau langsung catat ke <strong style="color: var(--text-dark);">Riwayat Kegiatan Kerja</strong>?</p>
+            </div>
+
+            <!-- Footer -->
+            <div class="reminder-popup-footer">
+              <button class="reminder-popup-btn-dismiss" @click="closeDoneModal">Nanti Dulu</button>
+              <button class="reminder-popup-btn-open" @click="confirmDoneAndLog">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                Ya, Catat Sekarang!
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </transition>
+
     </div>
   `,
   data() {
@@ -892,6 +1301,13 @@ const JobLogbook = {
       taskPlanCollapsed: false,
       editingPlanId: null,
       pendingConvertPlanId: null,  // ID task plan yang sedang dikonversi ke log (baru dihapus saat save)
+      showDoneModal: false,
+      pendingDonePlan: null,
+      openPhaseDropdownId: null,
+      showFilterCategoryDD: false,
+      showPriorityDD: false,
+      showJadwalDD: false,
+      showTampilkanDD: false,
       planFilterPriority: '',
       planFilterSchedule: '',
       planForm: {
@@ -902,7 +1318,7 @@ const JobLogbook = {
         tasks: '',
         priority: 'Medium',
         requester: '',
-        phase: 'Plan'
+        phase: 'To-do'
       },
       searchQuery: '',
       filterStartDate: '',
@@ -939,13 +1355,18 @@ const JobLogbook = {
       noteShowRangePicker: false,
       noteRangeCalViewDate: new Date().toISOString().slice(0,7),
       noteFilterSchedule: '',
+      showNoteFilterCatDD: false,
+      showNoteJadwalDD: false,
+      showNoteCustomColor: false,
+      noteCustomColorInput: '#D1FAE5',
       notes: [],
       noteCategories: ['Psychology', 'Groceries', 'Work', 'Ideas'],
       editingNoteId: null, // Baru: untuk menyimpan ID note yang sedang di-edit
       noteForm: {
         category: 'Work',
         title: '',
-        body: ''
+        body: '',
+        color: 'green'
       }
     };
   },
@@ -953,6 +1374,23 @@ const JobLogbook = {
     // Computed Logbook (Existing)
     todayStr() {
       return new Date().toISOString().split('T')[0];
+    },
+    tomorrowStr() {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      return d.toISOString().split('T')[0];
+    },
+    noteColorOptions() {
+      return [
+        { key: 'pink',   label: 'Merah Muda', bg: '#FCE7F3', headerText: '#831843', border: '#f3ccde' },
+        { key: 'yellow', label: 'Kuning',     bg: '#FEF3C7', headerText: '#92400E', border: '#f5d782' },
+        { key: 'green',  label: 'Hijau',      bg: '#D1FAE5', headerText: '#065F46', border: '#6ee7b7' },
+        { key: 'blue',   label: 'Biru',       bg: '#DBEAFE', headerText: '#1E3A8A', border: '#93c5fd' },
+        { key: 'purple', label: 'Ungu',       bg: '#F3E8FF', headerText: '#4C1D95', border: '#c4b5fd' },
+        { key: 'rose',   label: 'Rose',       bg: '#FFE4E6', headerText: '#9F1239', border: '#fda4af' },
+        { key: 'orange', label: 'Oranye',     bg: '#FFEDD5', headerText: '#7C2D12', border: '#fdba74' },
+        { key: 'teal',   label: 'Teal',       bg: '#CCFBF1', headerText: '#134E4A', border: '#5eead4' },
+      ];
     },
     defaultCategories() {
       return ['Administrasi', 'HR Operational'];
@@ -1021,6 +1459,7 @@ const JobLogbook = {
           if (this.planFilterPriority && p.priority !== this.planFilterPriority) return false;
           if (this.planFilterSchedule === 'overdue' && p.date >= today) return false;
           if (this.planFilterSchedule === 'today' && p.date !== today) return false;
+          if (this.planFilterSchedule === 'tomorrow' && p.date !== this.tomorrowStr) return false;
           if (this.planFilterSchedule === 'upcoming' && p.date <= today) return false;
           // ── global filter bar ──
           if (q && !['tasks','category','requester'].some(k => p[k] && p[k].toLowerCase().includes(q))) return false;
@@ -1215,7 +1654,7 @@ const JobLogbook = {
           tasks: this.planForm.tasks.trim(),
           priority: this.planForm.priority,
           requester: this.planForm.requester.trim(),
-          phase: 'Plan'
+          phase: 'To-do'
         };
         this.plans.unshift(newPlan);
       }
@@ -1256,14 +1695,22 @@ const JobLogbook = {
       if (plan) {
         plan.phase = phase;
         this.savePlansToStorage();
-        if (phase === 'Done') {
+        if (phase === 'Completed') {
           this.$nextTick(() => {
-            if (confirm('Task ditandai Done! Mau langsung catat ke Riwayat Kegiatan Kerja?')) {
-              this.convertPlanToLog(plan);
-            }
+            this.pendingDonePlan = plan;
+            this.showDoneModal = true;
           });
         }
       }
+    },
+    closeDoneModal() {
+      this.showDoneModal = false;
+      this.pendingDonePlan = null;
+    },
+    confirmDoneAndLog() {
+      if (this.pendingDonePlan) this.convertPlanToLog(this.pendingDonePlan);
+      this.showDoneModal = false;
+      this.pendingDonePlan = null;
     },
     cancelAddLog() {
       // Batal isi form — kembalikan task plan ke list jika sedang dikonversi
@@ -1493,6 +1940,7 @@ const JobLogbook = {
       this.editingNoteId = null;
       this.noteForm.title = '';
       this.noteForm.body = '';
+      this.noteForm.color = 'green';
       this.noteForm.category = this.noteCategories[0] || 'Work';
       this.showAddNoteForm = true;
     },
@@ -1501,6 +1949,7 @@ const JobLogbook = {
       this.noteForm.title = note.title;
       this.noteForm.category = note.category;
       this.noteForm.body = note.body;
+      this.noteForm.color = note.color || 'green';
       this.showAddNoteForm = true;
     },
     cancelNoteForm() {
@@ -1508,6 +1957,7 @@ const JobLogbook = {
       this.editingNoteId = null;
       this.noteForm.title = '';
       this.noteForm.body = '';
+      this.noteForm.color = 'green';
     },
     saveNote() {
       if (this.editingNoteId) {
@@ -1516,25 +1966,26 @@ const JobLogbook = {
           this.notes[idx].title = this.noteForm.title;
           this.notes[idx].category = this.noteForm.category;
           this.notes[idx].body = this.noteForm.body;
+          this.notes[idx].color = this.noteForm.color || 'green';
         }
         this.editingNoteId = null;
       } else {
-        const colors = ['pink', 'blue', 'green', 'yellow', 'purple'];
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
         const newN = {
           id: 'note-' + Date.now(),
           date: new Date().toISOString().split('T')[0],
           category: this.noteForm.category,
           title: this.noteForm.title,
           body: this.noteForm.body,
-          color: randomColor
+          color: this.noteForm.color || 'green'
         };
         this.notes.unshift(newN);
       }
       this.saveNotesToStorage();
       this.showAddNoteForm = false;
+      this.showNoteCustomColor = false;
       this.noteForm.title = '';
       this.noteForm.body = '';
+      this.noteForm.color = 'green';
     },
     deleteNote(id) {
       if(!confirm('Hapus note ini secara permanen?')) return;
@@ -1559,13 +2010,19 @@ const JobLogbook = {
     },
     getNoteColorStyle(color) {
       const styles = {
-        pink: { bg: '#FCE7F3', headerText: '#831843', text: '#2C2621', border: '#f3ccde' },
-        blue: { bg: '#DBEAFE', headerText: '#1E3A8A', text: '#2C2621', border: '#becdef' },
-        green: { bg: '#D1FAE5', headerText: '#065F46', text: '#2C2621', border: '#bce7c4' },
-        yellow: { bg: '#FEF3C7', headerText: '#92400E', text: '#2C2621', border: '#f5f7c4' },
-        purple: { bg: '#F3E8FF', headerText: '#4C1D95', text: '#2C2621', border: '#fecbbd' }
+        pink:   { bg: '#FCE7F3', headerText: '#831843', text: '#2C2621', border: '#f3ccde' },
+        blue:   { bg: '#DBEAFE', headerText: '#1E3A8A', text: '#2C2621', border: '#93c5fd' },
+        green:  { bg: '#D1FAE5', headerText: '#065F46', text: '#2C2621', border: '#6ee7b7' },
+        yellow: { bg: '#FEF3C7', headerText: '#92400E', text: '#2C2621', border: '#f5d782' },
+        purple: { bg: '#F3E8FF', headerText: '#4C1D95', text: '#2C2621', border: '#c4b5fd' },
+        rose:   { bg: '#FFE4E6', headerText: '#9F1239', text: '#2C2621', border: '#fda4af' },
+        orange: { bg: '#FFEDD5', headerText: '#7C2D12', text: '#2C2621', border: '#fdba74' },
+        teal:   { bg: '#CCFBF1', headerText: '#134E4A', text: '#2C2621', border: '#5eead4' },
       };
-      return styles[color] || styles.pink;
+      if (color && color.startsWith('#')) {
+        return { bg: color + '33', headerText: color, text: '#2C2621', border: color + '66' };
+      }
+      return styles[color] || styles.green;
     }
   },
   watch: {
@@ -1577,9 +2034,23 @@ const JobLogbook = {
   mounted() {
     this._closeRangePicker = () => { if (this.showRangePicker) this.showRangePicker = false; if (this.noteShowRangePicker) this.noteShowRangePicker = false; };
     document.addEventListener('click', this._closeRangePicker);
+    this._closePhaseDropdown = () => { if (this.openPhaseDropdownId !== null) this.openPhaseDropdownId = null; };
+    document.addEventListener('click', this._closePhaseDropdown);
+    this._closeAllCustomDD = () => {
+      this.showFilterCategoryDD = false;
+      this.showPriorityDD = false;
+      this.showJadwalDD = false;
+      this.showTampilkanDD = false;
+      this.showNoteFilterCatDD = false;
+      this.showNoteJadwalDD = false;
+      this.showNoteCustomColor = false;
+    };
+    document.addEventListener('click', this._closeAllCustomDD);
   },
   unmounted() {
     document.removeEventListener('click', this._closeRangePicker);
+    document.removeEventListener('click', this._closePhaseDropdown);
+    document.removeEventListener('click', this._closeAllCustomDD);
   }
 };
 

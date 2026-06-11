@@ -164,6 +164,12 @@
     .insight-modal-fade-enter-active { animation: insightPopIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     .insight-modal-fade-leave-active { animation: insightPopIn 0.18s ease-in reverse; }
 
+    /* ── Done Celebration Animation ── */
+    @keyframes doneConfetti {
+      0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.75; }
+      50%       { transform: translateY(-7px) rotate(14deg); opacity: 1; }
+    }
+
     /* Transition */
     .reminder-popup-fade-enter-active { animation: reminder-pop-in 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     .reminder-popup-fade-leave-active { animation: reminder-pop-out 0.18s ease-in; }
