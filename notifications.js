@@ -744,23 +744,44 @@ const NotificationPanel = {
               <span>Tidak ada agenda hari ini</span>
             </div>
 
-            <div v-for="notif in infoNotifs" :key="notif.id"
-                 class="notif-item notif-item-info notif-item-clickable"
-                 @click="handleInfoClick(notif)">
-              <div class="notif-item-icon" :class="'notif-icon-' + notif.type">
-                <svg v-if="notif.type === 'task'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                <svg v-else-if="notif.type === 'content-today'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <template v-for="notif in infoNotifs" :key="notif.id">
+              <!-- Task dengan waktu: tampil seperti style pengingat (ada time badge di kanan) -->
+              <div v-if="notif.hasTime"
+                   class="notif-item notif-item-info notif-item-clickable"
+                   style="border-left: 2.5px solid var(--color-terracotta, #D67B52);"
+                   @click="handleInfoClick(notif)">
+                <div class="notif-item-icon notif-icon-task">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </div>
+                <div class="notif-item-content">
+                  <div class="notif-item-title">{{ notif.title }}</div>
+                  <div class="notif-item-sub">{{ notif.subtitle }}</div>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
+                  <span class="notif-time-badge">{{ notif.time }}</span>
+                  <span v-if="notif.badge" class="notif-badge" :class="'notif-badge-' + notif.badgeColor" style="margin-top:2px;">{{ notif.badge }}</span>
+                </div>
               </div>
-              <div class="notif-item-content">
-                <div class="notif-item-title">{{ notif.title }}</div>
-                <div class="notif-item-sub">{{ notif.subtitle }}</div>
+
+              <!-- Task tanpa waktu: tampil seperti biasa (badge priority di kanan) -->
+              <div v-else
+                   class="notif-item notif-item-info notif-item-clickable"
+                   @click="handleInfoClick(notif)">
+                <div class="notif-item-icon" :class="'notif-icon-' + notif.type">
+                  <svg v-if="notif.type === 'task'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                  <svg v-else-if="notif.type === 'content-today'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div class="notif-item-content">
+                  <div class="notif-item-title">{{ notif.title }}</div>
+                  <div class="notif-item-sub">{{ notif.subtitle }}</div>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
+                  <span v-if="notif.badge" class="notif-badge" :class="'notif-badge-' + notif.badgeColor">{{ notif.badge }}</span>
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); margin-top: 2px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </div>
               </div>
-              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
-                <span v-if="notif.badge" class="notif-badge" :class="'notif-badge-' + notif.badgeColor">{{ notif.badge }}</span>
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); margin-top: 2px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-              </div>
-            </div>
+            </template>
 
             <!-- ══ SECTION 2: ACTIONABLE ══ -->
             <div class="notif-section-label" style="margin-top: 18px;">
@@ -1015,6 +1036,12 @@ const NotificationPanel = {
       todayPlans.forEach(p => {
         const priorityMap = { High: { badge: 'High', color: 'red' }, Medium: { badge: 'Med', color: 'amber' }, Low: { badge: 'Low', color: 'sage' } };
         const pm = priorityMap[p.priority] || { badge: p.priority, color: 'amber' };
+        // Konversi time string "HH:MM" ke menit untuk sorting
+        let timeVal = 9999; // task tanpa waktu diletakkan di bawah
+        if (p.time) {
+          const [hh, mm] = p.time.split(':').map(Number);
+          timeVal = hh * 60 + mm;
+        }
         list.push({
           id: 'task-' + p.id,
           type: 'task',
@@ -1022,7 +1049,10 @@ const NotificationPanel = {
           subtitle: `Task Plan · ${p.category || 'Umum'}${p.requester ? ' · dari ' + p.requester : ''}`,
           badge: pm.badge,
           badgeColor: pm.color,
-          page: 'jobLogbook'
+          page: 'jobLogbook',
+          time: p.time || null,
+          timeVal,
+          hasTime: !!p.time
         });
       });
 
@@ -1061,11 +1091,15 @@ const NotificationPanel = {
           subtitle,
           badge,
           badgeColor,
-          page: 'contentTracker'
+          page: 'contentTracker',
+          time: null,
+          timeVal: 9998,
+          hasTime: false
         });
       });
 
-      return list;
+      // Urutkan: yang ada waktu paling pagi dulu, lalu yang tidak ada waktu
+      return list.sort((a, b) => a.timeVal - b.timeVal);
     },
 
     // Section 2: Actionable
