@@ -1939,7 +1939,7 @@ const CalendarMoment = {
 
       <!-- ADD / EDIT DETAIL MOMENT MODAL -->
       <div v-if="showModal" class="modal-backdrop" @click.self="showModal = false">
-        <div class="moment-modal animate-fade-in" style="max-height: 90vh; overflow-y: auto; width: 100%; max-width: 1000px; padding: 24px; border-radius: var(--border-radius-md); box-shadow: var(--shadow-lg); background-color: #FFFFFF;">
+        <div class="moment-modal animate-fade-in" style="max-height: 90vh; overflow-y: auto; padding: 24px; border-radius: var(--border-radius-md); box-shadow: var(--shadow-lg); background-color: #FFFFFF;">
           <!-- Modal Header -->
           <div class="flex-between" style="border-bottom: 2px solid var(--color-sand); margin-bottom: 20px; padding-bottom: 14px;">
             <h3 style="font-size: 19px; font-weight: 800; color: var(--text-dark); display: inline-flex; align-items: center; gap: 8px; margin: 0;">
@@ -1975,7 +1975,7 @@ const CalendarMoment = {
               </button>
             </div>
 
-            <div v-else style="display: grid; grid-template-columns: repeat(auto-fit, minmax(430px, 1fr)); gap: 20px; max-height: 52vh; overflow-y: auto; padding-right: 6px; margin-bottom: 8px;">
+            <div v-else style="display: grid; grid-template-columns: repeat(auto-fit, minmax(430px, 1fr)); gap: 20px; max-height: 62vh; overflow-y: auto; padding-right: 6px; margin-bottom: 8px;">
               <div v-for="(m, index) in modalMoments" 
                    :key="m.id" 
                    style="border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px; border: 1.5px solid var(--color-sand); background-color: #FFFFFF; position: relative;"
