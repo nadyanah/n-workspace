@@ -542,12 +542,26 @@ const JobLogbook = {
                 </div>
                 
                 <div style="display: flex; gap: 6px; flex-shrink: 0; align-items: center;">
-                  <button @click="convertPlanToLog(plan)"
-                    title="Tandai sudah dikerjakan → pindah ke Riwayat"
-                    style="background: #ECFDF5; color: #065F46; border: 1.5px solid #6EE7B7; border-radius: 8px; padding: 4px 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    Selesai
-                  </button>
+                  <div style="position: relative; display: inline-flex; align-items: center;">
+                    <select
+                      :value="plan.phase || 'Plan'"
+                      @change="updatePlanPhase(plan.id, $event.target.value)"
+                      :style="{
+                        background: (plan.phase === 'Done') ? '#ECFDF5' : (plan.phase === 'Progress') ? '#EFF6FF' : '#FFF4ED',
+                        color: (plan.phase === 'Done') ? '#065F46' : (plan.phase === 'Progress') ? '#1D4ED8' : '#92400E',
+                        borderColor: (plan.phase === 'Done') ? '#6EE7B7' : (plan.phase === 'Progress') ? '#93C5FD' : '#FCD34D'
+                      }"
+                      style="appearance: none; -webkit-appearance: none; border: 1.5px solid; border-radius: 8px; padding: 4px 28px 4px 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; outline: none; min-width: 95px;">
+                      <option value="Plan">Plan</option>
+                      <option value="Progress">Progress</option>
+                      <option value="Done">Done</option>
+                    </select>
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                      style="position: absolute; right: 8px; pointer-events: none;"
+                      :style="{ color: (plan.phase === 'Done') ? '#065F46' : (plan.phase === 'Progress') ? '#1D4ED8' : '#92400E' }">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </div>
                   <button @click="startEditPlan(plan)"
                     title="Edit task plan ini"
                     style="background: var(--bg-cream); color: var(--text-dark); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 4px 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
@@ -887,7 +901,8 @@ const JobLogbook = {
         category: 'Administrasi',
         tasks: '',
         priority: 'Medium',
-        requester: ''
+        requester: '',
+        phase: 'Plan'
       },
       searchQuery: '',
       filterStartDate: '',
@@ -1199,7 +1214,8 @@ const JobLogbook = {
           category: this.planForm.category,
           tasks: this.planForm.tasks.trim(),
           priority: this.planForm.priority,
-          requester: this.planForm.requester.trim()
+          requester: this.planForm.requester.trim(),
+          phase: 'Plan'
         };
         this.plans.unshift(newPlan);
       }
@@ -1234,6 +1250,20 @@ const JobLogbook = {
       this.plans = this.plans.filter(p => p.id !== id);
       if (this.editingPlanId === id) { this.editingPlanId = null; this.showAddPlan = false; }
       this.savePlansToStorage();
+    },
+    updatePlanPhase(id, phase) {
+      const plan = this.plans.find(p => p.id === id);
+      if (plan) {
+        plan.phase = phase;
+        this.savePlansToStorage();
+        if (phase === 'Done') {
+          this.$nextTick(() => {
+            if (confirm('Task ditandai Done! Mau langsung catat ke Riwayat Kegiatan Kerja?')) {
+              this.convertPlanToLog(plan);
+            }
+          });
+        }
+      }
     },
     cancelAddLog() {
       // Batal isi form — kembalikan task plan ke list jika sedang dikonversi
