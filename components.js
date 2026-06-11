@@ -53,6 +53,85 @@ const JobLogbook = {
           </div>
         </div>
 
+        <!-- ── Compact Filter Bar ── -->
+        <div style="margin-bottom: 20px; background: var(--bg-card); border: 1.5px solid var(--color-sand); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;" @click.self="showRangePicker = false">
+
+          <!-- Icon + Label -->
+          <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap;">Filter Log</span>
+          </div>
+          <div style="width: 1px; height: 26px; background: var(--color-sand); flex-shrink: 0;"></div>
+
+          <!-- Keyword Search -->
+          <div style="position: relative; flex: 1; min-width: 150px; max-width: 260px;">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            <input type="text" v-model="searchQuery" placeholder="Cari kata kunci..." @click.stop
+              style="width: 100%; height: 34px; padding: 0 10px 0 28px; border: 1.5px solid var(--color-sand); border-radius: 8px; font-size: 12.5px; font-family: 'Outfit', sans-serif; color: var(--text-dark); background: var(--bg-cream); box-sizing: border-box; outline: none; transition: border-color 0.15s;"
+              @focus="$event.target.style.borderColor='var(--color-terracotta)'" @blur="$event.target.style.borderColor='var(--color-sand)'" />
+          </div>
+
+          <!-- Date Range Button + Dropdown -->
+          <div style="position: relative; flex-shrink: 0;">
+            <button type="button" @click.stop="showRangePicker = !showRangePicker"
+              :style="(filterStartDate || filterEndDate) ? { borderColor: 'var(--color-terracotta)', background: '#FFF4ED', color: 'var(--color-terracotta)' } : { borderColor: 'var(--color-sand)', background: 'var(--bg-cream)', color: 'var(--text-muted)' }"
+              style="height: 34px; padding: 0 12px; border: 1.5px solid; border-radius: 8px; font-size: 12px; font-family: 'Outfit', sans-serif; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: all 0.15s;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <template v-if="filterStartDate || filterEndDate">{{ filterStartDate ? formatDate(filterStartDate) : '?' }} – {{ filterEndDate ? formatDate(filterEndDate) : '?' }}</template>
+              <template v-else>Rentang Tanggal</template>
+            </button>
+            <!-- Calendar Dropdown -->
+            <div v-if="showRangePicker" @click.stop style="position: absolute; top: calc(100% + 6px); left: 0; z-index: 9999; background: #fff; border: 1.5px solid var(--color-sand); border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.14); padding: 14px; min-width: 272px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <button type="button" @click="rangeCalPrevMonth" style="background: none; border: none; cursor: pointer; font-size: 15px; color: var(--text-dark); padding: 4px 8px; border-radius: 6px; line-height: 1;">&lt;</button>
+                <span style="font-weight: 700; font-size: 13.5px; color: var(--text-dark);">{{ rangeCalMonthLabel }}</span>
+                <button type="button" @click="rangeCalNextMonth" style="background: none; border: none; cursor: pointer; font-size: 15px; color: var(--text-dark); padding: 4px 8px; border-radius: 6px; line-height: 1;">&gt;</button>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 3px;">
+                <span v-for="(d, i) in ['S','S','R','K','J','S','M']" :key="'fh'+i" style="text-align: center; font-size: 10px; font-weight: 700; color: var(--text-muted); padding: 2px 0;">{{ d }}</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;">
+                <span v-for="cell in rangeCalCells" :key="cell.key" @click="cell.date ? onRangeCalClick(cell.date) : null"
+                  :style="getRangeCellStyle(cell)"
+                  style="text-align: center; font-size: 12.5px; padding: 5px 2px; border-radius: 6px; cursor: pointer; user-select: none; transition: background 0.12s;">
+                  {{ cell.label }}
+                </span>
+              </div>
+              <div style="margin-top: 8px; font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.4;">
+                <span v-if="!filterStartDate">Klik tanggal mulai</span>
+                <span v-else-if="!filterEndDate">Klik tanggal akhir</span>
+                <span v-else style="color: var(--color-terracotta); font-weight: 600;">✓ Rentang dipilih</span>
+              </div>
+              <button v-if="filterStartDate || filterEndDate" type="button" @click="filterStartDate=''; filterEndDate=''; showRangePicker=false;"
+                style="margin-top: 7px; width: 100%; background: var(--bg-cream); border: 1px solid var(--color-sand); color: var(--text-dark); border-radius: 7px; padding: 5px; font-size: 11.5px; cursor: pointer; font-weight: 600;">
+                Hapus Rentang
+              </button>
+            </div>
+          </div>
+
+          <!-- Category Filter -->
+          <select v-model="filterCategory" @click.stop
+            :style="filterCategory ? { borderColor: 'var(--color-terracotta)', background: '#FFF4ED', color: 'var(--color-terracotta)' } : { borderColor: 'var(--color-sand)', background: 'var(--bg-cream)', color: 'var(--text-dark)' }"
+            style="height: 34px; padding: 0 10px; border: 1.5px solid; border-radius: 8px; font-size: 12.5px; font-family: 'Outfit', sans-serif; font-weight: 600; cursor: pointer; min-width: 140px; outline: none; flex-shrink: 0; transition: all 0.15s;">
+            <option value="">Semua Kategori</option>
+            <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
+          </select>
+
+          <!-- Spacer + Active badge + Reset -->
+          <div style="display: flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0;">
+            <span v-if="searchQuery || filterStartDate || filterEndDate || filterCategory"
+              style="background: var(--color-terracotta); color: #fff; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap;">
+              {{ [searchQuery, (filterStartDate || filterEndDate) ? 1 : 0, filterCategory].filter(Boolean).length }} aktif
+            </span>
+            <button v-if="searchQuery || filterStartDate || filterEndDate || filterCategory"
+              class="btn btn-secondary" @click="resetFilters"
+              style="height: 34px; padding: 0 12px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; border-color: var(--color-terracotta); color: var(--color-terracotta); font-family: 'Outfit', sans-serif; display: inline-flex; align-items: center; gap: 5px; border-radius: 8px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+              Reset
+            </button>
+          </div>
+        </div>
+
         <!-- ── Quick Notes ── -->
         <div style="margin-bottom: 24px; padding: 18px 20px; border-radius: 12px; background-color: transparent; border: 1.5px dashed var(--color-sand);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
@@ -445,70 +524,6 @@ const JobLogbook = {
           </div>
           </div><!-- end collapse wrapper -->
         </div>
-        <div class="drawer-section" style="margin-bottom: 20px; padding: 18px 20px; border-radius: 12px; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand);">
-          <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 14px; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-            Penyaringan &amp; Pencarian Log Kerja
-          </h3>
-          <!-- Row 1: keyword search -->
-          <div class="form-group" style="margin-bottom: 12px;">
-            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Cari Kata Kunci</label>
-            <input type="text" class="form-input" v-model="searchQuery" placeholder="Cari berdasarkan tugas, kategori, hasil, dsb..." />
-          </div>
-          <!-- Row 2: date range + category + reset -->
-          <div style="display: grid; grid-template-columns: 1.6fr 1fr auto; gap: 12px; align-items: end;">
-            <div class="form-group" style="margin-bottom: 0; position: relative;">
-              <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Rentang Tanggal</label>
-              <button type="button" class="form-input" @click.stop="showRangePicker = !showRangePicker"
-                style="width: 100%; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px; background: #fff; height: 42px; box-sizing: border-box; white-space: nowrap; overflow: hidden;">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; color: var(--color-terracotta);"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                <span style="font-size: 12.5px; color: var(--text-dark); overflow: hidden; text-overflow: ellipsis;">
-                  <template v-if="filterStartDate || filterEndDate">
-                    {{ filterStartDate ? formatDate(filterStartDate) : '?' }} – {{ filterEndDate ? formatDate(filterEndDate) : '?' }}
-                  </template>
-                  <template v-else><span style="color: var(--text-muted);">Pilih rentang tanggal...</span></template>
-                </span>
-              </button>
-              <div v-if="showRangePicker" @click.stop style="position: absolute; top: calc(100% + 6px); left: 0; z-index: 999; background: #fff; border: 1.5px solid var(--color-sand); border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.13); padding: 16px; min-width: 280px;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                  <button type="button" @click="rangeCalPrevMonth" style="background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text-dark); padding: 4px 8px; border-radius: 6px; line-height: 1;">&lt;</button>
-                  <span style="font-weight: 700; font-size: 14px; color: var(--text-dark);">{{ rangeCalMonthLabel }}</span>
-                  <button type="button" @click="rangeCalNextMonth" style="background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text-dark); padding: 4px 8px; border-radius: 6px; line-height: 1;">&gt;</button>
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 4px;">
-                  <span v-for="(d, i) in ['S','S','R','K','J','S','M']" :key="'h'+i" style="text-align: center; font-size: 10.5px; font-weight: 700; color: var(--text-muted); padding: 2px 0;">{{ d }}</span>
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;">
-                  <span v-for="cell in rangeCalCells" :key="cell.key" @click="cell.date ? onRangeCalClick(cell.date) : null"
-                    :style="getRangeCellStyle(cell)"
-                    style="text-align: center; font-size: 13px; padding: 6px 2px; border-radius: 7px; cursor: pointer; user-select: none; transition: background 0.12s;">
-                    {{ cell.label }}
-                  </span>
-                </div>
-                <div style="margin-top: 10px; font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.4;">
-                  <span v-if="!filterStartDate">Klik tanggal mulai</span>
-                  <span v-else-if="!filterEndDate">Klik tanggal akhir</span>
-                  <span v-else style="color: var(--color-terracotta); font-weight: 600;">✓ Rentang dipilih — klik lagi untuk reset</span>
-                </div>
-                <button v-if="filterStartDate || filterEndDate" type="button" @click="filterStartDate=''; filterEndDate=''; showRangePicker=false;"
-                  style="margin-top: 8px; width: 100%; background: var(--bg-cream); border: 1px solid var(--color-sand); color: var(--text-dark); border-radius: 7px; padding: 6px; font-size: 12px; cursor: pointer; font-weight: 600;">
-                  Hapus Rentang
-                </button>
-              </div>
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-              <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Filter Kategori</label>
-              <select class="form-input" v-model="filterCategory" style="height: 42px;">
-                <option value="">Semua Kategori</option>
-                <option v-for="cat in allCategories" :key="cat" :value="cat">{{ cat }}</option>
-              </select>
-            </div>
-            <div style="padding-bottom: 0;">
-              <button class="btn btn-secondary" style="height: 42px; padding: 0 16px; cursor: pointer; justify-content: center; white-space: nowrap; font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 600;" @click="resetFilters">Reset Filter</button>
-            </div>
-          </div>
-        </div>
-
 
         <!-- ── Riwayat Kegiatan Kerja ── -->
         <div class="drawer-section" style="margin-bottom: 0; padding: 20px 22px; border-radius: 12px; min-width: 0; overflow: visible;">
@@ -929,12 +944,19 @@ const JobLogbook = {
     sortedFilteredPlans() {
       const priorityOrder = { High: 0, Medium: 1, Low: 2 };
       const today = this.todayStr;
+      const q = this.searchQuery.toLowerCase().trim();
       return [...this.plans]
         .filter(p => {
+          // ── local plan filters ──
           if (this.planFilterPriority && p.priority !== this.planFilterPriority) return false;
           if (this.planFilterSchedule === 'overdue' && p.date >= today) return false;
           if (this.planFilterSchedule === 'today' && p.date !== today) return false;
           if (this.planFilterSchedule === 'upcoming' && p.date <= today) return false;
+          // ── global filter bar ──
+          if (q && !['tasks','category','requester'].some(k => p[k] && p[k].toLowerCase().includes(q))) return false;
+          if (this.filterCategory && p.category !== this.filterCategory) return false;
+          if (this.filterStartDate && p.date < this.filterStartDate) return false;
+          if (this.filterEndDate && p.date > this.filterEndDate) return false;
           return true;
         })
         .sort((a, b) => {
@@ -1395,6 +1417,12 @@ const JobLogbook = {
       };
       return styles[color] || styles.pink;
     }
+  },
+  watch: {
+    searchQuery()     { this.currentPage = 1; },
+    filterCategory()  { this.currentPage = 1; },
+    filterStartDate() { this.currentPage = 1; },
+    filterEndDate()   { this.currentPage = 1; },
   },
   mounted() {
     this._closeRangePicker = () => { if (this.showRangePicker) this.showRangePicker = false; if (this.noteShowRangePicker) this.noteShowRangePicker = false; };
