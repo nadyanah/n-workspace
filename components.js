@@ -8430,12 +8430,16 @@ const GoogleCalendar = {
 
             <!-- All-day / no-time items -->
             <div v-if="group.allDayItems.length > 0" class="gcal-agenda-allday">
-              <div v-for="item in group.allDayItems" :key="item.id" class="gcal-agenda-allday-item" :style="{background: item.color}">
-                <span v-if="item.type==='task'">📋</span>
+              <div v-for="item in group.allDayItems" :key="item.id" class="gcal-agenda-allday-item" :class="{ 'gcal-agenda-item-done': item.done }" :style="{background: item.color}">
+                <span v-if="item.actionable" class="gcal-agenda-check-icon">
+                  <svg v-if="item.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>
+                  <svg v-else viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+                </span>
+                <span v-else-if="item.type==='task'">📋</span>
                 <span v-else-if="item.type==='habit'">✅</span>
                 <span v-else-if="item.type==='manual'">⏰</span>
                 <span v-else>🎉</span>
-                {{ item.title }}
+                <span class="gcal-agenda-allday-item-title">{{ item.title }}</span>
               </div>
             </div>
 
@@ -8451,7 +8455,7 @@ const GoogleCalendar = {
                   v-for="block in group.timedBlocks"
                   :key="block.id"
                   class="gcal-agenda-block"
-                  :class="'gcal-agenda-block-' + block.type"
+                  :class="['gcal-agenda-block-' + block.type, block.done && 'gcal-agenda-item-done']"
                   :style="{
                     top: block.top + 'px',
                     height: block.height + 'px',
@@ -8462,6 +8466,10 @@ const GoogleCalendar = {
                   :title="block.title + ' (' + block.startLabel + ' - ' + block.endLabel + ')'"
                   @click.stop="block.type==='event' && localDeleteEvent(block.raw)"
                 >
+                  <span v-if="block.actionable" class="gcal-agenda-check-icon">
+                    <svg v-if="block.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>
+                    <svg v-else viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+                  </span>
                   <span class="gcal-agenda-block-title">{{ block.title }}</span>
                   <span class="gcal-agenda-block-time">{{ block.startLabel }}</span>
                 </div>
@@ -8834,6 +8842,15 @@ const GoogleCalendar = {
       const isToday = ds === todayStr;
       const TYPE_COLORS = { task: '#D67B52', habit: '#A3B18A', manual: '#F59E0B' };
 
+      // ── Status selesai (ws_notif_action_status) untuk tanggal ds ──
+      let actionStatus = {};
+      try {
+        const raw = WorkspaceStorage.getItem('ws_notif_action_status');
+        const s = JSON.parse(raw || '{}');
+        actionStatus = s[ds] || {};
+      } catch(e) {}
+      const isActionDone = (rawId) => !!actionStatus[rawId];
+
       const allDayItems = [];
       const timed = []; // { id, title, type, color, startMin, endMin, raw }
 
@@ -8881,12 +8898,13 @@ const GoogleCalendar = {
           const habits = JSON.parse(WorkspaceStorage.getItem('ws_habit_notifs') || '[]');
           habits.forEach(h => {
             const id = 'habit-' + h.id;
+            const done = isActionDone(h.id);
             if (h.time) {
               const [sh, sm] = h.time.split(':').map(Number);
               const startMin = sh * 60 + (sm || 0);
-              timed.push({ id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, startMin, endMin: startMin + 30, raw: h });
+              timed.push({ id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, startMin, endMin: startMin + 30, raw: h, done, actionable: true });
             } else {
-              allDayItems.push({ id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, raw: h });
+              allDayItems.push({ id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, raw: h, done, actionable: true });
             }
           });
         } catch(e) {}
@@ -8897,12 +8915,13 @@ const GoogleCalendar = {
         const manuals = JSON.parse(WorkspaceStorage.getItem('ws_manual_notifs') || '[]');
         manuals.filter(m => m.date === ds).forEach(m => {
           const id = 'manual-' + m.id;
+          const done = isActionDone(m.id);
           if (m.time) {
             const [sh, sm] = m.time.split(':').map(Number);
             const startMin = sh * 60 + (sm || 0);
-            timed.push({ id, title: m.title, type: 'manual', color: TYPE_COLORS.manual, startMin, endMin: startMin + 30, raw: m });
+            timed.push({ id, title: m.title, type: 'manual', color: TYPE_COLORS.manual, startMin, endMin: startMin + 30, raw: m, done, actionable: true });
           } else {
-            allDayItems.push({ id, title: m.title, type: 'manual', color: TYPE_COLORS.manual, raw: m });
+            allDayItems.push({ id, title: m.title, type: 'manual', color: TYPE_COLORS.manual, raw: m, done, actionable: true });
           }
         });
       } catch(e) {}
@@ -8930,7 +8949,9 @@ const GoogleCalendar = {
         col: item.col,
         totalCols,
         startLabel: fmt(item.startMin),
-        endLabel: fmt(item.endMin)
+        endLabel: fmt(item.endMin),
+        done: !!item.done,
+        actionable: !!item.actionable
       }));
 
       let nowLineTop = null;

@@ -5552,6 +5552,32 @@ input:checked + .switch-slider:before {
   font-family: 'Outfit', sans-serif;
   display: flex; align-items: center; gap: 6px;
 }
+.gcal-agenda-allday-item-title { flex: 1; min-width: 0; }
+
+/* ── Checklist icon (status selesai/belum) ── */
+.gcal-agenda-check-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0; line-height: 0;
+}
+.gcal-agenda-allday-item .gcal-agenda-check-icon { color: rgba(255,255,255,0.85); }
+.gcal-agenda-block .gcal-agenda-check-icon { color: var(--text-muted); }
+.gcal-agenda-block.gcal-agenda-item-done .gcal-agenda-check-icon,
+.gcal-agenda-allday-item.gcal-agenda-item-done .gcal-agenda-check-icon {
+  color: var(--color-sage, #7FA882);
+}
+
+/* ── Item yang sudah selesai/dikerjakan: judul dicoret + sedikit redup ── */
+.gcal-agenda-item-done .gcal-agenda-block-title,
+.gcal-agenda-item-done .gcal-agenda-allday-item-title {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+.gcal-agenda-block.gcal-agenda-item-done {
+  opacity: 0.7;
+}
+.gcal-agenda-allday-item.gcal-agenda-item-done {
+  opacity: 0.6;
+}
 
 .gcal-agenda-timeline-wrap {
   display: flex;
