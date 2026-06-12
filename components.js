@@ -1395,6 +1395,8 @@ const JobLogbook = {
       const q = this.searchQuery.toLowerCase().trim();
       return [...this.plans]
         .filter(p => {
+          // Plan yang sudah Completed tidak tampil di task plan list (tapi tetap ada di agenda view dicoret)
+          if (p.phase === 'Completed') return false;
           // ── local plan filters ──
           if (this.planFilterPriority && p.priority !== this.planFilterPriority) return false;
           if (this.planFilterSchedule === 'overdue' && p.date >= today) return false;
@@ -1701,6 +1703,7 @@ const JobLogbook = {
     },
     savePlansToStorage() {
       WorkspaceStorage.setItem('personal_workspace_job_plans', JSON.stringify(this.plans));
+      window.dispatchEvent(new CustomEvent('ws-plans-updated'));
     },
     rangeCalPrevMonth() { if (this.rangeCalMonth === 0) { this.rangeCalMonth = 11; this.rangeCalYear--; } else this.rangeCalMonth--; },
     rangeCalNextMonth() { if (this.rangeCalMonth === 11) { this.rangeCalMonth = 0; this.rangeCalYear++; } else this.rangeCalMonth++; },
@@ -1814,7 +1817,9 @@ const JobLogbook = {
       this.logs.unshift(newLog);
       // Baru hapus task plan saat log benar-benar disimpan
       if (this.pendingConvertPlanId) {
-        this.plans = this.plans.filter(p => p.id !== this.pendingConvertPlanId);
+        // Jangan hapus plan — cukup tandai Completed supaya tetap tampil (coret) di agenda view
+        const donePlan = this.plans.find(p => p.id === this.pendingConvertPlanId);
+        if (donePlan) donePlan.phase = 'Completed';
         this.pendingConvertPlanId = null;
         this.savePlansToStorage();
       }
@@ -8430,16 +8435,23 @@ const GoogleCalendar = {
 
             <!-- All-day / no-time items -->
             <div v-if="group.allDayItems.length > 0" class="gcal-agenda-allday">
-              <div v-for="item in group.allDayItems" :key="item.id" class="gcal-agenda-allday-item" :class="{ 'gcal-agenda-item-done': item.done }" :style="{background: item.color}">
-                <span v-if="item.actionable" class="gcal-agenda-check-icon">
-                  <svg v-if="item.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>
-                  <svg v-else viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+              <div v-for="item in group.allDayItems" :key="item.id"
+                class="gcal-agenda-allday-item"
+                :class="{ 'gcal-agenda-item-done': item.done }"
+                :style="{ background: item.color, cursor: 'pointer' }"
+                @click.stop="item.isTaskPlan ? localGoToLogbook() : (item.actionable ? localHandleAgendaAction(item) : null)"
+                :title="item.isTaskPlan ? 'Buka Job Logbook' : (item.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai')">
+                <span class="gcal-agenda-check-icon"
+                  @click.stop="item.actionable ? localHandleAgendaAction(item) : null"
+                  style="cursor:pointer;">
+                  <svg v-if="item.done" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>
+                  <svg v-else-if="item.actionable" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+                  <span v-else-if="item.type==='task'">📋</span>
+                  <span v-else-if="item.type==='habit'">✅</span>
+                  <span v-else-if="item.type==='manual'">⏰</span>
+                  <span v-else>🎉</span>
                 </span>
-                <span v-else-if="item.type==='task'">📋</span>
-                <span v-else-if="item.type==='habit'">✅</span>
-                <span v-else-if="item.type==='manual'">⏰</span>
-                <span v-else>🎉</span>
-                <span class="gcal-agenda-allday-item-title">{{ item.title }}</span>
+                <span class="gcal-agenda-allday-item-title" :style="item.done ? 'text-decoration:line-through; opacity:0.55;' : ''">{{ item.title }}</span>
               </div>
             </div>
 
@@ -8461,16 +8473,20 @@ const GoogleCalendar = {
                     height: block.height + 'px',
                     borderColor: block.color,
                     left: 'calc(' + (block.col * (100/block.totalCols)) + '% + 2px)',
-                    width: 'calc(' + (100/block.totalCols) + '% - 4px)'
+                    width: 'calc(' + (100/block.totalCols) + '% - 4px)',
+                    cursor: 'pointer'
                   }"
-                  :title="block.title + ' (' + block.startLabel + ' - ' + block.endLabel + ')'"
-                  @click.stop="block.type==='event' && localDeleteEvent(block.raw)"
+                  :title="block.isTaskPlan ? 'Buka Job Logbook' : (block.actionable ? (block.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai') : block.title + ' (' + block.startLabel + ' - ' + block.endLabel + ')')"
+                  @click.stop="block.isTaskPlan ? localGoToLogbook() : (block.actionable ? localHandleAgendaAction(block) : (block.type==='event' && localDeleteEvent(block.raw)))"
                 >
-                  <span v-if="block.actionable" class="gcal-agenda-check-icon">
-                    <svg v-if="block.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>
-                    <svg v-else viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+                  <span v-if="block.actionable" class="gcal-agenda-check-icon"
+                    @click.stop="localHandleAgendaAction(block)"
+                    style="cursor:pointer;"
+                    :title="block.done ? 'Batalkan selesai' : 'Tandai selesai'">
+                    <svg v-if="block.done" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>
+                    <svg v-else viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
                   </span>
-                  <span class="gcal-agenda-block-title">{{ block.title }}</span>
+                  <span class="gcal-agenda-block-title" :style="block.done ? 'text-decoration:line-through; opacity:0.55;' : ''">{{ block.title }}</span>
                   <span class="gcal-agenda-block-time">{{ block.startLabel }}</span>
                 </div>
               </div>
@@ -8874,6 +8890,7 @@ const GoogleCalendar = {
         const plans = JSON.parse(WorkspaceStorage.getItem('personal_workspace_job_plans') || '[]');
         plans.filter(p => p.date === ds).forEach(p => {
           const id = 'tp-' + p.id;
+          const done = p.phase === 'Completed';
           if (p.time) {
             const [sh, sm] = p.time.split(':').map(Number);
             let startMin = sh * 60 + (sm || 0);
@@ -8885,9 +8902,9 @@ const GoogleCalendar = {
             } else {
               endMin = startMin + 60;
             }
-            timed.push({ id, title: p.tasks, type: 'task', color: TYPE_COLORS.task, startMin, endMin, raw: p });
+            timed.push({ id, title: p.tasks, type: 'task', color: TYPE_COLORS.task, startMin, endMin, raw: p, done, actionable: true, isTaskPlan: true });
           } else {
-            allDayItems.push({ id, title: p.tasks, type: 'task', color: TYPE_COLORS.task, raw: p });
+            allDayItems.push({ id, title: p.tasks, type: 'task', color: TYPE_COLORS.task, raw: p, done, actionable: true, isTaskPlan: true });
           }
         });
       } catch(e) {}
@@ -8944,6 +8961,7 @@ const GoogleCalendar = {
         type: item.type,
         color: item.color,
         raw: item.raw,
+        isTaskPlan: !!item.isTaskPlan,
         top: item.startMin,
         height: Math.max(item.endMin - item.startMin, 30),
         col: item.col,
@@ -8971,11 +8989,56 @@ const GoogleCalendar = {
   },
   mounted() {
     this.initFirebase();
-    // init localCurDate fresh
     this.localCurDate = new Date();
+    this._onPlansUpdated = () => { this.localStorageTick++; };
+    window.addEventListener('ws-plans-updated', this._onPlansUpdated);
+  },
+  beforeUnmount() {
+    window.removeEventListener('ws-plans-updated', this._onPlansUpdated);
   },
   methods: {
+    localGoToLogbook() {
+      window.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'jobLogbook' }));
+    },
     // ============ LOCAL CALENDAR METHODS ============
+    // Task Plan → toggle done langsung di storage (tanpa navigasi, agar checklist lain tidak hilang)
+    // Habit/Manual → toggle done via ws_notif_action_status
+    localHandleAgendaAction(block) {
+      if (block.isTaskPlan) {
+        this.localToggleTaskPlanDone(block);
+        return;
+      }
+      this.localToggleAgendaDone(block);
+    },
+    localToggleTaskPlanDone(block) {
+      try {
+        const plans = JSON.parse(WorkspaceStorage.getItem('personal_workspace_job_plans') || '[]');
+        const planId = block.raw && block.raw.id;
+        if (!planId) return;
+        const plan = plans.find(p => p.id === planId);
+        if (!plan) return;
+        const nowDone = plan.phase !== 'Completed';
+        plan.phase = nowDone ? 'Completed' : 'To-do';
+        WorkspaceStorage.setItem('personal_workspace_job_plans', JSON.stringify(plans));
+        // Trigger recompute agenda view — cukup increment tick, tanpa broadcast ke komponen lain
+        this.localStorageTick++;
+        if (nowDone && typeof NotifSound !== 'undefined') NotifSound.playCheck && NotifSound.playCheck();
+      } catch(e) {}
+    },
+    localToggleAgendaDone(block) {
+      const ds = this.localSelectedDate || new Date().toISOString().split('T')[0];
+      const storageKey = (block.raw && block.raw.id) ? block.raw.id : block.id;
+      try {
+        const raw = WorkspaceStorage.getItem('ws_notif_action_status');
+        const s = raw ? JSON.parse(raw) : {};
+        if (!s[ds]) s[ds] = {};
+        const nowDone = !s[ds][storageKey];
+        if (nowDone) { s[ds][storageKey] = true; } else { delete s[ds][storageKey]; }
+        WorkspaceStorage.setItem('ws_notif_action_status', JSON.stringify(s));
+        this.localStorageTick++;
+        if (nowDone && typeof NotifSound !== 'undefined') NotifSound.playCheck && NotifSound.playCheck();
+      } catch(e) {}
+    },
     localSaveEvents() {
       try { localStorage.setItem('gcal_local_events', JSON.stringify(this.localEvents)); } catch(e){}
     },

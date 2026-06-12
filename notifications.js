@@ -559,7 +559,7 @@ const ReminderPopup = {
       // Task Plan hari ini
       try {
         const plans = JSON.parse(WorkspaceStorage.getItem('personal_workspace_job_plans') || '[]');
-        plans.filter(p => p.date === today).forEach(p => {
+        plans.filter(p => p.date === today && p.phase !== 'Completed').forEach(p => {
           const timeLabel = p.time ? (p.timeEnd ? p.time + ' – ' + p.timeEnd : p.time) : null;
           items.push({
             id: 'task-' + p.id,
@@ -1119,8 +1119,8 @@ const NotificationPanel = {
     infoNotifs() {
       const list = [];
 
-      // Task Plan hari ini
-      const todayPlans = this.plans.filter(p => p.date === this.todayStr);
+      // Task Plan hari ini — yang sudah Completed tidak ditampilkan
+      const todayPlans = this.plans.filter(p => p.date === this.todayStr && p.phase !== 'Completed');
       todayPlans.forEach(p => {
         const priorityMap = { High: { badge: 'High', color: 'red' }, Medium: { badge: 'Med', color: 'amber' }, Low: { badge: 'Low', color: 'sage' } };
         const pm = priorityMap[p.priority] || { badge: p.priority, color: 'amber' };
