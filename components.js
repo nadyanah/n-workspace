@@ -8157,10 +8157,12 @@ const GoogleCalendar = {
               <span class="gcal-agenda-mon">{{ group.mon }}</span>
             </div>
             <div class="gcal-agenda-events">
+
+              <!-- Acara Google Calendar / lokal biasa -->
               <div v-for="ev in group.events" :key="ev.id" class="gcal-agenda-ev" :style="{'border-left-color': ev.color || '#4285F4'}">
                 <div class="gcal-agenda-ev-time">
                   <span v-if="ev.allDay" style="color:#70757a;font-size:12px;">Sepanjang hari</span>
-                  <span v-else style="color:#70757a;font-size:12px;">{{ ev.startTime }} &#8211; {{ ev.endTime }}</span>
+                  <span v-else style="color:#70757a;font-size:12px;">{{ ev.startTime }} &ndash; {{ ev.endTime }}</span>
                 </div>
                 <div class="gcal-agenda-ev-body">
                   <div class="gcal-agenda-ev-title">{{ ev.title }}</div>
@@ -8174,6 +8176,41 @@ const GoogleCalendar = {
                   <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                 </button>
               </div>
+
+              <!-- TIMELINE NOTIF 24 JAM (hanya hari ini) -->
+              <template v-if="group.isToday">
+                <div class="gcal-notif-timeline-header">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  Notif &amp; Task Hari Ini
+                </div>
+                <div class="gcal-notif-timeline">
+                  <div
+                    v-for="slot in group.notifSlots"
+                    :key="slot.hour"
+                    class="gcal-notif-slot"
+                    :class="{ 'gcal-notif-slot-past': slot.isPast && !slot.isCurrent, 'gcal-notif-slot-current': slot.isCurrent, 'gcal-notif-slot-filled': slot.items.length > 0 }"
+                  >
+                    <div class="gcal-notif-slot-hour" :class="{ 'gcal-notif-hour-now': slot.isCurrent }">
+                      {{ slot.label }}<span v-if="slot.isCurrent" class="gcal-notif-now-pip"></span>
+                    </div>
+                    <div class="gcal-notif-slot-items">
+                      <span v-if="slot.items.length === 0" class="gcal-notif-slot-empty">—</span>
+                      <span
+                        v-for="item in slot.items"
+                        :key="item.id"
+                        class="gcal-notif-pill"
+                        :class="'gcal-notif-pill-' + item.type"
+                      >{{ item.title }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="gcal-notif-legend">
+                  <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" style="background:var(--color-terracotta);"></span>Task Plan</span>
+                  <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" style="background:var(--color-sage);"></span>Habit</span>
+                  <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" style="background:#F59E0B;"></span>Pengingat</span>
+                </div>
+              </template>
+
             </div>
           </div>
         </div>
@@ -8528,12 +8565,65 @@ const GoogleCalendar = {
         if (!grouped[ev.startDate]) grouped[ev.startDate] = [];
         grouped[ev.startDate].push(ev);
       });
+
+      // Pastikan hari ini selalu muncul di agenda meski tidak ada event kalender
+      if (!grouped[todayStr]) grouped[todayStr] = [];
+
       return Object.keys(grouped).sort().map(ds => {
         const dt = new Date(ds + 'T12:00:00');
+        const isToday = ds === todayStr;
+
+        // Hanya untuk hari ini: kumpulkan notif per-jam (Task Plan + Habit + Manual)
+        let notifSlots = [];
+        if (isToday) {
+          const nowHour = new Date().getHours();
+          const byHour = {};
+
+          // Task Plan
+          try {
+            const plans = JSON.parse(WorkspaceStorage.getItem('personal_workspace_job_plans') || '[]');
+            plans.filter(p => p.date === todayStr && p.time).forEach(p => {
+              const hh = parseInt(p.time.split(':')[0], 10);
+              if (!byHour[hh]) byHour[hh] = [];
+              byHour[hh].push({ id: 'tp-'+p.id, title: p.tasks, type: 'task', time: p.time, timeEnd: p.timeEnd || null });
+            });
+          } catch(e) {}
+
+          // Habit reminders
+          try {
+            const habits = JSON.parse(WorkspaceStorage.getItem('ws_habit_notifs') || '[]');
+            habits.filter(h => h.time).forEach(h => {
+              const hh = parseInt(h.time.split(':')[0], 10);
+              if (!byHour[hh]) byHour[hh] = [];
+              byHour[hh].push({ id: h.id, title: h.title, type: 'habit', time: h.time, timeEnd: null });
+            });
+          } catch(e) {}
+
+          // Manual reminders hari ini
+          try {
+            const manuals = JSON.parse(WorkspaceStorage.getItem('ws_manual_notifs') || '[]');
+            manuals.filter(m => m.date === todayStr && m.time).forEach(m => {
+              const hh = parseInt(m.time.split(':')[0], 10);
+              if (!byHour[hh]) byHour[hh] = [];
+              byHour[hh].push({ id: m.id, title: m.title, type: 'manual', time: m.time, timeEnd: null });
+            });
+          } catch(e) {}
+
+          // Buat 24 slot jam
+          notifSlots = Array.from({ length: 24 }, (_, h) => ({
+            hour: h,
+            label: String(h).padStart(2,'0') + ':00',
+            items: (byHour[h] || []).sort((a,b) => a.time.localeCompare(b.time)),
+            isCurrent: h === nowHour,
+            isPast: h < nowHour
+          }));
+        }
+
         return {
-          dateStr: ds, isToday: ds===todayStr,
+          dateStr: ds, isToday,
           dow: dows[dt.getDay()], day: dt.getDate(), mon: months[dt.getMonth()],
-          events: grouped[ds]
+          events: grouped[ds],
+          notifSlots
         };
       });
     }

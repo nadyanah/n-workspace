@@ -5587,3 +5587,494 @@ input:checked + .switch-slider:before {
 /* ---- SYNC BANNER (kept for legacy, hidden) ---- */
 .gcal-sync-banner { display: none; }
 .gcal-sync-link { display: none; }
+
+/* ============================================================================
+   DAILY AGENDA PAGE
+   ============================================================================ */
+
+.da-page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 16px 56px;
+}
+
+/* ── Header ── */
+.da-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-top: 8px;
+}
+
+.da-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.da-header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.da-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-sand);
+  background: #fff;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.da-icon-btn:hover {
+  background: var(--color-terracotta);
+  color: #fff;
+  border-color: var(--color-terracotta);
+}
+
+/* ── Legend ── */
+.da-legend {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.da-legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: #fff;
+  border: 1.5px solid var(--color-sand);
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+
+.da-chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Timeline wrapper ── */
+.da-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+/* ── Single hour slot ── */
+.da-slot {
+  display: grid;
+  grid-template-columns: 48px 20px 1fr;
+  gap: 0 10px;
+  min-height: 40px;
+  align-items: flex-start;
+}
+
+/* Dim past slots */
+.da-slot-past .da-slot-time,
+.da-slot-past .da-slot-empty {
+  opacity: 0.38;
+}
+
+/* ── Time column ── */
+.da-slot-time {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding-top: 9px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.da-slot-hour {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.da-hour-current {
+  color: var(--color-terracotta);
+}
+
+.da-now-badge {
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--color-terracotta);
+  border-radius: 4px;
+  padding: 1px 4px;
+  white-space: nowrap;
+}
+
+/* ── Divider line column ── */
+.da-slot-line {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 12px;
+  flex-shrink: 0;
+}
+
+.da-slot-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--color-sand);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1.5px var(--color-sand);
+  flex-shrink: 0;
+  z-index: 1;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.da-dot-current {
+  background: var(--color-terracotta) !important;
+  box-shadow: 0 0 0 2px rgba(214,123,82,0.25) !important;
+  width: 11px;
+  height: 11px;
+}
+
+.da-dot-filled {
+  background: var(--color-terracotta);
+  box-shadow: 0 0 0 2px rgba(214,123,82,0.18);
+}
+
+.da-slot-past .da-dot-filled {
+  background: var(--color-sage);
+  box-shadow: 0 0 0 2px rgba(163,177,138,0.2);
+}
+
+.da-slot-track {
+  width: 2px;
+  flex: 1;
+  background: var(--color-sand);
+  min-height: 28px;
+  margin-top: 4px;
+  border-radius: 2px;
+}
+
+.da-slot-current .da-slot-track {
+  background: linear-gradient(to bottom, var(--color-terracotta), var(--color-sand));
+}
+
+/* ── Content column ── */
+.da-slot-content {
+  padding: 6px 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 38px;
+}
+
+.da-slot-empty {
+  font-size: 12px;
+  color: var(--color-sand);
+  padding-top: 7px;
+  line-height: 1;
+}
+
+/* ── Item cards ── */
+.da-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1.5px solid var(--color-sand);
+  border-radius: 8px;
+  padding: 5px 10px 5px 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.da-item:hover {
+  border-color: var(--color-terracotta);
+  box-shadow: 0 2px 10px rgba(214,123,82,0.12);
+  transform: translateX(2px);
+}
+
+/* type-specific border accent */
+.da-item-task   { border-left: 3px solid var(--color-terracotta); }
+.da-item-habit  { border-left: 3px solid var(--color-sage); }
+.da-item-manual { border-left: 3px solid #F59E0B; }
+
+/* past items */
+.da-slot-past .da-item {
+  opacity: 0.52;
+}
+.da-slot-past .da-item:hover {
+  opacity: 1;
+}
+
+.da-item-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.da-item-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.da-item-done-badge {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--color-sage);
+  background: #EEF5EB;
+  border: 1px solid #C9DECA;
+  border-radius: 5px;
+  padding: 1px 5px;
+  flex-shrink: 0;
+}
+
+.da-item-timerange {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ── Stats bar ── */
+.da-stats {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  justify-content: center;
+}
+
+.da-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fff;
+  border: 1.5px solid var(--color-sand);
+  border-radius: 12px;
+  padding: 10px 20px;
+  min-width: 80px;
+}
+
+.da-stat-num {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-dark);
+  line-height: 1;
+}
+
+.da-stat-label {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-top: 3px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .da-page { padding: 0 10px 48px; }
+  .da-slot { grid-template-columns: 42px 16px 1fr; gap: 0 7px; }
+  .da-item { padding: 4px 8px 4px 7px; }
+  .da-item-title { font-size: 12px; }
+  .da-stat { padding: 8px 14px; min-width: 68px; }
+  .da-stat-num { font-size: 19px; }
+}
+
+/* ============================================================================
+   GCAL AGENDA — Notif Timeline 24 jam (di dalam Daily N / agenda view)
+   ============================================================================ */
+
+.gcal-notif-timeline-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 16px 0 8px;
+  padding: 0 2px;
+}
+
+.gcal-notif-timeline {
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid var(--color-sand);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.gcal-notif-slot {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 0;
+  min-height: 32px;
+  border-bottom: 1px solid var(--color-sand);
+  transition: background 0.12s;
+}
+
+.gcal-notif-slot:last-child {
+  border-bottom: none;
+}
+
+/* Slot past: redup */
+.gcal-notif-slot-past {
+  opacity: 0.42;
+}
+
+/* Slot jam sekarang: highlight */
+.gcal-notif-slot-current {
+  background: rgba(214, 123, 82, 0.06);
+  opacity: 1 !important;
+}
+
+/* Slot yang ada isinya: sedikit lebih terang */
+.gcal-notif-slot-filled:not(.gcal-notif-slot-past) {
+  background: #FDFBF7;
+}
+
+/* Label jam */
+.gcal-notif-slot-hour {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 0 10px 0 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  border-right: 1.5px solid var(--color-sand);
+  background: #F9F6F2;
+  white-space: nowrap;
+}
+
+.gcal-notif-hour-now {
+  color: var(--color-terracotta);
+  background: rgba(214, 123, 82, 0.08);
+}
+
+.gcal-notif-now-pip {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-terracotta);
+  flex-shrink: 0;
+  animation: notif-pip-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes notif-pip-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.75); }
+}
+
+/* Items area */
+.gcal-notif-slot-items {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+}
+
+/* Placeholder kosong */
+.gcal-notif-slot-empty {
+  font-size: 11px;
+  color: #d1cbc4;
+  line-height: 1;
+}
+
+/* Pill per item — hanya judul */
+.gcal-notif-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-dark);
+  background: var(--bg-cream);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 20px;
+  padding: 2px 9px;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.gcal-notif-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* Type accents */
+.gcal-notif-pill-task {
+  border-left: 3px solid var(--color-terracotta);
+  color: var(--color-terracotta);
+  background: rgba(214, 123, 82, 0.07);
+}
+
+.gcal-notif-pill-habit {
+  border-left: 3px solid var(--color-sage);
+  color: #3E6B3A;
+  background: rgba(163, 177, 138, 0.10);
+}
+
+.gcal-notif-pill-manual {
+  border-left: 3px solid #F59E0B;
+  color: #92400E;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+/* Legend bawah */
+.gcal-notif-legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  margin-bottom: 4px;
+  padding: 0 2px;
+}
+
+.gcal-notif-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.gcal-notif-legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
