@@ -2364,6 +2364,10 @@ const CalendarMoment = {
                           <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" class="lucide-inline"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
                           {{ item.category }}
                         </span>
+                        <span v-if="item.timeStart" style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 4px 10px; font-size: 11px; font-weight: 700; color: #1D4ED8; display: inline-flex; align-items: center; gap: 5px; font-family: 'Hack', monospace;">
+                          <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                          {{ item.timeStart }}<template v-if="item.timeEnd"> – {{ item.timeEnd }}</template>
+                        </span>
                       </div>
 
                       <!-- Title of memory -->
@@ -2587,6 +2591,24 @@ const CalendarMoment = {
                         {{ cat }}
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                <!-- Waktu Mulai - Waktu Berakhir -->
+                <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                  <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 5px;">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                      Waktu Mulai
+                    </label>
+                    <input type="time" class="form-input" v-model="m.timeStart" style="height: 38px; width: 100%;" />
+                  </div>
+                  <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 5px;">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                      Waktu Berakhir
+                    </label>
+                    <input type="time" class="form-input" v-model="m.timeEnd" style="height: 38px; width: 100%;" />
                   </div>
                 </div>
 
@@ -3102,6 +3124,8 @@ const CalendarMoment = {
         importantNote: '',
         isImportant: true,
         image: '',
+        timeStart: '',
+        timeEnd: '',
         dragX: 0,
         dragY: 0,
         scale: 1.1,

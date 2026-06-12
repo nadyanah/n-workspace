@@ -612,7 +612,9 @@ h1, h2, h3, h4 {
 /* Module 2: Calendar Moment Styles */
 .calendar-wrapper {
   width: 100%;
+  max-width: 100%;
   margin: 0 auto;
+  overflow: hidden;
 }
 
 .calendar-header {
@@ -624,11 +626,14 @@ h1, h2, h3, h4 {
 
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 10px;
   background-color: var(--color-sand);
   padding: 10px;
   border-radius: var(--border-radius-md);
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .calendar-day-header {
@@ -651,6 +656,8 @@ h1, h2, h3, h4 {
   flex-direction: column;
   justify-content: space-between;
   border: 1px solid transparent;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .calendar-cell:hover {
@@ -1536,6 +1543,8 @@ input:checked + .switch-slider:before {
   justify-content: space-between;
   border: 1.5px solid var(--color-sand);
   min-height: 95px;
+  min-width: 0;
+  box-sizing: border-box;
   overflow: hidden;
 }
 
@@ -3200,6 +3209,8 @@ input:checked + .switch-slider:before {
   padding: 10px !important;
   box-shadow: 0 2px 8px rgba(44, 38, 33, 0.02) !important;
   transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
 }
 
 .calendar-cell:hover {
