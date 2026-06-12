@@ -9571,11 +9571,15 @@ const FinancialTracker = {
                   :style="{ color: tx.isTransfer ? (tx.type === 'expense' ? '#3B82F6' : '#3B82F6') : tx.type === 'income' ? '#10B981' : tx.type === 'expense' ? '#EF4444' : '#F59E0B' }">
                   {{ tx.isTransfer && tx.type === 'income' ? '+' : tx.isTransfer && tx.type === 'expense' ? '-' : tx.type === 'income' ? '+' : '-' }}{{ formatCurrency(tx.amount) }}
                 </span>
-                <div style="display:flex; gap:4px;">
+                <div style="display:flex; gap:4px; align-items:center;">
                   <button v-if="tx.isReimburse && !tx.settled" @click="settleReimburse(tx)"
                     title="Uang dikembalikan! (Otomatis Tambah Saldo)" style="background:#D1FAE5; border:1.5px solid #6EE7B7; border-radius:6px; padding:4px 8px; cursor:pointer; font-size:11px; font-weight:700; color:#065F46; display:inline-flex; align-items:center; gap:4px;">
                     <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     Uang Cair (Tambah Saldo)
+                  </button>
+                  <button v-if="!tx.isTransfer" @click="openEditTx(tx)" title="Edit Transaksi"
+                    style="background:#EFF6FF; border:1.5px solid #93C5FD; border-radius:6px; padding:4px 6px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
                   <button @click="deleteTx(tx.id)" title="Hapus Transaksi" style="background:#FEF2F2; border:1.5px solid #FCA5A5; border-radius:6px; padding:4px 6px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;">
                     <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
@@ -9633,7 +9637,7 @@ const FinancialTracker = {
                   <svg v-if="txForm.type === 'income'" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
                   <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
                 </span>
-                {{ txForm.type === 'income' ? 'Tambah Saldo' : 'Catat Pengeluaran' }}
+                {{ editingTxId ? (txForm.type === 'income' ? 'Edit Saldo Masuk' : 'Edit Pengeluaran') : (txForm.type === 'income' ? 'Tambah Saldo' : 'Catat Pengeluaran') }}
               </h3>
               <button @click="closeTxModal" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:20px; line-height:1;">✕</button>
             </div>
@@ -9696,7 +9700,7 @@ const FinancialTracker = {
             
             <div style="display:flex; gap:10px;">
               <button class="btn" @click="closeTxModal" style="flex:1; background:var(--bg-cream); border:1.5px solid var(--color-sand); color:var(--text-dark); cursor:pointer; border-radius:8px; font-weight:600;">Batal</button>
-              <button class="btn btn-primary" @click="saveTx" style="flex:2; cursor:pointer;">Simpan Transaksi</button>
+              <button class="btn btn-primary" @click="saveTx" style="flex:2; cursor:pointer;">{{ editingTxId ? 'Simpan Perubahan' : 'Simpan Transaksi' }}</button>
             </div>
           </div>
         </div>
@@ -9798,6 +9802,7 @@ const FinancialTracker = {
       bankForm: { name: '', function: '', initialBalance: 0, color: '#10B981' },
 
       showTxModal: false,
+      editingTxId: null,
       txForm: {
         type: 'expense',
         bankId: '',
@@ -9987,6 +9992,7 @@ const FinancialTracker = {
 
     openAddTransaction(type) {
       if (this.banks.length === 0) return alert('Silakan tambah Bank/Rekening terlebih dahulu!');
+      this.editingTxId = null;
       this.txForm = {
         type: type || 'expense',
         bankId: this.banks[0].id,
@@ -10000,11 +10006,49 @@ const FinancialTracker = {
       };
       this.showTxModal = true;
     },
+    openEditTx(tx) {
+      this.editingTxId = tx.id;
+      this.txForm = {
+        type: tx.type,
+        bankId: tx.bankId,
+        date: tx.date,
+        amount: tx.amount,
+        description: tx.description,
+        category: tx.category || '',
+        isReimburse: tx.isReimburse || false,
+        paidBy: tx.paidBy || '',
+        notes: tx.notes || '',
+      };
+      this.showTxModal = true;
+    },
     saveTx() {
       if (!this.txForm.bankId) return alert('Pilih Bank / Dompet tujuan!');
       if (!this.txForm.description.trim()) return alert('Deskripsi wajib diisi!');
       if (!this.txForm.amount || this.txForm.amount <= 0) return alert('Jumlah harus lebih dari 0!');
-      
+
+      if (this.editingTxId) {
+        // Mode Edit — update transaksi yang ada
+        const idx = this.transactions.findIndex(t => t.id === this.editingTxId);
+        if (idx !== -1) {
+          this.transactions[idx] = {
+            ...this.transactions[idx],
+            bankId: this.txForm.bankId,
+            type: this.txForm.type,
+            date: this.txForm.date,
+            amount: Number(this.txForm.amount),
+            description: this.txForm.description,
+            category: this.txForm.category,
+            isReimburse: this.txForm.type === 'expense' ? this.txForm.isReimburse : false,
+            paidBy: this.txForm.type === 'expense' && this.txForm.isReimburse ? this.txForm.paidBy : '',
+            notes: this.txForm.notes,
+          };
+        }
+        this.saveAll();
+        this.closeTxModal();
+        return;
+      }
+
+      // Mode Tambah Baru
       const newTx = {
         id: 'tx-' + Date.now(),
         bankId: this.txForm.bankId,
@@ -10077,7 +10121,7 @@ const FinancialTracker = {
       if (isToday) return { border: '1.5px solid var(--color-terracotta)', color: 'var(--color-terracotta)', fontWeight: 'bold', borderRadius: '50%' };
       return { color: 'var(--text-dark)' };
     },
-    closeTxModal() { this.showTxModal = false; },
+    closeTxModal() { this.showTxModal = false; this.editingTxId = null; },
 
     openTransferModal() {
       if (this.banks.length < 2) return alert('Kamu butuh minimal 2 bank/rekening untuk melakukan transfer!');
