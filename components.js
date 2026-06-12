@@ -8059,9 +8059,9 @@ const GoogleCalendar = {
         <div class="gcal-toolbar">
           <div style="display:flex; align-items:center; gap:10px;">
             <button class="gcal-today-btn" @click="localGoToday()">Hari ini</button>
-            <button class="gcal-nav-btn" @click="localPrevMonth()">&#8249;</button>
-            <button class="gcal-nav-btn" @click="localNextMonth()">&#8250;</button>
-            <span style="font-size:18px; font-weight:700; color:#3c4043; min-width:180px;">{{ localMonthLabel }}</span>
+            <button class="gcal-nav-btn" @click="localView==='agenda' ? localPrevDay() : localPrevMonth()">&#8249;</button>
+            <button class="gcal-nav-btn" @click="localView==='agenda' ? localNextDay() : localNextMonth()">&#8250;</button>
+            <span style="font-size:18px; font-weight:700; color:#3c4043; min-width:180px;">{{ localView==='agenda' ? localAgendaDateLabel : localMonthLabel }}</span>
           </div>
           <div style="display:flex; align-items:center; gap:10px;">
             <div class="gcal-view-toggle">
@@ -8505,6 +8505,14 @@ const GoogleCalendar = {
       const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
       return months[this.localCurDate.getMonth()] + ' ' + this.localCurDate.getFullYear();
     },
+    localAgendaDateLabel() {
+      const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+      const dows = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+      const todayStr = new Date().toISOString().split('T')[0];
+      const dt = new Date(this.localSelectedDate + 'T12:00:00');
+      const label = dows[dt.getDay()] + ', ' + dt.getDate() + ' ' + months[dt.getMonth()] + ' ' + dt.getFullYear();
+      return this.localSelectedDate === todayStr ? 'Hari Ini · ' + label : label;
+    },
     localMonthCells() {
       const yr = this.localCurDate.getFullYear();
       const mo = this.localCurDate.getMonth();
@@ -8557,19 +8565,18 @@ const GoogleCalendar = {
     localAgendaItems() {
       const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
       const dows = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
-      const today = new Date(); const todayStr = today.toISOString().split('T')[0];
-      // get all events sorted by date
-      const sorted = [...this.localEvents].sort((a,b) => (a.startDate+a.startTime).localeCompare(b.startDate+b.startTime));
+      const todayStr = new Date().toISOString().split('T')[0];
+      // Agenda hanya tampil untuk tanggal yang dipilih (localSelectedDate)
+      const selectedDate = this.localSelectedDate || todayStr;
       const grouped = {};
-      sorted.forEach(ev => {
+      this.localEvents.forEach(ev => {
         if (!grouped[ev.startDate]) grouped[ev.startDate] = [];
         grouped[ev.startDate].push(ev);
       });
+      const selectedOnly = {};
+      selectedOnly[selectedDate] = (grouped[selectedDate] || []).sort((a,b) => (a.startTime).localeCompare(b.startTime));
 
-      // Pastikan hari ini selalu muncul di agenda meski tidak ada event kalender
-      if (!grouped[todayStr]) grouped[todayStr] = [];
-
-      return Object.keys(grouped).sort().map(ds => {
+      return Object.keys(selectedOnly).sort().map(ds => {
         const dt = new Date(ds + 'T12:00:00');
         const isToday = ds === todayStr;
 
@@ -8622,7 +8629,7 @@ const GoogleCalendar = {
         return {
           dateStr: ds, isToday,
           dow: dows[dt.getDay()], day: dt.getDate(), mon: months[dt.getMonth()],
-          events: grouped[ds],
+          events: selectedOnly[ds] || [],
           notifSlots
         };
       });
@@ -8644,6 +8651,16 @@ const GoogleCalendar = {
     localGoToday() {
       this.localCurDate = new Date();
       this.localSelectedDate = new Date().toISOString().split('T')[0];
+    },
+    localPrevDay() {
+      const d = new Date(this.localSelectedDate + 'T12:00:00');
+      d.setDate(d.getDate() - 1);
+      this.localSelectedDate = d.toISOString().split('T')[0];
+    },
+    localNextDay() {
+      const d = new Date(this.localSelectedDate + 'T12:00:00');
+      d.setDate(d.getDate() + 1);
+      this.localSelectedDate = d.toISOString().split('T')[0];
     },
     localPrevMonth() {
       const d = new Date(this.localCurDate);
