@@ -9261,6 +9261,10 @@ const FinancialTracker = {
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Catat Pengeluaran
             </button>
+            <button @click="openTransferModal" style="display:inline-flex; align-items:center; gap:6px; height:34px; padding:0 14px; background:#EFF6FF; border:1.5px solid #3B82F6; color:#1D4ED8; border-radius:8px; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all 0.15s;" onmouseover="this.style.background='#DBEAFE'" onmouseout="this.style.background='#EFF6FF'">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M15 6l6 6-6 6"/><path d="M19 6H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2"/></svg>
+              Kirim ke Bank
+            </button>
           </div>
         </div>
 
@@ -9281,19 +9285,27 @@ const FinancialTracker = {
           <div v-else style="display:flex; flex-direction:column; gap:8px;">
             <div v-for="tx in filteredTransactions" :key="tx.id" class="fin-tx-row">
               <div class="fin-tx-icon" :style="{ background: getTxBg(tx), color: getTxColor(tx) }">
-                <svg v-if="tx.type === 'income'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+                <svg v-if="tx.isTransfer && tx.type === 'expense'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M15 6l6 6-6 6"/></svg>
+                <svg v-else-if="tx.isTransfer && tx.type === 'income'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M9 6l-6 6 6 6"/></svg>
+                <svg v-else-if="tx.type === 'income'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
                 <svg v-else-if="tx.type === 'expense' && !tx.isReimburse" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
                 <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
               </div>
               <div style="flex:1; min-width:0;">
                 <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                   <span style="font-size:13.5px; font-weight:600; color:var(--text-dark);">{{ tx.description }}</span>
+                  <span v-if="tx.isTransfer" class="fin-badge" style="background:#DBEAFE; color:#1D4ED8; border-color:#93C5FD;">
+                    ⇄ Transfer
+                  </span>
                   <span v-if="tx.isReimburse" class="fin-badge"
                     :style="tx.settled ? { background:'#D1FAE5', color:'#065F46', borderColor:'#6EE7B7' } : { background:'#FEF3C7', color:'#92400E', borderColor:'#FCD34D' }">
                     {{ tx.settled ? '✓ Reimburse Lunas' : '⏳ Reimburse Pending' }}
                   </span>
                   <span class="fin-badge" :style="{ background: getBankColor(tx.bankId) + '15', color: getBankColor(tx.bankId), borderColor: getBankColor(tx.bankId) + '50' }">
                     🏦 {{ getBankName(tx.bankId) }}
+                  </span>
+                  <span v-if="tx.transferPairBankId" class="fin-badge" :style="{ background: getBankColor(tx.transferPairBankId) + '15', color: getBankColor(tx.transferPairBankId), borderColor: getBankColor(tx.transferPairBankId) + '50' }">
+                    → 🏦 {{ getBankName(tx.transferPairBankId) }}
                   </span>
                   <span v-if="tx.category" class="fin-badge" style="background:var(--bg-cream); color:var(--text-muted); border-color:var(--color-sand);">{{ tx.category }}</span>
                 </div>
@@ -9305,8 +9317,8 @@ const FinancialTracker = {
               </div>
               <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
                 <span style="font-size:14px; font-weight:700; font-family:'Space Mono',monospace;"
-                  :style="{ color: tx.type === 'income' ? '#10B981' : tx.type === 'expense' ? '#EF4444' : '#F59E0B' }">
-                  {{ tx.type === 'income' ? '+' : '-' }}{{ formatCurrency(tx.amount) }}
+                  :style="{ color: tx.isTransfer ? (tx.type === 'expense' ? '#3B82F6' : '#3B82F6') : tx.type === 'income' ? '#10B981' : tx.type === 'expense' ? '#EF4444' : '#F59E0B' }">
+                  {{ tx.isTransfer && tx.type === 'income' ? '+' : tx.isTransfer && tx.type === 'expense' ? '-' : tx.type === 'income' ? '+' : '-' }}{{ formatCurrency(tx.amount) }}
                 </span>
                 <div style="display:flex; gap:4px;">
                   <button v-if="tx.isReimburse && !tx.settled" @click="settleReimburse(tx)"
@@ -9439,6 +9451,88 @@ const FinancialTracker = {
         </div>
       </transition>
 
+      <transition name="modal-fade">
+        <div v-if="showTransferModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(44, 38, 33, 0.6); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 99999;" @click.self="closeTransferModal">
+          <div style="background: var(--bg-card); max-width: 460px; width: 90%; padding: 28px; border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+              <h3 style="font-size:17px; margin:0; display:flex; align-items:center; gap:8px; color:var(--text-dark);">
+                <span style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; background:#DBEAFE; border-radius:8px;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M15 6l6 6-6 6"/><path d="M19 6H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2"/></svg>
+                </span>
+                Kirim Uang Antar Bank
+              </h3>
+              <button @click="closeTransferModal" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:20px; line-height:1;">✕</button>
+            </div>
+
+            <!-- Visualisasi arah transfer -->
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px; padding:14px 16px; background:#F0F9FF; border-radius:12px; border:1.5px solid #BAE6FD;">
+              <div style="flex:1; text-align:center;">
+                <div style="font-size:10px; font-weight:700; color:#0369A1; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Dari</div>
+                <div style="font-size:13.5px; font-weight:700; color:var(--text-dark);">{{ transferForm.fromBankId ? getBankName(transferForm.fromBankId) : '—' }}</div>
+                <div v-if="transferForm.fromBankId" style="font-size:11px; color:#0369A1; font-family:'Space Mono',monospace; margin-top:2px;">{{ formatCurrency(getBankBalance(transferForm.fromBankId)) }}</div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:center; gap:2px; flex-shrink:0;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M15 6l6 6-6 6"/></svg>
+                <span v-if="transferForm.amount && transferForm.amount > 0" style="font-size:11px; font-weight:700; color:#1D4ED8; white-space:nowrap; font-family:'Space Mono',monospace;">{{ formatCurrency(transferForm.amount) }}</span>
+              </div>
+              <div style="flex:1; text-align:center;">
+                <div style="font-size:10px; font-weight:700; color:#0369A1; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Ke</div>
+                <div style="font-size:13.5px; font-weight:700; color:var(--text-dark);">{{ transferForm.toBankId ? getBankName(transferForm.toBankId) : '—' }}</div>
+                <div v-if="transferForm.toBankId" style="font-size:11px; color:#0369A1; font-family:'Space Mono',monospace; margin-top:2px;">{{ formatCurrency(getBankBalance(transferForm.toBankId)) }}</div>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+              <div class="form-group" style="margin:0;">
+                <label>Bank Asal (Pengirim) *</label>
+                <select class="form-input" v-model="transferForm.fromBankId" required style="height:42px;">
+                  <option value="" disabled>Pilih bank...</option>
+                  <option v-for="bank in banks" :key="bank.id" :value="bank.id">{{ bank.name }}</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label>Bank Tujuan (Penerima) *</label>
+                <select class="form-input" v-model="transferForm.toBankId" required style="height:42px;">
+                  <option value="" disabled>Pilih bank...</option>
+                  <option v-for="bank in banks.filter(b => b.id !== transferForm.fromBankId)" :key="bank.id" :value="bank.id">{{ bank.name }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+              <div class="form-group" style="margin:0;">
+                <label>Jumlah Transfer (Rp) *</label>
+                <input type="number" class="form-input" v-model.number="transferForm.amount" placeholder="0" min="1" required style="height:42px;" />
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label>Tanggal Transfer</label>
+                <input type="date" class="form-input" v-model="transferForm.date" required style="height:42px;" />
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:20px;">
+              <label>Catatan <span style="font-weight:400; color:var(--text-muted);">(opsional)</span></label>
+              <input type="text" class="form-input" v-model="transferForm.notes" placeholder="cth. Pindah dana tabungan, bayar cicilan..." />
+            </div>
+
+            <!-- Warning saldo kurang -->
+            <div v-if="transferForm.fromBankId && transferForm.amount && transferForm.amount > getBankBalance(transferForm.fromBankId)"
+              style="display:flex; align-items:center; gap:8px; background:#FEF2F2; border:1.5px solid #FCA5A5; border-radius:8px; padding:10px 12px; margin-bottom:14px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span style="font-size:12px; font-weight:600; color:#B91C1C;">Saldo {{ getBankName(transferForm.fromBankId) }} tidak cukup! (tersedia {{ formatCurrency(getBankBalance(transferForm.fromBankId)) }})</span>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+              <button class="btn" @click="closeTransferModal" style="flex:1; background:var(--bg-cream); border:1.5px solid var(--color-sand); color:var(--text-dark); cursor:pointer; border-radius:8px; font-weight:600;">Batal</button>
+              <button @click="saveTransfer" style="flex:2; height:42px; background:#3B82F6; border:none; border-radius:8px; color:#fff; font-size:13.5px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:background 0.15s;" onmouseover="this.style.background='#2563EB'" onmouseout="this.style.background='#3B82F6'">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M15 6l6 6-6 6"/></svg>
+                Kirim Sekarang
+              </button>
+            </div>
+          </div>
+        </div>
+      </transition>
+
     </div>
   `,
 
@@ -9478,16 +9572,27 @@ const FinancialTracker = {
         { key: 'income', label: '↑ Masuk', color: '#10B981' },
         { key: 'expense', label: '↓ Keluar', color: '#EF4444' },
         { key: 'reimburse', label: '↺ Reimburse', color: '#F59E0B' },
+        { key: 'transfer', label: '⇄ Transfer', color: '#3B82F6' },
       ],
+
+      showTransferModal: false,
+      transferForm: {
+        fromBankId: '',
+        toBankId: '',
+        amount: null,
+        date: new Date().toISOString().split('T')[0],
+        notes: '',
+      },
     };
   },
 
   computed: {
     filteredTransactions() {
       let txs = [...this.finDateFilteredTx].sort((a, b) => new Date(b.date) - new Date(a.date));
-      if (this.activeTab === 'income') return txs.filter(t => t.type === 'income');
-      if (this.activeTab === 'expense') return txs.filter(t => t.type === 'expense' && !t.isReimburse);
+      if (this.activeTab === 'income') return txs.filter(t => t.type === 'income' && !t.isTransfer);
+      if (this.activeTab === 'expense') return txs.filter(t => t.type === 'expense' && !t.isReimburse && !t.isTransfer);
       if (this.activeTab === 'reimburse') return txs.filter(t => t.isReimburse);
+      if (this.activeTab === 'transfer') return txs.filter(t => t.isTransfer);
       return txs;
     },
     finFilteredCount() {
@@ -9587,11 +9692,13 @@ const FinancialTracker = {
       catch(e) { return d; }
     },
     getTxColor(tx) {
+      if (tx.isTransfer) return '#3B82F6';
       if (tx.isReimburse) return '#F59E0B';
       if (tx.type === 'income') return '#10B981';
       return '#EF4444';
     },
     getTxBg(tx) {
+      if (tx.isTransfer) return '#DBEAFE';
       if (tx.isReimburse) return '#FEF3C7';
       if (tx.type === 'income') return '#D1FAE5';
       return '#FEE2E2';
@@ -9720,6 +9827,74 @@ const FinancialTracker = {
       return { color: 'var(--text-dark)' };
     },
     closeTxModal() { this.showTxModal = false; },
+
+    openTransferModal() {
+      if (this.banks.length < 2) return alert('Kamu butuh minimal 2 bank/rekening untuk melakukan transfer!');
+      this.transferForm = {
+        fromBankId: this.banks[0].id,
+        toBankId: this.banks[1].id,
+        amount: null,
+        date: new Date().toISOString().split('T')[0],
+        notes: '',
+      };
+      this.showTransferModal = true;
+    },
+    closeTransferModal() { this.showTransferModal = false; },
+    saveTransfer() {
+      if (!this.transferForm.fromBankId) return alert('Pilih bank asal!');
+      if (!this.transferForm.toBankId) return alert('Pilih bank tujuan!');
+      if (this.transferForm.fromBankId === this.transferForm.toBankId) return alert('Bank asal dan tujuan tidak boleh sama!');
+      if (!this.transferForm.amount || this.transferForm.amount <= 0) return alert('Jumlah transfer harus lebih dari 0!');
+      if (this.transferForm.amount > this.getBankBalance(this.transferForm.fromBankId)) {
+        return alert('Saldo ' + this.getBankName(this.transferForm.fromBankId) + ' tidak mencukupi!');
+      }
+
+      const transferId = 'tf-' + Date.now();
+      const fromName = this.getBankName(this.transferForm.fromBankId);
+      const toName = this.getBankName(this.transferForm.toBankId);
+      const desc = this.transferForm.notes
+        ? this.transferForm.notes
+        : `Transfer ${fromName} → ${toName}`;
+
+      // Transaksi keluar dari bank asal
+      const txOut = {
+        id: 'tx-out-' + transferId,
+        bankId: this.transferForm.fromBankId,
+        transferPairBankId: this.transferForm.toBankId,
+        type: 'expense',
+        date: this.transferForm.date,
+        amount: Number(this.transferForm.amount),
+        description: desc,
+        category: 'Transfer',
+        isReimburse: false,
+        isTransfer: true,
+        paidBy: '',
+        notes: `Transfer ke ${toName}`,
+        settled: null,
+      };
+
+      // Transaksi masuk ke bank tujuan
+      const txIn = {
+        id: 'tx-in-' + transferId,
+        bankId: this.transferForm.toBankId,
+        transferPairBankId: this.transferForm.fromBankId,
+        type: 'income',
+        date: this.transferForm.date,
+        amount: Number(this.transferForm.amount),
+        description: desc,
+        category: 'Transfer',
+        isReimburse: false,
+        isTransfer: true,
+        paidBy: '',
+        notes: `Transfer dari ${fromName}`,
+        settled: null,
+      };
+
+      this.transactions.push(txOut, txIn);
+      this.saveAll();
+      this.closeTransferModal();
+      this.activeTab = 'transfer';
+    },
 
     saveAll() {
       WorkspaceStorage.setItem('fin_banks', JSON.stringify(this.banks));
