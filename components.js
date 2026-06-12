@@ -745,6 +745,42 @@ const JobLogbook = {
 
                     </div>
                   </div>
+                  <!-- ── Waktu Quick-Set Dropdown ── -->
+                  <div style="position: relative; display: inline-flex; align-items: center;" @click.stop>
+                    <button @click.stop="openTimeDropdown(plan)"
+                      title="Set Waktu Mulai - Berakhir"
+                      style="background: var(--bg-cream); color: var(--text-dark); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 4px 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </button>
+
+                    <!-- Floating time popover -->
+                    <div v-if="openTimeDropdownId === plan.id"
+                      @click.stop
+                      style="position: absolute; top: calc(100% + 6px); right: 0; z-index: 99999;
+                             background: var(--color-paper, #FAF7F2);
+                             border: 1.5px solid var(--color-sand-light, #EDE8E1);
+                             border-radius: 14px;
+                             box-shadow: 0 8px 32px rgba(61,46,34,0.16), 0 2px 8px rgba(61,46,34,0.08);
+                             padding: 12px;
+                             min-width: 230px;">
+                      <p style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px;">Atur Waktu</p>
+                      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px;">
+                        <div style="flex: 1;">
+                          <label style="font-size: 10.5px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 3px;">Mulai</label>
+                          <input type="time" class="form-input" v-model="timeEditForm.time" style="height: 34px; width: 100%; font-size: 12.5px;" />
+                        </div>
+                        <span style="color: var(--text-muted); font-size: 16px; margin-top: 16px;">–</span>
+                        <div style="flex: 1;">
+                          <label style="font-size: 10.5px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 3px;">Berakhir</label>
+                          <input type="time" class="form-input" v-model="timeEditForm.timeEnd" style="height: 34px; width: 100%; font-size: 12.5px;" />
+                        </div>
+                      </div>
+                      <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                        <button @click.stop="openTimeDropdownId = null" class="btn btn-secondary" style="cursor: pointer; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 12px;">Batal</button>
+                        <button @click.stop="saveTimeFromDropdown(plan)" class="btn btn-primary" style="cursor: pointer; padding: 6px 14px; border-radius: 8px; font-weight: 600; font-size: 12px;">Simpan</button>
+                      </div>
+                    </div>
+                  </div>
                   <button @click="startEditPlan(plan)"
                     title="Edit task plan ini"
                     style="background: var(--bg-cream); color: var(--text-dark); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 4px 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">
@@ -1273,6 +1309,8 @@ const JobLogbook = {
       showDoneModal: false,
       pendingDonePlan: null,
       openPhaseDropdownId: null,
+      openTimeDropdownId: null,
+      timeEditForm: { time: '', timeEnd: '' },
       showFilterCategoryDD: false,
       showPriorityDD: false,
       showJadwalDD: false,
@@ -1446,6 +1484,9 @@ const JobLogbook = {
           const bGroup  = bOverdue ? 0 : bToday ? 1 : 2;
           if (aGroup !== bGroup) return aGroup - bGroup;
           if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+          const aTime = a.time || '99:99';
+          const bTime = b.time || '99:99';
+          if (aTime !== bTime) return aTime < bTime ? -1 : 1;
           return (priorityOrder[a.priority] ?? 1) - (priorityOrder[b.priority] ?? 1);
         });
     },
@@ -1571,6 +1612,27 @@ const JobLogbook = {
       this.planForm.priority = 'Medium';
       this.planForm.requester = '';
       this.showAddPlan = true;
+    },
+    openTimeDropdown(plan) {
+      if (this.openTimeDropdownId === plan.id) {
+        this.openTimeDropdownId = null;
+        return;
+      }
+      this.openPhaseDropdownId = null;
+      this.timeEditForm.time = plan.time || '';
+      this.timeEditForm.timeEnd = plan.timeEnd || '';
+      this.openTimeDropdownId = plan.id;
+    },
+    saveTimeFromDropdown(plan) {
+      plan.time = this.timeEditForm.time;
+      plan.timeEnd = this.timeEditForm.timeEnd;
+      // Jika task plan ini sedang dibuka di form Edit Task Plan, sinkronkan juga inputnya
+      if (this.editingPlanId === plan.id) {
+        this.planForm.time = plan.time;
+        this.planForm.timeEnd = plan.timeEnd;
+      }
+      this.savePlansToStorage();
+      this.openTimeDropdownId = null;
     },
     startEditPlan(plan) {
       this.editingPlanId = plan.id;
@@ -8169,74 +8231,67 @@ const GoogleCalendar = {
         <!-- ========== AGENDA VIEW ========== -->
         <div v-if="localView==='agenda'" class="gcal-agenda-wrap">
 
-          <div v-if="localAgendaItems.length===0" class="gcal-agenda-empty">
+          <div v-if="localAgendaItems[0].allDayItems.length===0 && localAgendaItems[0].timedBlocks.length===0" class="gcal-agenda-empty">
             <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.4" style="color:#bdc1c6; margin:0 auto 12px; display:block;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             <p style="font-size:15px;color:#5f6368;font-weight:600;">Tidak ada acara mendatang</p>
             <p style="font-size:13px;color:#9aa0a6;margin-top:4px;">Klik "Set Pengingat" untuk menambahkan pengingat baru.</p>
           </div>
-          <div v-for="group in localAgendaItems" :key="group.dateStr" class="gcal-agenda-group">
-            <div :class="['gcal-agenda-date', group.isToday && 'gcal-agenda-date-today']">
-              <span class="gcal-agenda-dow">{{ group.dow }}</span>
-              <span class="gcal-agenda-day">{{ group.day }}</span>
-              <span class="gcal-agenda-mon">{{ group.mon }}</span>
-            </div>
-            <div class="gcal-agenda-events">
 
-              <!-- Acara Google Calendar / lokal biasa -->
-              <div v-for="ev in group.events" :key="ev.id" class="gcal-agenda-ev" :style="{'border-left-color': ev.color || '#4285F4'}">
-                <div class="gcal-agenda-ev-time">
-                  <span v-if="ev.allDay" style="color:#70757a;font-size:12px;">Sepanjang hari</span>
-                  <span v-else style="color:#70757a;font-size:12px;">{{ ev.startTime }} &ndash; {{ ev.endTime }}</span>
-                </div>
-                <div class="gcal-agenda-ev-body">
-                  <div class="gcal-agenda-ev-title">{{ ev.title }}</div>
-                  <div v-if="ev.location" class="gcal-agenda-ev-loc">
-                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                    {{ ev.location }}
-                  </div>
-                  <div v-if="ev.desc" class="gcal-agenda-ev-desc">{{ ev.desc }}</div>
-                </div>
-                <button class="gcal-agenda-del-btn" @click="localDeleteEvent(ev)" title="Hapus acara">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                </button>
+          <template v-for="group in localAgendaItems" :key="group.dateStr">
+            <!-- Date header -->
+            <div class="gcal-agenda-day-header">
+              <span class="gcal-agenda-day-hdr-dow">{{ group.dow }}</span>
+              <span :class="['gcal-agenda-day-hdr-num', group.isToday && 'gcal-agenda-day-hdr-num-today']">{{ group.day }}</span>
+            </div>
+
+            <!-- All-day / no-time items -->
+            <div v-if="group.allDayItems.length > 0" class="gcal-agenda-allday">
+              <div v-for="item in group.allDayItems" :key="item.id" class="gcal-agenda-allday-item" :style="{background: item.color}">
+                <span v-if="item.type==='task'">📋</span>
+                <span v-else-if="item.type==='habit'">✅</span>
+                <span v-else-if="item.type==='manual'">⏰</span>
+                <span v-else>🎉</span>
+                {{ item.title }}
               </div>
-
-              <!-- TIMELINE NOTIF 24 JAM -->
-              <template v-if="group.notifSlots.length > 0">
-                <div class="gcal-notif-timeline-header">
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  {{ group.isToday ? 'Notif & Task Hari Ini' : 'Notif & Task' }}
-                </div>
-                <div class="gcal-notif-timeline">
-                  <div
-                    v-for="slot in group.notifSlots"
-                    :key="slot.hour"
-                    class="gcal-notif-slot"
-                    :class="{ 'gcal-notif-slot-past': slot.isPast && !slot.isCurrent, 'gcal-notif-slot-current': slot.isCurrent, 'gcal-notif-slot-filled': slot.items.length > 0 }"
-                  >
-                    <div class="gcal-notif-slot-hour" :class="{ 'gcal-notif-hour-now': slot.isCurrent }">
-                      {{ slot.label }}<span v-if="slot.isCurrent" class="gcal-notif-now-pip"></span>
-                    </div>
-                    <div class="gcal-notif-slot-items">
-                      <span v-if="slot.items.length === 0" class="gcal-notif-slot-empty">—</span>
-                      <span
-                        v-for="item in slot.items"
-                        :key="item.id"
-                        class="gcal-notif-pill"
-                        :class="'gcal-notif-pill-' + item.type"
-                      >{{ item.title }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="gcal-notif-legend">
-                  <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" style="background:var(--color-terracotta);"></span>Task Plan</span>
-                  <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" style="background:var(--color-sage);"></span>Habit</span>
-                  <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" style="background:#F59E0B;"></span>Pengingat</span>
-                </div>
-              </template>
-
             </div>
-          </div>
+
+            <!-- Hour grid timeline -->
+            <div class="gcal-agenda-timeline-wrap">
+              <div class="gcal-agenda-timeline-time-col">
+                <div v-for="h in localHours" :key="h" class="gcal-agenda-hour-label">{{ h }}</div>
+              </div>
+              <div class="gcal-agenda-timeline-col">
+                <div v-for="h in localHours" :key="h" class="gcal-agenda-hour-cell"></div>
+                <div v-if="group.nowLineTop !== null" class="gcal-agenda-now-line" :style="{top: (group.nowLineTop*1) + 'px'}"></div>
+                <div
+                  v-for="block in group.timedBlocks"
+                  :key="block.id"
+                  class="gcal-agenda-block"
+                  :class="'gcal-agenda-block-' + block.type"
+                  :style="{
+                    top: block.top + 'px',
+                    height: block.height + 'px',
+                    borderColor: block.color,
+                    left: 'calc(' + (block.col * (100/block.totalCols)) + '% + 2px)',
+                    width: 'calc(' + (100/block.totalCols) + '% - 4px)'
+                  }"
+                  :title="block.title + ' (' + block.startLabel + ' - ' + block.endLabel + ')'"
+                  @click.stop="block.type==='event' && localDeleteEvent(block.raw)"
+                >
+                  <span class="gcal-agenda-block-title">{{ block.title }}</span>
+                  <span class="gcal-agenda-block-time">{{ block.startLabel }}</span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- LEGEND -->
+        <div v-if="localView==='agenda'" class="gcal-notif-legend" style="margin-top:8px;">
+          <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" style="background:var(--color-terracotta);"></span>Task Plan</span>
+          <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" style="background:var(--color-sage);"></span>Habit</span>
+          <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" style="background:#F59E0B;"></span>Pengingat</span>
+          <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" style="background:#4285F4;"></span>Acara</span>
         </div>
 
         <!-- ========== MODAL: FORM SET PENGINGAT MANUAL ========== -->
@@ -8589,78 +8644,124 @@ const GoogleCalendar = {
       const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
       const dows = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
       const todayStr = new Date().toISOString().split('T')[0];
-      // Agenda hanya tampil untuk tanggal yang dipilih (localSelectedDate)
       const selectedDate = this.localSelectedDate || todayStr;
-      const grouped = {};
-      this.localEvents.forEach(ev => {
-        if (!grouped[ev.startDate]) grouped[ev.startDate] = [];
-        grouped[ev.startDate].push(ev);
-      });
-      const selectedOnly = {};
-      selectedOnly[selectedDate] = (grouped[selectedDate] || []).sort((a,b) => (a.startTime).localeCompare(b.startTime));
+      const ds = selectedDate;
+      const dt = new Date(ds + 'T12:00:00');
+      const isToday = ds === todayStr;
+      const TYPE_COLORS = { task: '#D67B52', habit: '#A3B18A', manual: '#F59E0B' };
 
-      return Object.keys(selectedOnly).sort().map(ds => {
-        const dt = new Date(ds + 'T12:00:00');
-        const isToday = ds === todayStr;
+      const allDayItems = [];
+      const timed = []; // { id, title, type, color, startMin, endMin, raw }
 
-        // Kumpulkan notif per-jam (Task Plan + Habit + Manual) untuk tanggal yang dipilih
-        let notifSlots = [];
-        {
-          const nowHour = new Date().getHours();
-          const byHour = {};
-
-          // Task Plan
-          try {
-            const plans = JSON.parse(WorkspaceStorage.getItem('personal_workspace_job_plans') || '[]');
-            plans.filter(p => p.date === ds && p.time).forEach(p => {
-              const hh = parseInt(p.time.split(':')[0], 10);
-              if (!byHour[hh]) byHour[hh] = [];
-              byHour[hh].push({ id: 'tp-'+p.id, title: p.tasks, type: 'task', time: p.time, timeEnd: p.timeEnd || null });
-            });
-          } catch(e) {}
-
-          // Habit reminders (hanya relevan untuk hari ini)
-          if (isToday) {
-            try {
-              const habits = JSON.parse(WorkspaceStorage.getItem('ws_habit_notifs') || '[]');
-              habits.filter(h => h.time).forEach(h => {
-                const hh = parseInt(h.time.split(':')[0], 10);
-                if (!byHour[hh]) byHour[hh] = [];
-                byHour[hh].push({ id: h.id, title: h.title, type: 'habit', time: h.time, timeEnd: null });
-              });
-            } catch(e) {}
-          }
-
-          // Manual reminders untuk tanggal ini
-          try {
-            const manuals = JSON.parse(WorkspaceStorage.getItem('ws_manual_notifs') || '[]');
-            manuals.filter(m => m.date === ds && m.time).forEach(m => {
-              const hh = parseInt(m.time.split(':')[0], 10);
-              if (!byHour[hh]) byHour[hh] = [];
-              byHour[hh].push({ id: m.id, title: m.title, type: 'manual', time: m.time, timeEnd: null });
-            });
-          } catch(e) {}
-
-          // Buat 24 slot jam
-          const hasAny = Object.keys(byHour).length > 0;
-          if (isToday || hasAny) {
-            notifSlots = Array.from({ length: 24 }, (_, h) => ({
-              hour: h,
-              label: String(h).padStart(2,'0') + ':00',
-              items: (byHour[h] || []).sort((a,b) => a.time.localeCompare(b.time)),
-              isCurrent: isToday && h === nowHour,
-              isPast: isToday && h < nowHour
-            }));
-          }
+      // --- Local events (gcal_local_events) ---
+      this.localEvents.filter(ev => ev.startDate === ds).forEach(ev => {
+        const color = ev.color || '#4285F4';
+        if (ev.allDay) {
+          allDayItems.push({ id: ev.id, title: ev.title, type: 'event', color, raw: ev });
+        } else {
+          const [sh, sm] = (ev.startTime || '00:00').split(':').map(Number);
+          const [eh, em] = (ev.endTime || '01:00').split(':').map(Number);
+          let startMin = sh * 60 + (sm || 0);
+          let endMin = eh * 60 + (em || 0);
+          if (endMin <= startMin) endMin = startMin + 30;
+          timed.push({ id: ev.id, title: ev.title, type: 'event', color, startMin, endMin, raw: ev });
         }
-
-        return {
-          dateStr: ds, isToday,
-          dow: dows[dt.getDay()], day: dt.getDate(), mon: months[dt.getMonth()],
-          events: selectedOnly[ds] || [],
-          notifSlots
-        };
       });
+
+      // --- Task Plan ---
+      try {
+        const plans = JSON.parse(WorkspaceStorage.getItem('personal_workspace_job_plans') || '[]');
+        plans.filter(p => p.date === ds).forEach(p => {
+          const id = 'tp-' + p.id;
+          if (p.time) {
+            const [sh, sm] = p.time.split(':').map(Number);
+            let startMin = sh * 60 + (sm || 0);
+            let endMin;
+            if (p.timeEnd) {
+              const [eh, em] = p.timeEnd.split(':').map(Number);
+              endMin = eh * 60 + (em || 0);
+              if (endMin <= startMin) endMin = startMin + 30;
+            } else {
+              endMin = startMin + 60;
+            }
+            timed.push({ id, title: p.tasks, type: 'task', color: TYPE_COLORS.task, startMin, endMin, raw: p });
+          } else {
+            allDayItems.push({ id, title: p.tasks, type: 'task', color: TYPE_COLORS.task, raw: p });
+          }
+        });
+      } catch(e) {}
+
+      // --- Habit reminders (hanya relevan untuk hari ini) ---
+      if (isToday) {
+        try {
+          const habits = JSON.parse(WorkspaceStorage.getItem('ws_habit_notifs') || '[]');
+          habits.forEach(h => {
+            const id = 'habit-' + h.id;
+            if (h.time) {
+              const [sh, sm] = h.time.split(':').map(Number);
+              const startMin = sh * 60 + (sm || 0);
+              timed.push({ id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, startMin, endMin: startMin + 30, raw: h });
+            } else {
+              allDayItems.push({ id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, raw: h });
+            }
+          });
+        } catch(e) {}
+      }
+
+      // --- Manual reminders ---
+      try {
+        const manuals = JSON.parse(WorkspaceStorage.getItem('ws_manual_notifs') || '[]');
+        manuals.filter(m => m.date === ds).forEach(m => {
+          const id = 'manual-' + m.id;
+          if (m.time) {
+            const [sh, sm] = m.time.split(':').map(Number);
+            const startMin = sh * 60 + (sm || 0);
+            timed.push({ id, title: m.title, type: 'manual', color: TYPE_COLORS.manual, startMin, endMin: startMin + 30, raw: m });
+          } else {
+            allDayItems.push({ id, title: m.title, type: 'manual', color: TYPE_COLORS.manual, raw: m });
+          }
+        });
+      } catch(e) {}
+
+      // --- Assign overlap columns for timed items ---
+      timed.sort((a, b) => a.startMin - b.startMin || a.endMin - b.endMin);
+      const columns = []; // each: last endMin
+      timed.forEach(item => {
+        let colIdx = columns.findIndex(endMin => endMin <= item.startMin);
+        if (colIdx === -1) { colIdx = columns.length; columns.push(0); }
+        columns[colIdx] = item.endMin;
+        item.col = colIdx;
+      });
+      const totalCols = Math.max(1, columns.length);
+
+      const fmt = (min) => String(Math.floor(min/60)%24).padStart(2,'0') + ':' + String(min%60).padStart(2,'0');
+      const timedBlocks = timed.map(item => ({
+        id: item.id,
+        title: item.title,
+        type: item.type,
+        color: item.color,
+        raw: item.raw,
+        top: item.startMin,
+        height: Math.max(item.endMin - item.startMin, 30),
+        col: item.col,
+        totalCols,
+        startLabel: fmt(item.startMin),
+        endLabel: fmt(item.endMin)
+      }));
+
+      let nowLineTop = null;
+      if (isToday) {
+        const now = new Date();
+        nowLineTop = now.getHours() * 60 + now.getMinutes();
+      }
+
+      return [{
+        dateStr: ds, isToday,
+        dow: dows[dt.getDay()], day: dt.getDate(), mon: months[dt.getMonth()],
+        allDayItems,
+        timedBlocks,
+        nowLineTop
+      }];
     }
   },
   mounted() {
