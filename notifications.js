@@ -180,46 +180,44 @@ const ReminderPopup = {
           <template v-if="mode === 'open'">
             <div class="reminder-popup-body reminder-popup-body-scroll">
 
-              <!-- Section 1: Hari Ini (task plan + content urgen) -->
-              <template v-if="infoItems.length > 0">
-                <div class="reminder-popup-section-label">
-                  <span class="reminder-popup-dot reminder-popup-dot-terra"></span> Hari Ini
-                </div>
-                <div v-for="item in infoItems" :key="item.id" class="reminder-popup-item reminder-popup-item-info">
-                  <div class="reminder-popup-item-icon">{{ item.icon }}</div>
+              <!-- Section gabungan: Hari Ini (info items + pengingat), diurutkan berdasarkan waktu -->
+              <div class="reminder-popup-section-label">
+                <span class="reminder-popup-dot reminder-popup-dot-terra"></span> Hari Ini
+              </div>
+              <template v-for="entry in mergedTodayItems" :key="entry.key">
+                <!-- Info item (task plan / content) -->
+                <div v-if="entry.kind === 'info'" class="reminder-popup-item reminder-popup-item-info">
+                  <div class="reminder-popup-item-icon">{{ entry.item.icon }}</div>
                   <div class="reminder-popup-item-info-text" style="flex:1; min-width:0;">
-                    <div class="reminder-popup-item-title">{{ item.title }}</div>
-                    <div class="reminder-popup-item-sub">{{ item.sub }}</div>
+                    <div class="reminder-popup-item-title">{{ entry.item.title }}</div>
+                    <div class="reminder-popup-item-sub">{{ entry.item.sub }}</div>
                   </div>
                   <!-- Badge waktu mulai–selesai kalau ada -->
-                  <span v-if="item.time"
+                  <span v-if="entry.item.time"
                     style="flex-shrink:0; margin-left:8px; display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; color:var(--color-terracotta,#D67B52); background:rgba(214,123,82,0.10); padding:3px 8px; border-radius:7px; white-space:nowrap;">
                     <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    {{ item.time }}
+                    {{ entry.item.time }}
                   </span>
+                </div>
+
+                <!-- Pengingat item -->
+                <div v-else
+                     class="reminder-popup-item"
+                     :class="{ 'reminder-popup-item-habit-clickable': entry.item.isHabit }"
+                     @click="entry.item.isHabit ? triggerHabitFromPopup(entry.item) : null"
+                     :style="entry.item.isHabit ? 'cursor:pointer;' : ''">
+                  <div class="reminder-popup-item-time">{{ entry.item.time }}</div>
+                  <div class="reminder-popup-item-info" style="flex:1; min-width:0;">
+                    <div class="reminder-popup-item-title">{{ entry.item.title }}</div>
+                    <div class="reminder-popup-item-sub">{{ entry.item.subtitle }}</div>
+                  </div>
+                  <!-- Arrow indicator for habit items -->
+                  <svg v-if="entry.item.isHabit" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-sage,#7FA882); flex-shrink:0; margin-left:6px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </div>
               </template>
 
-              <!-- Section 2: Pengingat Hari Ini (actionable pending) -->
-              <div class="reminder-popup-section-label" :style="infoItems.length > 0 ? 'margin-top:14px;' : ''">
-                <span class="reminder-popup-dot reminder-popup-dot-sage"></span> Pengingat Hari Ini
-              </div>
-              <div v-for="notif in pendingNotifs" :key="notif.id"
-                   class="reminder-popup-item"
-                   :class="{ 'reminder-popup-item-habit-clickable': notif.isHabit }"
-                   @click="notif.isHabit ? triggerHabitFromPopup(notif) : null"
-                   :style="notif.isHabit ? 'cursor:pointer;' : ''">
-                <div class="reminder-popup-item-time">{{ notif.time }}</div>
-                <div class="reminder-popup-item-info" style="flex:1; min-width:0;">
-                  <div class="reminder-popup-item-title">{{ notif.title }}</div>
-                  <div class="reminder-popup-item-sub">{{ notif.subtitle }}</div>
-                </div>
-                <!-- Arrow indicator for habit items -->
-                <svg v-if="notif.isHabit" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-sage,#7FA882); flex-shrink:0; margin-left:6px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-              </div>
-
-              <!-- Kalau tidak ada keduanya -->
-              <p v-if="infoItems.length === 0 && pendingNotifs.length === 0"
+              <!-- Kalau tidak ada apa-apa -->
+              <p v-if="mergedTodayItems.length === 0"
                  style="font-size:12px; color:var(--text-muted); text-align:center; padding:8px 0;">
                 Tidak ada agenda hari ini 🎉
               </p>
@@ -380,6 +378,35 @@ const ReminderPopup = {
       const days   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
       const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
       return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+    },
+
+    // ── Gabungan Section 1 (info) + Section 2 (pengingat), diurutkan berdasarkan waktu ──
+    // Item tanpa waktu diletakkan paling atas.
+    mergedTodayItems() {
+      const result = [];
+
+      this.infoItems.forEach(item => {
+        let timeVal = -1; // tanpa waktu → paling atas
+        if (item.time) {
+          const m = String(item.time).match(/^(\d{1,2}):(\d{2})/);
+          if (m) timeVal = parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+        }
+        result.push({ kind: 'info', key: 'info-' + item.id, timeVal, item });
+      });
+
+      this.pendingNotifs.forEach(notif => {
+        let timeVal = -1;
+        if (notif.time) {
+          const m = String(notif.time).match(/^(\d{1,2}):(\d{2})/);
+          if (m) timeVal = parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+          else if (typeof notif.timeVal === 'number') timeVal = notif.timeVal;
+        } else if (typeof notif.timeVal === 'number') {
+          timeVal = notif.timeVal;
+        }
+        result.push({ kind: 'notif', key: 'notif-' + notif.id, timeVal, item: notif });
+      });
+
+      return result.sort((a, b) => a.timeVal - b.timeVal);
     }
   },
 
@@ -796,98 +823,96 @@ const NotificationPanel = {
             ══════════════════════════════ -->
             <template v-if="activeTab === 'today'">
 
-            <!-- ══ SECTION 1: INFORMATIONAL ══ -->
+            <!-- ══ SECTION GABUNGAN: HARI INI (info + pengingat, urut waktu) ══ -->
             <div class="notif-section-label">
               <span class="notif-section-dot notif-dot-info"></span>
               Hari Ini
             </div>
 
-            <div v-if="infoNotifs.length === 0" class="notif-empty">
+            <div v-if="mergedTodayPanelItems.length === 0" class="notif-empty">
               <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-sand); margin-bottom:6px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
               <span>Tidak ada agenda hari ini</span>
             </div>
 
-            <template v-for="notif in infoNotifs" :key="notif.id">
-              <!-- Task dengan waktu: tampil seperti style pengingat (ada time badge di kanan) -->
-              <div v-if="notif.hasTime"
-                   class="notif-item notif-item-info notif-item-clickable"
-                   style="border-left: 2.5px solid var(--color-terracotta, #D67B52);"
-                   @click="handleInfoClick(notif)">
-                <div class="notif-item-icon notif-icon-task">
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <template v-for="entry in mergedTodayPanelItems" :key="entry.key">
+              <!-- ═ INFO ITEM ═ -->
+              <template v-if="entry.kind === 'info'">
+                <!-- Task dengan waktu: tampil seperti style pengingat (ada time badge di kanan) -->
+                <div v-if="entry.item.hasTime"
+                     class="notif-item notif-item-info notif-item-clickable"
+                     style="border-left: 2.5px solid var(--color-terracotta, #D67B52);"
+                     @click="handleInfoClick(entry.item)">
+                  <div class="notif-item-icon notif-icon-task">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                  </div>
+                  <div class="notif-item-content">
+                    <div class="notif-item-title">{{ entry.item.title }}</div>
+                    <div class="notif-item-sub">{{ entry.item.subtitle }}</div>
+                  </div>
+                  <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
+                    <span class="notif-time-badge">{{ entry.item.time }}</span>
+                    <span v-if="entry.item.badge" class="notif-badge" :class="'notif-badge-' + entry.item.badgeColor" style="margin-top:2px;">{{ entry.item.badge }}</span>
+                  </div>
                 </div>
-                <div class="notif-item-content">
-                  <div class="notif-item-title">{{ notif.title }}</div>
-                  <div class="notif-item-sub">{{ notif.subtitle }}</div>
-                </div>
-                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
-                  <span class="notif-time-badge">{{ notif.time }}</span>
-                  <span v-if="notif.badge" class="notif-badge" :class="'notif-badge-' + notif.badgeColor" style="margin-top:2px;">{{ notif.badge }}</span>
-                </div>
-              </div>
 
-              <!-- Task tanpa waktu: tampil seperti biasa (badge priority di kanan) -->
+                <!-- Task tanpa waktu: tampil seperti biasa (badge priority di kanan) -->
+                <div v-else
+                     class="notif-item notif-item-info notif-item-clickable"
+                     @click="handleInfoClick(entry.item)">
+                  <div class="notif-item-icon" :class="'notif-icon-' + entry.item.type">
+                    <svg v-if="entry.item.type === 'task'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    <svg v-else-if="entry.item.type === 'content-today'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
+                  <div class="notif-item-content">
+                    <div class="notif-item-title">{{ entry.item.title }}</div>
+                    <div class="notif-item-sub">{{ entry.item.subtitle }}</div>
+                  </div>
+                  <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
+                    <span v-if="entry.item.badge" class="notif-badge" :class="'notif-badge-' + entry.item.badgeColor">{{ entry.item.badge }}</span>
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); margin-top: 2px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  </div>
+                </div>
+              </template>
+
+              <!-- ═ PENGINGAT ITEM ═ -->
               <div v-else
-                   class="notif-item notif-item-info notif-item-clickable"
-                   @click="handleInfoClick(notif)">
-                <div class="notif-item-icon" :class="'notif-icon-' + notif.type">
-                  <svg v-if="notif.type === 'task'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                  <svg v-else-if="notif.type === 'content-today'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                   class="notif-item notif-item-action"
+                   :class="{ 'notif-item-done': entry.item.done }"
+                   @click="handleActionClick(entry.item)">
+                <div class="notif-item-icon" :class="entry.item.done ? 'notif-icon-done' : 'notif-icon-action'" :style="entry.item.isHabit && !entry.item.done ? { backgroundColor: entry.item.color + '22', border: '1.5px solid ' + entry.item.color + '55' } : {}">
+                  <svg v-if="entry.item.done" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg v-else-if="entry.item.isHabit" viewBox="0 0 24 24" width="14" height="14" fill="none" :stroke="entry.item.color" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
                   <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 </div>
                 <div class="notif-item-content">
-                  <div class="notif-item-title">{{ notif.title }}</div>
-                  <div class="notif-item-sub">{{ notif.subtitle }}</div>
+                  <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : ''">{{ entry.item.title }}</div>
+                  <div class="notif-item-sub" style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
+                    <span v-if="entry.item.isHabit && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #f0fdf4; color: #16a34a; border: 1px solid #86efac;">
+                      <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
+                      Habit
+                    </span>
+                    <span v-if="entry.item.isManual && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #fefce8; color: #a16207; border: 1px solid #fde68a;">
+                      <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      edit by n
+                    </span>
+                    {{ entry.item.done ? 'Sudah dikerjakan ✓' : entry.item.subtitle }}
+                  </div>
                 </div>
-                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
-                  <span v-if="notif.badge" class="notif-badge" :class="'notif-badge-' + notif.badgeColor">{{ notif.badge }}</span>
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); margin-top: 2px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                <div class="notif-item-right" style="align-items: center;">
+                  <span class="notif-time-badge">{{ entry.item.time }}</span>
+                  <div style="display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+                    <!-- Hapus manual reminder -->
+                    <button v-if="entry.item.isManual && !entry.item.done" @click.stop="deleteManualReminder(entry.item.id)"
+                            title="Hapus pengingat ini"
+                            style="background:none; border:none; cursor:pointer; padding:2px; color:#ef4444; display:flex; align-items:center;">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                    </button>
+                    <svg v-if="!entry.item.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  </div>
                 </div>
               </div>
             </template>
-
-            <!-- ══ SECTION 2: ACTIONABLE ══ -->
-            <div class="notif-section-label" style="margin-top: 18px;">
-              <span class="notif-section-dot notif-dot-action"></span>
-              Pengingat Hari Ini
-            </div>
-
-            <div v-for="notif in actionNotifs" :key="notif.id"
-                 class="notif-item notif-item-action"
-                 :class="{ 'notif-item-done': notif.done }"
-                 @click="handleActionClick(notif)">
-              <div class="notif-item-icon" :class="notif.done ? 'notif-icon-done' : 'notif-icon-action'" :style="notif.isHabit && !notif.done ? { backgroundColor: notif.color + '22', border: '1.5px solid ' + notif.color + '55' } : {}">
-                <svg v-if="notif.done" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <svg v-else-if="notif.isHabit" viewBox="0 0 24 24" width="14" height="14" fill="none" :stroke="notif.color" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
-                <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              </div>
-              <div class="notif-item-content">
-                <div class="notif-item-title" :style="notif.done ? 'text-decoration: line-through; opacity: 0.55;' : ''">{{ notif.title }}</div>
-                <div class="notif-item-sub" style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
-                  <span v-if="notif.isHabit && !notif.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #f0fdf4; color: #16a34a; border: 1px solid #86efac;">
-                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
-                    Habit
-                  </span>
-                  <span v-if="notif.isManual && !notif.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #fefce8; color: #a16207; border: 1px solid #fde68a;">
-                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    edit by n
-                  </span>
-                  {{ notif.done ? 'Sudah dikerjakan ✓' : notif.subtitle }}
-                </div>
-              </div>
-              <div class="notif-item-right" style="align-items: center;">
-                <span class="notif-time-badge">{{ notif.time }}</span>
-                <div style="display: flex; align-items: center; gap: 4px; margin-top: 2px;">
-                  <!-- Hapus manual reminder -->
-                  <button v-if="notif.isManual && !notif.done" @click.stop="deleteManualReminder(notif.id)"
-                          title="Hapus pengingat ini"
-                          style="background:none; border:none; cursor:pointer; padding:2px; color:#ef4444; display:flex; align-items:center;">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                  </button>
-                  <svg v-if="!notif.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                </div>
-              </div>
-            </div>
 
             <!-- Reset completed untuk hari ini -->
             <div v-if="anyDone" style="margin-top: 12px; text-align: center;">
@@ -1228,6 +1253,25 @@ const NotificationPanel = {
 
     totalMissedCount() {
       return this.missedLog.reduce((s, e) => s + e.tasks.length, 0);
+    },
+
+    // ── Gabungan Section Hari Ini: infoNotifs + actionNotifs, urut waktu ──
+    // Item tanpa waktu diletakkan paling atas.
+    mergedTodayPanelItems() {
+      const result = [];
+
+      this.infoNotifs.forEach(notif => {
+        const hasTime = notif.hasTime && typeof notif.timeVal === 'number' && notif.timeVal < 9998;
+        const timeVal = hasTime ? notif.timeVal : -1;
+        result.push({ kind: 'info', key: 'info-' + notif.id, timeVal, item: notif });
+      });
+
+      this.actionNotifs.forEach(notif => {
+        const timeVal = (typeof notif.timeVal === 'number') ? notif.timeVal : -1;
+        result.push({ kind: 'action', key: 'action-' + notif.id, timeVal, item: notif });
+      });
+
+      return result.sort((a, b) => a.timeVal - b.timeVal);
     }
   },
 
