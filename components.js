@@ -28,133 +28,113 @@ const JobLogbook = {
               <h2 style="margin: 0 0 4px 0; font-size: 24px; font-weight: 800; color: var(--text-dark);">My 8-9 Job Logbook</h2>
               <p style="color: var(--text-muted); font-size: 13px; margin: 0; max-width: 520px; line-height: 1.5;">Perekaman aktivitas harian kerja, kategori dinamis, hasil capaian, rencana aksi selanjutnya, dan koordinasi dokumen pendukung.</p>
             </div>
-            <!-- Actions: Export + Primary -->
+            <!-- Actions: primary buttons only -->
             <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap;">
-              <button class="btn text-mono" @click="exportToExcel" style="background-color: #DEF7EC; border: 1.5px solid #31C48D; color: #03543F; font-weight: bold; cursor: pointer; padding: 7px 14px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M8 13h8"></path><path d="M8 17h8"></path><path d="M8 9h1"></path></svg>
-                Excel
-              </button>
-              
-              <button class="btn text-mono" @click="exportToPDF" style="background-color: #FDE8E8; border: 1.5px solid #F05252; color: #9B1C1C; font-weight: bold; cursor: pointer; padding: 7px 14px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>
-                PDF
-              </button>
-
               <button class="btn text-mono" @click="showManageCategories = true" style="background-color: #FFF4ED; border: 1.5px solid #D67B52; color: #8C4B2D; font-weight: bold; cursor: pointer; padding: 7px 14px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                 Kelola Kategori
               </button>
-
               <button class="btn btn-primary" @click="showAddLog = true" style="padding: 10px 20px; font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 Catat Hari Baru
               </button>
             </div>
           </div>
-        </div>
 
-        <!-- ── Compact Filter Bar ── -->
-        <div style="margin-bottom: 20px; background: var(--bg-card); border: 1.5px solid var(--color-sand); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;" @click.self="showRangePicker = false">
+          <!-- Filter row: always visible below the title row -->
+          <div style="margin-top: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;" @click.self="showRangePicker = false">
 
-          <!-- Icon + Label -->
-          <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta);"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-            <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap;">Filter Log</span>
-          </div>
-          <div style="width: 1px; height: 26px; background: var(--color-sand); flex-shrink: 0;"></div>
-
-          <!-- Keyword Search -->
-          <div style="position: relative; flex: 1; min-width: 150px; max-width: 260px;">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-            <input type="text" v-model="searchQuery" placeholder="Cari kata kunci..." @click.stop
-              style="width: 100%; height: 34px; padding: 0 10px 0 28px; border: 1.5px solid var(--color-sand); border-radius: 8px; font-size: 12.5px; font-family: 'Outfit', sans-serif; color: var(--text-dark); background: var(--bg-cream); box-sizing: border-box; outline: none; transition: border-color 0.15s;"
-              @focus="$event.target.style.borderColor='var(--color-terracotta)'" @blur="$event.target.style.borderColor='var(--color-sand)'" />
-          </div>
-
-          <!-- Date Range Button + Dropdown -->
-          <div style="position: relative; flex-shrink: 0;">
-            <button type="button" @click.stop="showRangePicker = !showRangePicker"
-              :style="(filterStartDate || filterEndDate) ? { borderColor: 'var(--color-terracotta)', background: '#FFF4ED', color: 'var(--color-terracotta)' } : { borderColor: 'var(--color-sand)', background: 'var(--bg-cream)', color: 'var(--text-muted)' }"
-              style="height: 34px; padding: 0 12px; border: 1.5px solid; border-radius: 8px; font-size: 12px; font-family: 'Outfit', sans-serif; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: all 0.15s;">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              <template v-if="filterStartDate || filterEndDate">{{ filterStartDate ? formatDate(filterStartDate) : '?' }} – {{ filterEndDate ? formatDate(filterEndDate) : '?' }}</template>
-              <template v-else>Rentang Tanggal</template>
-            </button>
-            <!-- Calendar Dropdown -->
-            <div v-if="showRangePicker" @click.stop style="position: absolute; top: calc(100% + 6px); left: 0; z-index: 9999; background: #fff; border: 1.5px solid var(--color-sand); border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.14); padding: 14px; min-width: 272px;">
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                <button type="button" @click="rangeCalPrevMonth" style="background: none; border: none; cursor: pointer; font-size: 15px; color: var(--text-dark); padding: 4px 8px; border-radius: 6px; line-height: 1;">&lt;</button>
-                <span style="font-weight: 700; font-size: 13.5px; color: var(--text-dark);">{{ rangeCalMonthLabel }}</span>
-                <button type="button" @click="rangeCalNextMonth" style="background: none; border: none; cursor: pointer; font-size: 15px; color: var(--text-dark); padding: 4px 8px; border-radius: 6px; line-height: 1;">&gt;</button>
-              </div>
-              <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 3px;">
-                <span v-for="(d, i) in ['S','S','R','K','J','S','M']" :key="'fh'+i" style="text-align: center; font-size: 10px; font-weight: 700; color: var(--text-muted); padding: 2px 0;">{{ d }}</span>
-              </div>
-              <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;">
-                <span v-for="cell in rangeCalCells" :key="cell.key" @click="cell.date ? onRangeCalClick(cell.date) : null"
-                  :style="getRangeCellStyle(cell)"
-                  style="text-align: center; font-size: 12.5px; padding: 5px 2px; border-radius: 6px; cursor: pointer; user-select: none; transition: background 0.12s;">
-                  {{ cell.label }}
-                </span>
-              </div>
-              <div style="margin-top: 8px; font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.4;">
-                <span v-if="!filterStartDate">Klik tanggal mulai</span>
-                <span v-else-if="!filterEndDate">Klik tanggal akhir</span>
-                <span v-else style="color: var(--color-terracotta); font-weight: 600;">✓ Rentang dipilih</span>
-              </div>
-              <button v-if="filterStartDate || filterEndDate" type="button" @click="filterStartDate=''; filterEndDate=''; showRangePicker=false;"
-                style="margin-top: 7px; width: 100%; background: var(--bg-cream); border: 1px solid var(--color-sand); color: var(--text-dark); border-radius: 7px; padding: 5px; font-size: 11.5px; cursor: pointer; font-weight: 600;">
-                Hapus Rentang
-              </button>
+            <!-- Keyword Search -->
+            <div style="position: relative; flex-shrink: 0;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+              <input type="text" v-model="searchQuery" placeholder="Cari kata kunci..." @click.stop
+                style="width: 200px; height: 34px; padding: 0 10px 0 28px; border: 1.5px solid var(--color-sand); border-radius: 8px; font-size: 12.5px; font-family: 'Outfit', sans-serif; color: var(--text-dark); background: var(--bg-cream); box-sizing: border-box; outline: none; transition: border-color 0.15s;"
+                @focus="$event.target.style.borderColor='var(--color-terracotta)'" @blur="$event.target.style.borderColor='var(--color-sand)'" />
             </div>
-          </div>
 
-          <!-- Category Filter — custom dropdown -->
-          <div style="position: relative; flex-shrink: 0;" @click.stop>
-            <button @click.stop="showFilterCategoryDD = !showFilterCategoryDD"
-              :style="filterCategory ? { borderColor: 'var(--color-terracotta)', background: '#FFF4ED', color: 'var(--color-terracotta)' } : { borderColor: 'var(--color-sand)', background: 'var(--bg-cream)', color: 'var(--text-dark)' }"
-              style="height: 34px; padding: 0 28px 0 10px; border: 1.5px solid; border-radius: 8px; font-size: 12.5px; font-family: 'Outfit', sans-serif; font-weight: 600; cursor: pointer; min-width: 140px; outline: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; white-space: nowrap; position: relative;">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
-              {{ filterCategory || 'Semua Kategori' }}
-              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                style="position: absolute; right: 8px;"
-                :style="{ transform: showFilterCategoryDD ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </button>
-            <div v-if="showFilterCategoryDD" @click.stop
-              style="position: absolute; top: calc(100% + 5px); left: 0; z-index: 99999;
-                     background: var(--color-paper, #FAF7F2);
-                     border: 1.5px solid var(--color-sand-light, #EDE8E1);
-                     border-radius: 14px;
-                     box-shadow: 0 8px 32px rgba(61,46,34,0.16), 0 2px 8px rgba(61,46,34,0.08);
-                     padding: 6px; min-width: 170px; max-height: 240px; overflow-y: auto;
-                     scrollbar-width: thin; scrollbar-color: var(--color-sand) transparent;">
-              <button @click.stop="filterCategory = ''; showFilterCategoryDD = false"
-                :style="!filterCategory ? { background: 'var(--color-sand-light,#EDE8E1)' } : {}"
-                style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
-                onmouseover="this.style.background='var(--color-cream,#FDF5EB)'" onmouseout="this.style.background='transparent'">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-sand,#C8BDB5)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
-                <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-secondary,#7A6F66);">Semua Kategori</span>
-                <svg v-if="!filterCategory" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <!-- Date Range Button + Dropdown -->
+            <div style="position: relative; flex-shrink: 0;">
+              <button type="button" @click.stop="showRangePicker = !showRangePicker"
+                :style="(filterStartDate || filterEndDate) ? { borderColor: 'var(--color-terracotta)', background: '#FFF4ED', color: 'var(--color-terracotta)' } : { borderColor: 'var(--color-sand)', background: 'var(--bg-cream)', color: 'var(--text-muted)' }"
+                style="height: 34px; padding: 0 12px; border: 1.5px solid; border-radius: 8px; font-size: 12px; font-family: 'Outfit', sans-serif; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: all 0.15s;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <template v-if="filterStartDate || filterEndDate">{{ filterStartDate ? formatDate(filterStartDate) : '?' }} – {{ filterEndDate ? formatDate(filterEndDate) : '?' }}</template>
+                <template v-else>Rentang Tanggal</template>
               </button>
-              <div style="height: 1px; background: var(--color-sand-light,#EDE8E1); margin: 3px 6px;"></div>
-              <button v-for="cat in allCategories" :key="cat"
-                @click.stop="filterCategory = cat; showFilterCategoryDD = false"
-                :style="filterCategory === cat ? { background: 'rgba(214,123,82,0.08)' } : {}"
-                style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
-                onmouseover="this.style.background='rgba(214,123,82,0.07)'" onmouseout="this.style.background='transparent'">
-                <span :style="{ color: getCategoryColor(cat) }" style="flex-shrink: 0; display: inline-flex; align-items: center;">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-                </span>
-                <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-dark,#3D2E22); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ cat }}</span>
-                <svg v-if="filterCategory === cat" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              </button>
+              <!-- Calendar Dropdown -->
+              <div v-if="showRangePicker" @click.stop style="position: absolute; top: calc(100% + 6px); left: 0; z-index: 9999; background: #fff; border: 1.5px solid var(--color-sand); border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.14); padding: 14px; min-width: 272px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                  <button type="button" @click="rangeCalPrevMonth" style="background: none; border: none; cursor: pointer; font-size: 15px; color: var(--text-dark); padding: 4px 8px; border-radius: 6px; line-height: 1;">&lt;</button>
+                  <span style="font-weight: 700; font-size: 13.5px; color: var(--text-dark);">{{ rangeCalMonthLabel }}</span>
+                  <button type="button" @click="rangeCalNextMonth" style="background: none; border: none; cursor: pointer; font-size: 15px; color: var(--text-dark); padding: 4px 8px; border-radius: 6px; line-height: 1;">&gt;</button>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 3px;">
+                  <span v-for="(d, i) in ['S','S','R','K','J','S','M']" :key="'fh'+i" style="text-align: center; font-size: 10px; font-weight: 700; color: var(--text-muted); padding: 2px 0;">{{ d }}</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;">
+                  <span v-for="cell in rangeCalCells" :key="cell.key" @click="cell.date ? onRangeCalClick(cell.date) : null"
+                    :style="getRangeCellStyle(cell)"
+                    style="text-align: center; font-size: 12.5px; padding: 5px 2px; border-radius: 6px; cursor: pointer; user-select: none; transition: background 0.12s;">
+                    {{ cell.label }}
+                  </span>
+                </div>
+                <div style="margin-top: 8px; font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.4;">
+                  <span v-if="!filterStartDate">Klik tanggal mulai</span>
+                  <span v-else-if="!filterEndDate">Klik tanggal akhir</span>
+                  <span v-else style="color: var(--color-terracotta); font-weight: 600;">✓ Rentang dipilih</span>
+                </div>
+                <button v-if="filterStartDate || filterEndDate" type="button" @click="filterStartDate=''; filterEndDate=''; showRangePicker=false;"
+                  style="margin-top: 7px; width: 100%; background: var(--bg-cream); border: 1px solid var(--color-sand); color: var(--text-dark); border-radius: 7px; padding: 5px; font-size: 11.5px; cursor: pointer; font-weight: 600;">
+                  Hapus Rentang
+                </button>
+              </div>
             </div>
-          </div>
 
-          <!-- Spacer + Active badge + Reset -->
-          <div style="display: flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0;">
+            <!-- Category Filter -->
+            <div style="position: relative; flex-shrink: 0;" @click.stop>
+              <button @click.stop="showFilterCategoryDD = !showFilterCategoryDD"
+                :style="filterCategory ? { borderColor: 'var(--color-terracotta)', background: '#FFF4ED', color: 'var(--color-terracotta)' } : { borderColor: 'var(--color-sand)', background: 'var(--bg-cream)', color: 'var(--text-dark)' }"
+                style="height: 34px; padding: 0 28px 0 10px; border: 1.5px solid; border-radius: 8px; font-size: 12.5px; font-family: 'Outfit', sans-serif; font-weight: 600; cursor: pointer; min-width: 140px; outline: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; white-space: nowrap; position: relative;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+                {{ filterCategory || 'Semua Kategori' }}
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                  style="position: absolute; right: 8px;"
+                  :style="{ transform: showFilterCategoryDD ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+              <div v-if="showFilterCategoryDD" @click.stop
+                style="position: absolute; top: calc(100% + 5px); left: 0; z-index: 99999;
+                       background: var(--color-paper, #FAF7F2);
+                       border: 1.5px solid var(--color-sand-light, #EDE8E1);
+                       border-radius: 14px;
+                       box-shadow: 0 8px 32px rgba(61,46,34,0.16), 0 2px 8px rgba(61,46,34,0.08);
+                       padding: 6px; min-width: 170px; max-height: 240px; overflow-y: auto;
+                       scrollbar-width: thin; scrollbar-color: var(--color-sand) transparent;">
+                <button @click.stop="filterCategory = ''; showFilterCategoryDD = false"
+                  :style="!filterCategory ? { background: 'var(--color-sand-light,#EDE8E1)' } : {}"
+                  style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                  onmouseover="this.style.background='var(--color-cream,#FDF5EB)'" onmouseout="this.style.background='transparent'">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-sand,#C8BDB5)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+                  <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-secondary,#7A6F66);">Semua Kategori</span>
+                  <svg v-if="!filterCategory" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </button>
+                <div style="height: 1px; background: var(--color-sand-light,#EDE8E1); margin: 3px 6px;"></div>
+                <button v-for="cat in allCategories" :key="cat"
+                  @click.stop="filterCategory = cat; showFilterCategoryDD = false"
+                  :style="filterCategory === cat ? { background: 'rgba(214,123,82,0.08)' } : {}"
+                  style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
+                  onmouseover="this.style.background='rgba(214,123,82,0.07)'" onmouseout="this.style.background='transparent'">
+                  <span :style="{ color: getCategoryColor(cat) }" style="flex-shrink: 0; display: inline-flex; align-items: center;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                  </span>
+                  <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-dark,#3D2E22); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ cat }}</span>
+                  <svg v-if="filterCategory === cat" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Active badge + Reset (only when filters active) -->
             <span v-if="searchQuery || filterStartDate || filterEndDate || filterCategory"
               style="background: var(--color-terracotta); color: #fff; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap;">
               {{ [searchQuery, (filterStartDate || filterEndDate) ? 1 : 0, filterCategory].filter(Boolean).length }} aktif
@@ -167,6 +147,8 @@ const JobLogbook = {
             </button>
           </div>
         </div>
+
+
 
         <!-- ── Quick Notes ── -->
         <div style="margin-bottom: 24px; padding: 18px 20px; border-radius: 12px; background-color: transparent; border: 1.5px dashed var(--color-sand);">
@@ -945,7 +927,7 @@ const JobLogbook = {
           <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
             <!-- Filter Tanggal button -->
             <div style="position: relative;" @click.stop>
-              <button type="button" @click.stop="noteShowRangePicker = !noteShowRangePicker; showNoteFilterCatDD = false; showNoteJadwalDD = false"
+              <button type="button" @click.stop="noteShowRangePicker = !noteShowRangePicker; showNoteFilterCatDD = false"
                 :style="(noteFilterStartDate || noteFilterEndDate) ? { borderColor: 'var(--color-terracotta)', background: '#FFF4ED', color: 'var(--color-terracotta)' } : { borderColor: 'var(--color-sand)', background: 'var(--bg-cream)', color: 'var(--text-muted)' }"
                 style="height: 32px; padding: 0 12px; border: 1.5px solid; border-radius: 8px; font-size: 12px; font-family: 'Outfit', sans-serif; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: all 0.15s;">
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -981,7 +963,8 @@ const JobLogbook = {
             </div>
 
             <!-- Filter Kategori button (inline compact) -->
-              <button @click.stop="showNoteFilterCatDD = !showNoteFilterCatDD; noteShowRangePicker = false; showNoteJadwalDD = false"
+            <div style="position: relative;" @click.stop>
+              <button @click.stop="showNoteFilterCatDD = !showNoteFilterCatDD; noteShowRangePicker = false"
                 :style="noteFilterCategory ? { borderColor: 'var(--color-terracotta)', background: '#FFF4ED', color: 'var(--color-terracotta)' } : { borderColor: 'var(--color-sand)', background: 'var(--bg-cream)', color: 'var(--text-muted)' }"
                 style="height: 32px; padding: 0 10px 0 10px; border: 1.5px solid; border-radius: 8px; font-size: 12px; font-family: 'Outfit', sans-serif; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; transition: all 0.15s;">
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
@@ -1011,59 +994,9 @@ const JobLogbook = {
               </div>
             </div>
 
-            <!-- Filter Jadwal button (inline compact) -->
-            <div style="position: relative;" @click.stop>
-              <button @click.stop="showNoteJadwalDD = !showNoteJadwalDD; noteShowRangePicker = false; showNoteFilterCatDD = false"
-                :style="noteFilterSchedule ? { borderColor: 'var(--color-terracotta)', background: '#FFF4ED', color: 'var(--color-terracotta)' } : { borderColor: 'var(--color-sand)', background: 'var(--bg-cream)', color: 'var(--text-muted)' }"
-                style="height: 32px; padding: 0 10px; border: 1.5px solid; border-radius: 8px; font-size: 12px; font-family: 'Outfit', sans-serif; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; transition: all 0.15s;">
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                <span v-if="!noteFilterSchedule">Jadwal</span>
-                <span v-else-if="noteFilterSchedule === 'overdue'">Lewat</span>
-                <span v-else-if="noteFilterSchedule === 'today'">Hari Ini</span>
-                <span v-else>Akan Datang</span>
-                <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: showNoteJadwalDD ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </button>
-              <div v-if="showNoteJadwalDD" @click.stop
-                style="position: absolute; top: calc(100% + 5px); left: 0; z-index: 99999; background: var(--color-paper,#FAF7F2); border: 1.5px solid var(--color-sand-light,#EDE8E1); border-radius: 14px; box-shadow: 0 8px 32px rgba(61,46,34,0.16); padding: 6px; min-width: 180px;">
-                <button @click.stop="noteFilterSchedule = ''; showNoteJadwalDD = false"
-                  :style="!noteFilterSchedule ? { background: 'var(--color-sand-light,#EDE8E1)' } : {}"
-                  style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
-                  onmouseover="this.style.background='var(--color-cream,#FDF5EB)'" onmouseout="this.style.background='transparent'">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-sand,#C8BDB5)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                  <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-secondary,#7A6F66);">Semua</span>
-                  <svg v-if="!noteFilterSchedule" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                </button>
-                <div style="height:1px; background:var(--color-sand-light,#EDE8E1); margin:3px 6px;"></div>
-                <button @click.stop="noteFilterSchedule = 'overdue'; showNoteJadwalDD = false"
-                  :style="noteFilterSchedule === 'overdue' ? { background: 'rgba(185,28,28,0.06)' } : {}"
-                  style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
-                  onmouseover="this.style.background='rgba(185,28,28,0.05)'" onmouseout="this.style.background='transparent'">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                  <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: #B91C1C;">Lewat Jadwal</span>
-                  <svg v-if="noteFilterSchedule === 'overdue'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                </button>
-                <button @click.stop="noteFilterSchedule = 'today'; showNoteJadwalDD = false"
-                  :style="noteFilterSchedule === 'today' ? { background: 'rgba(214,123,82,0.08)' } : {}"
-                  style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
-                  onmouseover="this.style.background='rgba(214,123,82,0.07)'" onmouseout="this.style.background='transparent'">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                  <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--color-terracotta,#D67B52);">Hari Ini</span>
-                  <svg v-if="noteFilterSchedule === 'today'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                </button>
-                <button @click.stop="noteFilterSchedule = 'upcoming'; showNoteJadwalDD = false"
-                  :style="noteFilterSchedule === 'upcoming' ? { background: 'rgba(29,78,216,0.06)' } : {}"
-                  style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
-                  onmouseover="this.style.background='rgba(29,78,216,0.05)'" onmouseout="this.style.background='transparent'">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline><path d="M17 12h2"></path></svg>
-                  <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: #1D4ED8;">Akan Datang</span>
-                  <svg v-if="noteFilterSchedule === 'upcoming'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                </button>
-              </div>
-            </div>
-
             <!-- Reset filter -->
-            <button v-if="noteFilterStartDate || noteFilterEndDate || noteFilterCategory || noteFilterSchedule"
-              @click="noteFilterStartDate=''; noteFilterEndDate=''; noteFilterCategory=''; noteFilterSchedule=''; noteShowRangePicker=false"
+            <button v-if="noteFilterStartDate || noteFilterEndDate || noteFilterCategory"
+              @click="noteFilterStartDate=''; noteFilterEndDate=''; noteFilterCategory=''; noteShowRangePicker=false"
               style="height: 32px; padding: 0 10px; border: 1.5px solid var(--color-terracotta); background: transparent; color: var(--color-terracotta); border-radius: 8px; font-size: 12px; font-family: 'Outfit', sans-serif; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; transition: all 0.15s;">
               <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
               Reset
