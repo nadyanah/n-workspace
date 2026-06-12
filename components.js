@@ -8402,6 +8402,9 @@ const GoogleCalendar = {
               :key="cell.key"
               :class="['gcal-cell', cell.isToday && 'gcal-cell-today', !cell.inMonth && 'gcal-cell-dim', localSelectedDate===cell.dateStr && 'gcal-cell-selected']"
               @click="localSelectedDate=cell.dateStr; localView='agenda'"
+              @mouseenter="monthHoverDate=cell.dateStr"
+              @mouseleave="monthHoverDate=null"
+              style="position:relative;"
             >
               <div class="gcal-cell-num">{{ cell.day }}</div>
               <!-- Dot indicators per item type, synced with filters -->
@@ -8413,6 +8416,24 @@ const GoogleCalendar = {
               <!-- Count badge if many items -->
               <div v-if="localTotalItemsForDate(cell.dateStr) > 0" class="gcal-cell-count">
                 {{ localTotalItemsForDate(cell.dateStr) }}
+              </div>
+
+              <!-- ── Hover Tooltip: list semua item hari itu ── -->
+              <div
+                v-if="monthHoverDate===cell.dateStr && localTotalItemsForDate(cell.dateStr) > 0"
+                class="gcal-cell-tooltip"
+                @click.stop
+              >
+                <div class="gcal-cell-tooltip-date">{{ localTooltipDateLabel(cell.dateStr) }}</div>
+                <div
+                  v-for="item in localAllItemsForDate(cell.dateStr)"
+                  :key="item.id"
+                  class="gcal-cell-tooltip-item"
+                >
+                  <span class="gcal-cell-tooltip-dot" :style="{ background: item.color }"></span>
+                  <span class="gcal-cell-tooltip-title" :style="item.done ? 'text-decoration:line-through;opacity:0.5;' : ''">{{ item.title }}</span>
+                  <span v-if="item.startMin !== null" class="gcal-cell-tooltip-time">{{ localFmtMin(item.startMin) }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -8820,7 +8841,8 @@ const GoogleCalendar = {
         { val: '#3F9142' }, { val: '#0B8043' }, { val: '#D50000' },
         { val: '#E67C73' }, { val: '#039BE5' }
       ],
-      localHours: ['00:00','01:00','02:00','03:00','04:00','05:00','06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00','23:00']
+      localHours: ['00:00','01:00','02:00','03:00','04:00','05:00','06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00','23:00'],
+      monthHoverDate: null,
     };
   },
   computed: {
@@ -9210,6 +9232,21 @@ const GoogleCalendar = {
     // ── Total item count untuk badge di month view ──
     localTotalItemsForDate(dateStr) {
       return this.localAllItemsForDate(dateStr).length;
+    },
+
+    // ── Helper: format menit jadi HH:MM untuk tooltip ──
+    localFmtMin(min) {
+      if (min === null || min === undefined) return '';
+      return String(Math.floor(min / 60) % 24).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0');
+    },
+
+    // ── Helper: label tanggal lengkap untuk header tooltip ──
+    localTooltipDateLabel(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr + 'T12:00:00');
+      const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+      const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+      return days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()];
     },
 
     // ── Blocks untuk week view timeline (hanya item yang punya waktu) ──
