@@ -6219,3 +6219,211 @@ input:checked + .switch-slider:before {
   border-radius: 50%;
   flex-shrink: 0;
 }
+
+/* ============================================================
+   AGENDA VIEW — FILTER BAR
+   ============================================================ */
+.gcal-agenda-filter-bar {
+  background: var(--bg-card, #fff);
+  border: 1.5px solid var(--color-sand, #E8DDD0);
+  border-radius: 10px;
+  margin: 12px 0 10px 0;
+  overflow: hidden;
+}
+
+.gcal-agenda-filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 14px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.gcal-agenda-filter-header:hover {
+  background: rgba(232, 221, 208, 0.35);
+}
+
+.gcal-filter-active-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 20px;
+  background: var(--color-terracotta, #D67B52);
+  color: #fff;
+  line-height: 1.4;
+  font-family: 'Hack', monospace;
+}
+
+.gcal-agenda-filter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 14px 12px 14px;
+  border-top: 1px solid var(--color-sand, #E8DDD0);
+}
+
+.gcal-agenda-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 4px;
+  cursor: pointer;
+  border-radius: 7px;
+  transition: background 0.12s;
+  user-select: none;
+}
+.gcal-agenda-filter-item:hover {
+  background: rgba(232, 221, 208, 0.4);
+}
+.gcal-agenda-filter-item.checked .gcal-filter-label {
+  color: var(--text-dark, #2D1B0E);
+  font-weight: 600;
+}
+
+.gcal-filter-checkbox {
+  width: 17px;
+  height: 17px;
+  border-radius: 5px;
+  border: 2px solid var(--color-sand, #E8DDD0);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+  cursor: pointer;
+}
+
+.gcal-filter-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.gcal-filter-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-muted, #A09080);
+  font-family: 'Outfit', sans-serif;
+  transition: color 0.12s;
+}
+
+/* Slide-in animation for the filter bar */
+.agenda-filter-slide-enter-active,
+.agenda-filter-slide-leave-active {
+  transition: opacity 0.2s, transform 0.2s;
+}
+.agenda-filter-slide-enter-from,
+.agenda-filter-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+/* Expand animation for the checklist inside */
+.agenda-filter-expand-enter-active,
+.agenda-filter-expand-leave-active {
+  transition: max-height 0.25s ease, opacity 0.2s;
+  overflow: hidden;
+  max-height: 200px;
+}
+.agenda-filter-expand-enter-from,
+.agenda-filter-expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* ============================================================
+   MONTH VIEW — Dot indicators & count badge (synced with filters)
+   ============================================================ */
+.gcal-cell-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  padding: 3px 2px 1px 2px;
+  min-height: 14px;
+}
+
+.gcal-cell-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+}
+
+.gcal-cell-count {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding: 1px 3px;
+  font-family: 'Hack', monospace;
+  line-height: 1;
+}
+
+/* ============================================================
+   WEEK VIEW — Now-line, header dots, synced event blocks
+   ============================================================ */
+.gcal-week-now-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-terracotta, #D67B52);
+  z-index: 5;
+  pointer-events: none;
+}
+.gcal-week-now-line::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-terracotta, #D67B52);
+}
+
+/* Mini dot row under day header */
+.gcal-week-hdr-dots {
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+  margin-top: 3px;
+  min-height: 8px;
+}
+.gcal-week-hdr-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* Per-type color tinting on week event blocks */
+.gcal-week-ev {
+  border-left: 3px solid rgba(0,0,0,0.18);
+}
+.gcal-week-ev-task   { border-left-color: rgba(255,255,255,0.35); }
+.gcal-week-ev-habit  { border-left-color: rgba(255,255,255,0.35); }
+.gcal-week-ev-manual { border-left-color: rgba(255,255,255,0.35); }
+.gcal-week-ev-event  { border-left-color: rgba(255,255,255,0.35); }
+
+/* Week col clickable feel */
+.gcal-week-col {
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.gcal-week-col:hover {
+  background: rgba(214, 123, 82, 0.04);
+}
+
+/* Week header day clickable */
+.gcal-week-day-hdr {
+  cursor: pointer;
+  transition: background 0.12s;
+}

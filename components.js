@@ -8351,6 +8351,34 @@ const GoogleCalendar = {
           </div>
         </div>
 
+        <!-- ========== AGENDA FILTER ========== -->
+        <transition name="agenda-filter-slide">
+          <div v-if="localView==='agenda'" class="gcal-agenda-filter-bar">
+            <div class="gcal-agenda-filter-header" @click="agendaFilterOpen = !agendaFilterOpen">
+              <div style="display:flex; align-items:center; gap:7px;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-terracotta);"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                <span style="font-size:11.5px; font-weight:700; color:var(--text-dark);">Tampilkan di agenda</span>
+                <span v-if="agendaActiveFilterCount < 3" class="gcal-filter-active-badge">{{ agendaActiveFilterCount }}/3</span>
+              </div>
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                   :style="{ transition:'transform 0.2s', transform: agendaFilterOpen ? 'rotate(180deg)' : 'rotate(0deg)', color:'var(--text-muted)' }">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+            <transition name="agenda-filter-expand">
+              <div v-if="agendaFilterOpen" class="gcal-agenda-filter-list">
+                <label v-for="f in agendaFilterOptions" :key="f.key" class="gcal-agenda-filter-item" :class="{ checked: agendaFilters[f.key] }">
+                  <span class="gcal-filter-checkbox" :style="{ borderColor: f.color, background: agendaFilters[f.key] ? f.color : 'transparent' }" @click.prevent="agendaFilters[f.key] = !agendaFilters[f.key]">
+                    <svg v-if="agendaFilters[f.key]" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <span class="gcal-filter-dot" :style="{ background: f.color }"></span>
+                  <span class="gcal-filter-label">{{ f.label }}</span>
+                </label>
+              </div>
+            </transition>
+          </div>
+        </transition>
+
         <!-- Success / Error toast -->
         <div v-if="localSuccess" class="gcal-toast gcal-toast-success">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -8376,10 +8404,16 @@ const GoogleCalendar = {
               @click="localSelectedDate=cell.dateStr; localView='agenda'"
             >
               <div class="gcal-cell-num">{{ cell.day }}</div>
-              <div v-for="ev in localEventsForDate(cell.dateStr).slice(0,2)" :key="ev.id" class="gcal-ev-chip" :style="{background: ev.color || '#4285F4'}">
-                <span class="gcal-ev-time">{{ ev.startTime }}</span> {{ ev.title }}
+              <!-- Dot indicators per item type, synced with filters -->
+              <div class="gcal-cell-dots">
+                <span v-for="dot in localDotsForDate(cell.dateStr)" :key="dot.type"
+                      class="gcal-cell-dot" :style="{ background: dot.color }"
+                      :title="dot.label + ' (' + dot.count + ')'"></span>
               </div>
-              <div v-if="localEventsForDate(cell.dateStr).length > 2" class="gcal-ev-more">+{{ localEventsForDate(cell.dateStr).length - 2 }} lagi</div>
+              <!-- Count badge if many items -->
+              <div v-if="localTotalItemsForDate(cell.dateStr) > 0" class="gcal-cell-count">
+                {{ localTotalItemsForDate(cell.dateStr) }}
+              </div>
             </div>
           </div>
         </div>
@@ -8392,26 +8426,47 @@ const GoogleCalendar = {
               v-for="d in localWeekDays"
               :key="d.dateStr"
               :class="['gcal-week-day-hdr', d.isToday && 'gcal-week-day-today']"
+              style="cursor:pointer;"
+              @click="localSelectedDate=d.dateStr; localView='agenda'"
+              title="Buka agenda hari ini"
             >
               <span class="gcal-week-dow">{{ d.dowLabel }}</span>
               <span :class="['gcal-week-num', d.isToday && 'gcal-week-num-today']">{{ d.dayNum }}</span>
+              <!-- Mini dot row bawah header -->
+              <div class="gcal-week-hdr-dots">
+                <span v-for="dot in localDotsForDate(d.dateStr)" :key="dot.type"
+                      class="gcal-week-hdr-dot" :style="{ background: dot.color }"></span>
+              </div>
             </div>
           </div>
           <div class="gcal-week-body">
             <div class="gcal-week-time-col">
               <div v-for="h in localHours" :key="h" class="gcal-hour-label">{{ h }}</div>
             </div>
-            <div v-for="d in localWeekDays" :key="d.dateStr" class="gcal-week-col">
+            <div v-for="d in localWeekDays" :key="d.dateStr" class="gcal-week-col"
+                 @click="localSelectedDate=d.dateStr; localView='agenda'">
               <div v-for="h in localHours" :key="h" :class="['gcal-hour-cell', d.isToday && h===localCurrentHourLabel && 'gcal-hour-now']"></div>
+              <!-- Now-line -->
+              <div v-if="d.isToday && localWeekNowTop !== null" class="gcal-week-now-line" :style="{ top: localWeekNowTop + 'px' }"></div>
+              <!-- All items from all types, synced with filters -->
               <div
-                v-for="ev in localEventsForDate(d.dateStr)"
-                :key="ev.id"
+                v-for="block in localWeekBlocksForDate(d.dateStr)"
+                :key="block.id"
                 class="gcal-week-ev"
-                :style="{ top: localEvTop(ev)+'px', height: localEvHeight(ev)+'px', background: ev.color || '#4285F4' }"
-                @click.stop="localDeleteEvent(ev)"
-                title="Klik untuk hapus"
+                :class="'gcal-week-ev-' + block.type"
+                :style="{
+                  top: block.top + 'px',
+                  height: block.height + 'px',
+                  background: block.color,
+                  left: 'calc(' + (block.col * (100/block.totalCols)) + '% + 2px)',
+                  width: 'calc(' + (100/block.totalCols) + '% - 4px)',
+                  opacity: block.done ? 0.5 : 1
+                }"
+                @click.stop="localSelectedDate=d.dateStr; localView='agenda'"
+                :title="block.title + (block.startLabel ? ' · ' + block.startLabel : '')"
               >
-                <span style="font-weight:700;font-size:11px;">{{ ev.startTime }}</span> {{ ev.title }}
+                <span style="font-weight:700;font-size:10px;opacity:0.9;">{{ block.startLabel }}</span>
+                <span style="font-size:10.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">{{ block.title }}</span>
               </div>
             </div>
           </div>
@@ -8750,6 +8805,13 @@ const GoogleCalendar = {
       localNewEv: { title:'', startDate:'', startTime:'', endDate:'', endTime:'', location:'', desc:'', color:'#4285F4', allDay: false },
       localNewReminder: { title:'', subtitle:'', date: new Date().toISOString().split('T')[0], time:'', page:'' },
       localStorageTick: 0,
+      agendaFilterOpen: false,
+      agendaFilters: { task: true, habit: true, manual: true },
+      agendaFilterOptions: [
+        { key: 'task',   label: 'Task Plan (Job Logbook)', color: '#D67B52' },
+        { key: 'habit',  label: 'Habit (Habit Tracker)',   color: '#A3B18A' },
+        { key: 'manual', label: 'Pengingat (edit by n)',   color: '#F59E0B' },
+      ],
       localSuccess: null,
       localError: null,
       localColors: [
@@ -8846,6 +8908,13 @@ const GoogleCalendar = {
       const h = new Date().getHours();
       return (h < 10 ? '0' : '') + h + ':00';
     },
+    localWeekNowTop() {
+      const now = new Date();
+      return now.getHours() * 60 + now.getMinutes();
+    },
+    agendaActiveFilterCount() {
+      return Object.values(this.agendaFilters).filter(Boolean).length;
+    },
     localAgendaItems() {
       // depend on tick so this recomputes after manual reminder save
       void this.localStorageTick;
@@ -8857,6 +8926,10 @@ const GoogleCalendar = {
       const dt = new Date(ds + 'T12:00:00');
       const isToday = ds === todayStr;
       const TYPE_COLORS = { task: '#D67B52', habit: '#A3B18A', manual: '#F59E0B' };
+      // Active filters
+      const showTask   = this.agendaFilters.task;
+      const showHabit  = this.agendaFilters.habit;
+      const showManual = this.agendaFilters.manual;
 
       // ── Status selesai (ws_notif_action_status) untuk tanggal ds ──
       let actionStatus = {};
@@ -8886,31 +8959,33 @@ const GoogleCalendar = {
       });
 
       // --- Task Plan ---
-      try {
-        const plans = JSON.parse(WorkspaceStorage.getItem('personal_workspace_job_plans') || '[]');
-        plans.filter(p => p.date === ds).forEach(p => {
-          const id = 'tp-' + p.id;
-          const done = p.phase === 'Completed';
-          if (p.time) {
-            const [sh, sm] = p.time.split(':').map(Number);
-            let startMin = sh * 60 + (sm || 0);
-            let endMin;
-            if (p.timeEnd) {
-              const [eh, em] = p.timeEnd.split(':').map(Number);
-              endMin = eh * 60 + (em || 0);
-              if (endMin <= startMin) endMin = startMin + 30;
+      if (showTask) {
+        try {
+          const plans = JSON.parse(WorkspaceStorage.getItem('personal_workspace_job_plans') || '[]');
+          plans.filter(p => p.date === ds).forEach(p => {
+            const id = 'tp-' + p.id;
+            const done = p.phase === 'Completed';
+            if (p.time) {
+              const [sh, sm] = p.time.split(':').map(Number);
+              let startMin = sh * 60 + (sm || 0);
+              let endMin;
+              if (p.timeEnd) {
+                const [eh, em] = p.timeEnd.split(':').map(Number);
+                endMin = eh * 60 + (em || 0);
+                if (endMin <= startMin) endMin = startMin + 30;
+              } else {
+                endMin = startMin + 60;
+              }
+              timed.push({ id, title: p.tasks, type: 'task', color: TYPE_COLORS.task, startMin, endMin, raw: p, done, actionable: true, isTaskPlan: true });
             } else {
-              endMin = startMin + 60;
+              allDayItems.push({ id, title: p.tasks, type: 'task', color: TYPE_COLORS.task, raw: p, done, actionable: true, isTaskPlan: true });
             }
-            timed.push({ id, title: p.tasks, type: 'task', color: TYPE_COLORS.task, startMin, endMin, raw: p, done, actionable: true, isTaskPlan: true });
-          } else {
-            allDayItems.push({ id, title: p.tasks, type: 'task', color: TYPE_COLORS.task, raw: p, done, actionable: true, isTaskPlan: true });
-          }
-        });
-      } catch(e) {}
+          });
+        } catch(e) {}
+      }
 
       // --- Habit reminders (hanya relevan untuk hari ini) ---
-      if (isToday) {
+      if (isToday && showHabit) {
         try {
           const habits = JSON.parse(WorkspaceStorage.getItem('ws_habit_notifs') || '[]');
           habits.forEach(h => {
@@ -8928,20 +9003,22 @@ const GoogleCalendar = {
       }
 
       // --- Manual reminders ---
-      try {
-        const manuals = JSON.parse(WorkspaceStorage.getItem('ws_manual_notifs') || '[]');
-        manuals.filter(m => m.date === ds).forEach(m => {
-          const id = 'manual-' + m.id;
-          const done = isActionDone(m.id);
-          if (m.time) {
-            const [sh, sm] = m.time.split(':').map(Number);
-            const startMin = sh * 60 + (sm || 0);
-            timed.push({ id, title: m.title, type: 'manual', color: TYPE_COLORS.manual, startMin, endMin: startMin + 30, raw: m, done, actionable: true });
-          } else {
-            allDayItems.push({ id, title: m.title, type: 'manual', color: TYPE_COLORS.manual, raw: m, done, actionable: true });
-          }
-        });
-      } catch(e) {}
+      if (showManual) {
+        try {
+          const manuals = JSON.parse(WorkspaceStorage.getItem('ws_manual_notifs') || '[]');
+          manuals.filter(m => m.date === ds).forEach(m => {
+            const id = 'manual-' + m.id;
+            const done = isActionDone(m.id);
+            if (m.time) {
+              const [sh, sm] = m.time.split(':').map(Number);
+              const startMin = sh * 60 + (sm || 0);
+              timed.push({ id, title: m.title, type: 'manual', color: TYPE_COLORS.manual, startMin, endMin: startMin + 30, raw: m, done, actionable: true });
+            } else {
+              allDayItems.push({ id, title: m.title, type: 'manual', color: TYPE_COLORS.manual, raw: m, done, actionable: true });
+            }
+          });
+        } catch(e) {}
+      }
 
       // --- Assign overlap columns for timed items ---
       timed.sort((a, b) => a.startMin - b.startMin || a.endMin - b.endMin);
@@ -9042,6 +9119,120 @@ const GoogleCalendar = {
     localSaveEvents() {
       try { localStorage.setItem('gcal_local_events', JSON.stringify(this.localEvents)); } catch(e){}
     },
+    // ── SHARED HELPER: semua item (semua tipe) untuk satu tanggal, dihormati filter ──
+    localAllItemsForDate(dateStr) {
+      void this.localStorageTick;
+      const todayStr = new Date().toISOString().split('T')[0];
+      const isToday = dateStr === todayStr;
+      const TYPE_COLORS = { task: '#D67B52', habit: '#A3B18A', manual: '#F59E0B', event: '#4285F4' };
+      let actionStatus = {};
+      try {
+        const raw = WorkspaceStorage.getItem('ws_notif_action_status');
+        const s = JSON.parse(raw || '{}');
+        actionStatus = s[dateStr] || {};
+      } catch(e) {}
+      const isActionDone = (id) => !!actionStatus[id];
+      const items = [];
+
+      // Events (always shown, not filterable)
+      this.localEvents.filter(ev => ev.startDate === dateStr).forEach(ev => {
+        const [sh, sm] = (ev.startTime || '00:00').split(':').map(Number);
+        const [eh, em] = (ev.endTime || '01:00').split(':').map(Number);
+        const startMin = ev.allDay ? null : sh * 60 + (sm || 0);
+        let endMin = ev.allDay ? null : eh * 60 + (em || 0);
+        if (startMin !== null && endMin <= startMin) endMin = startMin + 30;
+        items.push({ id: ev.id, title: ev.title, type: 'event', color: ev.color || TYPE_COLORS.event, startMin, endMin, done: false, allDay: !!ev.allDay });
+      });
+
+      // Task Plan
+      if (this.agendaFilters.task) {
+        try {
+          const plans = JSON.parse(WorkspaceStorage.getItem('personal_workspace_job_plans') || '[]');
+          plans.filter(p => p.date === dateStr).forEach(p => {
+            const done = p.phase === 'Completed';
+            let startMin = null, endMin = null;
+            if (p.time) {
+              const [sh, sm] = p.time.split(':').map(Number);
+              startMin = sh * 60 + (sm || 0);
+              if (p.timeEnd) { const [eh, em] = p.timeEnd.split(':').map(Number); endMin = eh * 60 + (em || 0); if (endMin <= startMin) endMin = startMin + 60; }
+              else endMin = startMin + 60;
+            }
+            items.push({ id: 'tp-' + p.id, title: p.tasks, type: 'task', color: TYPE_COLORS.task, startMin, endMin, done, allDay: !p.time });
+          });
+        } catch(e) {}
+      }
+
+      // Habits (only today)
+      if (isToday && this.agendaFilters.habit) {
+        try {
+          const habits = JSON.parse(WorkspaceStorage.getItem('ws_habit_notifs') || '[]');
+          habits.forEach(h => {
+            const done = isActionDone(h.id);
+            let startMin = null, endMin = null;
+            if (h.time) { const [sh, sm] = h.time.split(':').map(Number); startMin = sh * 60 + (sm || 0); endMin = startMin + 30; }
+            items.push({ id: 'habit-' + h.id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, startMin, endMin, done, allDay: !h.time });
+          });
+        } catch(e) {}
+      }
+
+      // Manual reminders
+      if (this.agendaFilters.manual) {
+        try {
+          const manuals = JSON.parse(WorkspaceStorage.getItem('ws_manual_notifs') || '[]');
+          manuals.filter(m => m.date === dateStr).forEach(m => {
+            const done = isActionDone(m.id);
+            let startMin = null, endMin = null;
+            if (m.time) { const [sh, sm] = m.time.split(':').map(Number); startMin = sh * 60 + (sm || 0); endMin = startMin + 30; }
+            items.push({ id: 'manual-' + m.id, title: m.title, type: 'manual', color: TYPE_COLORS.manual, startMin, endMin, done, allDay: !m.time });
+          });
+        } catch(e) {}
+      }
+
+      return items;
+    },
+
+    // ── Dot indicators untuk month view ──
+    localDotsForDate(dateStr) {
+      const items = this.localAllItemsForDate(dateStr);
+      const typeMeta = {
+        task:   { color: '#D67B52', label: 'Task Plan' },
+        habit:  { color: '#A3B18A', label: 'Habit' },
+        manual: { color: '#F59E0B', label: 'Pengingat' },
+        event:  { color: '#4285F4', label: 'Acara' },
+      };
+      const counts = {};
+      items.forEach(it => { counts[it.type] = (counts[it.type] || 0) + 1; });
+      return Object.entries(counts).map(([type, count]) => ({
+        type, count, color: typeMeta[type]?.color || '#999', label: typeMeta[type]?.label || type
+      }));
+    },
+
+    // ── Total item count untuk badge di month view ──
+    localTotalItemsForDate(dateStr) {
+      return this.localAllItemsForDate(dateStr).length;
+    },
+
+    // ── Blocks untuk week view timeline (hanya item yang punya waktu) ──
+    localWeekBlocksForDate(dateStr) {
+      const items = this.localAllItemsForDate(dateStr).filter(it => it.startMin !== null);
+      items.sort((a, b) => a.startMin - b.startMin || a.endMin - b.endMin);
+      // Overlap column assignment
+      const columns = [];
+      items.forEach(item => {
+        let colIdx = columns.findIndex(endMin => endMin <= item.startMin);
+        if (colIdx === -1) { colIdx = columns.length; columns.push(0); }
+        columns[colIdx] = item.endMin;
+        item.col = colIdx;
+      });
+      const totalCols = Math.max(1, columns.length);
+      const fmt = (min) => String(Math.floor(min/60)%24).padStart(2,'0') + ':' + String(min%60).padStart(2,'0');
+      return items.map(item => ({
+        id: item.id, title: item.title, type: item.type, color: item.color,
+        top: item.startMin, height: Math.max(item.endMin - item.startMin, 25),
+        col: item.col, totalCols, startLabel: fmt(item.startMin), done: item.done
+      }));
+    },
+
     localEventsForDate(dateStr) {
       return this.localEvents.filter(ev => ev.startDate === dateStr);
     },
