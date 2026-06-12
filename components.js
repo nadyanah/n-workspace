@@ -8095,7 +8095,7 @@ const GoogleCalendar = {
             </div>
             <button class="gcal-create-btn" @click="localShowForm=true">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"/></svg>
-              Buat Acara
+              Set Pengingat
             </button>
           </div>
         </div>
@@ -8172,7 +8172,7 @@ const GoogleCalendar = {
           <div v-if="localAgendaItems.length===0" class="gcal-agenda-empty">
             <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.4" style="color:#bdc1c6; margin:0 auto 12px; display:block;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             <p style="font-size:15px;color:#5f6368;font-weight:600;">Tidak ada acara mendatang</p>
-            <p style="font-size:13px;color:#9aa0a6;margin-top:4px;">Klik "Buat Acara" untuk menambahkan jadwal baru.</p>
+            <p style="font-size:13px;color:#9aa0a6;margin-top:4px;">Klik "Set Pengingat" untuk menambahkan pengingat baru.</p>
           </div>
           <div v-for="group in localAgendaItems" :key="group.dateStr" class="gcal-agenda-group">
             <div :class="['gcal-agenda-date', group.isToday && 'gcal-agenda-date-today']">
@@ -8201,11 +8201,11 @@ const GoogleCalendar = {
                 </button>
               </div>
 
-              <!-- TIMELINE NOTIF 24 JAM (hanya hari ini) -->
-              <template v-if="group.isToday">
+              <!-- TIMELINE NOTIF 24 JAM -->
+              <template v-if="group.notifSlots.length > 0">
                 <div class="gcal-notif-timeline-header">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  Notif &amp; Task Hari Ini
+                  {{ group.isToday ? 'Notif & Task Hari Ini' : 'Notif & Task' }}
                 </div>
                 <div class="gcal-notif-timeline">
                   <div
@@ -8239,55 +8239,50 @@ const GoogleCalendar = {
           </div>
         </div>
 
-        <!-- ========== MODAL: FORM BUAT ACARA ========== -->
+        <!-- ========== MODAL: FORM SET PENGINGAT MANUAL ========== -->
         <div v-if="localShowForm" class="gcal-modal-overlay" @click.self="localShowForm=false">
           <div class="gcal-modal">
             <div class="gcal-modal-header">
-              <span style="font-size:16px;font-weight:700;color:#3c4043;">Tambah Acara Baru</span>
+              <span style="font-size:16px;font-weight:700;color:#3c4043;">Set Pengingat Manual</span>
               <button @click="localShowForm=false" class="gcal-modal-close">&#215;</button>
             </div>
             <div class="gcal-modal-body">
-              <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;">
-                <span style="font-size:12px;color:#70757a;font-weight:600;">Warna:</span>
-                <button v-for="c in localColors" :key="c.val"
-                  @click="localNewEv.color=c.val"
-                  :style="{width:'20px',height:'20px',borderRadius:'50%',background:c.val,border: localNewEv.color===c.val ? '3px solid #3c4043' : '2px solid transparent', cursor:'pointer'}"
-                ></button>
+              <div style="margin-bottom:14px;">
+                <label class="gcal-label">Judul Pengingat *</label>
+                <input type="text" class="gcal-input" v-model="localNewReminder.title" placeholder="cth., Minum obat, Hubungi klien..." maxlength="60" />
               </div>
               <div style="margin-bottom:14px;">
-                <input type="text" class="gcal-input" v-model="localNewEv.title" placeholder="Tambahkan judul acara" style="font-size:18px;font-weight:600;border:none;border-bottom:2px solid #4285f4;border-radius:0;padding-left:0;" />
+                <label class="gcal-label">Keterangan (opsional)</label>
+                <textarea class="gcal-input" v-model="localNewReminder.subtitle" rows="2" style="resize:none;" maxlength="80" placeholder="Catatan singkat..."></textarea>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
                 <div>
-                  <label class="gcal-label">Tanggal Mulai *</label>
-                  <input type="date" class="gcal-input" v-model="localNewEv.startDate" />
+                  <label class="gcal-label">Tanggal *</label>
+                  <input type="date" class="gcal-input" v-model="localNewReminder.date" />
                 </div>
                 <div>
-                  <label class="gcal-label">Waktu Mulai</label>
-                  <input type="time" class="gcal-input" v-model="localNewEv.startTime" />
+                  <label class="gcal-label">Jam Pengingat *</label>
+                  <input type="time" class="gcal-input" v-model="localNewReminder.time" />
                 </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
-                <div>
-                  <label class="gcal-label">Tanggal Selesai</label>
-                  <input type="date" class="gcal-input" v-model="localNewEv.endDate" />
-                </div>
-                <div>
-                  <label class="gcal-label">Waktu Selesai</label>
-                  <input type="time" class="gcal-input" v-model="localNewEv.endTime" />
-                </div>
-              </div>
-              <div style="margin-bottom:14px;">
-                <label class="gcal-label">Lokasi</label>
-                <input type="text" class="gcal-input" v-model="localNewEv.location" placeholder="Tambahkan lokasi atau link" />
               </div>
               <div style="margin-bottom:20px;">
-                <label class="gcal-label">Deskripsi</label>
-                <textarea class="gcal-input" v-model="localNewEv.desc" rows="2" style="resize:none;" placeholder="Tambahkan deskripsi..."></textarea>
+                <label class="gcal-label">Arahkan ke Halaman (opsional)</label>
+                <select v-model="localNewReminder.page" class="gcal-input" style="cursor:pointer;">
+                  <option value="">— Tidak ada tujuan —</option>
+                  <option value="jobLogbook">📓 Job Logbook</option>
+                  <option value="calendarMoment">🌍 Calendar Moment</option>
+                  <option value="contentTracker">📱 Content Tracker</option>
+                  <option value="interviewPractice">📞 Interview Practice</option>
+                  <option value="dailyNutrition">🍅 Daily Nutrition</option>
+                  <option value="habitTracker">✅ Habit Tracker</option>
+                  <option value="pomodoroTimer">⏳ Pomodoro Timer</option>
+                  <option value="googleCalendar">📅 Google Calendar</option>
+                  <option value="financialTracker">💳 Financial Tracker</option>
+                </select>
               </div>
               <div style="display:flex;gap:10px;justify-content:flex-end;">
                 <button class="gcal-btn-ghost" @click="localShowForm=false">Batal</button>
-                <button class="gcal-btn-save" @click="localAddEvent()">Simpan</button>
+                <button class="gcal-btn-save" :disabled="!localNewReminder.title.trim() || !localNewReminder.date || !localNewReminder.time" @click="localAddReminder()">Simpan Pengingat</button>
               </div>
             </div>
           </div>
@@ -8490,6 +8485,8 @@ const GoogleCalendar = {
       localEvents: JSON.parse(localStorage.getItem('gcal_local_events') || '[]'),
       localShowForm: false,
       localNewEv: { title:'', startDate:'', startTime:'', endDate:'', endTime:'', location:'', desc:'', color:'#4285F4', allDay: false },
+      localNewReminder: { title:'', subtitle:'', date: new Date().toISOString().split('T')[0], time:'', page:'' },
+      localStorageTick: 0,
       localSuccess: null,
       localError: null,
       localColors: [
@@ -8587,6 +8584,8 @@ const GoogleCalendar = {
       return (h < 10 ? '0' : '') + h + ':00';
     },
     localAgendaItems() {
+      // depend on tick so this recomputes after manual reminder save
+      void this.localStorageTick;
       const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
       const dows = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
       const todayStr = new Date().toISOString().split('T')[0];
@@ -8604,36 +8603,38 @@ const GoogleCalendar = {
         const dt = new Date(ds + 'T12:00:00');
         const isToday = ds === todayStr;
 
-        // Hanya untuk hari ini: kumpulkan notif per-jam (Task Plan + Habit + Manual)
+        // Kumpulkan notif per-jam (Task Plan + Habit + Manual) untuk tanggal yang dipilih
         let notifSlots = [];
-        if (isToday) {
+        {
           const nowHour = new Date().getHours();
           const byHour = {};
 
           // Task Plan
           try {
             const plans = JSON.parse(WorkspaceStorage.getItem('personal_workspace_job_plans') || '[]');
-            plans.filter(p => p.date === todayStr && p.time).forEach(p => {
+            plans.filter(p => p.date === ds && p.time).forEach(p => {
               const hh = parseInt(p.time.split(':')[0], 10);
               if (!byHour[hh]) byHour[hh] = [];
               byHour[hh].push({ id: 'tp-'+p.id, title: p.tasks, type: 'task', time: p.time, timeEnd: p.timeEnd || null });
             });
           } catch(e) {}
 
-          // Habit reminders
-          try {
-            const habits = JSON.parse(WorkspaceStorage.getItem('ws_habit_notifs') || '[]');
-            habits.filter(h => h.time).forEach(h => {
-              const hh = parseInt(h.time.split(':')[0], 10);
-              if (!byHour[hh]) byHour[hh] = [];
-              byHour[hh].push({ id: h.id, title: h.title, type: 'habit', time: h.time, timeEnd: null });
-            });
-          } catch(e) {}
+          // Habit reminders (hanya relevan untuk hari ini)
+          if (isToday) {
+            try {
+              const habits = JSON.parse(WorkspaceStorage.getItem('ws_habit_notifs') || '[]');
+              habits.filter(h => h.time).forEach(h => {
+                const hh = parseInt(h.time.split(':')[0], 10);
+                if (!byHour[hh]) byHour[hh] = [];
+                byHour[hh].push({ id: h.id, title: h.title, type: 'habit', time: h.time, timeEnd: null });
+              });
+            } catch(e) {}
+          }
 
-          // Manual reminders hari ini
+          // Manual reminders untuk tanggal ini
           try {
             const manuals = JSON.parse(WorkspaceStorage.getItem('ws_manual_notifs') || '[]');
-            manuals.filter(m => m.date === todayStr && m.time).forEach(m => {
+            manuals.filter(m => m.date === ds && m.time).forEach(m => {
               const hh = parseInt(m.time.split(':')[0], 10);
               if (!byHour[hh]) byHour[hh] = [];
               byHour[hh].push({ id: m.id, title: m.title, type: 'manual', time: m.time, timeEnd: null });
@@ -8641,13 +8642,16 @@ const GoogleCalendar = {
           } catch(e) {}
 
           // Buat 24 slot jam
-          notifSlots = Array.from({ length: 24 }, (_, h) => ({
-            hour: h,
-            label: String(h).padStart(2,'0') + ':00',
-            items: (byHour[h] || []).sort((a,b) => a.time.localeCompare(b.time)),
-            isCurrent: h === nowHour,
-            isPast: h < nowHour
-          }));
+          const hasAny = Object.keys(byHour).length > 0;
+          if (isToday || hasAny) {
+            notifSlots = Array.from({ length: 24 }, (_, h) => ({
+              hour: h,
+              label: String(h).padStart(2,'0') + ':00',
+              items: (byHour[h] || []).sort((a,b) => a.time.localeCompare(b.time)),
+              isCurrent: isToday && h === nowHour,
+              isPast: isToday && h < nowHour
+            }));
+          }
         }
 
         return {
@@ -8697,6 +8701,38 @@ const GoogleCalendar = {
       if (this.localView === 'week') { d.setDate(d.getDate() + 7); }
       else { d.setMonth(d.getMonth() + 1); }
       this.localCurDate = d;
+    },
+    localAddReminder() {
+      if (!this.localNewReminder.title.trim()) { this.localError = 'Judul pengingat tidak boleh kosong!'; return; }
+      if (!this.localNewReminder.date) { this.localError = 'Tanggal harus diisi!'; return; }
+      if (!this.localNewReminder.time) { this.localError = 'Jam pengingat harus diisi!'; return; }
+      const [hh, mm] = this.localNewReminder.time.split(':').map(Number);
+      const id = 'manual_' + Date.now();
+      let manuals = [];
+      try {
+        const raw = WorkspaceStorage.getItem('ws_manual_notifs');
+        manuals = raw ? JSON.parse(raw) : [];
+      } catch(e) { manuals = []; }
+      manuals.push({
+        id,
+        date: this.localNewReminder.date,
+        title: this.localNewReminder.title.trim(),
+        subtitle: this.localNewReminder.subtitle.trim() || 'Pengingat manual',
+        time: this.localNewReminder.time,
+        timeVal: hh * 60 + (mm || 0),
+        page: this.localNewReminder.page || null,
+        isHabit: false,
+        isManual: true
+      });
+      WorkspaceStorage.setItem('ws_manual_notifs', JSON.stringify(manuals));
+      this.localStorageTick++;
+      this.localSuccess = 'Pengingat "' + this.localNewReminder.title.trim() + '" berhasil disimpan!';
+      this.localError = null;
+      this.localShowForm = false;
+      this.localSelectedDate = this.localNewReminder.date;
+      this.localView = 'agenda';
+      this.localNewReminder = { title:'', subtitle:'', date: new Date().toISOString().split('T')[0], time:'', page:'' };
+      setTimeout(() => { this.localSuccess = null; }, 3000);
     },
     localAddEvent() {
       if (!this.localNewEv.title.trim()) { this.localError = 'Judul acara tidak boleh kosong!'; return; }
