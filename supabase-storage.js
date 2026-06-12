@@ -421,3 +421,7 @@ const WorkspaceStorage = {
 
 window.WorkspaceStorage = WorkspaceStorage;
 window._workspaceStorageReady = WorkspaceStorage.init().then(() => WorkspaceStorage.migrateFromLocalStorage());
+
+// -- Expose client & user id (dipakai push-notifications.js untuk simpan push subscription) --
+window._wsSupabaseClient = _supabaseClient;
+window._wsGetUserId = () => _currentUserId;

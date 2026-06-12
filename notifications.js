@@ -803,6 +803,9 @@ const NotificationPanel = {
             </div>
           </div>
 
+          <!-- Toggle Notifikasi Background (Web Push) -->
+          <push-notif-toggle></push-notif-toggle>
+
           <!-- Tabs -->
           <div class="notif-tabs">
             <button class="notif-tab" :class="{ active: activeTab === 'today' }" @click="activeTab = 'today'">

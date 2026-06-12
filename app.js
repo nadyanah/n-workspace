@@ -344,6 +344,11 @@ const App = {
       window.addEventListener('ws-navigate', (e) => {
         if (e.detail && e.detail.page) navigateTo(e.detail.page);
       });
+
+      // Handle klik notifikasi push (habit) — diteruskan dari push-notifications.js
+      window.addEventListener('ws-trigger-habit', (e) => {
+        if (e.detail && e.detail.habitId) onTriggerHabit(e.detail.habitId);
+      });
     });
 
     // Badge notif bell — diupdate reactif oleh event 'unread-count-changed' dari NotificationPanel
@@ -643,5 +648,6 @@ app.component('financial-tracker', FinancialTracker);
 app.component('notification-panel', NotificationPanel);
 app.component('reminder-popup', ReminderPopup);
 app.component('missed-tasks-page', MissedTasksPage);
+app.component('push-notif-toggle', PushNotifToggle);
 
 app.mount('#app');

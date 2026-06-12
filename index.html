@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>n-workspace</title>
+  <!-- PWA manifest & icons (diperlukan agar Web Push jalan di iOS Safari) -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#D67B52">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" href="icon-192.png" type="image/png">
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="style.css">
   <!-- Load Vue 3 Global from CDN -->
@@ -718,6 +723,8 @@
   <script src="assets.js"></script>
   <!-- Supabase Storage Layer (harus sebelum components.js & app.js) -->
   <script src="supabase-storage.js"></script>
+  <!-- Push Notification: registrasi SW & definisi komponen toggle (harus sebelum app.js) -->
+  <script src="push-notifications.js"></script>
   <script>
     // Tunggu WorkspaceStorage selesai init sebelum mount Vue app
     window._workspaceStorageReady.then(() => {
