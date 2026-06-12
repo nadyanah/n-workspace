@@ -5774,6 +5774,185 @@ const DailyNutrition = {
           </div>
         </div>
       </div>
+
+      <!-- ══════════════════════════════════════════════════════════ -->
+      <!-- PLAN NEXT INSIGHT SECTION                                  -->
+      <!-- ══════════════════════════════════════════════════════════ -->
+      <div style="margin-top: 40px;">
+
+        <!-- Section Header -->
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-top: 2px solid var(--color-sand); padding-top: 28px; margin-bottom: 20px;">
+          <div>
+            <h3 style="font-size: 18px; font-weight: 800; color: var(--text-dark); margin: 0 0 4px 0; display: flex; align-items: center; gap: 8px;">
+              <span style="background: linear-gradient(135deg, rgba(214,123,82,0.15), rgba(90,135,100,0.12)); border: 1.5px solid var(--color-sand); border-radius: 8px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/></svg>
+              </span>
+              Plan Next Insight
+            </h3>
+            <p style="color: var(--text-muted); font-size: 12.5px; margin: 0; line-height: 1.5; max-width: 480px;">Daftar antrian sumber belajar yang ingin kamu telaah — klik <strong style="color: var(--color-terracotta);">✦ Jadi Insight</strong> saat sudah selesai dipelajari untuk langsung pindah ke timeline.</p>
+          </div>
+          <button @click="showAddPlan = true"
+            style="flex-shrink: 0; height: 38px; padding: 0 16px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); border-radius: 9px; font-size: 12.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: border-color 0.15s, background 0.15s;"
+            onmouseover="this.style.borderColor='var(--color-terracotta)'; this.style.background='#FFF4ED'; this.style.color='var(--color-terracotta)'"
+            onmouseout="this.style.borderColor='var(--color-sand)'; this.style.background='var(--bg-cream)'; this.style.color='var(--text-dark)'">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah Plan
+          </button>
+        </div>
+
+        <!-- PLAN MODAL -->
+        <transition name="insight-modal-fade">
+          <div v-if="showAddPlan"
+            style="position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; background: rgba(30,22,16,0.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 16px;"
+            @click.self="cancelPlan">
+            <div style="background: var(--color-paper, #FAF7F2); width: min(540px, 96vw); border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.12); display: flex; flex-direction: column; overflow: hidden; animation: insightPopIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+
+              <!-- Modal Header -->
+              <div style="display: flex; align-items: center; gap: 12px; padding: 16px 22px 14px; background: var(--color-sage, #5A8764); color: #fff; flex-shrink: 0;">
+                <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/></svg>
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-size: 14.5px; font-weight: 800; letter-spacing: 0.2px;">{{ editingPlanId ? 'Edit Plan Insight' : 'Tambah Plan Next Insight' }}</div>
+                  <div style="font-size: 11px; opacity: 0.82; margin-top: 1px;">Antrian sumber belajar berikutnya ✦</div>
+                </div>
+                <button @click="cancelPlan"
+                  style="background: rgba(255,255,255,0.18); border: none; border-radius: 9px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 16px; flex-shrink: 0; transition: background 0.15s;"
+                  onmouseover="this.style.background='rgba(255,255,255,0.32)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">✕</button>
+              </div>
+
+              <!-- Modal Body -->
+              <div style="padding: 20px 24px 6px; overflow-y: auto;">
+
+                <!-- Judul -->
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; display: block;">Judul / Topik yang Ingin Dipelajari <span style="color:#EF4444;">*</span></label>
+                  <input type="text" class="form-input" v-model="planForm.title" placeholder="cth., Atomic Habits - Rangkuman Konsep Kebiasaan..." style="height: 40px;" />
+                </div>
+
+                <!-- Sumber + Kategori (2 cols) -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                  <div class="form-group" style="margin: 0;">
+                    <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; display: block;">Sumber</label>
+                    <input type="text" class="form-input" v-model="planForm.source" placeholder="cth., Buku, YouTube, Artikel..." style="height: 40px;" />
+                  </div>
+                  <div class="form-group" style="margin: 0;">
+                    <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; display: block;">Kategori <span style="color:#EF4444;">*</span></label>
+                    <select class="form-input" v-model="planForm.category" style="height: 40px; width: 100%;">
+                      <option v-for="cat in allInsightCategories" :key="'plan-cat-'+cat" :value="cat">{{ cat }}</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Link URL -->
+                <div class="form-group" style="margin-bottom: 16px;">
+                  <label style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; display: block;">Link URL <span style="font-weight:400; font-style:italic; text-transform:none; letter-spacing:0;">(opsional)</span></label>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="position: relative; flex: 1;">
+                      <span style="position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;">
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                      </span>
+                      <input type="url" class="form-input" v-model="planForm.url" placeholder="https://..." style="height: 40px; padding-left: 32px;" />
+                    </div>
+                    <a v-if="planForm.url && planForm.url.startsWith('http')" :href="planForm.url" target="_blank" rel="noopener"
+                       style="height: 40px; padding: 0 14px; background: var(--color-sage, #5A8764); color: #fff; border-radius: 8px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; flex-shrink: 0;">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                      Buka
+                    </a>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Modal Footer -->
+              <div style="display: flex; gap: 10px; padding: 12px 24px 18px; border-top: 1.5px solid var(--color-sand-light, #EDE8E1); flex-shrink: 0; background: var(--color-paper, #FAF7F2); align-items: center;">
+                <span style="font-size: 11px; color: var(--text-muted); margin-right: auto;">✦ Klik di luar untuk menutup</span>
+                <button type="button" @click="cancelPlan"
+                  style="padding: 9px 18px; background: transparent; border: 1.5px solid var(--color-sand); color: var(--text-secondary, #7A6F66); border-radius: 9px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: background 0.15s;"
+                  onmouseover="this.style.background='var(--bg-cream)'" onmouseout="this.style.background='transparent'">Batal</button>
+                <button type="button" @click="savePlan"
+                  style="padding: 9px 24px; background: var(--color-sage, #5A8764); color: #fff; border: none; border-radius: 9px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background 0.18s, transform 0.12s; box-shadow: 0 4px 12px rgba(90,135,100,0.25);"
+                  onmouseover="this.style.background='#456B52'; this.style.transform='scale(1.02)'" onmouseout="this.style.background='var(--color-sage, #5A8764)'; this.style.transform='scale(1)'">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  {{ editingPlanId ? 'Simpan Perubahan' : 'Tambah ke Antrian' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </transition>
+
+        <!-- PLAN LIST -->
+        <div v-if="nextPlans.length === 0"
+          style="padding: 40px 20px; text-align: center; color: var(--text-muted); background: var(--bg-cream); border-radius: 12px; border: 1.5px dashed var(--color-sand);">
+          <p style="font-size: 26px; margin-bottom: 8px;">📚</p>
+          <p style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">Antrian kosong</p>
+          <p style="font-size: 12px;">Tambahkan sumber yang ingin kamu pelajari berikutnya!</p>
+        </div>
+
+        <div v-else style="display: flex; flex-direction: column; gap: 10px;">
+          <div v-for="(plan, idx) in nextPlans" :key="plan.id"
+            style="background: var(--color-paper, #FAF7F2); border: 1.5px solid var(--color-sand); border-radius: 12px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px; transition: box-shadow 0.15s;"
+            onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='none'">
+
+            <!-- Plan info -->
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 5px;">
+                <!-- Kategori badge -->
+                <span :style="{ background: getCatColor(plan.category) + '18', color: getCatColor(plan.category), border: '1.5px solid ' + getCatColor(plan.category) + '40' }"
+                  style="border-radius: 20px; padding: 2px 9px; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;">
+                  {{ plan.category }}
+                </span>
+                <!-- Sumber badge -->
+                <span v-if="plan.source"
+                  style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-muted); border-radius: 20px; padding: 2px 9px; font-size: 10.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                  {{ plan.source }}
+                </span>
+                <!-- Link badge -->
+                <a v-if="plan.url && plan.url.startsWith('http')" :href="plan.url" target="_blank" rel="noopener"
+                   style="background: rgba(90,135,100,0.1); border: 1.5px solid rgba(90,135,100,0.3); color: var(--color-sage, #5A8764); border-radius: 20px; padding: 2px 9px; font-size: 10.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; text-decoration: none; transition: background 0.15s;"
+                   onmouseover="this.style.background='rgba(90,135,100,0.2)'" onmouseout="this.style.background='rgba(90,135,100,0.1)'">
+                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  Buka Link
+                </a>
+              </div>
+              <!-- Judul -->
+              <p style="font-size: 13.5px; font-weight: 700; margin: 0; line-height: 1.45; color: var(--text-dark);">{{ plan.title }}</p>
+            </div>
+
+            <!-- Actions -->
+            <div style="display: inline-flex; gap: 5px; flex-shrink: 0; align-items: center; margin-top: 1px;">
+              <!-- Jadi Insight button -->
+              <button @click="convertPlanToInsight(idx)" title="Sudah dipelajari? Jadikan insight baru!"
+                style="background: #FFF4ED; border: 1.5px solid rgba(214,123,82,0.45); border-radius: 6px; padding: 5px 9px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font-size: 11px; font-weight: 700; color: var(--color-terracotta, #D67B52); white-space: nowrap; transition: background 0.15s, border-color 0.15s;"
+                onmouseover="this.style.background='rgba(214,123,82,0.18)'; this.style.borderColor='var(--color-terracotta)'"
+                onmouseout="this.style.background='#FFF4ED'; this.style.borderColor='rgba(214,123,82,0.45)'">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                ✦ Jadi Insight
+              </button>
+              <!-- Edit -->
+              <button @click="startEditPlan(idx)" title="Edit plan"
+                style="background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <!-- Hapus -->
+              <button @click="deletePlan(idx)" title="Hapus plan"
+                style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Footer info -->
+          <p style="font-size: 11.5px; color: var(--text-muted); text-align: right; margin-top: 4px;">
+            {{ nextPlans.length }} plan dalam antrian
+          </p>
+        </div>
+
+      </div>
+      <!-- END PLAN NEXT INSIGHT -->
+
     </div>
   `,
   data() {
@@ -5799,6 +5978,16 @@ const DailyNutrition = {
         title: '',
         details: '',
         takeaway: ''
+      },
+      // Plan Next Insight
+      showAddPlan: false,
+      nextPlans: [],
+      editingPlanId: null,
+      planForm: {
+        title: '',
+        source: '',
+        category: 'Teknologi',
+        url: ''
       }
     };
   },
@@ -5864,6 +6053,12 @@ const DailyNutrition = {
       ];
       this.saveToStorage();
     }
+
+    // Load plan next insights
+    try {
+      const savedPlans = WorkspaceStorage.getItem('personal_workspace_next_plans');
+      if (savedPlans) this.nextPlans = JSON.parse(savedPlans);
+    } catch(e) { this.nextPlans = []; }
   },
   methods: {
     calPrevMonth() { if (this.calMonth === 0) { this.calMonth = 11; this.calYear--; } else this.calMonth--; },
@@ -6008,6 +6203,62 @@ const DailyNutrition = {
     },
     saveToStorage() {
       WorkspaceStorage.setItem('personal_workspace_nutrition_insights', JSON.stringify(this.insights));
+    },
+
+    // ── Plan Next Insight methods ──
+    savePlan() {
+      if (!this.planForm.title || !this.planForm.title.trim()) return alert('Judul wajib diisi!');
+      if (!this.planForm.category) return alert('Kategori wajib dipilih!');
+      if (this.editingPlanId) {
+        const idx = this.nextPlans.findIndex(p => p.id === this.editingPlanId);
+        if (idx !== -1) this.nextPlans[idx] = { ...this.nextPlans[idx], ...this.planForm };
+        this.editingPlanId = null;
+      } else {
+        this.nextPlans.push({ id: 'plan-' + Date.now(), ...this.planForm, createdAt: new Date().toISOString() });
+      }
+      this.savePlansToStorage();
+      this.cancelPlan();
+    },
+    cancelPlan() {
+      this.showAddPlan = false;
+      this.editingPlanId = null;
+      this.planForm = { title: '', source: '', category: this.allInsightCategories[0] || 'Teknologi', url: '' };
+    },
+    startEditPlan(idx) {
+      const plan = this.nextPlans[idx];
+      if (!plan) return;
+      this.editingPlanId = plan.id;
+      this.planForm = { title: plan.title, source: plan.source || '', category: plan.category, url: plan.url || '' };
+      this.showAddPlan = true;
+    },
+    deletePlan(idx) {
+      if (!confirm('Hapus plan ini?')) return;
+      this.nextPlans.splice(idx, 1);
+      this.savePlansToStorage();
+    },
+    convertPlanToInsight(idx) {
+      const plan = this.nextPlans[idx];
+      if (!plan) return;
+      // Pre-fill form insight dengan data dari plan
+      this.editingInsightId = null;
+      this.form = {
+        date: new Date().toISOString().split('T')[0],
+        category: plan.category,
+        source: plan.source || '',
+        url: plan.url || '',
+        title: plan.title,
+        details: '',
+        takeaway: ''
+      };
+      // Hapus dari antrian plan
+      this.nextPlans.splice(idx, 1);
+      this.savePlansToStorage();
+      // Buka modal tambah insight — editor di-sync setelah modal muncul
+      this.showAddLog = true;
+      this.syncEditorContent();
+    },
+    savePlansToStorage() {
+      WorkspaceStorage.setItem('personal_workspace_next_plans', JSON.stringify(this.nextPlans));
     }
   }
 };
