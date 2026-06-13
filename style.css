@@ -5449,13 +5449,13 @@ input:checked + .switch-slider:before {
   position: absolute;
   left: 2px; right: 2px;
   border-radius: 6px;
-  color: #fff;
   font-size: 11px;
+  font-weight: 600;
   padding: 2px 5px;
   cursor: pointer;
   overflow: hidden;
   z-index: 2;
-  box-shadow: 0 2px 6px rgba(44,38,33,0.15);
+  border: 1.2px solid transparent;
   font-family: 'Outfit', sans-serif;
 }
 
@@ -5548,10 +5548,11 @@ input:checked + .switch-slider:before {
   border-bottom: 1px solid rgba(232,223,216,0.7);
 }
 .gcal-agenda-allday-item {
-  font-size: 13px; font-weight: 600; color: #fff;
-  padding: 6px 12px; border-radius: 7px;
+  font-size: 13px; font-weight: 600;
+  padding: 6px 12px; border-radius: 20px;
   font-family: 'Outfit', sans-serif;
   display: flex; align-items: center; gap: 6px;
+  border: 1.2px solid transparent;
 }
 .gcal-agenda-allday-item-title { flex: 1; min-width: 0; }
 
@@ -5560,7 +5561,7 @@ input:checked + .switch-slider:before {
   display: inline-flex; align-items: center; justify-content: center;
   flex-shrink: 0; line-height: 0;
 }
-.gcal-agenda-allday-item .gcal-agenda-check-icon { color: rgba(255,255,255,0.85); }
+.gcal-agenda-allday-item .gcal-agenda-check-icon { color: inherit; opacity: 0.85; }
 .gcal-agenda-block .gcal-agenda-check-icon { color: var(--text-muted); }
 .gcal-agenda-block.gcal-agenda-item-done .gcal-agenda-check-icon,
 .gcal-agenda-allday-item.gcal-agenda-item-done .gcal-agenda-check-icon {
@@ -5632,7 +5633,7 @@ input:checked + .switch-slider:before {
   cursor: pointer;
   overflow: hidden;
   z-index: 2;
-  background: #FFFFFF;
+  background: transparent;
   border: 1.2px solid #E8E2DA;
   font-family: 'Outfit', sans-serif;
   display: flex;
@@ -6485,14 +6486,7 @@ input:checked + .switch-slider:before {
   display: inline-block;
 }
 
-/* Per-type color tinting on week event blocks */
-.gcal-week-ev {
-  border-left: 3px solid rgba(0,0,0,0.18);
-}
-.gcal-week-ev-task   { border-left-color: rgba(255,255,255,0.35); }
-.gcal-week-ev-habit  { border-left-color: rgba(255,255,255,0.35); }
-.gcal-week-ev-manual { border-left-color: rgba(255,255,255,0.35); }
-.gcal-week-ev-event  { border-left-color: rgba(255,255,255,0.35); }
+/* Per-type color tinting handled via inline style (background/border/color from block.color) */
 
 /* Week col clickable feel */
 .gcal-week-col {

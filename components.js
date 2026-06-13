@@ -8498,7 +8498,9 @@ const GoogleCalendar = {
                 :style="{
                   top: block.top + 'px',
                   height: block.height + 'px',
-                  background: block.color,
+                  background: localTintColor(block.color, 0.16),
+                  borderColor: localTintColor(block.color, 0.45),
+                  color: block.color,
                   left: 'calc(' + (block.col * (100/block.totalCols)) + '% + 2px)',
                   width: 'calc(' + (100/block.totalCols) + '% - 4px)',
                   opacity: block.done ? 0.5 : 1
@@ -8534,7 +8536,7 @@ const GoogleCalendar = {
               <div v-for="item in group.allDayItems" :key="item.id"
                 class="gcal-agenda-allday-item"
                 :class="{ 'gcal-agenda-item-done': item.done }"
-                :style="{ background: item.color, cursor: 'pointer' }"
+                :style="{ background: localTintColor(item.color, 0.16), borderColor: localTintColor(item.color, 0.45), color: item.color, cursor: 'pointer' }"
                 @click.stop="item.isTaskPlan ? localGoToLogbook() : (item.actionable ? localHandleAgendaAction(item) : null)"
                 :title="item.isTaskPlan ? 'Buka Job Logbook' : (item.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai')">
                 <span class="gcal-agenda-check-icon"
@@ -8567,7 +8569,9 @@ const GoogleCalendar = {
                   :style="{
                     top: block.top + 'px',
                     height: block.height + 'px',
-                    borderColor: block.color,
+                    background: localTintColor(block.color, 0.14),
+                    borderColor: localTintColor(block.color, 0.5),
+                    color: block.color,
                     left: 'calc(' + (block.col * (100/block.totalCols)) + '% + 2px)',
                     width: 'calc(' + (100/block.totalCols) + '% - 4px)',
                     cursor: 'pointer'
@@ -9122,6 +9126,15 @@ const GoogleCalendar = {
       const m = String(d.getMonth() + 1).padStart(2, '0');
       const day = String(d.getDate()).padStart(2, '0');
       return `${y}-${m}-${day}`;
+    },
+    // ── Helper: ubah warna hex jadi rgba transparan, untuk background pill yang lembut ──
+    localTintColor(hex, alpha) {
+      if (!hex) return `rgba(0,0,0,${alpha})`;
+      const h = hex.replace('#', '');
+      const r = parseInt(h.substring(0,2), 16);
+      const g = parseInt(h.substring(2,4), 16);
+      const b = parseInt(h.substring(4,6), 16);
+      return `rgba(${r},${g},${b},${alpha})`;
     },
     // ── HELPER: ambil semua habit untuk SATU tanggal (hari ini ATAU masa lalu) ──
     // Hari ini  → pakai ws_habit_notifs (sudah include jadwal jam) + status dari ws_notif_action_status
