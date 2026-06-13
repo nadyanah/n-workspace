@@ -5480,6 +5480,7 @@ input:checked + .switch-slider:before {
   font-weight: 400;
 }
 
+.gcal-agenda-block-habit {
   position: absolute;
   left: 2px; right: 2px;
   border-radius: 6px;
