@@ -183,7 +183,7 @@ const App = {
         x: 18,
         y: 64,
         customUrl: '',
-        label: '8. Google Calendar Sync',
+        label: '8. Daily N',
         num: '08'
       },
       financialTracker: {
