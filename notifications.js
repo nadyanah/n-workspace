@@ -897,7 +897,7 @@ const NotificationPanel = {
                     </span>
                     <span v-if="entry.item.isManual && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #fefce8; color: #a16207; border: 1px solid #fde68a;">
                       <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                      edit by n
+                      {{ manualCategoryLabel(entry.item) }}
                     </span>
                     {{ entry.item.done ? 'Sudah dikerjakan ✓' : entry.item.subtitle }}
                   </div>
@@ -972,15 +972,26 @@ const NotificationPanel = {
                     <select v-model="manualForm.page"
                             style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12.5px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box; cursor:pointer;">
                       <option value="">— Tidak ada tujuan —</option>
-                      <option value="jobLogbook">📓 Job Logbook</option>
-                      <option value="calendarMoment">🌍 Calendar Moment</option>
-                      <option value="contentTracker">📱 Content Tracker</option>
-                      <option value="interviewPractice">📞 Interview Practice</option>
-                      <option value="dailyNutrition">🍅 Daily Nutrition</option>
-                      <option value="habitTracker">✅ Habit Tracker</option>
-                      <option value="pomodoroTimer">⏳ Pomodoro Timer</option>
-                      <option value="googleCalendar">📅 Google Calendar</option>
-                      <option value="financialTracker">💳 Financial Tracker</option>
+                      <option value="jobLogbook">Job Logbook</option>
+                      <option value="calendarMoment">Calendar Moment</option>
+                      <option value="contentTracker">Content Tracker</option>
+                      <option value="interviewPractice">Interview Practice</option>
+                      <option value="dailyNutrition">Daily Nutrition</option>
+                      <option value="habitTracker">Habit Tracker</option>
+                      <option value="pomodoroTimer">Pomodoro Timer</option>
+                      <option value="googleCalendar">Google Calendar</option>
+                      <option value="financialTracker">Financial Tracker</option>
+                    </select>
+                  </div>
+
+                  <div style="margin-bottom:12px;">
+                    <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Kategori Pengingat</label>
+                    <select v-model="manualForm.category"
+                            style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12.5px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box; cursor:pointer;">
+                      <option value="manual">Pengingat (Default)</option>
+                      <option v-for="cat in customReminderCategories" :key="cat.key" :value="cat.key">
+                        {{ cat.label }}
+                      </option>
                     </select>
                   </div>
 
@@ -1103,7 +1114,13 @@ const NotificationPanel = {
       contentItems: [],
       actionStatus: {},
       showManualForm: false,
-      manualForm: { title: '', subtitle: '', time: '', page: '' },
+      manualForm: { title: '', subtitle: '', time: '', page: '', category: 'manual' },
+      customReminderCategories: (() => {
+        try {
+          const raw = WorkspaceStorage.getItem('gcal_custom_reminder_categories');
+          return raw ? JSON.parse(raw) : [];
+        } catch(_e) { return []; }
+      })(),
       activeTab: 'today',
       missedLog: [],
       expandedMissedDays: []
@@ -1449,7 +1466,14 @@ const NotificationPanel = {
 
     cancelManualForm() {
       this.showManualForm = false;
-      this.manualForm = { title: '', subtitle: '', time: '', page: '' };
+      this.manualForm = { title: '', subtitle: '', time: '', page: '', category: 'manual' };
+    },
+
+    manualCategoryLabel(item) {
+      const cat = item.category || 'manual';
+      if (cat === 'manual') return 'edit by n';
+      const found = this.customReminderCategories.find(c => c.key === cat);
+      return found ? found.label : 'edit by n';
     },
 
     deleteManualReminder(id) {
@@ -1518,7 +1542,8 @@ const NotificationPanel = {
           title: task.title,
           subtitle: task.subtitle || '',
           time: task.time || '',
-          page: task.page || ''
+          page: task.page || '',
+          category: task.category || 'manual'
         };
         return;
       }
@@ -1566,9 +1591,8 @@ const NotificationPanel = {
         const raw = WorkspaceStorage.getItem('ws_manual_notifs');
         manuals = raw ? JSON.parse(raw) : [];
       } catch(e) { manuals = []; }
-      // Bersihkan yang bukan hari ini
+      // Bersihkan duplikat pengingat hari ini yang sama, pertahankan pengingat tanggal lain
       const today = this.todayStr;
-      manuals = manuals.filter(m => m.date === today);
       manuals.push({
         id,
         date: today,
@@ -1577,6 +1601,7 @@ const NotificationPanel = {
         time: this.manualForm.time,
         timeVal: hh * 60 + (mm || 0),
         page: this.manualForm.page || null,
+        category: this.manualForm.category || 'manual',
         isHabit: false,
         isManual: true
       });

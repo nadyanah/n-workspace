@@ -8404,7 +8404,7 @@ const GoogleCalendar = {
               <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;">
                 <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:14px; font-size:12px; font-weight:600;"
                   :style="{ backgroundColor: agendaFilterColors.manual + '18', color: agendaFilterColors.manual, border: '1px solid ' + agendaFilterColors.manual + '50' }">
-                  🟡 Pengingat (Default)
+                  Pengingat (Default)
                 </span>
                 <span v-for="cat in customReminderCategories" :key="cat.key"
                   style="display:inline-flex; align-items:center; gap:6px; padding:5px 8px 5px 12px; border-radius:14px; font-size:12px; font-weight:600;"
@@ -8666,15 +8666,15 @@ const GoogleCalendar = {
                 <label class="gcal-label">Arahkan ke Halaman (opsional)</label>
                 <select v-model="localNewReminder.page" class="gcal-input" style="cursor:pointer;">
                   <option value="">— Tidak ada tujuan —</option>
-                  <option value="jobLogbook">📓 Job Logbook</option>
-                  <option value="calendarMoment">🌍 Calendar Moment</option>
-                  <option value="contentTracker">📱 Content Tracker</option>
-                  <option value="interviewPractice">📞 Interview Practice</option>
-                  <option value="dailyNutrition">🍅 Daily Nutrition</option>
-                  <option value="habitTracker">✅ Habit Tracker</option>
-                  <option value="pomodoroTimer">⏳ Pomodoro Timer</option>
-                  <option value="googleCalendar">📅 Google Calendar</option>
-                  <option value="financialTracker">💳 Financial Tracker</option>
+                  <option value="jobLogbook">Job Logbook</option>
+                  <option value="calendarMoment">Calendar Moment</option>
+                  <option value="contentTracker">Content Tracker</option>
+                  <option value="interviewPractice">Interview Practice</option>
+                  <option value="dailyNutrition">Daily Nutrition</option>
+                  <option value="habitTracker">Habit Tracker</option>
+                  <option value="pomodoroTimer">Pomodoro Timer</option>
+                  <option value="googleCalendar">Google Calendar</option>
+                  <option value="financialTracker">Financial Tracker</option>
                 </select>
               </div>
 
@@ -8682,9 +8682,9 @@ const GoogleCalendar = {
               <div style="margin-bottom:20px;">
                 <label class="gcal-label">Kategori Pengingat</label>
                 <select v-model="localNewReminder.category" class="gcal-input" style="cursor:pointer;">
-                  <option value="manual">🟡 Pengingat (Default)</option>
+                  <option value="manual">Pengingat (Default)</option>
                   <option v-for="cat in customReminderCategories" :key="cat.key" :value="cat.key">
-                    🏷️ {{ cat.label }}
+                    {{ cat.label }}
                   </option>
                 </select>
               </div>
