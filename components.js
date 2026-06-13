@@ -5782,6 +5782,10 @@ const DailyNutrition = {
                   <button class="card-nav-btn" @click="deleteInsight(idx)" title="Hapus insight" style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
                     <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                   </button>
+                  <button class="card-nav-btn" @click="viewInsightDetail(ins)" title="Buka detail lengkap"
+                    style="background: #FFF4ED; border: 1.5px solid #F5C8A8; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+                  </button>
                   <button class="card-nav-btn" @click="toggleInsightExpand(ins.id || idx)" :title="expandedInsights.has(ins.id || idx) ? 'Sembunyikan detail' : 'Lihat detail'"
                     style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
                     <svg :style="{ transform: expandedInsights.has(ins.id || idx) ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s' }"
@@ -5819,6 +5823,57 @@ const DailyNutrition = {
           </div>
         </div>
       </div>
+
+      <!-- DETAIL INSIGHT POPUP (Card khusus, scrollable) -->
+      <transition name="insight-modal-fade">
+        <div v-if="viewingInsight"
+          style="position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; background: rgba(30,22,16,0.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 16px;"
+          @click.self="closeInsightDetail">
+          <div style="background: var(--color-paper, #FAF7F2); width: min(720px, 96vw); max-height: 88vh; border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.12); display: flex; flex-direction: column; overflow: hidden; animation: insightPopIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+
+            <!-- Header -->
+            <div style="display: flex; align-items: flex-start; gap: 12px; padding: 18px 24px; background: var(--color-terracotta, #D67B52); color: #fff; flex-shrink: 0;">
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px;">
+                  <span style="background: rgba(255,255,255,0.2); border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700;">{{ viewingInsight.category }}</span>
+                  <span v-if="viewingInsight.source" style="background: rgba(255,255,255,0.15); border-radius: 20px; padding: 2px 10px; font-size: 10.5px; font-weight: 600;">{{ viewingInsight.source }}</span>
+                  <span style="font-size: 11px; opacity: 0.85;">{{ formatDate(viewingInsight.date) }}</span>
+                </div>
+                <div style="font-size: 17px; font-weight: 800; line-height: 1.4;">{{ viewingInsight.title }}</div>
+              </div>
+              <button @click="closeInsightDetail"
+                style="background: rgba(255,255,255,0.18); border: none; border-radius: 10px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 17px; flex-shrink: 0; transition: background 0.15s;"
+                onmouseover="this.style.background='rgba(255,255,255,0.32)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">✕</button>
+            </div>
+
+            <!-- Body (scrollable) -->
+            <div style="overflow-y: auto; padding: 22px 26px; flex: 1;">
+              <a v-if="viewingInsight.url && viewingInsight.url.startsWith('http')" :href="viewingInsight.url" target="_blank" rel="noopener"
+                 style="display: inline-flex; align-items: center; gap: 6px; background: rgba(214,123,82,0.1); border: 1.5px solid rgba(214,123,82,0.3); color: var(--color-terracotta,#D67B52); border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 600; text-decoration: none; margin-bottom: 16px;">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Buka Link Sumber
+              </a>
+              <div class="insight-rich-content" style="font-size: 14px; color: var(--text-dark); line-height: 1.8; margin-bottom: 20px;" v-html="viewingInsight.details"></div>
+              <div style="height: 1px; background: var(--color-sand); margin-bottom: 16px;"></div>
+              <div style="display: flex; gap: 10px; align-items: flex-start; background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 12px; padding: 14px 16px;">
+                <span style="font-size: 18px; flex-shrink: 0; margin-top: 1px;">💡</span>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-sage); margin-bottom: 6px;">Takeaway</div>
+                  <div style="font-size: 13.5px; color: var(--text-dark); line-height: 1.75;" v-html="viewingInsight.takeaway"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="display: flex; gap: 10px; padding: 14px 26px 18px; border-top: 1.5px solid var(--color-sand-light, #EDE8E1); flex-shrink: 0; background: var(--color-paper, #FAF7F2); align-items: center; justify-content: flex-end;">
+              <button type="button" @click="closeInsightDetail"
+                style="padding: 10px 22px; background: transparent; border: 1.5px solid var(--color-sand); color: var(--text-secondary, #7A6F66); border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s;"
+                onmouseover="this.style.background='var(--bg-cream)'" onmouseout="this.style.background='transparent'">Tutup</button>
+            </div>
+
+          </div>
+        </div>
+      </transition>
 
       <!-- ══════════════════════════════════════════════════════════ -->
       <!-- PLAN NEXT INSIGHT SECTION                                  -->
@@ -6016,6 +6071,7 @@ const DailyNutrition = {
       insights: [],
       expandedInsights: new Set(),
       editingInsightId: null,
+      viewingInsight: null,
       form: {
         date: new Date().toISOString().split('T')[0],
         category: 'Teknologi',
@@ -6269,6 +6325,12 @@ const DailyNutrition = {
       const s = new Set(this.expandedInsights);
       if (s.has(id)) { s.delete(id); } else { s.add(id); }
       this.expandedInsights = s;
+    },
+    viewInsightDetail(ins) {
+      this.viewingInsight = ins;
+    },
+    closeInsightDetail() {
+      this.viewingInsight = null;
     },
     saveToStorage() {
       WorkspaceStorage.setItem('personal_workspace_nutrition_insights', JSON.stringify(this.insights));
@@ -7211,6 +7273,7 @@ const HabitTracker = {
       this.toggleDayCheck(habitId, day);
     },
     toggleDayCheck(habitId, day) {
+      let nowChecked = false;
       this.habits = this.habits.map(h => {
         if (h.id !== habitId) return h;
         const historyCopy = { ...h.history };
@@ -7218,13 +7281,47 @@ const HabitTracker = {
         let newChecked;
         if (checkedList.includes(day)) {
           newChecked = checkedList.filter(d => d !== day);
+          nowChecked = false;
         } else {
           newChecked = [...checkedList, day].sort((a, b) => a - b);
+          nowChecked = true;
         }
         historyCopy[this.currentYearMonth] = newChecked;
         return { ...h, history: historyCopy };
       });
       this.saveToStorage();
+
+      // Kalau hari yang ditoggle adalah HARI INI, sinkronkan juga status-nya ke
+      // ws_notif_action_status supaya Panel Notifikasi & Agenda View (Google Calendar) ikut update.
+      this.syncTodayStatusToNotif(habitId, day, nowChecked);
+    },
+    // ── Sinkronisasi checklist hari-ini dari tabel Habit → ws_notif_action_status ──
+    // Memberi tahu Notification Panel & Agenda View (Google Calendar) via event,
+    // sehingga ketika trigger berasal dari tabel Habit, kedua tampilan tersebut ikut berubah.
+    syncTodayStatusToNotif(habitId, day, checked) {
+      const now = new Date();
+      const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      // hanya sinkron kalau yang ditoggle adalah tanggal hari ini di bulan yang sedang aktif
+      if (day !== now.getDate() || this.currentYearMonth !== ym) return;
+
+      const todayStr = `${ym}-${String(now.getDate()).padStart(2, '0')}`;
+      const notifId = 'habit_' + habitId;
+      try {
+        const raw = WorkspaceStorage.getItem('ws_notif_action_status');
+        const status = raw ? JSON.parse(raw) : {};
+        if (!status[todayStr]) status[todayStr] = {};
+        if (checked) {
+          status[todayStr][notifId] = true;
+        } else {
+          delete status[todayStr][notifId];
+        }
+        WorkspaceStorage.setItem('ws_notif_action_status', JSON.stringify(status));
+      } catch(_e) { /* ignore */ }
+
+      // Beri tahu Panel Notifikasi & Agenda View (Google Calendar) untuk refresh status
+      globalThis.dispatchEvent(new CustomEvent('ws-notif-status-updated', {
+        detail: { date: todayStr, id: notifId, habitId, done: checked, source: 'habitTracker' }
+      }));
     },
     createHabit() {
       if (!this.form.name.trim()) return;
@@ -8636,11 +8733,12 @@ const GoogleCalendar = {
                 class="gcal-agenda-allday-item"
                 :class="{ 'gcal-agenda-item-done': item.done }"
                 :style="{ background: localTintColor(item.color, 0.16), borderColor: localTintColor(item.color, 0.45), color: item.color, cursor: 'pointer' }"
-                @click.stop="item.isTaskPlan ? localGoToLogbook() : (item.actionable ? localHandleAgendaAction(item) : null)"
-                :title="item.isTaskPlan ? 'Buka Job Logbook' : (item.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai')">
+                @click.stop="item.isTaskPlan ? localGoToLogbook() : (item.type === 'habit' ? localGoToHabitTracker() : (item.actionable ? localHandleAgendaAction(item) : null))"
+                :title="item.isTaskPlan ? 'Buka Job Logbook' : (item.type === 'habit' ? 'Klik untuk buka Habit Tracker · klik bulet untuk tandai selesai' : (item.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai'))">
                 <span class="gcal-agenda-check-icon"
                   @click.stop="item.actionable ? localHandleAgendaAction(item) : null"
-                  style="cursor:pointer;">
+                  style="cursor:pointer;"
+                  :title="item.actionable ? (item.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai') : ''">
                   <svg v-if="item.done" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>
                   <svg v-else-if="item.actionable" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
                   <span v-else-if="item.type==='task'">📋</span>
@@ -8675,8 +8773,8 @@ const GoogleCalendar = {
                     width: 'calc(' + (100/block.totalCols) + '% - 4px)',
                     cursor: 'pointer'
                   }"
-                  :title="block.isTaskPlan ? 'Buka Job Logbook' : (block.actionable ? (block.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai') : block.title + ' (' + block.startLabel + ' - ' + block.endLabel + ')')"
-                  @click.stop="block.isTaskPlan ? localGoToLogbook() : (block.actionable ? localHandleAgendaAction(block) : (block.type==='event' && localDeleteEvent(block.raw)))"
+                  :title="block.isTaskPlan ? 'Buka Job Logbook' : (block.type === 'habit' ? 'Klik untuk buka Habit Tracker · klik bulet untuk tandai selesai' : (block.actionable ? (block.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai') : block.title + ' (' + block.startLabel + ' - ' + block.endLabel + ')'))"
+                  @click.stop="block.isTaskPlan ? localGoToLogbook() : (block.type === 'habit' ? localGoToHabitTracker() : (block.actionable ? localHandleAgendaAction(block) : (block.type==='event' && localDeleteEvent(block.raw))))"
                 >
                   <span v-if="block.actionable" class="gcal-agenda-check-icon"
                     @click.stop="localHandleAgendaAction(block)"
@@ -9247,6 +9345,10 @@ const GoogleCalendar = {
     this.localCurDate = new Date();
     this._onPlansUpdated = () => { this.localStorageTick++; };
     globalThis.addEventListener('ws-plans-updated', this._onPlansUpdated);
+    // Refresh agenda view kalau status selesai (ws_notif_action_status) berubah dari
+    // tempat lain (Panel Notifikasi atau Tabel Habit), supaya block agenda ikut update.
+    this._onNotifStatusUpdated = () => { this.localStorageTick++; };
+    globalThis.addEventListener('ws-notif-status-updated', this._onNotifStatusUpdated);
     // Pastikan setiap kategori custom punya state filter & warna default
     this.customReminderCategories.forEach(cat => {
       if (!(cat.key in this.agendaFilters)) this.agendaFilters[cat.key] = true;
@@ -9255,6 +9357,7 @@ const GoogleCalendar = {
   },
   beforeUnmount() {
     globalThis.removeEventListener('ws-plans-updated', this._onPlansUpdated);
+    globalThis.removeEventListener('ws-notif-status-updated', this._onNotifStatusUpdated);
   },
   methods: {
     // ── Custom warna kategori filter agenda ──
@@ -9348,6 +9451,10 @@ const GoogleCalendar = {
     localGoToLogbook() {
       globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'jobLogbook' }));
     },
+    // ── Navigasi ke halaman Habit Tracker (klik area block habit, di luar bullet checklist) ──
+    localGoToHabitTracker() {
+      globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'habitTracker' }));
+    },
     // ============ LOCAL CALENDAR METHODS ============
     // Task Plan → toggle done langsung di storage (tanpa navigasi, agar checklist lain tidak hilang)
     // Habit/Manual → toggle done via ws_notif_action_status
@@ -9386,6 +9493,11 @@ const GoogleCalendar = {
         WorkspaceStorage.setItem('ws_notif_action_status', JSON.stringify(s));
         this.localStorageTick++;
         if (nowDone && typeof NotifSound !== 'undefined') NotifSound.playCheck && NotifSound.playCheck();
+        // Beri tahu Panel Notifikasi (dan komponen lain) bahwa status selesai berubah,
+        // supaya badge & daftar di panel notif langsung ikut update.
+        globalThis.dispatchEvent(new CustomEvent('ws-notif-status-updated', {
+          detail: { date: ds, id: storageKey, done: nowDone, source: 'agendaView' }
+        }));
       } catch(_e) { /* ignore */ }
 
       // Jika item ini habit, sinkronkan juga ke tabel Habit Tracker (centang/uncentang hari ini)

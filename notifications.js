@@ -1350,10 +1350,19 @@ const NotificationPanel = {
       this.todayStr = newDay;
       this.loadData();
     }, 60000);
+
+    // Refresh panel kalau status selesai (ws_notif_action_status) berubah dari
+    // luar (Agenda View / Tabel Habit), supaya badge & checklist di panel ikut update.
+    this._onNotifStatusUpdated = (e) => {
+      if (e && e.detail && e.detail.source === 'notifPanel') return; // hindari refresh diri sendiri
+      this.loadData();
+    };
+    window.addEventListener('ws-notif-status-updated', this._onNotifStatusUpdated);
   },
 
   beforeUnmount() {
     clearInterval(this._interval);
+    window.removeEventListener('ws-notif-status-updated', this._onNotifStatusUpdated);
   },
 
   methods: {
@@ -1430,9 +1439,17 @@ const NotificationPanel = {
               return { ...h, history: hist };
             });
             WorkspaceStorage.setItem('aesthetic_habit_tracker_habits', JSON.stringify(updated));
+            // Beri tahu Tabel Habit (kalau sedang aktif) untuk reload data
+            window.dispatchEvent(new CustomEvent('ws-plans-updated'));
           }
         } catch(e) {}
       }
+
+      // Beri tahu Agenda View (Google Calendar) bahwa status selesai berubah,
+      // supaya block di agenda view ikut update tanpa perlu reload halaman.
+      window.dispatchEvent(new CustomEvent('ws-notif-status-updated', {
+        detail: { date: this.todayStr, id: notif.id, done: true, source: 'notifPanel' }
+      }));
 
       // Emit count terbaru supaya badge langsung berkurang
       this.$nextTick(() => {
