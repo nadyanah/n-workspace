@@ -6346,7 +6346,69 @@ input:checked + .switch-slider:before {
   color: var(--text-muted, #A09080);
   font-family: 'Outfit', sans-serif;
   transition: color 0.12s;
+  flex: 1;
+  min-width: 0;
 }
+
+/* ── Per-category color picker (custom warna filter agenda) ── */
+.gcal-filter-color-picker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid var(--color-sand, #E8DDD0);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.12s;
+}
+.gcal-filter-color-picker:hover {
+  border-color: var(--color-terracotta, #D67B52);
+  transform: scale(1.06);
+}
+.gcal-filter-color-input {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  margin: -3px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+.gcal-filter-color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.gcal-filter-color-input::-webkit-color-swatch {
+  border: none;
+}
+
+.gcal-filter-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  color: var(--text-muted, #A09080);
+  background: none;
+  border: 1px dashed var(--color-sand, #E8DDD0);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.gcal-filter-reset-btn:hover {
+  color: var(--color-terracotta, #D67B52);
+  border-color: var(--color-terracotta, #D67B52);
+}
+
 
 /* Slide-in animation for the filter bar */
 .agenda-filter-slide-enter-active,

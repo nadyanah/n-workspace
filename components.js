@@ -8345,6 +8345,46 @@ const GoogleCalendar = {
             Keluar
           </button>
         </div>
+
+        <!-- ========== AGENDA FILTER (custom color per kategori) ========== -->
+        <transition name="agenda-filter-slide">
+          <div v-if="localView==='agenda'" class="gcal-agenda-filter-bar" style="flex: 1 0 100%; width: 100%;">
+            <div class="gcal-agenda-filter-header" @click="agendaFilterOpen = !agendaFilterOpen">
+              <div style="display:flex; align-items:center; gap:7px;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-terracotta);"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                <span style="font-size:11.5px; font-weight:700; color:var(--text-dark);">Tampilkan di agenda</span>
+                <span v-if="agendaActiveFilterCount < 3" class="gcal-filter-active-badge">{{ agendaActiveFilterCount }}/3</span>
+              </div>
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                   :style="{ transition:'transform 0.2s', transform: agendaFilterOpen ? 'rotate(180deg)' : 'rotate(0deg)', color:'var(--text-muted)' }">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+            <transition name="agenda-filter-expand">
+              <div v-if="agendaFilterOpen" class="gcal-agenda-filter-list">
+                <label v-for="f in agendaFilterOptions" :key="f.key" class="gcal-agenda-filter-item" :class="{ checked: agendaFilters[f.key] }">
+                  <span class="gcal-filter-checkbox" :style="{ borderColor: agendaFilterColors[f.key], background: agendaFilters[f.key] ? agendaFilterColors[f.key] : 'transparent' }" @click.prevent="agendaFilters[f.key] = !agendaFilters[f.key]">
+                    <svg v-if="agendaFilters[f.key]" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <span class="gcal-filter-dot" :style="{ background: agendaFilterColors[f.key] }"></span>
+                  <span class="gcal-filter-label">{{ f.label }}</span>
+                  <span class="gcal-filter-color-picker" @click.stop title="Pilih warna kategori ini">
+                    <input
+                      type="color"
+                      class="gcal-filter-color-input"
+                      :value="agendaFilterColors[f.key]"
+                      @input="localUpdateFilterColor(f.key, $event.target.value)"
+                    />
+                  </span>
+                </label>
+                <button type="button" class="gcal-filter-reset-btn" @click.stop="localResetFilterColors()" title="Kembalikan warna default">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></svg>
+                  Reset warna
+                </button>
+              </div>
+            </transition>
+          </div>
+        </transition>
       </div>
 
       <!-- LOCAL CALENDAR VIEW (always shown, no auth needed) -->
@@ -8370,34 +8410,6 @@ const GoogleCalendar = {
             </button>
           </div>
         </div>
-
-        <!-- ========== AGENDA FILTER ========== -->
-        <transition name="agenda-filter-slide">
-          <div v-if="localView==='agenda'" class="gcal-agenda-filter-bar">
-            <div class="gcal-agenda-filter-header" @click="agendaFilterOpen = !agendaFilterOpen">
-              <div style="display:flex; align-items:center; gap:7px;">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-terracotta);"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                <span style="font-size:11.5px; font-weight:700; color:var(--text-dark);">Tampilkan di agenda</span>
-                <span v-if="agendaActiveFilterCount < 3" class="gcal-filter-active-badge">{{ agendaActiveFilterCount }}/3</span>
-              </div>
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                   :style="{ transition:'transform 0.2s', transform: agendaFilterOpen ? 'rotate(180deg)' : 'rotate(0deg)', color:'var(--text-muted)' }">
-                <polyline points="6 9 12 15 18 9"/>
-              </svg>
-            </div>
-            <transition name="agenda-filter-expand">
-              <div v-if="agendaFilterOpen" class="gcal-agenda-filter-list">
-                <label v-for="f in agendaFilterOptions" :key="f.key" class="gcal-agenda-filter-item" :class="{ checked: agendaFilters[f.key] }">
-                  <span class="gcal-filter-checkbox" :style="{ borderColor: f.color, background: agendaFilters[f.key] ? f.color : 'transparent' }" @click.prevent="agendaFilters[f.key] = !agendaFilters[f.key]">
-                    <svg v-if="agendaFilters[f.key]" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  </span>
-                  <span class="gcal-filter-dot" :style="{ background: f.color }"></span>
-                  <span class="gcal-filter-label">{{ f.label }}</span>
-                </label>
-              </div>
-            </transition>
-          </div>
-        </transition>
 
         <!-- Success / Error toast -->
         <div v-if="localSuccess" class="gcal-toast gcal-toast-success">
@@ -8573,9 +8585,9 @@ const GoogleCalendar = {
 
         <!-- LEGEND -->
         <div v-if="localView==='agenda'" class="gcal-notif-legend" style="margin-top:8px;">
-          <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" style="background:var(--color-terracotta);"></span>Task Plan</span>
-          <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" style="background:var(--color-sage);"></span>Habit</span>
-          <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" style="background:#F59E0B;"></span>Pengingat</span>
+          <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" :style="{ background: agendaFilterColors.task }"></span>Task Plan</span>
+          <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" :style="{ background: agendaFilterColors.habit }"></span>Habit</span>
+          <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" :style="{ background: agendaFilterColors.manual }"></span>Pengingat</span>
           <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" style="background:#4285F4;"></span>Acara</span>
         </div>
 
@@ -8834,6 +8846,14 @@ const GoogleCalendar = {
         { key: 'habit',  label: 'Habit (Habit Tracker)',   color: '#A3B18A' },
         { key: 'manual', label: 'Pengingat (edit by n)',   color: '#F59E0B' },
       ],
+      // Warna kustom per kategori filter agenda (bisa diubah lewat color picker)
+      agendaFilterColors: (() => {
+        const defaults = { task: '#D67B52', habit: '#A3B18A', manual: '#F59E0B' };
+        try {
+          const raw = WorkspaceStorage.getItem('gcal_agenda_filter_colors');
+          return raw ? { ...defaults, ...JSON.parse(raw) } : { ...defaults };
+        } catch(_e) { return { ...defaults }; }
+      })(),
       localSuccess: null,
       localError: null,
       localColors: [
@@ -8948,7 +8968,7 @@ const GoogleCalendar = {
       const ds = selectedDate;
       const dt = new Date(ds + 'T12:00:00');
       const isToday = ds === todayStr;
-      const TYPE_COLORS = { task: '#D67B52', habit: '#A3B18A', manual: '#F59E0B' };
+      const TYPE_COLORS = this.agendaFilterColors;
       // Active filters
       const showTask   = this.agendaFilters.task;
       const showHabit  = this.agendaFilters.habit;
@@ -9095,6 +9115,17 @@ const GoogleCalendar = {
     globalThis.removeEventListener('ws-plans-updated', this._onPlansUpdated);
   },
   methods: {
+    // ── Custom warna kategori filter agenda ──
+    localUpdateFilterColor(key, value) {
+      this.agendaFilterColors = { ...this.agendaFilterColors, [key]: value };
+      try { WorkspaceStorage.setItem('gcal_agenda_filter_colors', JSON.stringify(this.agendaFilterColors)); } catch(_e) { /* ignore */ }
+      this.localStorageTick++;
+    },
+    localResetFilterColors() {
+      this.agendaFilterColors = { task: '#D67B52', habit: '#A3B18A', manual: '#F59E0B' };
+      try { WorkspaceStorage.setItem('gcal_agenda_filter_colors', JSON.stringify(this.agendaFilterColors)); } catch(_e) { /* ignore */ }
+      this.localStorageTick++;
+    },
     // ── FIX: format Date object ke 'YYYY-MM-DD' berdasarkan LOCAL timezone,
     // bukan UTC seperti toISOString(). Mencegah tanggal "geser" mundur 1 hari
     // saat user berada di timezone +UTC (misal WIB) terutama tengah malam.
@@ -9221,7 +9252,7 @@ const GoogleCalendar = {
       void this.localStorageTick;
       const todayStr = this.localFmtDate(new Date());
       const isToday = dateStr === todayStr;
-      const TYPE_COLORS = { task: '#D67B52', habit: '#A3B18A', manual: '#F59E0B', event: '#4285F4' };
+      const TYPE_COLORS = { ...this.agendaFilterColors, event: '#4285F4' };
       let actionStatus = {};
       try {
         const raw = WorkspaceStorage.getItem('ws_notif_action_status');
@@ -9296,9 +9327,9 @@ const GoogleCalendar = {
     localDotsForDate(dateStr) {
       const items = this.localAllItemsForDate(dateStr);
       const typeMeta = {
-        task:   { color: '#D67B52', label: 'Task Plan' },
-        habit:  { color: '#A3B18A', label: 'Habit' },
-        manual: { color: '#F59E0B', label: 'Pengingat' },
+        task:   { color: this.agendaFilterColors.task,   label: 'Task Plan' },
+        habit:  { color: this.agendaFilterColors.habit,  label: 'Habit' },
+        manual: { color: this.agendaFilterColors.manual, label: 'Pengingat' },
         event:  { color: '#4285F4', label: 'Acara' },
       };
       const counts = {};
