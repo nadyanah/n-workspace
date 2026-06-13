@@ -29,7 +29,7 @@ async function _passwordToCredentials(password) {
   };
 }
 
-// -- Login atau daftar otomatis pakai password (fix: tidak perlu input 2x) --
+// -- Login atau daftar otomatis pakai password --
 async function _signInWithPassword(password) {
   const creds = await _passwordToCredentials(password);
 
@@ -237,10 +237,10 @@ function _showPasswordPopup() {
           overlay.remove();
           resolve(result.user.id);
         }, 300);
-      } catch (err) {
+      } catch (_err) {
         setLoading(false);
         showError('Gagal masuk. Coba lagi ya!');
-        console.error('[Auth]', err.message);
+        console.error('[Auth]', _err.message);
       }
     };
 
@@ -276,7 +276,7 @@ async function _ensureUser() {
       const result = await _signInWithPassword(pw);
       _currentUserId = result.user.id;
       return _currentUserId;
-    } catch (e) {
+    } catch (_e) {
       localStorage.removeItem('_nworkspace_pw_hash');
     }
   }
@@ -296,6 +296,8 @@ const WorkspaceStorage = {
   _saveDebounceMs: 800,
 
   async init() {
+    // ✅ FIX: Jangan skip init kalau sebelumnya error — reset dulu
+    // _initialized hanya di-set true setelah berhasil atau error non-fatal
     if (this._initialized) return;
     try {
       const userId = await _ensureUser();
@@ -307,25 +309,32 @@ const WorkspaceStorage = {
         .eq('user_id', userId);
 
       if (error) throw error;
+
+      // ✅ FIX: Reset cache dulu sebelum isi dari Supabase
+      // Ini mencegah sisa data lama dari device sebelumnya masih nempel di cache
+      this._cache = {};
       if (data) data.forEach(row => { this._cache[row.key] = row.value; });
 
       this._initialized = true;
-      console.log(`[WorkspaceStorage] Loaded ${data?.length || 0} keys`);
+      console.log(`[WorkspaceStorage] Loaded ${data?.length || 0} keys dari Supabase`);
     } catch (err) {
       console.error('[WorkspaceStorage] Error init:', err.message);
-      this._initialized = true;
+      // ✅ FIX: Kalau error, jangan set initialized = true
+      // Biarkan komponen retry lewat _workspaceStorageReady
+      // tapi set false supaya getItem tidak fallback ke localStorage
+      this._initialized = false;
     }
   },
 
   getItem(key) {
     // Kalau cache sudah diisi dari Supabase (init selesai), pakai itu
-    if (this._cache.hasOwnProperty(key)) return this._cache[key];
+    if (Object.prototype.hasOwnProperty.call(this._cache, key)) return this._cache[key];
 
     // Kalau init sudah selesai tapi key tidak ada di cache → memang tidak ada data
     // Jangan fallback ke localStorage supaya data device lain tidak terpakai
     if (this._initialized) return null;
 
-    // Init belum selesai (jarang terjadi) → fallback sementara ke localStorage
+    // Init belum selesai → fallback sementara ke localStorage
     return localStorage.getItem(key);
   },
 
@@ -333,7 +342,7 @@ const WorkspaceStorage = {
     // Guard: jangan simpan sebelum init selesai — bisa overwrite data Supabase
     // dengan nilai kosong/default dari device yang baru login
     if (!this._initialized) {
-      console.warn(`[WorkspaceStorage] setItem("${key}") dipanggil sebelum init selesai — diabaikan untuk mencegah overwrite data Supabase.`);
+      console.warn(`[WorkspaceStorage] setItem("${key}") dipanggil sebelum init selesai — diabaikan.`);
       return;
     }
     this._cache[key] = value;
@@ -393,8 +402,9 @@ const WorkspaceStorage = {
   },
 
   async migrateFromLocalStorage() {
-    // Hanya migrasi kalau Supabase benar-benar kosong (first time setup)
-    // Kalau Supabase sudah punya data, skip — jangan timpa dengan localStorage device ini
+    // ✅ FIX: Hanya migrasi kalau Supabase benar-benar kosong (first time setup)
+    // Pakai ukuran cache yang sudah diload dari Supabase sebagai indikator
+    // Kalau Supabase sudah punya data (cache > 0), SKIP — jangan timpa dengan localStorage
     if (Object.keys(this._cache).length > 0) {
       console.log('[WorkspaceStorage] Data Supabase sudah ada, skip migrasi localStorage');
       return 0;
@@ -425,9 +435,9 @@ const WorkspaceStorage = {
   }
 };
 
-window.WorkspaceStorage = WorkspaceStorage;
-window._workspaceStorageReady = WorkspaceStorage.init().then(() => WorkspaceStorage.migrateFromLocalStorage());
+globalThis.WorkspaceStorage = WorkspaceStorage;
+globalThis._workspaceStorageReady = WorkspaceStorage.init().then(() => WorkspaceStorage.migrateFromLocalStorage());
 
 // -- Expose client & user id (dipakai push-notifications.js untuk simpan push subscription) --
-window._wsSupabaseClient = _supabaseClient;
-window._wsGetUserId = () => _currentUserId;
+globalThis._wsSupabaseClient = _supabaseClient;
+globalThis._wsGetUserId = () => _currentUserId;

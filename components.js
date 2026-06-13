@@ -1434,8 +1434,8 @@ const JobLogbook = {
         return matchesQuery && matchesCategory && matchesDates;
       })];
       sorted.sort((a, b) => {
-        let valA = this.sortBy === 'date' ? new Date(a[this.sortBy] || 0) : (a[this.sortBy] || '').toString().toLowerCase();
-        let valB = this.sortBy === 'date' ? new Date(b[this.sortBy] || 0) : (b[this.sortBy] || '').toString().toLowerCase();
+        const valA = this.sortBy === 'date' ? new Date(a[this.sortBy] || 0) : (a[this.sortBy] || '').toString().toLowerCase();
+        const valB = this.sortBy === 'date' ? new Date(b[this.sortBy] || 0) : (b[this.sortBy] || '').toString().toLowerCase();
         if (valA < valB) return this.sortDesc ? 1 : -1;
         if (valA > valB) return this.sortDesc ? -1 : 1;
         return 0;
@@ -1500,26 +1500,26 @@ const JobLogbook = {
   },
   async created() {
     // ✅ FIX: Tunggu Supabase storage siap sebelum baca data
-    await window._workspaceStorageReady;
+    await globalThis._workspaceStorageReady;
 
     // Load Logbook Data
     const savedCats = WorkspaceStorage.getItem('personal_workspace_job_categories');
-    if (savedCats) { try { this.customCategories = JSON.parse(savedCats); } catch (e) { this.customCategories = []; } }
+    if (savedCats) { try { this.customCategories = JSON.parse(savedCats); } catch (_e) { this.customCategories = []; } }
     const savedPlans = WorkspaceStorage.getItem('personal_workspace_job_plans');
-    if (savedPlans) { try { this.plans = JSON.parse(savedPlans); } catch (e) { this.plans = []; } }
+    if (savedPlans) { try { this.plans = JSON.parse(savedPlans); } catch (_e) { this.plans = []; } }
     const saved = WorkspaceStorage.getItem('personal_workspace_job_logs');
     if (saved) {
       try {
         this.logs = JSON.parse(saved);
         this.logs.forEach((l, i) => { if (!l.id) l.id = 'log-' + i + '-' + Date.now(); });
-      } catch (e) { this.logs = []; }
+      } catch (_e) { this.logs = []; }
     }
     
     // Load Notes Data
     const savedNotes = WorkspaceStorage.getItem('personal_workspace_job_notes');
-    if (savedNotes) { try { this.notes = JSON.parse(savedNotes); } catch(e) { this.notes = []; } }
+    if (savedNotes) { try { this.notes = JSON.parse(savedNotes); } catch(_e) { this.notes = []; } }
     const savedNoteCats = WorkspaceStorage.getItem('personal_workspace_job_note_cats');
-    if (savedNoteCats) { try { this.noteCategories = JSON.parse(savedNoteCats); } catch(e) {} }
+    if (savedNoteCats) { try { this.noteCategories = JSON.parse(savedNoteCats); } catch(_e) { /* ignore */ } }
   },
   methods: {
     // ── Logbook Methods (Existing) ──
@@ -1631,7 +1631,7 @@ const JobLogbook = {
       if (this.pendingNextActionSourceLogId) {
         const src = this.logs.find(l => l.id === this.pendingNextActionSourceLogId);
         if (src) {
-          const actions = this.getNextActions(src);
+          this.getNextActions(src); // compute but result used implicitly via src reference
           const idx2 = this.pendingNextActionItemIdx;
           if (src.nextActions && idx2 >= 0 && idx2 < src.nextActions.length) {
             src.nextActions[idx2].completed = true;
@@ -1706,7 +1706,7 @@ const JobLogbook = {
     },
     savePlansToStorage() {
       WorkspaceStorage.setItem('personal_workspace_job_plans', JSON.stringify(this.plans));
-      window.dispatchEvent(new CustomEvent('ws-plans-updated'));
+      globalThis.dispatchEvent(new CustomEvent('ws-plans-updated'));
     },
     rangeCalPrevMonth() { if (this.rangeCalMonth === 0) { this.rangeCalMonth = 11; this.rangeCalYear--; } else this.rangeCalMonth--; },
     rangeCalNextMonth() { if (this.rangeCalMonth === 11) { this.rangeCalMonth = 0; this.rangeCalYear++; } else this.rangeCalMonth++; },
@@ -1759,7 +1759,7 @@ const JobLogbook = {
     },
     formatDate(d) {
       try { return new Date(d).toLocaleDateString('id-ID', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }); }
-      catch (e) { return d; }
+      catch (_e) { return d; }
     },
     getCategoryColor(cat) {
       const colors = { 'Administrasi': '#4F46E5', 'HR Operational': '#10B981', 'Coding': '#06B6D4', 'Design': '#EC4899', 'Lainnya': '#6B7280' };
@@ -1872,8 +1872,8 @@ const JobLogbook = {
       this.logNextActionItem(log, 0);
     },
     syncToContent(log) {
-      window.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'contentTracker' }));
-      setTimeout(() => { window.dispatchEvent(new CustomEvent('sync-logbook-content', { detail: { tasks: log.tasks, achievements: log.achievements, category: log.category } })); }, 250);
+      globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'contentTracker' }));
+      setTimeout(() => { globalThis.dispatchEvent(new CustomEvent('sync-logbook-content', { detail: { tasks: log.tasks, achievements: log.achievements, category: log.category } })); }, 250);
     },
     deleteLogById(id) {
       if (confirm('Yakin ingin menghapus catatan log kerja ini?')) { this.logs = this.logs.filter(l => l.id !== id && l.date !== id); this.saveToStorage(); }
@@ -1889,7 +1889,7 @@ const JobLogbook = {
       XLSX.writeFile(workbook, 'Job_Logbook_' + new Date().toISOString().slice(0, 10) + '.xlsx');
     },
     exportToPDF() {
-      const { jsPDF } = window.jspdf;
+      const { jsPDF } = globalThis.jspdf;
       const doc = new jsPDF();
       doc.setFont('Helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor(44, 38, 33);
       doc.text('Aesthetic Job Logbook', 14, 18);
@@ -2909,7 +2909,7 @@ const CalendarMoment = {
   },
   async created() {
     // ✅ FIX: Tunggu Supabase storage siap sebelum baca data
-    await window._workspaceStorageReady;
+    await globalThis._workspaceStorageReady;
 
     const saved = WorkspaceStorage.getItem('personal_workspace_calendar_moments');
     if (saved) {
@@ -2929,7 +2929,7 @@ const CalendarMoment = {
         } else {
           this.moments = {};
         }
-      } catch (e) {
+      } catch (_e) {
         this.moments = {};
       }
     } else {
@@ -2985,20 +2985,20 @@ const CalendarMoment = {
       };
       this.saveToStorage();
     }
-    window.addEventListener('mousemove', this.handleDragPhotoMove);
-    window.addEventListener('mouseup', this.handleDragPhotoEnd);
-    window.addEventListener('touchmove', this.handleDragPhotoMove, { passive: false });
-    window.addEventListener('touchend', this.handleDragPhotoEnd);
-    window.addEventListener('scroll', this.handleScrollRotation);
-    window.addEventListener('click', this.handleDocumentClick);
+    globalThis.addEventListener('mousemove', this.handleDragPhotoMove);
+    globalThis.addEventListener('mouseup', this.handleDragPhotoEnd);
+    globalThis.addEventListener('touchmove', this.handleDragPhotoMove, { passive: false });
+    globalThis.addEventListener('touchend', this.handleDragPhotoEnd);
+    globalThis.addEventListener('scroll', this.handleScrollRotation);
+    globalThis.addEventListener('click', this.handleDocumentClick);
   },
   beforeUnmount() {
-    window.removeEventListener('mousemove', this.handleDragPhotoMove);
-    window.removeEventListener('mouseup', this.handleDragPhotoEnd);
-    window.removeEventListener('touchmove', this.handleDragPhotoMove);
-    window.removeEventListener('touchend', this.handleDragPhotoEnd);
-    window.removeEventListener('scroll', this.handleScrollRotation);
-    window.removeEventListener('click', this.handleDocumentClick);
+    globalThis.removeEventListener('mousemove', this.handleDragPhotoMove);
+    globalThis.removeEventListener('mouseup', this.handleDragPhotoEnd);
+    globalThis.removeEventListener('touchmove', this.handleDragPhotoMove);
+    globalThis.removeEventListener('touchend', this.handleDragPhotoEnd);
+    globalThis.removeEventListener('scroll', this.handleScrollRotation);
+    globalThis.removeEventListener('click', this.handleDocumentClick);
   },
   watch: {
     wheelMoments(newVal) {
@@ -3019,7 +3019,7 @@ const CalendarMoment = {
       const angle = (idx * step) + this.wheelRotationAngle;
       const rad = (angle * Math.PI) / 180;
       
-      const isMobile = window.innerWidth < 640;
+      const isMobile = globalThis.innerWidth < 640;
       const radiusX = isMobile ? 120 : 255;
       const radiusY = isMobile ? 100 : 210;
       const size = isMobile ? 76 : 112;
@@ -3643,7 +3643,7 @@ const CalendarMoment = {
       return count;
     },
     handleScrollRotation() {
-      this.scrollRotation = window.scrollY * 0.12;
+      this.scrollRotation = globalThis.scrollY * 0.12;
     },
     filterByMoodFromWheel(emoji) {
       if (this.activeMoodFilter === emoji) {
@@ -4182,7 +4182,7 @@ const ContentTracker = {
   },
   async created() {
     // ✅ FIX: Tunggu Supabase storage siap sebelum baca data
-    await window._workspaceStorageReady;
+    await globalThis._workspaceStorageReady;
 
     // 1. Load Columns
     const savedCols = WorkspaceStorage.getItem('personal_workspace_content_columns');
@@ -4223,7 +4223,7 @@ const ContentTracker = {
     if (savedColors) {
       try {
         this.alertColors = { ...this.alertColors, ...JSON.parse(savedColors) };
-      } catch (e) {
+      } catch (_e) {
         console.error(e);
       }
     }
@@ -4248,11 +4248,11 @@ const ContentTracker = {
       this.form.notes = `Tugas / Deskripsi Kerja:\n${data.tasks}\n\nHasil yang Dicapai:\n${data.achievements}`;
       this.form.title = `Konten - ${data.tasks.substring(0, 35)}${data.tasks.length > 35 ? '...' : ''}`;
     };
-    window.addEventListener('sync-logbook-content', this.handleSyncEvent);
+    globalThis.addEventListener('sync-logbook-content', this.handleSyncEvent);
   },
   beforeUnmount() {
     if (this.handleSyncEvent) {
-      window.removeEventListener('sync-logbook-content', this.handleSyncEvent);
+      globalThis.removeEventListener('sync-logbook-content', this.handleSyncEvent);
     }
   },
   methods: {
@@ -4385,7 +4385,7 @@ const ContentTracker = {
           const c = this.alertColors.h2 || '#7F623F';
           return { isUrgent: true, label: 'Mendekati Rilis (H-2)', color: c, bgColor: this.hexToRgba(c, 0.04), borderColor: this.hexToRgba(c, 0.18) };
         }
-      } catch (e) {
+      } catch (_e) {
         console.error(e);
       }
       return { isUrgent: false, label: '' };
@@ -5146,7 +5146,7 @@ const InterviewPractice = {
   },
   async created() {
     // ✅ FIX: Tunggu Supabase storage siap sebelum baca data
-    await window._workspaceStorageReady;
+    await globalThis._workspaceStorageReady;
 
     const savedQ = WorkspaceStorage.getItem('personal_workspace_interview_questions');
     if (savedQ) this.questions = JSON.parse(savedQ);
@@ -5188,7 +5188,7 @@ const InterviewPractice = {
     // ── Sounds ──
     playTickSound() {
       try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const AudioCtx = globalThis.AudioContext || globalThis.webkitAudioContext;
         if (!AudioCtx) return;
         const ctx = new AudioCtx();
         const osc = ctx.createOscillator(); const gain = ctx.createGain();
@@ -5196,11 +5196,11 @@ const InterviewPractice = {
         osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.05);
         gain.gain.setValueAtTime(0.06, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
         osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.05);
-      } catch (e) {}
+      } catch (_e) { /* ignore */ }
     },
     playWinSound() {
       try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const AudioCtx = globalThis.AudioContext || globalThis.webkitAudioContext;
         if (!AudioCtx) return;
         const ctx = new AudioCtx();
         [261.63, 329.63, 392.00, 523.25].forEach((freq, idx) => {
@@ -5209,7 +5209,7 @@ const InterviewPractice = {
           gain.gain.setValueAtTime(0.08, ctx.currentTime + idx * 0.08); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.08 + 0.3);
           osc.connect(gain); gain.connect(ctx.destination); osc.start(ctx.currentTime + idx * 0.08); osc.stop(ctx.currentTime + idx * 0.08 + 0.3);
         });
-      } catch (e) {}
+      } catch (_e) { /* ignore */ }
     },
 
     // ── Lever & Spin ──
@@ -5270,7 +5270,7 @@ const InterviewPractice = {
       this.saveQuestionsToLocalStorage(); this.formText = ''; this.formHints = '';
       alert('Pertanyaan berhasil disimpan!');
     },
-    startEdit(q) { this.editingId = q.id; this.formCategory = q.category; this.formText = q.text; this.formHints = q.hints; window.scrollTo({ top: 300, behavior: 'smooth' }); },
+    startEdit(q) { this.editingId = q.id; this.formCategory = q.category; this.formText = q.text; this.formHints = q.hints; globalThis.scrollTo({ top: 300, behavior: 'smooth' }); },
     cancelEdit() { this.editingId = null; this.formText = ''; this.formHints = ''; },
     deleteCustomQuestion(id) {
       if (confirm('Hapus pertanyaan ini?')) { this.questions = this.questions.filter(q => q.id !== id); this.saveQuestionsToLocalStorage(); this.resetToReSpin(); }
@@ -6054,17 +6054,17 @@ const DailyNutrition = {
   },
   async created() {
     // ✅ FIX: Tunggu Supabase storage siap sebelum baca data
-    await window._workspaceStorageReady;
+    await globalThis._workspaceStorageReady;
 
     const savedCats = WorkspaceStorage.getItem('personal_workspace_insight_categories');
-    if (savedCats) { try { this.customInsightCategories = JSON.parse(savedCats); } catch(e) { this.customInsightCategories = []; } }
+    if (savedCats) { try { this.customInsightCategories = JSON.parse(savedCats); } catch(_e) { this.customInsightCategories = []; } }
 
     const saved = WorkspaceStorage.getItem('personal_workspace_nutrition_insights');
     if (saved) {
       try {
         this.insights = JSON.parse(saved);
         this.insights.forEach((ins, i) => { if (!ins.id) ins.id = 'ins-' + i + '-' + Date.now(); });
-      } catch(e) { this.insights = []; }
+      } catch(_e) { this.insights = []; }
     } else {
       this.insights = [
         { id: 'ins-1', date: '2026-05-28', category: 'Teknologi', source: 'Vue.js Docs', title: 'Why SPA CDNs Boost Developer Workflow', details: 'Using Vue via CDN directly speeds up small tools and static assets logic. You escape complex local package manager installation steps and launch immediately.', takeaway: 'For lightweight standalone apps, clean ESM CDN tags remove build overhead completely.' },
@@ -6078,7 +6078,7 @@ const DailyNutrition = {
     try {
       const savedPlans = WorkspaceStorage.getItem('personal_workspace_next_plans');
       if (savedPlans) this.nextPlans = JSON.parse(savedPlans);
-    } catch(e) { this.nextPlans = []; }
+    } catch(_e) { this.nextPlans = []; }
   },
   methods: {
     calPrevMonth() { if (this.calMonth === 0) { this.calMonth = 11; this.calYear--; } else this.calMonth--; },
@@ -6122,7 +6122,7 @@ const DailyNutrition = {
     onDetailsPaste(e) {
       // Paste sebagai plain text supaya tidak bawa styling dari luar
       e.preventDefault();
-      const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      const text = (e.clipboardData || globalThis.clipboardData).getData('text/plain');
       document.execCommand('insertText', false, text);
     },
     syncEditorContent() {
@@ -6155,7 +6155,7 @@ const DailyNutrition = {
     },
     onTakeawayPaste(e) {
       e.preventDefault();
-      const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      const text = (e.clipboardData || globalThis.clipboardData).getData('text/plain');
       document.execCommand('insertText', false, text);
     },
     addInsightCategory() {
@@ -6173,7 +6173,7 @@ const DailyNutrition = {
     },
     formatDate(d) {
       try { return new Date(d).toLocaleDateString('id-ID', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' }); }
-      catch(e) { return d; }
+      catch(_e) { return d; }
     },
     saveInsight() {
       if (this.editingInsightId) {
@@ -6809,7 +6809,7 @@ const HabitTracker = {
     },
     overallCompletionRate() {
       if (this.habits.length === 0) return 0;
-      let totalSlots = this.habits.length * this.daysInMonth;
+      const totalSlots = this.habits.length * this.daysInMonth;
       return Math.round((this.totalChecksThisMonth / totalSlots) * 100);
     },
     habitsTableSorted() {
@@ -6914,7 +6914,7 @@ const HabitTracker = {
   },
   async created() {
     // ✅ FIX: Tunggu Supabase storage siap sebelum baca data
-    await window._workspaceStorageReady;
+    await globalThis._workspaceStorageReady;
 
     const savedCats = WorkspaceStorage.getItem('aesthetic_habit_custom_categories');
     if (savedCats) {
@@ -7067,7 +7067,7 @@ const HabitTracker = {
       return paddingLeft + (index / Math.max(this.daysInMonth - 1, 1)) * chartWidth;
     },
     getChartY(percentage) {
-      const paddingTop = 15;
+      const _paddingTop = 15; void _paddingTop;
       const chartHeight = 130;
       return 145 - (percentage / 100) * chartHeight;
     },
@@ -7106,7 +7106,7 @@ const HabitTracker = {
     },
     playCheckSound(isChecking) {
       try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const ctx = new (globalThis.AudioContext || globalThis.webkitAudioContext)();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
@@ -7126,7 +7126,7 @@ const HabitTracker = {
         }
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + 0.15);
-      } catch(e) {}
+      } catch(_e) { /* ignore */ }
     },
     startPress(event) {
       const btn = event.currentTarget;
@@ -7354,7 +7354,7 @@ let ambienceNoiseNode = null;
 
 const getAudioContext = () => {
   if (!globalAudioCtx) {
-    globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    globalAudioCtx = new (globalThis.AudioContext || globalThis.webkitAudioContext)();
   }
   if (globalAudioCtx.state === 'suspended') {
     globalAudioCtx.resume();
@@ -7381,7 +7381,7 @@ const playTickSound = () => {
     gainNode.connect(ctx.destination);
     osc.start(now);
     osc.stop(now + 0.06);
-  } catch (e) {}
+  } catch (_e) { /* ignore */ }
 };
 
 const playZenBell = () => {
@@ -7410,7 +7410,7 @@ const playZenBell = () => {
       osc.start(now);
       osc.stop(now + 5);
     });
-  } catch (e) {}
+  } catch (_e) { /* ignore */ }
 };
 
 const playClassicAlarm = () => {
@@ -7437,7 +7437,7 @@ const playClassicAlarm = () => {
       osc.start(t);
       osc.stop(t + 0.3);
     }
-  } catch (e) {}
+  } catch (_e) { /* ignore */ }
 };
 
 const playGendingAlarm = () => {
@@ -7464,7 +7464,7 @@ const playGendingAlarm = () => {
       osc.start(t);
       osc.stop(t + 1.8);
     });
-  } catch (e) {}
+  } catch (_e) { /* ignore */ }
 };
 
 const playSwooshSound = () => {
@@ -7487,7 +7487,7 @@ const playSwooshSound = () => {
     gainNode.connect(ctx.destination);
     osc.start(now);
     osc.stop(now + 0.4);
-  } catch (e) {}
+  } catch (_e) { /* ignore */ }
 };
 
 const playForestBirdChirp = () => {
@@ -7515,7 +7515,7 @@ const playForestBirdChirp = () => {
       osc.start(t);
       osc.stop(t + 0.12);
     }
-  } catch (e) {}
+  } catch (_e) { /* ignore */ }
 };
 
 const startProceduralAmbience = (type) => {
@@ -7577,7 +7577,7 @@ const startProceduralAmbience = (type) => {
     sourceNode.start();
     
     ambienceNoiseNode = sourceNode;
-  } catch (e) {}
+  } catch (_e) { /* ignore */ }
 };
 
 const stopProceduralAmbience = () => {
@@ -7586,7 +7586,7 @@ const stopProceduralAmbience = () => {
       if (ambienceNoiseNode._sweep) ambienceNoiseNode._sweep.stop();
       if (ambienceNoiseNode._birdTimer) clearInterval(ambienceNoiseNode._birdTimer);
       ambienceNoiseNode.stop();
-    } catch (e) {}
+    } catch (_e) { /* ignore */ }
     ambienceNoiseNode = null;
   }
 };
@@ -8030,7 +8030,7 @@ const PomodoroTimer = {
   },
   async mounted() {
     // ✅ FIX: Tunggu Supabase storage siap sebelum baca data
-    await window._workspaceStorageReady;
+    await globalThis._workspaceStorageReady;
     this.loadState();
   },
   beforeUnmount() {
@@ -8072,14 +8072,14 @@ const PomodoroTimer = {
           this.tickingEnabled = !!parsed.tickingEnabled;
           this.alarmType = parsed.alarmType || 'zen';
           this.isMuted = !!parsed.isMuted;
-        } catch (e) {}
+        } catch (_e) { /* ignore */ }
       }
       // Load history logs
       const savedLogs = WorkspaceStorage.getItem('personal_workspace_pomo_history_logs');
       if (savedLogs) {
         try {
           this.historyLogs = JSON.parse(savedLogs);
-        } catch (e) {
+        } catch (_e) {
           this.historyLogs = [];
         }
       } else {
@@ -8112,7 +8112,7 @@ const PomodoroTimer = {
             }
           }
         }
-      } catch(e) {}
+      } catch(_e) { /* ignore */ }
       this.resetTimer(false);
     },
     saveState() {
@@ -8176,7 +8176,7 @@ const PomodoroTimer = {
 
       // Selalu bersihkan floating state saat timer direset agar floating tidak muncul lagi
       localStorage.removeItem('pomo_floating_state');
-      window.dispatchEvent(new CustomEvent('pomo-state-update', { detail: {
+      globalThis.dispatchEvent(new CustomEvent('pomo-state-update', { detail: {
         isRunning: false, timeLeft: 0, totalDuration: 0, deadline: null, everStarted: false
       }}));
     },
@@ -8204,7 +8204,7 @@ const PomodoroTimer = {
         ts: Date.now()
       };
       localStorage.setItem('pomo_floating_state', JSON.stringify(state));
-      window.dispatchEvent(new CustomEvent('pomo-state-update', { detail: state }));
+      globalThis.dispatchEvent(new CustomEvent('pomo-state-update', { detail: state }));
     },
     startTimer() {
       if (this.timerInterval) return;
@@ -8979,7 +8979,7 @@ const GoogleCalendar = {
         const raw = WorkspaceStorage.getItem('ws_notif_action_status');
         const s = JSON.parse(raw || '{}');
         actionStatus = s[ds] || {};
-      } catch(e) {}
+      } catch(_e) { /* ignore */ }
       const isActionDone = (rawId) => !!actionStatus[rawId];
 
       const allDayItems = [];
@@ -8993,7 +8993,7 @@ const GoogleCalendar = {
         } else {
           const [sh, sm] = (ev.startTime || '00:00').split(':').map(Number);
           const [eh, em] = (ev.endTime || '01:00').split(':').map(Number);
-          let startMin = sh * 60 + (sm || 0);
+          const startMin = sh * 60 + (sm || 0);
           let endMin = eh * 60 + (em || 0);
           if (endMin <= startMin) endMin = startMin + 30;
           timed.push({ id: ev.id, title: ev.title, type: 'event', color, startMin, endMin, raw: ev });
@@ -9009,7 +9009,7 @@ const GoogleCalendar = {
             const done = p.phase === 'Completed';
             if (p.time) {
               const [sh, sm] = p.time.split(':').map(Number);
-              let startMin = sh * 60 + (sm || 0);
+              const startMin = sh * 60 + (sm || 0);
               let endMin;
               if (p.timeEnd) {
                 const [eh, em] = p.timeEnd.split(':').map(Number);
@@ -9023,7 +9023,7 @@ const GoogleCalendar = {
               allDayItems.push({ id, title: p.tasks, type: 'task', color: TYPE_COLORS.task, raw: p, done, actionable: true, isTaskPlan: true });
             }
           });
-        } catch(e) {}
+        } catch(_e) { /* ignore */ }
       }
 
       // --- Habit reminders (hanya relevan untuk hari ini) ---
@@ -9041,7 +9041,7 @@ const GoogleCalendar = {
               allDayItems.push({ id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, raw: h, done, actionable: true });
             }
           });
-        } catch(e) {}
+        } catch(_e) { /* ignore */ }
       }
 
       // --- Manual reminders ---
@@ -9059,7 +9059,7 @@ const GoogleCalendar = {
               allDayItems.push({ id, title: m.title, type: 'manual', color: TYPE_COLORS.manual, raw: m, done, actionable: true });
             }
           });
-        } catch(e) {}
+        } catch(_e) { /* ignore */ }
       }
 
       // --- Assign overlap columns for timed items ---
@@ -9110,14 +9110,14 @@ const GoogleCalendar = {
     this.initFirebase();
     this.localCurDate = new Date();
     this._onPlansUpdated = () => { this.localStorageTick++; };
-    window.addEventListener('ws-plans-updated', this._onPlansUpdated);
+    globalThis.addEventListener('ws-plans-updated', this._onPlansUpdated);
   },
   beforeUnmount() {
-    window.removeEventListener('ws-plans-updated', this._onPlansUpdated);
+    globalThis.removeEventListener('ws-plans-updated', this._onPlansUpdated);
   },
   methods: {
     localGoToLogbook() {
-      window.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'jobLogbook' }));
+      globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'jobLogbook' }));
     },
     // ============ LOCAL CALENDAR METHODS ============
     // Task Plan → toggle done langsung di storage (tanpa navigasi, agar checklist lain tidak hilang)
@@ -9142,7 +9142,7 @@ const GoogleCalendar = {
         // Trigger recompute agenda view — cukup increment tick, tanpa broadcast ke komponen lain
         this.localStorageTick++;
         if (nowDone && typeof NotifSound !== 'undefined') NotifSound.playCheck && NotifSound.playCheck();
-      } catch(e) {}
+      } catch(_e) { /* ignore */ }
     },
     localToggleAgendaDone(block) {
       const ds = this.localSelectedDate || new Date().toISOString().split('T')[0];
@@ -9156,10 +9156,10 @@ const GoogleCalendar = {
         WorkspaceStorage.setItem('ws_notif_action_status', JSON.stringify(s));
         this.localStorageTick++;
         if (nowDone && typeof NotifSound !== 'undefined') NotifSound.playCheck && NotifSound.playCheck();
-      } catch(e) {}
+      } catch(_e) { /* ignore */ }
     },
     localSaveEvents() {
-      try { localStorage.setItem('gcal_local_events', JSON.stringify(this.localEvents)); } catch(e){}
+      try { localStorage.setItem('gcal_local_events', JSON.stringify(this.localEvents)); } catch(_e){ /* ignore */ }
     },
     // ── SHARED HELPER: semua item (semua tipe) untuk satu tanggal, dihormati filter ──
     localAllItemsForDate(dateStr) {
@@ -9172,7 +9172,7 @@ const GoogleCalendar = {
         const raw = WorkspaceStorage.getItem('ws_notif_action_status');
         const s = JSON.parse(raw || '{}');
         actionStatus = s[dateStr] || {};
-      } catch(e) {}
+      } catch(_e) { /* ignore */ }
       const isActionDone = (id) => !!actionStatus[id];
       const items = [];
 
@@ -9201,7 +9201,7 @@ const GoogleCalendar = {
             }
             items.push({ id: 'tp-' + p.id, title: p.tasks, type: 'task', color: TYPE_COLORS.task, startMin, endMin, done, allDay: !p.time });
           });
-        } catch(e) {}
+        } catch(_e) { /* ignore */ }
       }
 
       // Habits (only today)
@@ -9214,7 +9214,7 @@ const GoogleCalendar = {
             if (h.time) { const [sh, sm] = h.time.split(':').map(Number); startMin = sh * 60 + (sm || 0); endMin = startMin + 30; }
             items.push({ id: 'habit-' + h.id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, startMin, endMin, done, allDay: !h.time });
           });
-        } catch(e) {}
+        } catch(_e) { /* ignore */ }
       }
 
       // Manual reminders
@@ -9227,7 +9227,7 @@ const GoogleCalendar = {
             if (m.time) { const [sh, sm] = m.time.split(':').map(Number); startMin = sh * 60 + (sm || 0); endMin = startMin + 30; }
             items.push({ id: 'manual-' + m.id, title: m.title, type: 'manual', color: TYPE_COLORS.manual, startMin, endMin, done, allDay: !m.time });
           });
-        } catch(e) {}
+        } catch(_e) { /* ignore */ }
       }
 
       return items;
@@ -9329,7 +9329,7 @@ const GoogleCalendar = {
       try {
         const raw = WorkspaceStorage.getItem('ws_manual_notifs');
         manuals = raw ? JSON.parse(raw) : [];
-      } catch(e) { manuals = []; }
+      } catch(_e) { manuals = []; }
       manuals.push({
         id,
         date: this.localNewReminder.date,
@@ -9422,8 +9422,8 @@ const GoogleCalendar = {
           if (user) {
             this.user = user;
             // Check in-memory global token CACHE
-            if (window.googleCalendarCachedToken) {
-              this.accessToken = window.googleCalendarCachedToken;
+            if (globalThis.googleCalendarCachedToken) {
+              this.accessToken = globalThis.googleCalendarCachedToken;
               this.needsAuth = false;
               this.fetchEvents();
             } else {
@@ -9432,7 +9432,7 @@ const GoogleCalendar = {
           } else {
             this.user = null;
             this.accessToken = null;
-            window.googleCalendarCachedToken = null;
+            globalThis.googleCalendarCachedToken = null;
             this.needsAuth = true;
           }
           this.loading = false;
@@ -9443,7 +9443,7 @@ const GoogleCalendar = {
           .then((result) => {
             if (result && result.credential) {
               this.accessToken = result.credential.accessToken;
-              window.googleCalendarCachedToken = result.credential.accessToken;
+              globalThis.googleCalendarCachedToken = result.credential.accessToken;
               this.user = result.user;
               this.needsAuth = false;
               this.fetchEvents();
@@ -9469,7 +9469,7 @@ const GoogleCalendar = {
         }
         const result = await this.auth.signInWithPopup(this.provider);
         this.accessToken = result.credential.accessToken;
-        window.googleCalendarCachedToken = result.credential.accessToken;
+        globalThis.googleCalendarCachedToken = result.credential.accessToken;
         this.user = result.user;
         this.needsAuth = false;
         await this.fetchEvents();
@@ -9501,7 +9501,7 @@ const GoogleCalendar = {
       }
     },
     openInNewTab() {
-      window.open(window.location.href, '_blank');
+      globalThis.open(globalThis.location.href, '_blank');
     },
     async handleSignOut() {
       if (this.auth) {
@@ -9509,7 +9509,7 @@ const GoogleCalendar = {
       }
       this.user = null;
       this.accessToken = null;
-      window.googleCalendarCachedToken = null;
+      globalThis.googleCalendarCachedToken = null;
       this.events = [];
       this.needsAuth = true;
     },
@@ -9533,7 +9533,7 @@ const GoogleCalendar = {
           if (response.status === 401) {
             // Expired credentials
             this.accessToken = null;
-            window.googleCalendarCachedToken = null;
+            globalThis.googleCalendarCachedToken = null;
             this.user = null;
             this.needsAuth = true;
             throw new Error('Sesi Google Calendar telah kedaluwarsa. Silakan Hubungkan kembali.');
@@ -9561,7 +9561,7 @@ const GoogleCalendar = {
       }
 
       // Mandatory workspace security confirmation dialog
-      const isConfirmed = window.confirm(`Apakah Anda yakin ingin memasukkan acara ke Google Calendar Anda:\n\n📌 Judul: "${this.newEvent.summary}"\n📅 Hari/Tanggal: ${this.newEvent.startDate}`);
+      const isConfirmed = globalThis.confirm(`Apakah Anda yakin ingin memasukkan acara ke Google Calendar Anda:\n\n📌 Judul: "${this.newEvent.summary}"\n📅 Hari/Tanggal: ${this.newEvent.startDate}`);
       if (!isConfirmed) return;
 
       this.submitting = true;
@@ -9624,7 +9624,7 @@ const GoogleCalendar = {
     },
     async deleteEvent(eventItem) {
       // Mandatory workspace security confirmation dialog
-      const isConfirmed = window.confirm(`Apakah Anda yakin ingin menghapus acara "${eventItem.summary || 'Acara Tanpa Judul'}" dari Google Calendar? Tindakan ini tidak dapat dibatalkan.`);
+      const isConfirmed = globalThis.confirm(`Apakah Anda yakin ingin menghapus acara "${eventItem.summary || 'Acara Tanpa Judul'}" dari Google Calendar? Tindakan ini tidak dapat dibatalkan.`);
       if (!isConfirmed) return;
 
       this.loading = true;
@@ -10176,7 +10176,7 @@ const FinancialTracker = {
 
   computed: {
     filteredTransactions() {
-      let txs = [...this.finDateFilteredTx].sort((a, b) => new Date(b.date) - new Date(a.date));
+      const txs = [...this.finDateFilteredTx].sort((a, b) => new Date(b.date) - new Date(a.date));
       if (this.activeTab === 'income') return txs.filter(t => t.type === 'income' && !t.isTransfer);
       if (this.activeTab === 'expense') return txs.filter(t => t.type === 'expense' && !t.isReimburse && !t.isTransfer);
       if (this.activeTab === 'reimburse') return txs.filter(t => t.isReimburse);
@@ -10277,7 +10277,7 @@ const FinancialTracker = {
     },
     formatDate(d) {
       try { return new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }); }
-      catch(e) { return d; }
+      catch(_e) { return d; }
     },
     getTxColor(tx) {
       if (tx.isTransfer) return '#3B82F6';
@@ -10531,12 +10531,12 @@ const FinancialTracker = {
 
   async mounted() {
     // ✅ FIX: Tunggu Supabase storage siap sebelum baca data
-    await window._workspaceStorageReady;
+    await globalThis._workspaceStorageReady;
 
     try {
       const savedBanks = WorkspaceStorage.getItem('fin_banks');
       if (savedBanks) this.banks = JSON.parse(savedBanks);
-    } catch(e) { this.banks = []; }
+    } catch(_e) { this.banks = []; }
     try {
       const savedTx = WorkspaceStorage.getItem('fin_transactions');
       if (savedTx) {
@@ -10550,7 +10550,7 @@ const FinancialTracker = {
         });
         this.transactions = loadedTxs;
       }
-    } catch(e) { this.transactions = []; }
+    } catch(_e) { this.transactions = []; }
     this._closeFinRangePicker = () => { if (this.showFinRangePicker) this.showFinRangePicker = false; };
     document.addEventListener('click', this._closeFinRangePicker);
   },

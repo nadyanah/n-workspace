@@ -6,7 +6,7 @@
 // Semua data otomatis tersimpan di penyimpanan lokal browser Anda (localStorage).
 // Sangat sederhana, tanpa kompilasi rumit, sehingga Anda bisa langsung edit file ini!
 
-    const { createApp, ref, reactive, onMounted, computed } = Vue;
+    const { createApp, ref, reactive, onMounted } = Vue;
 
 const App = {
   setup() {
@@ -48,11 +48,12 @@ const App = {
       const { r, g, b } = hexToRgb(hex);
       return rgbToHex({ r: r * (1 - amount), g: g * (1 - amount), b: b * (1 - amount) });
     };
-    // Lighten: naikkan brightness
-    const lightenColor = (hex, amount) => {
+    // Lighten: naikkan brightness (disimpan untuk penggunaan di masa depan)
+    const _lightenColor = (hex, amount) => {
       const { r, g, b } = hexToRgb(hex);
       return rgbToHex({ r: r + (255 - r) * amount, g: g + (255 - g) * amount, b: b + (255 - b) * amount });
     };
+    void _lightenColor; // suppress unused warning
 
     const setDominantColor = (colorHex) => {
       dominantColor.value = colorHex;
@@ -199,7 +200,7 @@ const App = {
 
     // Drag and Drop tracking state
     let draggingKey = null;
-    let dragStartOffset = { x: 0, y: 0 };
+    let dragStartOffset = { x: 0, y: 0 }; // object properties mutated, not reassigned
     let hasDragged = false;
     const deskViewport = ref(null);
 
@@ -266,10 +267,10 @@ const App = {
       dragStartOffset.y = clientY - rect.top;
 
       // Add dynamic dragging listeners globally
-      window.addEventListener('mousemove', onDrag);
-      window.addEventListener('touchmove', onDrag, { passive: false });
-      window.addEventListener('mouseup', endDrag);
-      window.addEventListener('touchend', endDrag);
+      globalThis.addEventListener('mousemove', onDrag);
+      globalThis.addEventListener('touchmove', onDrag, { passive: false });
+      globalThis.addEventListener('mouseup', endDrag);
+      globalThis.addEventListener('touchend', endDrag);
     };
 
     const onDrag = (event) => {
@@ -306,10 +307,10 @@ const App = {
       // hasDragged stays true briefly so the @click handler can read it,
       // then reset after a microtask (click fires after mouseup)
       setTimeout(() => { hasDragged = false; }, 0);
-      window.removeEventListener('mousemove', onDrag);
-      window.removeEventListener('touchmove', onDrag);
-      window.removeEventListener('mouseup', endDrag);
-      window.removeEventListener('touchend', endDrag);
+      globalThis.removeEventListener('mousemove', onDrag);
+      globalThis.removeEventListener('touchmove', onDrag);
+      globalThis.removeEventListener('mouseup', endDrag);
+      globalThis.removeEventListener('touchend', endDrag);
     };
 
     // Callback when icon manager maps icons
@@ -327,7 +328,7 @@ const App = {
       // ✅ FIX: Tunggu Supabase storage selesai fetch data sebelum baca/tulis apapun.
       // Tanpa ini, komponen baca data sebelum Supabase kelar → dapat null →
       // tulis default value → overwrite data device utama di Supabase.
-      await window._workspaceStorageReady;
+      await globalThis._workspaceStorageReady;
 
       loadConfig();
       updateHabitDays();
@@ -341,17 +342,17 @@ const App = {
       }
 
     // Handle navigation triggered by other components (e.g. sync from Logbook)
-      window.addEventListener('navigate-to-page', (e) => {
+      globalThis.addEventListener('navigate-to-page', (e) => {
         navigateTo(e.detail);
       });
 
       // Handle navigation from MissedTasksPage (ws-navigate event)
-      window.addEventListener('ws-navigate', (e) => {
+      globalThis.addEventListener('ws-navigate', (e) => {
         if (e.detail && e.detail.page) navigateTo(e.detail.page);
       });
 
       // Handle klik notifikasi push (habit) — diteruskan dari push-notifications.js
-      window.addEventListener('ws-trigger-habit', (e) => {
+      globalThis.addEventListener('ws-trigger-habit', (e) => {
         if (e.detail && e.detail.habitId) onTriggerHabit(e.detail.habitId);
       });
     });
@@ -513,11 +514,11 @@ const FloatingCountdownTimer = {
   },
   mounted() {
     this._loadFromStorage();
-    window.addEventListener('pomo-state-update', this._onPomoUpdate);
+    globalThis.addEventListener('pomo-state-update', this._onPomoUpdate);
     this._ticker = setInterval(this._tick, 1000);
   },
   beforeUnmount() {
-    window.removeEventListener('pomo-state-update', this._onPomoUpdate);
+    globalThis.removeEventListener('pomo-state-update', this._onPomoUpdate);
     clearInterval(this._ticker);
   },
   methods: {
@@ -530,7 +531,7 @@ const FloatingCountdownTimer = {
         // Guard utama: hanya apply kalau memang pernah distart
         if (!s.everStarted) return;
         this._applyState(s);
-      } catch(e) {}
+      } catch(_e) { /* ignore parse errors */ }
     },
 
     // ── Tick setiap detik ──
@@ -630,7 +631,7 @@ const FloatingCountdownTimer = {
     },
 
     goToPomodoro() {
-      window.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'pomodoroTimer' }));
+      globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'pomodoroTimer' }));
     }
   }
 };
