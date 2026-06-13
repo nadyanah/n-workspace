@@ -18,8 +18,10 @@
 // SUPABASE_URL & SUPABASE_SERVICE_ROLE_KEY otomatis tersedia di Edge Functions.
 // ============================================================================
 
-import { createClient } from "npm:@supabase/supabase-js@2";
-import webpush from "npm:web-push@3.6.7";
+/// <reference lib="deno.window" />
+
+import { createClient } from "@supabase/supabase-js";
+import webpush from "web-push";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -39,7 +41,7 @@ const STORAGE_KEYS = [
   "ws_push_sent"
 ];
 
-function safeParse(value: string | null, fallback: any) {
+function safeParse(value: string | null, fallback: unknown) {
   if (!value) return fallback;
   try { return JSON.parse(value); } catch { return fallback; }
 }
@@ -158,12 +160,13 @@ Deno.serve(async (_req: Request) => {
                 payload
               );
               totalSent++;
-            } catch (err: any) {
+            } catch (err: unknown) {
               // Subscription kadaluarsa / device sudah unsubscribe → hapus
-              if (err.statusCode === 404 || err.statusCode === 410) {
+              const pushErr = err as { statusCode?: number; body?: string; message?: string };
+              if (pushErr.statusCode === 404 || pushErr.statusCode === 410) {
                 await supabase.from("push_subscriptions").delete().eq("id", sub.id);
               } else {
-                console.error("push error", userId, err.statusCode, err.body || err.message);
+                console.error("push error", userId, pushErr.statusCode, pushErr.body || pushErr.message);
               }
             }
           }
@@ -185,9 +188,10 @@ Deno.serve(async (_req: Request) => {
       JSON.stringify({ ok: true, todayStr, nowMin, totalDue, totalSent }),
       { headers: { "Content-Type": "application/json" } }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const e = err as { message?: string };
     console.error("send-reminders error:", err);
-    return new Response(JSON.stringify({ ok: false, error: err.message }), {
+    return new Response(JSON.stringify({ ok: false, error: e.message }), {
       status: 500,
       headers: { "Content-Type": "application/json" }
     });
