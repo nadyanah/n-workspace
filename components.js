@@ -8460,56 +8460,33 @@ const GoogleCalendar = {
         </div>
 
         <!-- ========== WEEK VIEW ========== -->
-        <div v-if="localView==='week'" class="gcal-week-wrap">
-          <div class="gcal-week-head">
-            <div class="gcal-week-time-col"></div>
-            <div
-              v-for="d in localWeekDays"
-              :key="d.dateStr"
-              :class="['gcal-week-day-hdr', d.isToday && 'gcal-week-day-today']"
-              style="cursor:pointer;"
-              @click="localSelectedDate=d.dateStr; localView='agenda'"
-              title="Buka agenda hari ini"
-            >
-              <span class="gcal-week-dow">{{ d.dowLabel }}</span>
-              <span :class="['gcal-week-num', d.isToday && 'gcal-week-num-today']">{{ d.dayNum }}</span>
-              <!-- Mini dot row bawah header -->
-              <div class="gcal-week-hdr-dots">
-                <span v-for="dot in localDotsForDate(d.dateStr)" :key="dot.type"
-                      class="gcal-week-hdr-dot" :style="{ background: dot.color }"></span>
-              </div>
+        <div v-if="localView==='week'" class="gcal-week-wrap gcal-week-list-wrap">
+          <div
+            v-for="d in localWeekDays"
+            :key="d.dateStr"
+            :class="['gcal-week-list-row', d.isToday && 'gcal-week-list-row-today']"
+          >
+            <div class="gcal-week-list-date" @click="localSelectedDate=d.dateStr; localView='agenda'" title="Buka agenda hari ini">
+              <span class="gcal-week-list-dow">{{ d.dowLabel }}</span>
+              <span :class="['gcal-week-list-num', d.isToday && 'gcal-week-list-num-today']">{{ d.dayNum }}</span>
             </div>
-          </div>
-          <div class="gcal-week-body">
-            <div class="gcal-week-time-col">
-              <div v-for="h in localHours" :key="h" class="gcal-hour-label">{{ h }}</div>
-            </div>
-            <div v-for="d in localWeekDays" :key="d.dateStr" class="gcal-week-col"
-                 @click="localSelectedDate=d.dateStr; localView='agenda'">
-              <div v-for="h in localHours" :key="h" :class="['gcal-hour-cell', d.isToday && h===localCurrentHourLabel && 'gcal-hour-now']"></div>
-              <!-- Now-line -->
-              <div v-if="d.isToday && localWeekNowTop !== null" class="gcal-week-now-line" :style="{ top: localWeekNowTop + 'px' }"></div>
-              <!-- All items from all types, synced with filters -->
+            <div class="gcal-week-list-items">
+              <div v-if="localAllItemsForDate(d.dateStr).length === 0" class="gcal-week-list-empty">—</div>
               <div
-                v-for="block in localWeekBlocksForDate(d.dateStr)"
-                :key="block.id"
-                class="gcal-week-ev"
-                :class="'gcal-week-ev-' + block.type"
+                v-for="item in localAllItemsForDate(d.dateStr)"
+                :key="item.id"
+                class="gcal-week-list-pill"
                 :style="{
-                  top: block.top + 'px',
-                  height: block.height + 'px',
-                  background: localTintColor(block.color, 0.16),
-                  borderColor: localTintColor(block.color, 0.45),
-                  color: block.color,
-                  left: 'calc(' + (block.col * (100/block.totalCols)) + '% + 2px)',
-                  width: 'calc(' + (100/block.totalCols) + '% - 4px)',
-                  opacity: block.done ? 0.5 : 1
+                  background: localTintColor(item.color, 0.16),
+                  borderColor: localTintColor(item.color, 0.45),
+                  color: item.color,
+                  opacity: item.done ? 0.5 : 1
                 }"
+                :title="item.title + (item.startMin !== null ? ' · ' + localFmtMin(item.startMin) : '')"
                 @click.stop="localSelectedDate=d.dateStr; localView='agenda'"
-                :title="block.title + (block.startLabel ? ' · ' + block.startLabel : '')"
               >
-                <span style="font-weight:700;font-size:10px;opacity:0.9;">{{ block.startLabel }}</span>
-                <span style="font-size:10.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">{{ block.title }}</span>
+                <span v-if="item.startMin !== null" class="gcal-week-list-pill-time">{{ localFmtMin(item.startMin) }}</span>
+                <span class="gcal-week-list-pill-title" :style="item.done ? 'text-decoration:line-through;' : ''">{{ item.title }}</span>
               </div>
             </div>
           </div>
@@ -9306,6 +9283,12 @@ const GoogleCalendar = {
         } catch(_e) { /* ignore */ }
       }
 
+      items.sort((a, b) => {
+        if (a.startMin === null && b.startMin === null) return 0;
+        if (a.startMin === null) return -1;
+        if (b.startMin === null) return 1;
+        return a.startMin - b.startMin;
+      });
       return items;
     },
 
