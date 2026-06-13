@@ -10871,3 +10871,182 @@ const FinancialTracker = {
     if (this._closeFinRangePicker) document.removeEventListener('click', this._closeFinRangePicker);
   },
 };
+
+// ============================================================================
+// INSPIRATION BOARD — Global Floating Component
+// ============================================================================
+const InspirationBoard = {
+  props: ['show'],
+  emits: ['close'],
+  template: `
+    <teleport to="body">
+      <transition name="insight-modal-fade">
+        <div v-if="show"
+          style="position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; background: rgba(30,22,16,0.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 16px;"
+          @click.self="$emit('close')">
+
+          <div style="background: var(--color-paper, #FAF7F2); width: min(560px, 96vw); border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.12); display: flex; flex-direction: column; overflow: hidden; animation: insightPopIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-height: 90vh;">
+
+            <!-- Header -->
+            <div style="display: flex; align-items: center; gap: 12px; padding: 16px 22px 14px; background: var(--color-terracotta, #D67B52); color: #fff; flex-shrink: 0;">
+              <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 17px;">✨</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 15px; font-weight: 800; letter-spacing: 0.2px;">Papan Inspirasi</div>
+                <div style="font-size: 11px; opacity: 0.82; margin-top: 1px;">kalimat & kutipan yang menghidupimu ✦</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <!-- View database button -->
+                <button @click="showDatabase = true" title="Lihat semua inspirasi"
+                  style="background: rgba(255,255,255,0.18); border: none; border-radius: 9px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; transition: background 0.15s;"
+                  onmouseover="this.style.background='rgba(255,255,255,0.32)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                </button>
+                <!-- Close button -->
+                <button @click="$emit('close')"
+                  style="background: rgba(255,255,255,0.18); border: none; border-radius: 9px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 16px; transition: background 0.15s;"
+                  onmouseover="this.style.background='rgba(255,255,255,0.32)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">✕</button>
+              </div>
+            </div>
+
+            <!-- Body: Form input -->
+            <div style="padding: 20px 24px; overflow-y: auto; flex: 1;">
+
+              <!-- Sumber -->
+              <div style="margin-bottom: 14px;">
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Sumber <span style="font-weight:400; font-style:italic; text-transform:none;">(buku, orang, film, dll.)</span></label>
+                <input type="text" v-model="form.source" placeholder="cth., Marcus Aurelius, Atomic Habits, Interstellar..."
+                  style="width: 100%; height: 40px; padding: 0 12px; border: 1.5px solid var(--color-sand); border-radius: 9px; font-size: 13px; font-family: inherit; color: var(--text-dark); background: #fff; box-sizing: border-box; outline: none; transition: border-color 0.15s;"
+                  @focus="$event.target.style.borderColor='var(--color-terracotta)'" @blur="$event.target.style.borderColor='var(--color-sand)'" />
+              </div>
+
+              <!-- Kalimat inspirasi -->
+              <div style="margin-bottom: 20px;">
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Kata / Kalimat Inspirasi <span style="color: #EF4444;">*</span></label>
+                <textarea v-model="form.quote" placeholder="Tulis kutipan atau kalimat yang menginspirasimu..." rows="4"
+                  style="width: 100%; padding: 10px 12px; border: 1.5px solid var(--color-sand); border-radius: 9px; font-size: 13.5px; font-family: inherit; color: var(--text-dark); background: #fff; box-sizing: border-box; outline: none; resize: vertical; line-height: 1.6; transition: border-color 0.15s;"
+                  @focus="$event.target.style.borderColor='var(--color-terracotta)'" @blur="$event.target.style.borderColor='var(--color-sand)'"></textarea>
+              </div>
+
+              <!-- Actions -->
+              <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button @click="resetForm"
+                  style="height: 38px; padding: 0 16px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); border-radius: 9px; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; transition: border-color 0.15s;"
+                  onmouseover="this.style.borderColor='var(--color-terracotta)'" onmouseout="this.style.borderColor='var(--color-sand)'">Bersihkan</button>
+                <button @click="saveQuote"
+                  style="height: 38px; padding: 0 20px; background: var(--color-terracotta, #D67B52); color: #fff; border: none; border-radius: 9px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s;"
+                  onmouseover="this.style.background='var(--color-terracotta-dark, #B8663F)'" onmouseout="this.style.background='var(--color-terracotta, #D67B52)'">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Simpan
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </transition>
+
+      <!-- DATABASE POPUP — lembaran semua kutipan -->
+      <transition name="insight-modal-fade">
+        <div v-if="showDatabase"
+          style="position: fixed; inset: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background: rgba(30,22,16,0.55); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); padding: 16px;"
+          @click.self="showDatabase = false">
+
+          <div style="background: var(--color-paper, #FAF7F2); width: min(640px, 96vw); max-height: 88vh; border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,0.32); display: flex; flex-direction: column; overflow: hidden; animation: insightPopIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+
+            <!-- DB Header -->
+            <div style="display: flex; align-items: center; gap: 12px; padding: 16px 22px 14px; background: var(--color-terracotta, #D67B52); color: #fff; flex-shrink: 0;">
+              <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 17px;">📖</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 15px; font-weight: 800;">Koleksi Inspirasi</div>
+                <div style="font-size: 11px; opacity: 0.82; margin-top: 1px;">{{ quotes.length }} kutipan tersimpan</div>
+              </div>
+              <button @click="showDatabase = false"
+                style="background: rgba(255,255,255,0.18); border: none; border-radius: 9px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 16px; transition: background 0.15s;"
+                onmouseover="this.style.background='rgba(255,255,255,0.32)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">✕</button>
+            </div>
+
+            <!-- DB Body -->
+            <div style="overflow-y: auto; padding: 20px 24px; flex: 1;">
+
+              <!-- Empty state -->
+              <div v-if="quotes.length === 0" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                <div style="font-size: 36px; margin-bottom: 12px;">✨</div>
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 6px;">Belum ada kutipan</div>
+                <div style="font-size: 12.5px;">Tambahkan kutipan pertamamu dari form inputan!</div>
+              </div>
+
+              <!-- Quote cards -->
+              <div v-for="(q, i) in quotes" :key="q.id"
+                style="background: #fff; border: 1.5px solid var(--color-sand); border-radius: 14px; padding: 16px 18px; margin-bottom: 12px; position: relative; border-left: 4px solid var(--color-terracotta, #D67B52);">
+
+                <button @click="deleteQuote(i)" title="Hapus kutipan"
+                  style="position: absolute; top: 10px; right: 10px; background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background 0.15s;"
+                  onmouseover="this.style.background='#FEE2E2'" onmouseout="this.style.background='#FEF2F2'">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
+
+                <!-- Quote text -->
+                <div style="font-size: 14px; color: var(--text-dark); line-height: 1.75; font-style: italic; margin-bottom: 10px; padding-right: 30px;">"{{ q.quote }}"</div>
+
+                <!-- Source + date -->
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <span v-if="q.source" style="font-size: 11.5px; font-weight: 700; color: var(--color-terracotta, #D67B52); background: rgba(214,123,82,0.1); border: 1.5px solid rgba(214,123,82,0.25); border-radius: 20px; padding: 2px 10px; display: inline-flex; align-items: center; gap: 4px;">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    {{ q.source }}
+                  </span>
+                  <span style="font-size: 10.5px; color: var(--text-muted);">{{ formatDate(q.createdAt) }}</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </transition>
+    </teleport>
+  `,
+  data() {
+    return {
+      form: { source: '', quote: '' },
+      quotes: [],
+      showDatabase: false,
+    };
+  },
+  methods: {
+    saveQuote() {
+      if (!this.form.quote.trim()) return alert('Kalimat inspirasi wajib diisi!');
+      this.quotes.unshift({
+        id: 'insp-' + Date.now(),
+        source: this.form.source.trim(),
+        quote: this.form.quote.trim(),
+        createdAt: new Date().toISOString(),
+      });
+      this.saveToStorage();
+      this.resetForm();
+    },
+    deleteQuote(idx) {
+      if (!confirm('Hapus kutipan ini?')) return;
+      this.quotes.splice(idx, 1);
+      this.saveToStorage();
+    },
+    resetForm() {
+      this.form = { source: '', quote: '' };
+    },
+    saveToStorage() {
+      WorkspaceStorage.setItem('inspiration_quotes', JSON.stringify(this.quotes));
+    },
+    formatDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+      return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+    },
+  },
+  async mounted() {
+    await globalThis._workspaceStorageReady;
+    try {
+      const saved = WorkspaceStorage.getItem('inspiration_quotes');
+      if (saved) this.quotes = JSON.parse(saved);
+    } catch(_e) { this.quotes = []; }
+  },
+};
+

@@ -16,6 +16,7 @@ const App = {
     const showSettings = ref(false);
     const showNavDrawer = ref(false);
     const showNotifPanel = ref(false);
+    const showInspirationModal = ref(false);
 
     // Color customization variables
     const showColorPicker = ref(false);
@@ -389,6 +390,7 @@ const App = {
       showSettings,
       showNavDrawer,
       showNotifPanel,
+      showInspirationModal,
       showColorPicker,
       dominantColor,
       presetColors,
@@ -654,6 +656,7 @@ app.component('financial-tracker', FinancialTracker);
 app.component('notification-panel', NotificationPanel);
 app.component('reminder-popup', ReminderPopup);
 app.component('missed-tasks-page', MissedTasksPage);
+app.component('inspiration-board', InspirationBoard);
 app.component('push-notif-toggle', PushNotifToggle);
 
 app.mount('#app');
