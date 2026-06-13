@@ -6410,6 +6410,25 @@ input:checked + .switch-slider:before {
   border-color: var(--color-terracotta, #D67B52);
 }
 
+.gcal-filter-manage-cat-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid var(--color-sand, #E8DDD0);
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, transform 0.12s;
+  flex-shrink: 0;
+}
+.gcal-filter-manage-cat-btn:hover {
+  border-color: var(--color-terracotta, #D67B52);
+  color: var(--color-terracotta, #D67B52);
+  transform: scale(1.06);
+}
+
 
 /* Slide-in animation for the filter bar */
 .agenda-filter-slide-enter-active,

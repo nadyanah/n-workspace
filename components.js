@@ -8355,10 +8355,15 @@ const GoogleCalendar = {
                 <span style="font-size:11.5px; font-weight:700; color:var(--text-dark);">Tampilkan di agenda</span>
                 <span v-if="agendaActiveFilterCount < 3" class="gcal-filter-active-badge">{{ agendaActiveFilterCount }}/3</span>
               </div>
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                   :style="{ transition:'transform 0.2s', transform: agendaFilterOpen ? 'rotate(180deg)' : 'rotate(0deg)', color:'var(--text-muted)' }">
-                <polyline points="6 9 12 15 18 9"/>
-              </svg>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <button type="button" class="gcal-filter-manage-cat-btn" @click.stop="showManageCategoryModal = true" title="Kelola Kategori Pengingat">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                     :style="{ transition:'transform 0.2s', transform: agendaFilterOpen ? 'rotate(180deg)' : 'rotate(0deg)', color:'var(--text-muted)' }">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div>
             </div>
             <transition name="agenda-filter-expand">
               <div v-if="agendaFilterOpen" class="gcal-agenda-filter-list">
@@ -8385,6 +8390,46 @@ const GoogleCalendar = {
             </transition>
           </div>
         </transition>
+
+        <!-- ========== MODAL: KELOLA KATEGORI PENGINGAT ========== -->
+        <div v-if="showManageCategoryModal" class="gcal-modal-overlay" @click.self="showManageCategoryModal=false">
+          <div class="gcal-modal">
+            <div class="gcal-modal-header">
+              <span style="font-size:16px;font-weight:700;color:#3c4043;">Kelola Kategori Pengingat</span>
+              <button @click="showManageCategoryModal=false" class="gcal-modal-close">&#215;</button>
+            </div>
+            <div class="gcal-modal-body">
+              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Kategori custom dipakai saat membuat Pengingat Manual & filter agenda. Kategori default "Pengingat" tidak bisa dihapus.</p>
+
+              <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;">
+                <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:14px; font-size:12px; font-weight:600;"
+                  :style="{ backgroundColor: agendaFilterColors.manual + '18', color: agendaFilterColors.manual, border: '1px solid ' + agendaFilterColors.manual + '50' }">
+                  🟡 Pengingat (Default)
+                </span>
+                <span v-for="cat in customReminderCategories" :key="cat.key"
+                  style="display:inline-flex; align-items:center; gap:6px; padding:5px 8px 5px 12px; border-radius:14px; font-size:12px; font-weight:600;"
+                  :style="{ backgroundColor: cat.color + '18', color: cat.color, border: '1px solid ' + cat.color + '50' }">
+                  {{ cat.label }}
+                  <button type="button" @click="deleteCustomReminderCategory(cat.key)"
+                    title="Hapus kategori ini"
+                    style="background:none; border:none; cursor:pointer; padding:0; display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; border-radius:50%; color:inherit; opacity:0.7;">
+                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </span>
+                <span v-if="!customReminderCategories.length" style="font-size:12px; color:var(--text-muted);">Belum ada kategori custom.</span>
+              </div>
+
+              <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em;">Tambah Kategori Baru</label>
+              <div style="display:flex; gap:8px;">
+                <input type="text" class="gcal-input" v-model="newCustomCategoryInput" placeholder="Nama kategori baru..."
+                  maxlength="24" @keydown.enter="addCustomReminderCategory" style="flex:1;" />
+                <button class="btn btn-primary" @click="addCustomReminderCategory" style="height:40px; padding: 0 20px; cursor: pointer; white-space: nowrap; font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 600;" :disabled="!newCustomCategoryInput.trim()">
+                  Tambah
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- LOCAL CALENDAR VIEW (always shown, no auth needed) -->
@@ -8632,6 +8677,18 @@ const GoogleCalendar = {
                   <option value="financialTracker">💳 Financial Tracker</option>
                 </select>
               </div>
+
+              <!-- ========== KATEGORI PENGINGAT (pilih dari kategori yang sudah ada) ========== -->
+              <div style="margin-bottom:20px;">
+                <label class="gcal-label">Kategori Pengingat</label>
+                <select v-model="localNewReminder.category" class="gcal-input" style="cursor:pointer;">
+                  <option value="manual">🟡 Pengingat (Default)</option>
+                  <option v-for="cat in customReminderCategories" :key="cat.key" :value="cat.key">
+                    🏷️ {{ cat.label }}
+                  </option>
+                </select>
+              </div>
+
               <div style="display:flex;gap:10px;justify-content:flex-end;">
                 <button class="gcal-btn-ghost" @click="localShowForm=false">Batal</button>
                 <button class="gcal-btn-save" :disabled="!localNewReminder.title.trim() || !localNewReminder.date || !localNewReminder.time" @click="localAddReminder()">Simpan Pengingat</button>
@@ -8837,15 +8894,19 @@ const GoogleCalendar = {
       localEvents: JSON.parse(localStorage.getItem('gcal_local_events') || '[]'),
       localShowForm: false,
       localNewEv: { title:'', startDate:'', startTime:'', endDate:'', endTime:'', location:'', desc:'', color:'#4285F4', allDay: false },
-      localNewReminder: { title:'', subtitle:'', date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(), time:'', page:'' },
+      localNewReminder: { title:'', subtitle:'', date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(), time:'', page:'', category: 'manual' },
+      newCustomCategoryInput: '',
+      showManageCategoryModal: false,
+      customReminderCategories: (() => {
+        try {
+          const raw = WorkspaceStorage.getItem('gcal_custom_reminder_categories');
+          return raw ? JSON.parse(raw) : [];
+        } catch(_e) { return []; }
+      })(),
       localStorageTick: 0,
       agendaFilterOpen: false,
       agendaFilters: { task: true, habit: true, manual: true },
-      agendaFilterOptions: [
-        { key: 'task',   label: 'Task Plan (Job Logbook)', color: '#D67B52' },
-        { key: 'habit',  label: 'Habit (Habit Tracker)',   color: '#A3B18A' },
-        { key: 'manual', label: 'Pengingat (edit by n)',   color: '#F59E0B' },
-      ],
+      // agendaFilterOptions moved to computed (includes custom categories)
       // Warna kustom per kategori filter agenda (bisa diubah lewat color picker)
       agendaFilterColors: (() => {
         const defaults = { task: '#D67B52', habit: '#A3B18A', manual: '#F59E0B' };
@@ -8955,6 +9016,17 @@ const GoogleCalendar = {
       const now = new Date();
       return now.getHours() * 60 + now.getMinutes();
     },
+    agendaFilterOptions() {
+      const base = [
+        { key: 'task',   label: 'Task Plan (Job Logbook)', color: '#D67B52' },
+        { key: 'habit',  label: 'Habit (Habit Tracker)',   color: '#A3B18A' },
+        { key: 'manual', label: 'Pengingat (edit by n)',   color: '#F59E0B' },
+      ];
+      const custom = this.customReminderCategories.map(cat => ({
+        key: cat.key, label: cat.label + ' (Kategori Custom)', color: cat.color || '#9CA3AF'
+      }));
+      return [...base, ...custom];
+    },
     agendaActiveFilterCount() {
       return Object.values(this.agendaFilters).filter(Boolean).length;
     },
@@ -8972,7 +9044,6 @@ const GoogleCalendar = {
       // Active filters
       const showTask   = this.agendaFilters.task;
       const showHabit  = this.agendaFilters.habit;
-      const showManual = this.agendaFilters.manual;
 
       // ── Status selesai (ws_notif_action_status) untuk tanggal ds ──
       let actionStatus = {};
@@ -9043,23 +9114,24 @@ const GoogleCalendar = {
         } catch(_e) { /* ignore */ }
       }
 
-      // --- Manual reminders ---
-      if (showManual) {
-        try {
-          const manuals = JSON.parse(WorkspaceStorage.getItem('ws_manual_notifs') || '[]');
-          manuals.filter(m => m.date === ds).forEach(m => {
-            const id = 'manual-' + m.id;
-            const done = isActionDone(m.id);
-            if (m.time) {
-              const [sh, sm] = m.time.split(':').map(Number);
-              const startMin = sh * 60 + (sm || 0);
-              timed.push({ id, title: m.title, type: 'manual', color: TYPE_COLORS.manual, startMin, endMin: startMin + 30, raw: m, done, actionable: true });
-            } else {
-              allDayItems.push({ id, title: m.title, type: 'manual', color: TYPE_COLORS.manual, raw: m, done, actionable: true });
-            }
-          });
-        } catch(_e) { /* ignore */ }
-      }
+      // --- Manual reminders (default + custom categories) ---
+      try {
+        const manuals = JSON.parse(WorkspaceStorage.getItem('ws_manual_notifs') || '[]');
+        manuals.filter(m => m.date === ds).forEach(m => {
+          const cat = m.category || 'manual';
+          if (this.agendaFilters[cat] === false) return;
+          const id = 'manual-' + m.id;
+          const done = isActionDone(m.id);
+          const color = TYPE_COLORS[cat] || TYPE_COLORS.manual;
+          if (m.time) {
+            const [sh, sm] = m.time.split(':').map(Number);
+            const startMin = sh * 60 + (sm || 0);
+            timed.push({ id, title: m.title, type: 'manual', category: cat, color, startMin, endMin: startMin + 30, raw: m, done, actionable: true });
+          } else {
+            allDayItems.push({ id, title: m.title, type: 'manual', category: cat, color, raw: m, done, actionable: true });
+          }
+        });
+      } catch(_e) { /* ignore */ }
 
       // --- Assign overlap columns for timed items ---
       timed.sort((a, b) => a.startMin - b.startMin || a.endMin - b.endMin);
@@ -9110,6 +9182,11 @@ const GoogleCalendar = {
     this.localCurDate = new Date();
     this._onPlansUpdated = () => { this.localStorageTick++; };
     globalThis.addEventListener('ws-plans-updated', this._onPlansUpdated);
+    // Pastikan setiap kategori custom punya state filter & warna default
+    this.customReminderCategories.forEach(cat => {
+      if (!(cat.key in this.agendaFilters)) this.agendaFilters[cat.key] = true;
+      if (!(cat.key in this.agendaFilterColors)) this.agendaFilterColors[cat.key] = cat.color || '#9CA3AF';
+    });
   },
   beforeUnmount() {
     globalThis.removeEventListener('ws-plans-updated', this._onPlansUpdated);
@@ -9301,18 +9378,20 @@ const GoogleCalendar = {
         } catch(_e) { /* ignore */ }
       }
 
-      // Manual reminders
-      if (this.agendaFilters.manual) {
-        try {
-          const manuals = JSON.parse(WorkspaceStorage.getItem('ws_manual_notifs') || '[]');
-          manuals.filter(m => m.date === dateStr).forEach(m => {
-            const done = isActionDone(m.id);
-            let startMin = null, endMin = null;
-            if (m.time) { const [sh, sm] = m.time.split(':').map(Number); startMin = sh * 60 + (sm || 0); endMin = startMin + 30; }
-            items.push({ id: 'manual-' + m.id, title: m.title, type: 'manual', color: TYPE_COLORS.manual, startMin, endMin, done, allDay: !m.time });
-          });
-        } catch(_e) { /* ignore */ }
-      }
+      // Manual reminders (default + custom categories)
+      try {
+        const manuals = JSON.parse(WorkspaceStorage.getItem('ws_manual_notifs') || '[]');
+        manuals.filter(m => m.date === dateStr).forEach(m => {
+          const cat = m.category || 'manual';
+          // skip jika kategori (default atau custom) sedang dinonaktifkan di filter agenda
+          if (this.agendaFilters[cat] === false) return;
+          const done = isActionDone(m.id);
+          let startMin = null, endMin = null;
+          if (m.time) { const [sh, sm] = m.time.split(':').map(Number); startMin = sh * 60 + (sm || 0); endMin = startMin + 30; }
+          const color = TYPE_COLORS[cat] || TYPE_COLORS.manual;
+          items.push({ id: 'manual-' + m.id, title: m.title, type: 'manual', category: cat, color, startMin, endMin, done, allDay: !m.time });
+        });
+      } catch(_e) { /* ignore */ }
 
       items.sort((a, b) => {
         if (a.startMin === null && b.startMin === null) return 0;
@@ -9332,11 +9411,16 @@ const GoogleCalendar = {
         manual: { color: this.agendaFilterColors.manual, label: 'Pengingat' },
         event:  { color: '#4285F4', label: 'Acara' },
       };
+      const customLabel = {};
+      this.customReminderCategories.forEach(c => { customLabel[c.key] = c.label; });
       const counts = {};
-      items.forEach(it => { counts[it.type] = (counts[it.type] || 0) + 1; });
-      return Object.entries(counts).map(([type, count]) => ({
-        type, count, color: typeMeta[type]?.color || '#999', label: typeMeta[type]?.label || type
-      }));
+      const groupKeyFor = (it) => (it.type === 'manual' && it.category && it.category !== 'manual') ? it.category : it.type;
+      items.forEach(it => { const gk = groupKeyFor(it); counts[gk] = (counts[gk] || 0) + 1; });
+      return Object.entries(counts).map(([gk, count]) => {
+        const meta = typeMeta[gk];
+        if (meta) return { type: gk, count, color: meta.color || '#999', label: meta.label };
+        return { type: gk, count, color: this.agendaFilterColors[gk] || '#999', label: customLabel[gk] || gk };
+      });
     },
 
     // ── Total item count untuk badge di month view ──
@@ -9428,6 +9512,7 @@ const GoogleCalendar = {
         time: this.localNewReminder.time,
         timeVal: hh * 60 + (mm || 0),
         page: this.localNewReminder.page || null,
+        category: this.localNewReminder.category || 'manual',
         isHabit: false,
         isManual: true
       });
@@ -9438,8 +9523,48 @@ const GoogleCalendar = {
       this.localShowForm = false;
       this.localSelectedDate = this.localNewReminder.date;
       this.localView = 'agenda';
-      this.localNewReminder = { title:'', subtitle:'', date: this.localFmtDate(new Date()), time:'', page:'' };
+      this.localNewReminder = { title:'', subtitle:'', date: this.localFmtDate(new Date()), time:'', page:'', category: 'manual' };
       setTimeout(() => { this.localSuccess = null; }, 3000);
+    },
+    // ── Kategori Custom untuk Pengingat Manual ──
+    addCustomReminderCategory() {
+      const label = this.newCustomCategoryInput.trim();
+      if (!label) return;
+      const key = 'custom_' + label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') + '_' + Date.now().toString(36);
+      const palette = ['#8E24AA', '#0B8043', '#E67C73', '#039BE5', '#F6BF26', '#3F9142', '#D50000', '#7C3AED', '#0891B2'];
+      const color = palette[this.customReminderCategories.length % palette.length];
+      const newCat = { key, label, color };
+      this.customReminderCategories.push(newCat);
+      try { WorkspaceStorage.setItem('gcal_custom_reminder_categories', JSON.stringify(this.customReminderCategories)); } catch(_e) { /* ignore */ }
+      // Aktifkan filter & warna untuk kategori baru ini secara langsung
+      this.agendaFilters[key] = true;
+      this.agendaFilterColors[key] = color;
+      try { WorkspaceStorage.setItem('gcal_agenda_filter_colors', JSON.stringify(this.agendaFilterColors)); } catch(_e) { /* ignore */ }
+      // Pilih kategori baru ini langsung di form
+      this.localNewReminder.category = key;
+      this.newCustomCategoryInput = '';
+    },
+    deleteCustomReminderCategory(key) {
+      // Pengingat yang sudah pakai kategori ini dikembalikan ke kategori default
+      try {
+        const raw = WorkspaceStorage.getItem('ws_manual_notifs');
+        let manuals = raw ? JSON.parse(raw) : [];
+        let changed = false;
+        manuals = manuals.map(m => {
+          if (m.category === key) { changed = true; return { ...m, category: 'manual' }; }
+          return m;
+        });
+        if (changed) WorkspaceStorage.setItem('ws_manual_notifs', JSON.stringify(manuals));
+      } catch(_e) { /* ignore */ }
+      this.customReminderCategories = this.customReminderCategories.filter(c => c.key !== key);
+      try { WorkspaceStorage.setItem('gcal_custom_reminder_categories', JSON.stringify(this.customReminderCategories)); } catch(_e) { /* ignore */ }
+      // Bersihkan state filter & warna kategori yang dihapus
+      delete this.agendaFilters[key];
+      delete this.agendaFilterColors[key];
+      try { WorkspaceStorage.setItem('gcal_agenda_filter_colors', JSON.stringify(this.agendaFilterColors)); } catch(_e) { /* ignore */ }
+      // Jika form sedang memakai kategori ini, kembalikan ke default
+      if (this.localNewReminder.category === key) this.localNewReminder.category = 'manual';
+      this.localStorageTick++;
     },
     localAddEvent() {
       if (!this.localNewEv.title.trim()) { this.localError = 'Judul acara tidak boleh kosong!'; return; }
