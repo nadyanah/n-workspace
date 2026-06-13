@@ -1176,7 +1176,7 @@ const JobLogbook = {
 
       <!-- ── Done Celebration Modal ── -->
       <transition name="reminder-popup-fade">
-        <div v-if="showDoneModal" class="reminder-popup-overlay" @click.self="closeDoneModal" style="z-index: 10000;">
+        <div v-if="showDoneModal" class="reminder-popup-overlay" style="z-index: 10000;">
           <div class="reminder-popup-card">
 
             <!-- Header — struktur identik reminder popup live/open -->
@@ -1395,8 +1395,8 @@ const JobLogbook = {
       const q = this.searchQuery.toLowerCase().trim();
       return [...this.plans]
         .filter(p => {
-          // Plan yang sudah Completed tidak tampil di task plan list (tapi tetap ada di agenda view dicoret)
-          if (p.phase === 'Completed') return false;
+          // Plan yang sudah Completed tidak tampil di task plan list, kecuali yang sedang menunggu konfirmasi popup
+          if (p.phase === 'Completed' && !(this.pendingDonePlan && this.pendingDonePlan.id === p.id)) return false;
           // ── local plan filters ──
           if (this.planFilterPriority && p.priority !== this.planFilterPriority) return false;
           if (this.planFilterSchedule === 'overdue' && p.date >= today) return false;
@@ -1673,6 +1673,7 @@ const JobLogbook = {
       }
     },
     closeDoneModal() {
+      // Tutup popup saja — plan tetap Completed, tidak dihapus dari list
       this.showDoneModal = false;
       this.pendingDonePlan = null;
     },
@@ -5758,7 +5759,7 @@ const DailyNutrition = {
             <div class="timeline-card">
 
               <!-- Card Header: kategori + source + actions -->
-              <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px;">
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; padding-bottom: 0;">
                 <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0;">
                   <span class="timeline-category" :style="{ background: getCatColor(ins.category) + '18', color: getCatColor(ins.category), border: '1.5px solid ' + getCatColor(ins.category) + '40' }">
                     {{ ins.category }}
@@ -5781,26 +5782,38 @@ const DailyNutrition = {
                   <button class="card-nav-btn" @click="deleteInsight(idx)" title="Hapus insight" style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
                     <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                   </button>
+                  <button class="card-nav-btn" @click="toggleInsightExpand(ins.id || idx)" :title="expandedInsights.has(ins.id || idx) ? 'Sembunyikan detail' : 'Lihat detail'"
+                    style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                    <svg :style="{ transform: expandedInsights.has(ins.id || idx) ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s' }"
+                      viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </button>
                 </div>
               </div>
 
-              <!-- Judul -->
-              <h3 class="timeline-title" style="font-size: 15.5px; font-weight: 800; color: var(--text-dark); margin: 0 0 10px 0; line-height: 1.4;">{{ ins.title }}</h3>
+              <!-- Judul selalu tampil -->
+              <h3 class="timeline-title" style="font-size: 15.5px; font-weight: 800; color: var(--text-dark); margin: 0 0 10px 0; line-height: 1.4; padding: 0 0 10px 0;">{{ ins.title }}</h3>
 
-              <!-- Divider -->
-              <div style="height: 1px; background: var(--color-sand); margin-bottom: 12px;"></div>
+              <!-- Collapsible body -->
+              <div :style="{ maxHeight: expandedInsights.has(ins.id || idx) ? 'none' : '0px', overflow: 'hidden', transition: 'max-height 0.3s ease' }">
+                <!-- Divider -->
+                <div style="height: 1px; background: var(--color-sand); margin-bottom: 12px;"></div>
 
-              <!-- Detail / rangkuman -->
-              <div class="insight-rich-content" style="font-size: 13.5px; color: var(--text-dark); line-height: 1.75; margin-bottom: 14px;" v-html="ins.details"></div>
+                <!-- Detail / rangkuman -->
+                <div class="insight-rich-content" style="font-size: 13.5px; color: var(--text-dark); line-height: 1.75; margin-bottom: 14px;" v-html="ins.details"></div>
 
-              <!-- Takeaway -->
-              <div class="timeline-takeaway" style="display: flex; gap: 10px; align-items: flex-start;">
-                <span style="font-size: 16px; flex-shrink: 0; margin-top: 1px;">💡</span>
-                <div style="flex: 1; min-width: 0;">
-                  <div style="font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-sage); margin-bottom: 4px;">Takeaway</div>
-                  <div style="font-size: 13px; color: var(--text-dark); line-height: 1.65;" v-html="ins.takeaway"></div>
+                <!-- Takeaway -->
+                <div class="timeline-takeaway" style="display: flex; gap: 10px; align-items: flex-start;">
+                  <span style="font-size: 16px; flex-shrink: 0; margin-top: 1px;">💡</span>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-sage); margin-bottom: 4px;">Takeaway</div>
+                    <div style="font-size: 13px; color: var(--text-dark); line-height: 1.65;" v-html="ins.takeaway"></div>
+                  </div>
                 </div>
               </div>
+
+
 
             </div>
           </div>
@@ -6001,6 +6014,7 @@ const DailyNutrition = {
       newInsightCatInput: '',
       customInsightCategories: [],
       insights: [],
+      expandedInsights: new Set(),
       editingInsightId: null,
       form: {
         date: new Date().toISOString().split('T')[0],
@@ -6250,6 +6264,11 @@ const DailyNutrition = {
       const realIdx = this.insights.findIndex(i => i.id === insToDelete.id);
       if (realIdx !== -1) this.insights.splice(realIdx, 1);
       this.saveToStorage();
+    },
+    toggleInsightExpand(id) {
+      const s = new Set(this.expandedInsights);
+      if (s.has(id)) { s.delete(id); } else { s.add(id); }
+      this.expandedInsights = s;
     },
     saveToStorage() {
       WorkspaceStorage.setItem('personal_workspace_nutrition_insights', JSON.stringify(this.insights));
