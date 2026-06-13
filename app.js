@@ -323,7 +323,12 @@ const App = {
       saveConfig();
     };
 
-    onMounted(() => {
+    onMounted(async () => {
+      // ✅ FIX: Tunggu Supabase storage selesai fetch data sebelum baca/tulis apapun.
+      // Tanpa ini, komponen baca data sebelum Supabase kelar → dapat null →
+      // tulis default value → overwrite data device utama di Supabase.
+      await window._workspaceStorageReady;
+
       loadConfig();
       updateHabitDays();
 

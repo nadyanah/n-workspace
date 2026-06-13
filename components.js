@@ -1498,7 +1498,10 @@ const JobLogbook = {
       return cells;
     }
   },
-  created() {
+  async created() {
+    // ✅ FIX: Tunggu Supabase storage siap sebelum baca data
+    await window._workspaceStorageReady;
+
     // Load Logbook Data
     const savedCats = WorkspaceStorage.getItem('personal_workspace_job_categories');
     if (savedCats) { try { this.customCategories = JSON.parse(savedCats); } catch (e) { this.customCategories = []; } }
@@ -2904,7 +2907,10 @@ const CalendarMoment = {
       return list;
     }
   },
-  created() {
+  async created() {
+    // ✅ FIX: Tunggu Supabase storage siap sebelum baca data
+    await window._workspaceStorageReady;
+
     const saved = WorkspaceStorage.getItem('personal_workspace_calendar_moments');
     if (saved) {
       try {
@@ -4174,7 +4180,10 @@ const ContentTracker = {
       }
     };
   },
-  created() {
+  async created() {
+    // ✅ FIX: Tunggu Supabase storage siap sebelum baca data
+    await window._workspaceStorageReady;
+
     // 1. Load Columns
     const savedCols = WorkspaceStorage.getItem('personal_workspace_content_columns');
     if (savedCols) {
@@ -5135,7 +5144,10 @@ const InterviewPractice = {
       return this.questions.filter(q => q.category === this.selectedCategory);
     }
   },
-  created() {
+  async created() {
+    // ✅ FIX: Tunggu Supabase storage siap sebelum baca data
+    await window._workspaceStorageReady;
+
     const savedQ = WorkspaceStorage.getItem('personal_workspace_interview_questions');
     if (savedQ) this.questions = JSON.parse(savedQ);
     else WorkspaceStorage.setItem('personal_workspace_interview_questions', JSON.stringify(this.questions));
@@ -6040,7 +6052,10 @@ const DailyNutrition = {
       return sorted[0]?.title || '—';
     }
   },
-  created() {
+  async created() {
+    // ✅ FIX: Tunggu Supabase storage siap sebelum baca data
+    await window._workspaceStorageReady;
+
     const savedCats = WorkspaceStorage.getItem('personal_workspace_insight_categories');
     if (savedCats) { try { this.customInsightCategories = JSON.parse(savedCats); } catch(e) { this.customInsightCategories = []; } }
 
@@ -6897,7 +6912,10 @@ const HabitTracker = {
       this._autoTriggerHabitFromNotif(habitId);
     }
   },
-  created() {
+  async created() {
+    // ✅ FIX: Tunggu Supabase storage siap sebelum baca data
+    await window._workspaceStorageReady;
+
     const savedCats = WorkspaceStorage.getItem('aesthetic_habit_custom_categories');
     if (savedCats) {
       this.customCategories = JSON.parse(savedCats);
@@ -8010,7 +8028,9 @@ const PomodoroTimer = {
       }
     }
   },
-  mounted() {
+  async mounted() {
+    // ✅ FIX: Tunggu Supabase storage siap sebelum baca data
+    await window._workspaceStorageReady;
     this.loadState();
   },
   beforeUnmount() {
@@ -10509,7 +10529,10 @@ const FinancialTracker = {
     },
   },
 
-  mounted() {
+  async mounted() {
+    // ✅ FIX: Tunggu Supabase storage siap sebelum baca data
+    await window._workspaceStorageReady;
+
     try {
       const savedBanks = WorkspaceStorage.getItem('fin_banks');
       if (savedBanks) this.banks = JSON.parse(savedBanks);

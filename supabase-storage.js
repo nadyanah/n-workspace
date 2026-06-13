@@ -330,6 +330,12 @@ const WorkspaceStorage = {
   },
 
   setItem(key, value) {
+    // Guard: jangan simpan sebelum init selesai — bisa overwrite data Supabase
+    // dengan nilai kosong/default dari device yang baru login
+    if (!this._initialized) {
+      console.warn(`[WorkspaceStorage] setItem("${key}") dipanggil sebelum init selesai — diabaikan untuk mencegah overwrite data Supabase.`);
+      return;
+    }
     this._cache[key] = value;
     this._scheduleSave(key, value);
   },
