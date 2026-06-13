@@ -452,8 +452,7 @@ const ReminderPopup = {
         const raw = WorkspaceStorage.getItem('ws_manual_notifs');
         if (raw) {
           const manuals = JSON.parse(raw);
-          manuals.filter(m => m.date === this.todayStr).forEach(m => {
-            if (!base.find(b => b.id === m.id)) base.push({ ...m, isHabit: false, isManual: true });
+          manuals.filter(m => reminderOccursOnDate(m, this.todayStr)).forEach(m => {
           });
         }
       } catch(e) {}
@@ -724,6 +723,43 @@ const ReminderPopup = {
 };
 
 
+// ── Helper: cek apakah pengingat manual berlaku pada tanggal tertentu ──
+// Mendukung recurrence ala Google Calendar: none, daily, weekly, monthly, yearly, weekday
+// startDate (m.date) = tanggal mulai berlaku; recurrence menentukan pengulangan setelahnya
+if (typeof reminderOccursOnDate === 'undefined') {
+  var reminderOccursOnDate = function(m, dateStr) {
+    if (!m || !m.date || !dateStr) return false;
+    const rec = m.recurrence || 'none';
+    if (dateStr < m.date) return false; // belum mulai
+    if (m.endDate && dateStr > m.endDate) return false; // sudah berakhir
+    if (rec === 'none') return m.date === dateStr;
+
+    const start = new Date(m.date + 'T00:00:00');
+    const target = new Date(dateStr + 'T00:00:00');
+    if (isNaN(start) || isNaN(target)) return m.date === dateStr;
+
+    switch (rec) {
+      case 'daily':
+        return true;
+      case 'weekday': {
+        const day = target.getDay(); // 0=Minggu, 6=Sabtu
+        return day >= 1 && day <= 5;
+      }
+      case 'weekly': {
+        return start.getDay() === target.getDay();
+      }
+      case 'monthly': {
+        return start.getDate() === target.getDate();
+      }
+      case 'yearly': {
+        return start.getDate() === target.getDate() && start.getMonth() === target.getMonth();
+      }
+      default:
+        return m.date === dateStr;
+    }
+  };
+}
+
 // ── Helper: ambil notif belum dikerjakan dari hari tertentu ──
 function _snapshotMissedForDate(dateStr) {
   try {
@@ -741,9 +777,9 @@ function _snapshotMissedForDate(dateStr) {
     } catch(e) {}
     try {
       const raw = WorkspaceStorage.getItem('ws_manual_notifs');
-      if (raw) JSON.parse(raw).filter(m => m.date === dateStr).forEach(m => {
+      if (raw) JSON.parse(raw).filter(m => reminderOccursOnDate(m, dateStr)).forEach(m => {
         if (!base.find(b => b.id === m.id))
-          base.push({ id: m.id, title: m.title, subtitle: m.subtitle || 'Pengingat manual', time: m.time, type: 'manual' });
+          base.push({ id: m.id, title: m.title, subtitle: m.subtitle || 'Pengingat manual', time: m.time, endTime: m.endTime || null, type: 'manual' });
       });
     } catch(e) {}
     // Task Plan hari itu yang punya waktu -> snapshot juga sebagai missed
@@ -903,8 +939,7 @@ const NotificationPanel = {
                   </div>
                 </div>
                 <div class="notif-item-right" style="align-items: center;">
-                  <span class="notif-time-badge">{{ entry.item.time }}</span>
-                  <div style="display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+                  <span class="notif-time-badge">{{ entry.item.endTime ? entry.item.time + '–' + entry.item.endTime : entry.item.time }}</span>
                     <!-- Hapus manual reminder -->
                     <button v-if="entry.item.isManual && !entry.item.done" @click.stop="deleteManualReminder(entry.item.id)"
                             title="Hapus pengingat ini"
@@ -927,7 +962,7 @@ const NotificationPanel = {
             <!-- ══ TAMBAH PENGINGAT MANUAL ══ -->
             <div style="margin-top: 18px; border-top: 1.5px dashed var(--color-sand); padding-top: 14px;">
               <button v-if="!showManualForm"
-                      @click="showManualForm = true"
+                      @click="showManualForm = true; manualForm.date = manualForm.date || todayStr"
                       class="notif-add-manual-btn">
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
                 Set Pengingat Manual Hari Ini
@@ -961,11 +996,55 @@ const NotificationPanel = {
                            maxlength="80"
                            style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;" />
                   </div>
-                  <div style="margin-bottom:12px;">
-                    <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Jam Pengingat *</label>
-                    <input v-model="manualForm.time"
-                           type="time"
-                           style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12.5px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;" />
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+                    <div>
+                      <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Jam Mulai *</label>
+                      <input v-model="manualForm.time"
+                             type="time"
+                             style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12.5px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;" />
+                    </div>
+                    <div>
+                      <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Jam Selesai</label>
+                      <input v-model="manualForm.endTime"
+                             type="time"
+                             style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12.5px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;" />
+                    </div>
+                  </div>
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:4px;">
+                    <div>
+                      <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Tanggal Mulai *</label>
+                      <input v-model="manualForm.date"
+                             type="date"
+                             style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12.5px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;" />
+                    </div>
+                    <div>
+                      <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Tanggal Selesai</label>
+                      <input v-model="manualForm.endDate"
+                             type="date" :min="manualForm.date"
+                             style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12.5px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;" />
+                    </div>
+                  </div>
+                  <p style="font-size:10.5px; color:var(--text-muted); margin:0 0 12px; line-height:1.5;">
+                    Jam Selesai & Tanggal Selesai opsional — kosongkan jika tidak perlu rentang.
+                  </p>
+
+                  <!-- ========== ULANGI / RECURRENCE (ala Google Calendar) ========== -->
+                  <div style="margin-bottom:12px; position:relative;">
+                    <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Ulangi</label>
+                    <button type="button" @click="showManualRecurrence = !showManualRecurrence"
+                            style="width:100%; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12.5px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;">
+                      <span>{{ manualRecurrenceLabel(manualForm.recurrence, manualForm.date) }}</span>
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: showManualRecurrence ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div v-if="showManualRecurrence" @click.stop
+                      style="position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:50; background:#fff; border:1px solid #dadce0; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.15); overflow:hidden;">
+                      <div v-for="opt in ['none','daily','weekly','monthly','yearly','weekday']" :key="opt"
+                        @click="manualForm.recurrence = opt; showManualRecurrence = false"
+                        :class="{ 'gcal-recurrence-opt-active': manualForm.recurrence === opt }"
+                        class="gcal-recurrence-opt">
+                        {{ manualRecurrenceLabel(opt, manualForm.date) }}
+                      </div>
+                    </div>
                   </div>
                   <div style="margin-bottom:12px;">
                     <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Arahkan ke Halaman (opsional)</label>
@@ -1114,7 +1193,8 @@ const NotificationPanel = {
       contentItems: [],
       actionStatus: {},
       showManualForm: false,
-      manualForm: { title: '', subtitle: '', time: '', page: '', category: 'manual' },
+      showManualRecurrence: false,
+      manualForm: { title: '', subtitle: '', date: '', endDate: '', time: '', endTime: '', page: '', category: 'manual', recurrence: 'none' },
       customReminderCategories: (() => {
         try {
           const raw = WorkspaceStorage.getItem('gcal_custom_reminder_categories');
@@ -1240,7 +1320,7 @@ const NotificationPanel = {
         const raw = WorkspaceStorage.getItem('ws_manual_notifs');
         if (raw) {
           const manuals = JSON.parse(raw);
-          manuals.filter(m => m.date === this.todayStr).forEach(m => {
+          manuals.filter(m => reminderOccursOnDate(m, this.todayStr)).forEach(m => {
             if (!base.find(b => b.id === m.id)) {
               base.push({
                 id: m.id,
@@ -1483,7 +1563,29 @@ const NotificationPanel = {
 
     cancelManualForm() {
       this.showManualForm = false;
-      this.manualForm = { title: '', subtitle: '', time: '', page: '', category: 'manual' };
+      this.showManualRecurrence = false;
+      this.manualForm = { title: '', subtitle: '', date: '', endDate: '', time: '', endTime: '', page: '', category: 'manual', recurrence: 'none' };
+    },
+
+    manualRecurrenceLabel(rec, dateStr) {
+      const dayNames = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+      let dayName = '', dateNum = '', monthName = '';
+      try {
+        const d = new Date((dateStr || this.todayStr) + 'T00:00:00');
+        dayName = dayNames[d.getDay()];
+        dateNum = d.getDate();
+        const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        monthName = monthNames[d.getMonth()];
+      } catch(_e) {}
+      const map = {
+        none: 'Tidak berulang',
+        daily: 'Harian',
+        weekly: 'Mingguan pada hari ' + dayName,
+        monthly: 'Bulanan pada tanggal ' + dateNum,
+        yearly: 'Tiap tahun pada ' + dateNum + ' ' + monthName,
+        weekday: 'Setiap hari kerja (Senin–Jumat)'
+      };
+      return map[rec] || map.none;
     },
 
     manualCategoryLabel(item) {
@@ -1558,9 +1660,13 @@ const NotificationPanel = {
         this.manualForm = {
           title: task.title,
           subtitle: task.subtitle || '',
+          date: this.todayStr,
+          endDate: '',
           time: task.time || '',
+          endTime: task.endTime || '',
           page: task.page || '',
-          category: task.category || 'manual'
+          category: task.category || 'manual',
+          recurrence: 'none'
         };
         return;
       }
@@ -1601,6 +1707,11 @@ const NotificationPanel = {
     saveManualReminder() {
       if (!this.manualForm.title.trim() || !this.manualForm.time) return;
       const [hh, mm] = this.manualForm.time.split(':').map(Number);
+      let endTimeVal = null;
+      if (this.manualForm.endTime) {
+        const [eh, em] = this.manualForm.endTime.split(':').map(Number);
+        endTimeVal = eh * 60 + (em || 0);
+      }
       const id = 'manual_' + Date.now();
       // Baca existing manual reminders dari storage
       let manuals = [];
@@ -1608,17 +1719,21 @@ const NotificationPanel = {
         const raw = WorkspaceStorage.getItem('ws_manual_notifs');
         manuals = raw ? JSON.parse(raw) : [];
       } catch(e) { manuals = []; }
-      // Bersihkan duplikat pengingat hari ini yang sama, pertahankan pengingat tanggal lain
-      const today = this.todayStr;
+      // Pengingat berlaku mulai tanggal yang dipilih (default hari ini)
+      const startDate = this.manualForm.date || this.todayStr;
       manuals.push({
         id,
-        date: today,
+        date: startDate,
+        endDate: this.manualForm.endDate || null,
         title: this.manualForm.title.trim(),
         subtitle: this.manualForm.subtitle.trim() || 'Pengingat manual',
         time: this.manualForm.time,
         timeVal: hh * 60 + (mm || 0),
+        endTime: this.manualForm.endTime || null,
+        endTimeVal,
         page: this.manualForm.page || null,
         category: this.manualForm.category || 'manual',
+        recurrence: this.manualForm.recurrence || 'none',
         isHabit: false,
         isManual: true
       });
@@ -1741,7 +1856,7 @@ const MissedTasksPage = {
                 <span style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:8px;
                              background:var(--bg-cream); border:1px solid var(--color-sand);
                              color:var(--text-dark); white-space:nowrap;">
-                  {{ task.time }}
+                  {{ task.endTime ? task.time + '–' + task.endTime : task.time }}
                 </span>
                 <!-- Action hint -->
                 <span v-if="task.type === 'manual'"

@@ -5741,6 +5741,20 @@ input:checked + .switch-slider:before {
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .gcal-input:focus { outline: none; border-color: var(--color-terracotta); box-shadow: 0 0 0 3px rgba(214,123,82,0.12); }
+.gcal-recurrence-opt {
+  padding: 10px 14px;
+  font-size: 13.5px;
+  cursor: pointer;
+  color: var(--text-dark);
+  background: var(--bg-card);
+  font-family: 'Outfit', sans-serif;
+  transition: background 0.12s;
+}
+.gcal-recurrence-opt:hover { background: var(--color-sand); }
+.gcal-recurrence-opt-active {
+  background: var(--color-sand);
+  font-weight: 700;
+}
 .gcal-btn-ghost {
   padding: 8px 18px;
   font-size: 13.5px; font-weight: 600;

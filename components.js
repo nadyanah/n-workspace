@@ -15,6 +15,40 @@
 // 7. Icon Manager (Pengaturan) .. (Baris ~1780)- Pengubah model ikon & custom URL gambar
 // ============================================================================
 
+// ── Helper global: cek apakah pengingat manual berlaku pada tanggal tertentu ──
+// Mendukung recurrence ala Google Calendar: none, daily, weekly, monthly, yearly, weekday
+// m.date = tanggal mulai berlaku (start date); recurrence menentukan pengulangan setelahnya
+if (typeof reminderOccursOnDate === 'undefined') {
+  var reminderOccursOnDate = function(m, dateStr) {
+    if (!m || !m.date || !dateStr) return false;
+    const rec = m.recurrence || 'none';
+    if (dateStr < m.date) return false; // belum mulai
+    if (m.endDate && dateStr > m.endDate) return false; // sudah berakhir
+    if (rec === 'none') return m.date === dateStr;
+
+    const start = new Date(m.date + 'T00:00:00');
+    const target = new Date(dateStr + 'T00:00:00');
+    if (isNaN(start) || isNaN(target)) return m.date === dateStr;
+
+    switch (rec) {
+      case 'daily':
+        return true;
+      case 'weekday': {
+        const day = target.getDay();
+        return day >= 1 && day <= 5;
+      }
+      case 'weekly':
+        return start.getDay() === target.getDay();
+      case 'monthly':
+        return start.getDate() === target.getDate();
+      case 'yearly':
+        return start.getDate() === target.getDate() && start.getMonth() === target.getMonth();
+      default:
+        return m.date === dateStr;
+    }
+  };
+}
+
 // 1. My 8-4 Job Logbook Component
 const JobLogbook = {
   template: `
@@ -5776,15 +5810,15 @@ const DailyNutrition = {
                   </a>
                 </div>
                 <div style="display: inline-flex; gap: 5px; flex-shrink: 0; align-items: center;">
+                  <button class="card-nav-btn" @click="viewInsightDetail(ins)" title="Buka detail lengkap"
+                    style="background: #FFF4ED; border: 1.5px solid #F5C8A8; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+                  </button>
                   <button class="card-nav-btn" @click="startEditInsight(idx)" title="Edit insight" style="background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
                     <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
                   <button class="card-nav-btn" @click="deleteInsight(idx)" title="Hapus insight" style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
                     <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                  </button>
-                  <button class="card-nav-btn" @click="viewInsightDetail(ins)" title="Buka detail lengkap"
-                    style="background: #FFF4ED; border: 1.5px solid #F5C8A8; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
                   </button>
                   <button class="card-nav-btn" @click="toggleInsightExpand(ins.id || idx)" :title="expandedInsights.has(ins.id || idx) ? 'Sembunyikan detail' : 'Lihat detail'"
                     style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
@@ -8817,13 +8851,48 @@ const GoogleCalendar = {
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
                 <div>
-                  <label class="gcal-label">Tanggal *</label>
+                  <label class="gcal-label">Jam Mulai *</label>
+                  <input type="time" class="gcal-input" v-model="localNewReminder.time" />
+                </div>
+                <div>
+                  <label class="gcal-label">Jam Selesai (opsional)</label>
+                  <input type="time" class="gcal-input" v-model="localNewReminder.endTime" />
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+                <div>
+                  <label class="gcal-label">Tanggal Mulai *</label>
                   <input type="date" class="gcal-input" v-model="localNewReminder.date" />
                 </div>
                 <div>
-                  <label class="gcal-label">Jam Pengingat *</label>
-                  <input type="time" class="gcal-input" v-model="localNewReminder.time" />
+                  <label class="gcal-label">Tanggal Selesai (opsional)</label>
+                  <input type="date" class="gcal-input" v-model="localNewReminder.endDate" :min="localNewReminder.date" />
                 </div>
+              </div>
+              <p style="font-size:11px; color:var(--text-muted); margin:-6px 0 14px; line-height:1.5;">
+                Pengingat berlaku mulai Tanggal Mulai. Jika diisi, Tanggal Selesai membatasi sampai kapan aturan ulang berlaku — kosongkan untuk berlaku terus-menerus.
+              </p>
+
+              <!-- ========== ULANGI / RECURRENCE (ala Google Calendar) ========== -->
+              <div style="margin-bottom:14px; position:relative;">
+                <label class="gcal-label">Ulangi</label>
+                <button type="button" class="gcal-input" @click="localShowRecurrenceDropdown = !localShowRecurrenceDropdown"
+                  style="width:100%; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; background:#fff;">
+                  <span>{{ localRecurrenceLabel(localNewReminder.recurrence, localNewReminder.date) }}</span>
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: localShowRecurrenceDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div v-if="localShowRecurrenceDropdown" @click.stop
+                  style="position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:50; background:#fff; border:1px solid #dadce0; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.15); overflow:hidden;">
+                  <div v-for="opt in ['none','daily','weekly','monthly','yearly','weekday']" :key="opt"
+                    @click="localNewReminder.recurrence = opt; localShowRecurrenceDropdown = false"
+                    :class="{ 'gcal-recurrence-opt-active': localNewReminder.recurrence === opt }"
+                    class="gcal-recurrence-opt">
+                    {{ localRecurrenceLabel(opt, localNewReminder.date) }}
+                  </div>
+                </div>
+                <p v-if="localNewReminder.recurrence !== 'none'" style="font-size:11px; color:var(--text-muted); margin-top:6px; line-height:1.5;">
+                  Pengingat akan berulang otomatis mulai dari tanggal yang dipilih, sesuai aturan di atas.
+                </p>
               </div>
               <div style="margin-bottom:20px;">
                 <label class="gcal-label">Arahkan ke Halaman (opsional)</label>
@@ -9057,7 +9126,8 @@ const GoogleCalendar = {
       localEvents: JSON.parse(localStorage.getItem('gcal_local_events') || '[]'),
       localShowForm: false,
       localNewEv: { title:'', startDate:'', startTime:'', endDate:'', endTime:'', location:'', desc:'', color:'#4285F4', allDay: false },
-      localNewReminder: { title:'', subtitle:'', date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(), time:'', page:'', category: 'manual' },
+      localNewReminder: { title:'', subtitle:'', date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(), endDate: '', time:'', endTime:'', page:'', category: 'manual', recurrence: 'none' },
+      localShowRecurrenceDropdown: false,
       newCustomCategoryInput: '',
       showManageCategoryModal: false,
       customReminderCategories: (() => {
@@ -9280,7 +9350,7 @@ const GoogleCalendar = {
       // --- Manual reminders (default + custom categories) ---
       try {
         const manuals = JSON.parse(WorkspaceStorage.getItem('ws_manual_notifs') || '[]');
-        manuals.filter(m => m.date === ds).forEach(m => {
+        manuals.filter(m => reminderOccursOnDate(m, ds)).forEach(m => {
           const cat = m.category || 'manual';
           if (this.agendaFilters[cat] === false) return;
           const id = 'manual-' + m.id;
@@ -9289,7 +9359,14 @@ const GoogleCalendar = {
           if (m.time) {
             const [sh, sm] = m.time.split(':').map(Number);
             const startMin = sh * 60 + (sm || 0);
-            timed.push({ id, title: m.title, type: 'manual', category: cat, color, startMin, endMin: startMin + 30, raw: m, done, actionable: true });
+            let endMin = startMin + 30;
+            if (m.endTimeVal != null && m.endTimeVal > startMin) endMin = m.endTimeVal;
+            else if (m.endTime) {
+              const [eh, em] = m.endTime.split(':').map(Number);
+              const ev = eh * 60 + (em || 0);
+              if (ev > startMin) endMin = ev;
+            }
+            timed.push({ id, title: m.title, type: 'manual', category: cat, color, startMin, endMin, raw: m, done, actionable: true });
           } else {
             allDayItems.push({ id, title: m.title, type: 'manual', category: cat, color, raw: m, done, actionable: true });
           }
@@ -9591,13 +9668,23 @@ const GoogleCalendar = {
       // Manual reminders (default + custom categories)
       try {
         const manuals = JSON.parse(WorkspaceStorage.getItem('ws_manual_notifs') || '[]');
-        manuals.filter(m => m.date === dateStr).forEach(m => {
+        manuals.filter(m => reminderOccursOnDate(m, dateStr)).forEach(m => {
           const cat = m.category || 'manual';
           // skip jika kategori (default atau custom) sedang dinonaktifkan di filter agenda
           if (this.agendaFilters[cat] === false) return;
           const done = isActionDone(m.id);
           let startMin = null, endMin = null;
-          if (m.time) { const [sh, sm] = m.time.split(':').map(Number); startMin = sh * 60 + (sm || 0); endMin = startMin + 30; }
+          if (m.time) {
+            const [sh, sm] = m.time.split(':').map(Number);
+            startMin = sh * 60 + (sm || 0);
+            endMin = startMin + 30;
+            if (m.endTimeVal != null && m.endTimeVal > startMin) endMin = m.endTimeVal;
+            else if (m.endTime) {
+              const [eh, em] = m.endTime.split(':').map(Number);
+              const ev = eh * 60 + (em || 0);
+              if (ev > startMin) endMin = ev;
+            }
+          }
           const color = TYPE_COLORS[cat] || TYPE_COLORS.manual;
           items.push({ id: 'manual-' + m.id, title: m.title, type: 'manual', category: cat, color, startMin, endMin, done, allDay: !m.time });
         });
@@ -9705,9 +9792,16 @@ const GoogleCalendar = {
     },
     localAddReminder() {
       if (!this.localNewReminder.title.trim()) { this.localError = 'Judul pengingat tidak boleh kosong!'; return; }
-      if (!this.localNewReminder.date) { this.localError = 'Tanggal harus diisi!'; return; }
-      if (!this.localNewReminder.time) { this.localError = 'Jam pengingat harus diisi!'; return; }
+      if (!this.localNewReminder.date) { this.localError = 'Tanggal mulai harus diisi!'; return; }
+      if (!this.localNewReminder.time) { this.localError = 'Jam mulai harus diisi!'; return; }
+      if (this.localNewReminder.endDate && this.localNewReminder.endDate < this.localNewReminder.date) { this.localError = 'Tanggal selesai tidak boleh sebelum tanggal mulai!'; return; }
+      if (this.localNewReminder.endTime && this.localNewReminder.endTime <= this.localNewReminder.time) { this.localError = 'Jam selesai harus setelah jam mulai!'; return; }
       const [hh, mm] = this.localNewReminder.time.split(':').map(Number);
+      let endTimeVal = null;
+      if (this.localNewReminder.endTime) {
+        const [eh, em] = this.localNewReminder.endTime.split(':').map(Number);
+        endTimeVal = eh * 60 + (em || 0);
+      }
       const id = 'manual_' + Date.now();
       let manuals = [];
       try {
@@ -9717,12 +9811,16 @@ const GoogleCalendar = {
       manuals.push({
         id,
         date: this.localNewReminder.date,
+        endDate: this.localNewReminder.endDate || null,
         title: this.localNewReminder.title.trim(),
         subtitle: this.localNewReminder.subtitle.trim() || 'Pengingat manual',
         time: this.localNewReminder.time,
         timeVal: hh * 60 + (mm || 0),
+        endTime: this.localNewReminder.endTime || null,
+        endTimeVal,
         page: this.localNewReminder.page || null,
         category: this.localNewReminder.category || 'manual',
+        recurrence: this.localNewReminder.recurrence || 'none',
         isHabit: false,
         isManual: true
       });
@@ -9731,10 +9829,32 @@ const GoogleCalendar = {
       this.localSuccess = 'Pengingat "' + this.localNewReminder.title.trim() + '" berhasil disimpan!';
       this.localError = null;
       this.localShowForm = false;
+      this.localShowRecurrenceDropdown = false;
       this.localSelectedDate = this.localNewReminder.date;
       this.localView = 'agenda';
-      this.localNewReminder = { title:'', subtitle:'', date: this.localFmtDate(new Date()), time:'', page:'', category: 'manual' };
+      this.localNewReminder = { title:'', subtitle:'', date: this.localFmtDate(new Date()), endDate: '', time:'', endTime:'', page:'', category: 'manual', recurrence: 'none' };
       setTimeout(() => { this.localSuccess = null; }, 3000);
+    },
+    // ── Recurrence helper: label & opsi sesuai tanggal mulai (ala Google Calendar) ──
+    localRecurrenceLabel(rec, dateStr) {
+      const dayNames = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+      let dayName = '', dateNum = '', monthName = '';
+      try {
+        const d = new Date((dateStr || this.localNewReminder.date) + 'T00:00:00');
+        dayName = dayNames[d.getDay()];
+        dateNum = d.getDate();
+        const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        monthName = monthNames[d.getMonth()];
+      } catch(_e) {}
+      const map = {
+        none: 'Tidak berulang',
+        daily: 'Harian',
+        weekly: 'Mingguan pada hari ' + dayName,
+        monthly: 'Bulanan pada tanggal ' + dateNum,
+        yearly: 'Tiap tahun pada ' + dateNum + ' ' + monthName,
+        weekday: 'Setiap hari kerja (Senin–Jumat)'
+      };
+      return map[rec] || map.none;
     },
     // ── Kategori Custom untuk Pengingat Manual ──
     addCustomReminderCategory() {
