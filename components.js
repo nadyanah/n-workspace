@@ -8840,11 +8840,11 @@ const GoogleCalendar = {
       // --- Local Calendar State ---
       localView: 'month',
       localCurDate: new Date(),
-      localSelectedDate: new Date().toISOString().split('T')[0],
+      localSelectedDate: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(),
       localEvents: JSON.parse(localStorage.getItem('gcal_local_events') || '[]'),
       localShowForm: false,
       localNewEv: { title:'', startDate:'', startTime:'', endDate:'', endTime:'', location:'', desc:'', color:'#4285F4', allDay: false },
-      localNewReminder: { title:'', subtitle:'', date: new Date().toISOString().split('T')[0], time:'', page:'' },
+      localNewReminder: { title:'', subtitle:'', date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(), time:'', page:'' },
       localStorageTick: 0,
       agendaFilterOpen: false,
       agendaFilters: { task: true, habit: true, manual: true },
@@ -8896,7 +8896,7 @@ const GoogleCalendar = {
     localAgendaDateLabel() {
       const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
       const dows = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-      const todayStr = new Date().toISOString().split('T')[0];
+      const todayStr = this.localFmtDate(new Date());
       const dt = new Date(this.localSelectedDate + 'T12:00:00');
       const label = dows[dt.getDay()] + ', ' + dt.getDate() + ' ' + months[dt.getMonth()] + ' ' + dt.getFullYear();
       return this.localSelectedDate === todayStr ? 'Hari Ini · ' + label : label;
@@ -8904,7 +8904,7 @@ const GoogleCalendar = {
     localMonthCells() {
       const yr = this.localCurDate.getFullYear();
       const mo = this.localCurDate.getMonth();
-      const today = new Date(); const todayStr = today.toISOString().split('T')[0];
+      const today = new Date(); const todayStr = this.localFmtDate(today);
       const firstDay = new Date(yr, mo, 1);
       const startDow = firstDay.getDay(); // 0=Sun
       const daysInMonth = new Date(yr, mo + 1, 0).getDate();
@@ -8914,34 +8914,34 @@ const GoogleCalendar = {
       for (let i = startDow - 1; i >= 0; i--) {
         const d = prevDays - i;
         const dt = new Date(yr, mo - 1, d);
-        const ds = dt.toISOString().split('T')[0];
+        const ds = this.localFmtDate(dt);
         cells.push({ key: 'p'+d, day: d, inMonth: false, isToday: ds===todayStr, dateStr: ds });
       }
       // current month
       for (let d = 1; d <= daysInMonth; d++) {
         const dt = new Date(yr, mo, d);
-        const ds = dt.toISOString().split('T')[0];
+        const ds = this.localFmtDate(dt);
         cells.push({ key: 'c'+d, day: d, inMonth: true, isToday: ds===todayStr, dateStr: ds });
       }
       // next month filler
       const remaining = 42 - cells.length;
       for (let d = 1; d <= remaining; d++) {
         const dt = new Date(yr, mo + 1, d);
-        const ds = dt.toISOString().split('T')[0];
+        const ds = this.localFmtDate(dt);
         cells.push({ key: 'n'+d, day: d, inMonth: false, isToday: ds===todayStr, dateStr: ds });
       }
       return cells;
     },
     localWeekDays() {
       const dow = ['MIN','SEN','SEL','RAB','KAM','JUM','SAB'];
-      const today = new Date(); const todayStr = today.toISOString().split('T')[0];
+      const today = new Date(); const todayStr = this.localFmtDate(today);
       // Start of week from localCurDate (Sunday)
       const d = new Date(this.localCurDate);
       d.setDate(d.getDate() - d.getDay());
       const days = [];
       for (let i = 0; i < 7; i++) {
         const dt = new Date(d); dt.setDate(d.getDate() + i);
-        const ds = dt.toISOString().split('T')[0];
+        const ds = this.localFmtDate(dt);
         days.push({ dateStr: ds, dowLabel: dow[i], dayNum: dt.getDate(), isToday: ds===todayStr });
       }
       return days;
@@ -8962,7 +8962,7 @@ const GoogleCalendar = {
       void this.localStorageTick;
       const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
       const dows = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
-      const todayStr = new Date().toISOString().split('T')[0];
+      const todayStr = this.localFmtDate(new Date());
       const selectedDate = this.localSelectedDate || todayStr;
       const ds = selectedDate;
       const dt = new Date(ds + 'T12:00:00');
@@ -9026,19 +9026,17 @@ const GoogleCalendar = {
         } catch(_e) { /* ignore */ }
       }
 
-      // --- Habit reminders (hanya relevan untuk hari ini) ---
-      if (isToday && showHabit) {
+      // --- Habit reminders (hari ini: dari ws_habit_notifs; hari lalu/depan: dari histori habit) ---
+      if (showHabit) {
         try {
-          const habits = JSON.parse(WorkspaceStorage.getItem('ws_habit_notifs') || '[]');
-          habits.forEach(h => {
-            const id = 'habit-' + h.id;
-            const done = isActionDone(h.id);
+          this.localHabitItemsForDate(ds).forEach(h => {
+            const done = h.done;
             if (h.time) {
               const [sh, sm] = h.time.split(':').map(Number);
               const startMin = sh * 60 + (sm || 0);
-              timed.push({ id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, startMin, endMin: startMin + 30, raw: h, done, actionable: true });
+              timed.push({ id: h.id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, startMin, endMin: startMin + 30, raw: h, done, actionable: h.actionable });
             } else {
-              allDayItems.push({ id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, raw: h, done, actionable: true });
+              allDayItems.push({ id: h.id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, raw: h, done, actionable: h.actionable });
             }
           });
         } catch(_e) { /* ignore */ }
@@ -9116,6 +9114,73 @@ const GoogleCalendar = {
     globalThis.removeEventListener('ws-plans-updated', this._onPlansUpdated);
   },
   methods: {
+    // ── FIX: format Date object ke 'YYYY-MM-DD' berdasarkan LOCAL timezone,
+    // bukan UTC seperti toISOString(). Mencegah tanggal "geser" mundur 1 hari
+    // saat user berada di timezone +UTC (misal WIB) terutama tengah malam.
+    localFmtDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    },
+    // ── HELPER: ambil semua habit untuk SATU tanggal (hari ini ATAU masa lalu) ──
+    // Hari ini  → pakai ws_habit_notifs (sudah include jadwal jam) + status dari ws_notif_action_status
+    // Hari lalu → pakai aesthetic_habit_tracker_habits + habit.history['YYYY-MM'] utk cek selesai/tidak
+    //   (history menyimpan tanggal yg di-checklist; jika tgl tsb ada di history -> done = true)
+    //   Habit yg dibuat SETELAH tanggal tsb (createdAt > dateStr) tidak ditampilkan,
+    //   supaya histori tidak menampilkan habit yang belum exist saat itu.
+    localHabitItemsForDate(dateStr) {
+      const todayStr = this.localFmtDate(new Date());
+      const isToday = dateStr === todayStr;
+      const result = [];
+
+      if (isToday) {
+        let actionStatus = {};
+        try {
+          const raw = WorkspaceStorage.getItem('ws_notif_action_status');
+          const s = JSON.parse(raw || '{}');
+          actionStatus = s[dateStr] || {};
+        } catch(_e) { /* ignore */ }
+        try {
+          const habits = JSON.parse(WorkspaceStorage.getItem('ws_habit_notifs') || '[]');
+          habits.forEach(h => {
+            result.push({
+              id: 'habit-' + h.id,
+              title: h.title,
+              time: h.time || null,
+              done: !!actionStatus[h.id],
+              actionable: true
+            });
+          });
+        } catch(_e) { /* ignore */ }
+        return result;
+      }
+
+      // --- Tanggal masa lalu / masa depan: baca dari data habit asli + history ---
+      try {
+        const [yr, mo, dayNum] = dateStr.split('-').map(Number);
+        const yearMonthKey = `${String(yr).padStart(4,'0')}-${String(mo).padStart(2,'0')}`;
+        const habits = JSON.parse(WorkspaceStorage.getItem('aesthetic_habit_tracker_habits') || '[]');
+        habits.forEach(h => {
+          // Jika habit punya createdAt dan tanggal yg dilihat sebelum habit dibuat, skip
+          if (h.createdAt) {
+            const createdDateStr = String(h.createdAt).split('T')[0];
+            if (dateStr < createdDateStr) return;
+          }
+          const checkedDays = (h.history && h.history[yearMonthKey]) || [];
+          const done = checkedDays.includes(dayNum);
+          result.push({
+            id: 'habit-' + h.id,
+            title: h.name,
+            time: h.timeSchedule || null,
+            done,
+            actionable: false // histori: tidak bisa di-toggle dari Google Calendar
+          });
+        });
+      } catch(_e) { /* ignore */ }
+
+      return result;
+    },
     localGoToLogbook() {
       globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'jobLogbook' }));
     },
@@ -9145,7 +9210,7 @@ const GoogleCalendar = {
       } catch(_e) { /* ignore */ }
     },
     localToggleAgendaDone(block) {
-      const ds = this.localSelectedDate || new Date().toISOString().split('T')[0];
+      const ds = this.localSelectedDate || this.localFmtDate(new Date());
       const storageKey = (block.raw && block.raw.id) ? block.raw.id : block.id;
       try {
         const raw = WorkspaceStorage.getItem('ws_notif_action_status');
@@ -9164,7 +9229,7 @@ const GoogleCalendar = {
     // ── SHARED HELPER: semua item (semua tipe) untuk satu tanggal, dihormati filter ──
     localAllItemsForDate(dateStr) {
       void this.localStorageTick;
-      const todayStr = new Date().toISOString().split('T')[0];
+      const todayStr = this.localFmtDate(new Date());
       const isToday = dateStr === todayStr;
       const TYPE_COLORS = { task: '#D67B52', habit: '#A3B18A', manual: '#F59E0B', event: '#4285F4' };
       let actionStatus = {};
@@ -9204,15 +9269,13 @@ const GoogleCalendar = {
         } catch(_e) { /* ignore */ }
       }
 
-      // Habits (only today)
-      if (isToday && this.agendaFilters.habit) {
+      // Habits (hari ini: notif; hari lalu/depan: histori habit)
+      if (this.agendaFilters.habit) {
         try {
-          const habits = JSON.parse(WorkspaceStorage.getItem('ws_habit_notifs') || '[]');
-          habits.forEach(h => {
-            const done = isActionDone(h.id);
+          this.localHabitItemsForDate(dateStr).forEach(h => {
             let startMin = null, endMin = null;
             if (h.time) { const [sh, sm] = h.time.split(':').map(Number); startMin = sh * 60 + (sm || 0); endMin = startMin + 30; }
-            items.push({ id: 'habit-' + h.id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, startMin, endMin, done, allDay: !h.time });
+            items.push({ id: h.id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, startMin, endMin, done: h.done, allDay: !h.time });
           });
         } catch(_e) { /* ignore */ }
       }
@@ -9295,17 +9358,17 @@ const GoogleCalendar = {
     },
     localGoToday() {
       this.localCurDate = new Date();
-      this.localSelectedDate = new Date().toISOString().split('T')[0];
+      this.localSelectedDate = this.localFmtDate(new Date());
     },
     localPrevDay() {
       const d = new Date(this.localSelectedDate + 'T12:00:00');
       d.setDate(d.getDate() - 1);
-      this.localSelectedDate = d.toISOString().split('T')[0];
+      this.localSelectedDate = this.localFmtDate(d);
     },
     localNextDay() {
       const d = new Date(this.localSelectedDate + 'T12:00:00');
       d.setDate(d.getDate() + 1);
-      this.localSelectedDate = d.toISOString().split('T')[0];
+      this.localSelectedDate = this.localFmtDate(d);
     },
     localPrevMonth() {
       const d = new Date(this.localCurDate);
@@ -9348,7 +9411,7 @@ const GoogleCalendar = {
       this.localShowForm = false;
       this.localSelectedDate = this.localNewReminder.date;
       this.localView = 'agenda';
-      this.localNewReminder = { title:'', subtitle:'', date: new Date().toISOString().split('T')[0], time:'', page:'' };
+      this.localNewReminder = { title:'', subtitle:'', date: this.localFmtDate(new Date()), time:'', page:'' };
       setTimeout(() => { this.localSuccess = null; }, 3000);
     },
     localAddEvent() {
