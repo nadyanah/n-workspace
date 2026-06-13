@@ -6973,6 +6973,17 @@ const HabitTracker = {
         this._autoTriggerHabitFromNotif(this.pendingHabitTrigger);
       });
     }
+    // Reload habits jika ada perubahan dari luar (mis. toggle dari Agenda Google Calendar)
+    this._onExternalHabitsUpdated = () => {
+      try {
+        const saved = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+        if (saved) this.habits = JSON.parse(saved);
+      } catch(_e) { /* ignore */ }
+    };
+    globalThis.addEventListener('ws-plans-updated', this._onExternalHabitsUpdated);
+  },
+  beforeUnmount() {
+    globalThis.removeEventListener('ws-plans-updated', this._onExternalHabitsUpdated);
   },
   methods: {
     closeModal() {
@@ -9243,7 +9254,8 @@ const GoogleCalendar = {
           const habits = JSON.parse(WorkspaceStorage.getItem('ws_habit_notifs') || '[]');
           habits.forEach(h => {
             result.push({
-              id: 'habit-' + h.id,
+              id: h.id, // sama dengan key di ws_habit_notifs & notif panel (mis. 'habit_xxx')
+              habitId: h.habitId || h.id.replace(/^habit_/, ''),
               title: h.title,
               time: h.time || null,
               done: !!actionStatus[h.id],
@@ -9310,15 +9322,47 @@ const GoogleCalendar = {
     localToggleAgendaDone(block) {
       const ds = this.localSelectedDate || this.localFmtDate(new Date());
       const storageKey = (block.raw && block.raw.id) ? block.raw.id : block.id;
+      let nowDone = false;
       try {
         const raw = WorkspaceStorage.getItem('ws_notif_action_status');
         const s = raw ? JSON.parse(raw) : {};
         if (!s[ds]) s[ds] = {};
-        const nowDone = !s[ds][storageKey];
+        nowDone = !s[ds][storageKey];
         if (nowDone) { s[ds][storageKey] = true; } else { delete s[ds][storageKey]; }
         WorkspaceStorage.setItem('ws_notif_action_status', JSON.stringify(s));
         this.localStorageTick++;
         if (nowDone && typeof NotifSound !== 'undefined') NotifSound.playCheck && NotifSound.playCheck();
+      } catch(_e) { /* ignore */ }
+
+      // Jika item ini habit, sinkronkan juga ke tabel Habit Tracker (centang/uncentang hari ini)
+      if (block.type === 'habit' && block.raw && block.raw.habitId) {
+        this.localSyncHabitHistory(block.raw.habitId, ds, nowDone);
+      }
+    },
+    // ── Sinkronisasi checklist habit dari Agenda ke tabel Habit Tracker ──
+    localSyncHabitHistory(habitId, dateStr, checked) {
+      try {
+        const raw = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+        if (!raw) return;
+        const habits = JSON.parse(raw);
+        const [yr, mo, dayNum] = dateStr.split('-').map(Number);
+        const ym = `${String(yr).padStart(4,'0')}-${String(mo).padStart(2,'0')}`;
+        const day = dayNum;
+        const updated = habits.map(h => {
+          if (h.id !== habitId) return h;
+          const hist = { ...h.history };
+          let arr = hist[ym] ? [...hist[ym]] : [];
+          if (checked) {
+            if (!arr.includes(day)) arr.push(day);
+          } else {
+            arr = arr.filter(d => d !== day);
+          }
+          hist[ym] = arr.sort((a, b) => a - b);
+          return { ...h, history: hist };
+        });
+        WorkspaceStorage.setItem('aesthetic_habit_tracker_habits', JSON.stringify(updated));
+        // Beri tahu komponen Habit Tracker (jika sedang aktif) untuk reload data
+        globalThis.dispatchEvent(new CustomEvent('ws-plans-updated'));
       } catch(_e) { /* ignore */ }
     },
     localSaveEvents() {
