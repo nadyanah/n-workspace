@@ -18,6 +18,42 @@ const App = {
     const showNotifPanel = ref(false);
     const showInspirationModal = ref(false);
 
+    // Desk quote ticker state
+    const deskQuotes = ref([]);
+    const deskQuoteIndex = ref(0);
+    const deskQuoteVisible = ref(false);
+
+    const loadDeskQuotes = () => {
+      try {
+        const saved = WorkspaceStorage.getItem('inspiration_quotes');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          deskQuotes.value = parsed;
+          deskQuoteVisible.value = parsed.length > 0;
+        }
+      } catch(_e) {}
+    };
+
+    const deskCurrentQuote = Vue.computed(() => {
+      if (!deskQuotes.value.length) return '';
+      return deskQuotes.value[deskQuoteIndex.value]?.quote || '';
+    });
+    const deskCurrentSource = Vue.computed(() => {
+      if (!deskQuotes.value.length) return '';
+      return deskQuotes.value[deskQuoteIndex.value]?.source || '';
+    });
+
+    let _deskQuoteTimer = null;
+    const startDeskQuoteCycle = () => {
+      if (_deskQuoteTimer) clearInterval(_deskQuoteTimer);
+      _deskQuoteTimer = setInterval(() => {
+        loadDeskQuotes();
+        if (deskQuotes.value.length > 1) {
+          deskQuoteIndex.value = (deskQuoteIndex.value + 1) % deskQuotes.value.length;
+        }
+      }, 7000);
+    };
+
     // Color customization variables
     const showColorPicker = ref(false);
     const dominantColor = ref('#D67B52');
@@ -356,6 +392,17 @@ const App = {
       globalThis.addEventListener('ws-trigger-habit', (e) => {
         if (e.detail && e.detail.habitId) onTriggerHabit(e.detail.habitId);
       });
+
+      // Load & start quote ticker after storage ready
+      globalThis._workspaceStorageReady.then(() => {
+        loadDeskQuotes();
+        startDeskQuoteCycle();
+      });
+
+      // Refresh quotes when InspirationBoard saves new ones
+      globalThis.addEventListener('inspiration-quotes-updated', () => {
+        loadDeskQuotes();
+      });
     });
 
     // Badge notif bell — diupdate reactif oleh event 'unread-count-changed' dari NotificationPanel
@@ -391,6 +438,11 @@ const App = {
       showNavDrawer,
       showNotifPanel,
       showInspirationModal,
+      deskQuotes,
+      deskQuoteIndex,
+      deskQuoteVisible,
+      deskCurrentQuote,
+      deskCurrentSource,
       showColorPicker,
       dominantColor,
       presetColors,

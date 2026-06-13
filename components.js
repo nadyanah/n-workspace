@@ -11033,6 +11033,7 @@ const InspirationBoard = {
     },
     saveToStorage() {
       WorkspaceStorage.setItem('inspiration_quotes', JSON.stringify(this.quotes));
+      globalThis.dispatchEvent(new CustomEvent('inspiration-quotes-updated'));
     },
     formatDate(iso) {
       if (!iso) return '';
