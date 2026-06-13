@@ -196,7 +196,7 @@ const JobLogbook = {
         </div>
 
         <transition name="modal-fade">
-          <div v-if="showAddLog" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(44, 38, 33, 0.6); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 99999;" @click.self="cancelAddLog">
+          <div v-if="showAddLog" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(44, 38, 33, 0.6); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 99999;" @click.self="safeCloseAddLog">
             <div style="background: var(--bg-card); max-width: 540px; width: 90%; padding: 28px; border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
               
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -1067,7 +1067,7 @@ const JobLogbook = {
         </div>
 
         <transition name="modal-fade">
-          <div v-if="showAddNoteForm" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(44, 38, 33, 0.6); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 99999;" @click.self="cancelNoteForm">
+          <div v-if="showAddNoteForm" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(44, 38, 33, 0.6); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 99999;" @click.self="safeCloseNoteForm">
             <div style="background: var(--bg-card); max-width: 480px; width: 90%; padding: 28px; border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
               
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -1689,6 +1689,14 @@ const JobLogbook = {
       // Form di-reset (opsional — supaya bersih saat dibuka berikutnya)
       this.form = { date: this.todayStr, category: 'Administrasi', tasks: '', achievements: '', nextActions: [{ id: 'na-' + Date.now(), text: '', completed: false }], documentLink: '' };
     },
+    safeCloseAddLog() {
+      // Cek apakah ada data yang sudah diisi sebelum menutup via klik overlay
+      const hasData = this.form.tasks.trim() || this.form.achievements.trim() || this.form.nextActions.some(a => a.text.trim());
+      if (hasData) {
+        if (!confirm('Kamu sudah mengisi beberapa data. Yakin mau tutup dan buang perubahan?')) return;
+      }
+      this.cancelAddLog();
+    },
     convertPlanToLog(plan) { // baru dihapus saat saveLog dipanggil
       this.pendingConvertPlanId = plan.id;
       this.form.date = plan.date;
@@ -1930,6 +1938,13 @@ const JobLogbook = {
       this.noteForm.title = '';
       this.noteForm.body = '';
       this.noteForm.color = 'green';
+    },
+    safeCloseNoteForm() {
+      const hasData = this.noteForm.title.trim() || this.noteForm.body.trim();
+      if (hasData) {
+        if (!confirm('Kamu sudah mengisi beberapa data. Yakin mau tutup dan buang perubahan?')) return;
+      }
+      this.cancelNoteForm();
     },
     saveNote() {
       if (this.editingNoteId) {
@@ -5387,7 +5402,7 @@ const DailyNutrition = {
       <transition name="insight-modal-fade">
         <div v-if="showAddLog"
           style="position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; background: rgba(30,22,16,0.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 16px;"
-          @click.self="cancelEditInsight">
+          @click.self="safeCloseEditInsight">
           <div style="background: var(--color-paper, #FAF7F2); width: min(820px, 96vw); max-height: 94vh; border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.12); display: flex; flex-direction: column; overflow: hidden; animation: insightPopIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
 
             <!-- Modal Header -->
@@ -5821,7 +5836,7 @@ const DailyNutrition = {
         <transition name="insight-modal-fade">
           <div v-if="showAddPlan"
             style="position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; background: rgba(30,22,16,0.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 16px;"
-            @click.self="cancelPlan">
+            @click.self="safeClosePlan">
             <div style="background: var(--color-paper, #FAF7F2); width: min(540px, 96vw); border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.12); display: flex; flex-direction: column; overflow: hidden; animation: insightPopIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
 
               <!-- Modal Header -->
@@ -6000,6 +6015,7 @@ const DailyNutrition = {
       showAddPlan: false,
       nextPlans: [],
       editingPlanId: null,
+      pendingConvertPlanIdx: null,
       planForm: {
         title: '',
         source: '',
@@ -6188,6 +6204,12 @@ const DailyNutrition = {
         const newIns = { ...this.form, id: 'ins-' + Date.now() };
         this.insights.push(newIns);
       }
+      // Kalau berasal dari konversi plan, baru hapus plan-nya sekarang
+      if (this.pendingConvertPlanIdx !== null) {
+        this.nextPlans.splice(this.pendingConvertPlanIdx, 1);
+        this.savePlansToStorage();
+        this.pendingConvertPlanIdx = null;
+      }
       this.saveToStorage();
       this.form = { date: new Date().toISOString().split('T')[0], category: this.form.category, source: '', url: '', title: '', details: '', takeaway: '' };
       this.showAddLog = false;
@@ -6206,12 +6228,20 @@ const DailyNutrition = {
     },
     cancelEditInsight() {
       this.editingInsightId = null;
+      this.pendingConvertPlanIdx = null;
       this.form = { date: new Date().toISOString().split('T')[0], category: 'Teknologi', source: '', url: '', title: '', details: '', takeaway: '' };
       this.showAddLog = false;
       this.$nextTick(() => {
         const ed = this.$refs.detailsEditor; if (ed) ed.innerHTML = '';
         const tw = this.$refs.takeawayEditor; if (tw) tw.innerHTML = '';
       });
+    },
+    safeCloseEditInsight() {
+      const hasData = this.form.title && this.form.title.trim() || this.form.source && this.form.source.trim() || this.form.details && this.form.details.trim() || this.form.takeaway && this.form.takeaway.trim();
+      if (hasData) {
+        if (!confirm('Kamu sudah mengisi beberapa data. Yakin mau tutup dan buang perubahan?')) return;
+      }
+      this.cancelEditInsight();
     },
     deleteInsight(idx) {
       if (!confirm('Hapus insight ini?')) return;
@@ -6244,6 +6274,13 @@ const DailyNutrition = {
       this.editingPlanId = null;
       this.planForm = { title: '', source: '', category: this.allInsightCategories[0] || 'Teknologi', url: '' };
     },
+    safeClosePlan() {
+      const hasData = this.planForm.title && this.planForm.title.trim() || this.planForm.source && this.planForm.source.trim() || this.planForm.url && this.planForm.url.trim();
+      if (hasData) {
+        if (!confirm('Kamu sudah mengisi beberapa data. Yakin mau tutup dan buang perubahan?')) return;
+      }
+      this.cancelPlan();
+    },
     startEditPlan(idx) {
       const plan = this.nextPlans[idx];
       if (!plan) return;
@@ -6261,6 +6298,7 @@ const DailyNutrition = {
       if (!plan) return;
       // Pre-fill form insight dengan data dari plan
       this.editingInsightId = null;
+      this.pendingConvertPlanIdx = idx;
       this.form = {
         date: new Date().toISOString().split('T')[0],
         category: plan.category,
@@ -6270,10 +6308,7 @@ const DailyNutrition = {
         details: '',
         takeaway: ''
       };
-      // Hapus dari antrian plan
-      this.nextPlans.splice(idx, 1);
-      this.savePlansToStorage();
-      // Buka modal tambah insight — editor di-sync setelah modal muncul
+      // Buka modal tambah insight — plan baru dihapus saat save berhasil
       this.showAddLog = true;
       this.syncEditorContent();
     },
