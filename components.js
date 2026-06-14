@@ -8919,13 +8919,21 @@ const GoogleCalendar = {
                   </span>
                 </div>
 
-                <!-- Arahkan ke halaman (untuk manual) -->
+                <!-- Arahkan ke halaman (untuk manual) — tampilkan path Page › Section › Item -->
                 <div v-if="agendaDetailItem.type === 'manual' && agendaDetailItem.raw && agendaDetailItem.raw.page" class="agenda-detail-row">
                   <span class="agenda-detail-row-icon">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                   </span>
-                  <span class="agenda-detail-row-text" style="color: var(--color-terracotta, #D67B52); font-weight:600; cursor:pointer;" @click="localNavigateFromDetail(agendaDetailItem.raw.page)">
+                  <span class="agenda-detail-row-text" style="color: var(--color-terracotta, #D67B52); font-weight:600; cursor:pointer; line-height:1.6;" @click="localNavigateFromDetail(agendaDetailItem.raw.page)">
                     {{ localPageLabel(agendaDetailItem.raw.page) }}
+                    <template v-if="agendaDetailItem.raw.section">
+                      <span style="opacity:0.5; font-weight:400; margin:0 3px;">›</span>
+                      <span style="color:var(--text-dark); font-weight:600;">{{ agendaDetailItem.raw.section.replace(/^(col_|cat_|bank_)/, '') }}</span>
+                    </template>
+                    <template v-if="agendaDetailItem.raw.targetItem">
+                      <span style="opacity:0.5; font-weight:400; margin:0 3px;">›</span>
+                      <span style="color:var(--text-secondary); font-weight:500; font-size:11.5px;">{{ agendaDetailItem.raw.targetItem }}</span>
+                    </template>
                     <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:4px; vertical-align:middle;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                   </span>
                 </div>
@@ -8961,96 +8969,164 @@ const GoogleCalendar = {
 
         <!-- ========== MODAL: FORM SET PENGINGAT MANUAL ========== -->
         <div v-if="localShowForm" class="gcal-modal-overlay" @click.self="localShowForm=false">
-          <div class="gcal-modal">
+          <div class="gcal-modal gcal-modal-wide">
             <div class="gcal-modal-header">
               <span style="font-size:16px;font-weight:700;color:#3c4043;">Set Pengingat Manual</span>
               <button @click="localShowForm=false" class="gcal-modal-close">&#215;</button>
             </div>
-            <div class="gcal-modal-body">
-              <div style="margin-bottom:14px;">
-                <label class="gcal-label">Judul Pengingat *</label>
-                <input type="text" class="gcal-input" v-model="localNewReminder.title" placeholder="cth., Minum obat, Hubungi klien..." maxlength="60" />
-              </div>
-              <div style="margin-bottom:14px;">
-                <label class="gcal-label">Keterangan (opsional)</label>
-                <textarea class="gcal-input" v-model="localNewReminder.subtitle" rows="2" style="resize:none;" maxlength="80" placeholder="Catatan singkat..."></textarea>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
-                <div>
-                  <label class="gcal-label">Jam Mulai *</label>
-                  <input type="time" class="gcal-input" v-model="localNewReminder.time" />
-                </div>
-                <div>
-                  <label class="gcal-label">Jam Selesai (opsional)</label>
-                  <input type="time" class="gcal-input" v-model="localNewReminder.endTime" />
-                </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
-                <div>
-                  <label class="gcal-label">Tanggal Mulai *</label>
-                  <input type="date" class="gcal-input" v-model="localNewReminder.date" />
-                </div>
-                <div>
-                  <label class="gcal-label">Tanggal Selesai (opsional)</label>
-                  <input type="date" class="gcal-input" v-model="localNewReminder.endDate" :min="localNewReminder.date" />
-                </div>
-              </div>
-              <p style="font-size:11px; color:var(--text-muted); margin:-6px 0 14px; line-height:1.5;">
-                Pengingat berlaku mulai Tanggal Mulai. Jika diisi, Tanggal Selesai membatasi sampai kapan aturan ulang berlaku — kosongkan untuk berlaku terus-menerus.
-              </p>
+            <div class="gcal-modal-body" style="padding:20px;">
 
-              <!-- ========== ULANGI / RECURRENCE (ala Google Calendar) ========== -->
-              <div style="margin-bottom:14px; position:relative;">
-                <label class="gcal-label">Ulangi</label>
-                <button type="button" class="gcal-input" @click="localShowRecurrenceDropdown = !localShowRecurrenceDropdown"
-                  style="width:100%; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; background:#fff;">
-                  <span>{{ localRecurrenceLabel(localNewReminder.recurrence, localNewReminder.date) }}</span>
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: localShowRecurrenceDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }"><polyline points="6 9 12 15 18 9"/></svg>
-                </button>
-                <div v-if="localShowRecurrenceDropdown" @click.stop
-                  style="position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:50; background:#fff; border:1px solid #dadce0; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.15); overflow:hidden;">
-                  <div v-for="opt in ['none','daily','weekly','monthly','yearly','weekday']" :key="opt"
-                    @click="localNewReminder.recurrence = opt; localShowRecurrenceDropdown = false"
-                    :class="{ 'gcal-recurrence-opt-active': localNewReminder.recurrence === opt }"
-                    class="gcal-recurrence-opt">
-                    {{ localRecurrenceLabel(opt, localNewReminder.date) }}
+              <!-- ── 2-kolom layout utama ── -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start;">
+
+                <!-- ── KOLOM KIRI: Judul, Keterangan, Waktu, Tanggal, Ulangi ── -->
+                <div>
+                  <div style="margin-bottom:13px;">
+                    <label class="gcal-label">Judul Pengingat *</label>
+                    <input type="text" class="gcal-input" v-model="localNewReminder.title" placeholder="cth., Minum obat, Hubungi klien..." maxlength="60" />
+                  </div>
+                  <div style="margin-bottom:13px;">
+                    <label class="gcal-label">Keterangan (opsional)</label>
+                    <textarea class="gcal-input" v-model="localNewReminder.subtitle" rows="2" style="resize:none;" maxlength="80" placeholder="Catatan singkat..."></textarea>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px;">
+                    <div>
+                      <label class="gcal-label">Jam Mulai *</label>
+                      <input type="time" class="gcal-input" v-model="localNewReminder.time" />
+                    </div>
+                    <div>
+                      <label class="gcal-label">Jam Selesai</label>
+                      <input type="time" class="gcal-input" v-model="localNewReminder.endTime" />
+                    </div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;">
+                    <div>
+                      <label class="gcal-label">Tanggal Mulai *</label>
+                      <input type="date" class="gcal-input" v-model="localNewReminder.date" />
+                    </div>
+                    <div>
+                      <label class="gcal-label">Tanggal Selesai</label>
+                      <input type="date" class="gcal-input" v-model="localNewReminder.endDate" :min="localNewReminder.date" />
+                    </div>
+                  </div>
+                  <p style="font-size:10.5px; color:var(--text-muted); margin:0 0 13px; line-height:1.5;">
+                    Tanggal Selesai membatasi kapan aturan ulang berakhir — kosongkan agar berlaku terus.
+                  </p>
+
+                  <!-- Ulangi -->
+                  <div style="margin-bottom:0; position:relative;">
+                    <label class="gcal-label">Ulangi</label>
+                    <button type="button" class="gcal-input" @click="localShowRecurrenceDropdown = !localShowRecurrenceDropdown"
+                      style="width:100%; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; background:#fff;">
+                      <span>{{ localRecurrenceLabel(localNewReminder.recurrence, localNewReminder.date) }}</span>
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: localShowRecurrenceDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div v-if="localShowRecurrenceDropdown" @click.stop
+                      style="position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:50; background:#fff; border:1px solid #dadce0; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.15); overflow:hidden;">
+                      <div v-for="opt in ['none','daily','weekly','monthly','yearly','weekday']" :key="opt"
+                        @click="localNewReminder.recurrence = opt; localShowRecurrenceDropdown = false"
+                        :class="{ 'gcal-recurrence-opt-active': localNewReminder.recurrence === opt }"
+                        class="gcal-recurrence-opt">
+                        {{ localRecurrenceLabel(opt, localNewReminder.date) }}
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <p v-if="localNewReminder.recurrence !== 'none'" style="font-size:11px; color:var(--text-muted); margin-top:6px; line-height:1.5;">
-                  Pengingat akan berulang otomatis mulai dari tanggal yang dipilih, sesuai aturan di atas.
-                </p>
-              </div>
-              <div style="margin-bottom:20px;">
-                <label class="gcal-label">Arahkan ke Halaman (opsional)</label>
-                <select v-model="localNewReminder.page" class="gcal-input" style="cursor:pointer;">
-                  <option value="">— Tidak ada tujuan —</option>
-                  <option value="jobLogbook">Job Logbook</option>
-                  <option value="calendarMoment">Calendar Moment</option>
-                  <option value="contentTracker">Content Tracker</option>
-                  <option value="interviewPractice">Interview Practice</option>
-                  <option value="dailyNutrition">Daily Nutrition</option>
-                  <option value="habitTracker">Habit Tracker</option>
-                  <option value="pomodoroTimer">Pomodoro Timer</option>
-                  <option value="googleCalendar">Google Calendar</option>
-                  <option value="financialTracker">Financial Tracker</option>
-                </select>
+
+                <!-- ── KOLOM KANAN: Halaman → Section → Item + Kategori ── -->
+                <div style="background:var(--color-cream,#FDF5EB); border-radius:12px; padding:14px; border:1px solid var(--color-sand,#D6CEC5);">
+
+                  <!-- Label kolom kanan -->
+                  <div style="display:flex;align-items:center;gap:7px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--color-sand,#D6CEC5);">
+                    <div style="width:24px;height:24px;background:var(--color-terracotta,#D67B52);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+                    </div>
+                    <span style="font-size:11px;font-weight:700;color:var(--text-dark);text-transform:uppercase;letter-spacing:0.6px;font-family:'Hack',monospace;">Arahkan ke</span>
+                  </div>
+
+                  <!-- Page -->
+                  <div style="margin-bottom:12px;">
+                    <label class="gcal-label">Halaman</label>
+                    <select v-model="localNewReminder.page" class="gcal-input" style="cursor:pointer;" @change="localOnPageChange()">
+                      <option value="">— Tidak ada tujuan —</option>
+                      <option value="jobLogbook">Job Logbook</option>
+                      <option value="calendarMoment">Calendar Moment</option>
+                      <option value="contentTracker">Content Tracker</option>
+                      <option value="interviewPractice">Interview Practice</option>
+                      <option value="dailyNutrition">Daily Nutrition (Insight)</option>
+                      <option value="habitTracker">Habit Tracker</option>
+                      <option value="pomodoroTimer">Pomodoro Timer</option>
+                      <option value="googleCalendar">Daily n (Kalender)</option>
+                      <option value="financialTracker">Financial Tracker</option>
+                    </select>
+                  </div>
+
+                  <!-- Section — muncul jika halaman dipilih & punya section -->
+                  <transition name="agenda-filter-slide">
+                    <div v-if="localNewReminder.page && localReminderSections.length > 0" style="margin-bottom:12px;">
+                      <label class="gcal-label" style="display:flex;align-items:center;gap:4px;">
+                        <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        Section
+                      </label>
+                      <select v-model="localNewReminder.section" class="gcal-input" style="cursor:pointer;" @change="localOnSectionChange()">
+                        <option value="">— Pilih section —</option>
+                        <option v-for="sec in localReminderSections" :key="sec.value" :value="sec.value">{{ sec.label }}</option>
+                      </select>
+                    </div>
+                  </transition>
+
+                  <!-- Item — muncul jika section dipilih & punya item -->
+                  <transition name="agenda-filter-slide">
+                    <div v-if="localNewReminder.section && localReminderItems.length > 0" style="margin-bottom:12px;">
+                      <label class="gcal-label" style="display:flex;align-items:center;gap:4px;">
+                        <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-left:-5px;"><polyline points="9 18 15 12 9 6"/></svg>
+                        Item Spesifik
+                      </label>
+                      <select v-model="localNewReminder.targetItem" class="gcal-input" style="cursor:pointer;">
+                        <option value="">— Pilih item (opsional) —</option>
+                        <option v-for="item in localReminderItems" :key="item.value" :value="item.value">{{ item.label }}</option>
+                      </select>
+                    </div>
+                  </transition>
+
+                  <!-- Summary path chip -->
+                  <div v-if="localNewReminder.page" style="margin-top:4px; padding:8px 10px; background:rgba(214,123,82,0.1); border-radius:8px; font-size:11.5px; color:var(--text-secondary,#7A6F66); line-height:1.7;">
+                    <strong style="color:var(--color-terracotta,#D67B52);">{{ localPageLabel(localNewReminder.page) }}</strong>
+                    <template v-if="localNewReminder.section">
+                      <span style="opacity:0.45; margin:0 3px;">›</span>
+                      <span style="font-weight:600;color:var(--text-dark);">{{ localReminderSections.find(s=>s.value===localNewReminder.section)?.label || localNewReminder.section }}</span>
+                    </template>
+                    <template v-if="localNewReminder.targetItem">
+                      <br/>
+                      <span style="opacity:0.45; padding-left:8px;">↳</span>
+                      <span style="font-size:11px;color:var(--text-muted);">{{ localReminderItems.find(i=>i.value===localNewReminder.targetItem)?.label || localNewReminder.targetItem }}</span>
+                    </template>
+                  </div>
+                  <div v-else style="margin-top:4px; padding:10px; border-radius:8px; border:1.5px dashed var(--color-sand,#D6CEC5); text-align:center;">
+                    <p style="font-size:11px; color:var(--text-muted); margin:0; line-height:1.6;">Pilih halaman untuk mengarahkan pengingat ini ke section & item tertentu.</p>
+                  </div>
+
+                  <!-- Kategori — di bawah cascading, masih di kolom kanan -->
+                  <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--color-sand,#D6CEC5);">
+                    <label class="gcal-label">Kategori Pengingat</label>
+                    <select v-model="localNewReminder.category" class="gcal-input" style="cursor:pointer;">
+                      <option value="manual">Pengingat (Default)</option>
+                      <option v-for="cat in customReminderCategories" :key="cat.key" :value="cat.key">
+                        {{ cat.label }}
+                      </option>
+                    </select>
+                  </div>
+
+                </div>
               </div>
 
-              <!-- ========== KATEGORI PENGINGAT (pilih dari kategori yang sudah ada) ========== -->
-              <div style="margin-bottom:20px;">
-                <label class="gcal-label">Kategori Pengingat</label>
-                <select v-model="localNewReminder.category" class="gcal-input" style="cursor:pointer;">
-                  <option value="manual">Pengingat (Default)</option>
-                  <option v-for="cat in customReminderCategories" :key="cat.key" :value="cat.key">
-                    {{ cat.label }}
-                  </option>
-                </select>
-              </div>
-
-              <div style="display:flex;gap:10px;justify-content:flex-end;">
+              <!-- ── Footer tombol, full width di bawah kedua kolom ── -->
+              <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1.5px solid var(--color-sand,#D6CEC5);">
                 <button class="gcal-btn-ghost" @click="localShowForm=false">Batal</button>
                 <button class="gcal-btn-save" :disabled="!localNewReminder.title.trim() || !localNewReminder.date || !localNewReminder.time" @click="localAddReminder()">Simpan Pengingat</button>
               </div>
+
             </div>
           </div>
         </div>
@@ -9246,13 +9322,13 @@ const GoogleCalendar = {
       },
       filterGroup: 'all', // 'all', 'today', 'week'
       // --- Local Calendar State ---
-      localView: 'month',
+      localView: 'agenda',
       localCurDate: new Date(),
       localSelectedDate: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(),
       localEvents: JSON.parse(localStorage.getItem('gcal_local_events') || '[]'),
       localShowForm: false,
       localNewEv: { title:'', startDate:'', startTime:'', endDate:'', endTime:'', location:'', desc:'', color:'#4285F4', allDay: false },
-      localNewReminder: { title:'', subtitle:'', date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(), endDate: '', time:'', endTime:'', page:'', category: 'manual', recurrence: 'none' },
+      localNewReminder: { title:'', subtitle:'', date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(), endDate: '', time:'', endTime:'', page:'', section:'', targetItem:'', category: 'manual', recurrence: 'none' },
       localShowRecurrenceDropdown: false,
       newCustomCategoryInput: '',
       showManageCategoryModal: false,
@@ -9390,6 +9466,146 @@ const GoogleCalendar = {
     agendaActiveFilterCount() {
       return Object.values(this.agendaFilters).filter(Boolean).length;
     },
+
+    // ── Cascading Reminder: Section options berdasarkan page yang dipilih ──
+    localReminderSections() {
+      const page = this.localNewReminder.page;
+      if (!page) return [];
+      try {
+        switch (page) {
+          case 'jobLogbook': return [
+            { value: 'plans', label: '📋 Task Plan' },
+            { value: 'logs',  label: '📝 Log Harian' },
+            { value: 'notes', label: '🗒️ Catatan / Notes' },
+          ];
+          case 'calendarMoment': return [
+            { value: 'moments', label: '📅 Momen / Kenangan' },
+          ];
+          case 'contentTracker': {
+            const cols = JSON.parse(WorkspaceStorage.getItem('personal_workspace_content_columns') || '[]');
+            const defaults = ['Idea','Writing','In Production','Scheduled','Published'];
+            const list = cols.length ? cols : defaults;
+            return list.map(c => ({ value: 'col_' + c, label: '📊 ' + c }));
+          }
+          case 'interviewPractice': {
+            const qs = JSON.parse(WorkspaceStorage.getItem('personal_workspace_interview_questions') || '[]');
+            const cats = [...new Set(qs.map(q => q.category).filter(Boolean))];
+            const base = ['General HR','Technical Speciality','General Technical','Performance Tuning','Behavioral & Teamwork'];
+            const allCats = [...new Set([...base, ...cats])];
+            return [
+              { value: 'all', label: '🎯 Semua Kategori' },
+              ...allCats.map(c => ({ value: 'cat_' + c, label: '🎤 ' + c })),
+            ];
+          }
+          case 'dailyNutrition': {
+            const customCats = JSON.parse(WorkspaceStorage.getItem('personal_workspace_insight_categories') || '[]');
+            const defaultCats = ['Self','Quotes Life','Framework Life','Journaling','Psikologi','Teknologi'];
+            const allCats = [...new Set([...defaultCats, ...customCats])];
+            return [
+              { value: 'all', label: '💡 Semua Insight' },
+              { value: 'plans', label: '📌 Plan Insight Berikutnya' },
+              ...allCats.map(c => ({ value: 'cat_' + c, label: '🏷️ ' + c })),
+            ];
+          }
+          case 'habitTracker': {
+            const habits = JSON.parse(WorkspaceStorage.getItem('aesthetic_habit_tracker_habits') || '[]');
+            const cats = [...new Set(habits.map(h => h.category).filter(Boolean))];
+            const baseCats = ['Kesehatan','Produktivitas','Pikiran','Rutinitas'];
+            const allCats = [...new Set([...baseCats, ...cats])];
+            return [
+              { value: 'all', label: '✅ Semua Habit' },
+              ...allCats.map(c => ({ value: 'cat_' + c, label: '🏷️ ' + c })),
+            ];
+          }
+          case 'pomodoroTimer': return [
+            { value: 'focus',      label: '🍅 Sesi Fokus' },
+            { value: 'shortBreak', label: '☕ Istirahat Pendek' },
+            { value: 'longBreak',  label: '🛌 Istirahat Panjang' },
+          ];
+          case 'financialTracker': {
+            const banks = JSON.parse(WorkspaceStorage.getItem('fin_banks') || '[]');
+            return [
+              { value: 'all',       label: '💰 Semua Transaksi' },
+              { value: 'income',    label: '↑ Pemasukan' },
+              { value: 'expense',   label: '↓ Pengeluaran' },
+              { value: 'reimburse', label: '↺ Reimburse' },
+              { value: 'transfer',  label: '⇄ Transfer' },
+              ...banks.map(b => ({ value: 'bank_' + b.id, label: '🏦 ' + b.name })),
+            ];
+          }
+          case 'googleCalendar': return [
+            { value: 'month',  label: '📆 Tampilan Bulan' },
+            { value: 'week',   label: '📅 Tampilan Minggu' },
+            { value: 'agenda', label: '📋 Tampilan Agenda' },
+          ];
+          default: return [];
+        }
+      } catch(_e) { return []; }
+    },
+
+    // ── Cascading Reminder: Item options berdasarkan page + section yang dipilih ──
+    localReminderItems() {
+      const page = this.localNewReminder.page;
+      const section = this.localNewReminder.section;
+      if (!page || !section) return [];
+      try {
+        switch (page) {
+          case 'jobLogbook': {
+            if (section === 'plans') {
+              const plans = JSON.parse(WorkspaceStorage.getItem('personal_workspace_job_plans') || '[]');
+              return plans.map(p => ({ value: p.id, label: (p.phase === 'Completed' ? '✅ ' : '📌 ') + (p.tasks || 'Task tanpa judul').slice(0,60) }));
+            }
+            if (section === 'logs') {
+              const logs = JSON.parse(WorkspaceStorage.getItem('personal_workspace_job_logs') || '[]');
+              return [...logs].reverse().slice(0,20).map(l => ({ value: l.id, label: '📝 [' + l.date + '] ' + (l.tasks || '').slice(0,50) }));
+            }
+            if (section === 'notes') {
+              const notes = JSON.parse(WorkspaceStorage.getItem('personal_workspace_job_notes') || '[]');
+              return notes.map(n => ({ value: n.id, label: '🗒️ ' + (n.title || n.body || 'Catatan').slice(0,60) }));
+            }
+            return [];
+          }
+          case 'contentTracker': {
+            const colName = section.replace('col_', '');
+            const items = JSON.parse(WorkspaceStorage.getItem('personal_workspace_content_items') || '[]');
+            return items.filter(i => i.status === colName).map(i => ({ value: String(i.id), label: '📊 ' + (i.title || '').slice(0,60) + (i.platform ? ' · ' + i.platform : '') }));
+          }
+          case 'interviewPractice': {
+            const qs = JSON.parse(WorkspaceStorage.getItem('personal_workspace_interview_questions') || '[]');
+            if (section === 'all') return qs.map(q => ({ value: String(q.id), label: '🎤 ' + q.text.slice(0,70) }));
+            const catName = section.replace('cat_', '');
+            return qs.filter(q => q.category === catName).map(q => ({ value: String(q.id), label: '🎤 ' + q.text.slice(0,70) }));
+          }
+          case 'dailyNutrition': {
+            if (section === 'plans') {
+              const plans = JSON.parse(WorkspaceStorage.getItem('personal_workspace_next_plans') || '[]');
+              return plans.map(p => ({ value: p.id || p.title, label: '📌 ' + (p.title || '').slice(0,60) }));
+            }
+            const insights = JSON.parse(WorkspaceStorage.getItem('personal_workspace_nutrition_insights') || '[]');
+            if (section === 'all') return [...insights].reverse().slice(0,20).map(i => ({ value: i.id, label: '💡 ' + (i.title || '').slice(0,60) }));
+            const catName = section.replace('cat_', '');
+            return insights.filter(i => i.category === catName).map(i => ({ value: i.id, label: '💡 ' + (i.title || '').slice(0,60) }));
+          }
+          case 'habitTracker': {
+            const habits = JSON.parse(WorkspaceStorage.getItem('aesthetic_habit_tracker_habits') || '[]');
+            if (section === 'all') return habits.map(h => ({ value: h.id, label: '✅ ' + h.name + (h.timeSchedule ? ' · ' + h.timeSchedule : '') }));
+            const catName = section.replace('cat_', '');
+            return habits.filter(h => h.category === catName).map(h => ({ value: h.id, label: '✅ ' + h.name + (h.timeSchedule ? ' · ' + h.timeSchedule : '') }));
+          }
+          case 'financialTracker': {
+            if (section.startsWith('bank_')) {
+              const bankId = section.replace('bank_', '');
+              const txs = JSON.parse(WorkspaceStorage.getItem('fin_transactions') || '[]');
+              return txs.filter(t => t.bankId === bankId).slice(-15).reverse().map(t => ({ value: t.id, label: (t.type === 'income' ? '↑ ' : '↓ ') + (t.description || t.category || '').slice(0,50) + (t.amount ? ' · Rp' + Number(t.amount).toLocaleString('id-ID') : '') }));
+            }
+            return [];
+          }
+          // section-only pages, no sub-items needed
+          default: return [];
+        }
+      } catch(_e) { return []; }
+    },
+
     localAgendaItems() {
       // depend on tick so this recomputes after manual reminder save
       void this.localStorageTick;
@@ -9659,6 +9875,15 @@ const GoogleCalendar = {
     localGoToHabitTracker() {
       globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'habitTracker' }));
     },
+    // ── Cascading reminder: reset section & item saat page berganti ──
+    localOnPageChange() {
+      this.localNewReminder.section = '';
+      this.localNewReminder.targetItem = '';
+    },
+    // ── Cascading reminder: reset item saat section berganti ──
+    localOnSectionChange() {
+      this.localNewReminder.targetItem = '';
+    },
     // ============ LOCAL CALENDAR METHODS ============
     // Task Plan → toggle done langsung di storage (tanpa navigasi, agar checklist lain tidak hilang)
     // Habit/Manual → toggle done via ws_notif_action_status
@@ -9789,7 +10014,7 @@ const GoogleCalendar = {
         calendarMoment: 'Calendar Moment',
         contentTracker: 'Content Tracker',
         interviewPractice: 'Interview Practice',
-        dailyNutrition: 'Daily Nutrition',
+        dailyNutrition: 'Daily Nutrition (Insight)',
         habitTracker: 'Habit Tracker',
         pomodoroTimer: 'Pomodoro Timer',
         googleCalendar: 'Daily n (Kalender)',
@@ -9846,6 +10071,8 @@ const GoogleCalendar = {
         time: m.time || '',
         endTime: m.endTime || '',
         page: m.page || '',
+        section: m.section || '',
+        targetItem: m.targetItem || '',
         category: m.category || 'manual',
         recurrence: m.recurrence || 'none',
         _editId: m.id,  // simpan id lama untuk update di saveLocalReminder
@@ -10066,6 +10293,8 @@ const GoogleCalendar = {
         endTime: this.localNewReminder.endTime || null,
         endTimeVal,
         page: this.localNewReminder.page || null,
+        section: this.localNewReminder.section || null,
+        targetItem: this.localNewReminder.targetItem || null,
         category: this.localNewReminder.category || 'manual',
         recurrence: this.localNewReminder.recurrence || 'none',
         isHabit: false,
@@ -10079,7 +10308,7 @@ const GoogleCalendar = {
       this.localShowRecurrenceDropdown = false;
       this.localSelectedDate = this.localNewReminder.date;
       this.localView = 'agenda';
-      this.localNewReminder = { title:'', subtitle:'', date: this.localFmtDate(new Date()), endDate: '', time:'', endTime:'', page:'', category: 'manual', recurrence: 'none' };
+      this.localNewReminder = { title:'', subtitle:'', date: this.localFmtDate(new Date()), endDate: '', time:'', endTime:'', page:'', section:'', targetItem:'', category: 'manual', recurrence: 'none' };
       setTimeout(() => { this.localSuccess = null; }, 3000);
     },
     // ── Recurrence helper: label & opsi sesuai tanggal mulai (ala Google Calendar) ──

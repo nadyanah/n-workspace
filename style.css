@@ -5702,6 +5702,10 @@ input:checked + .switch-slider:before {
   box-shadow: 0 16px 48px rgba(44,38,33,0.2);
   overflow: hidden;
 }
+.gcal-modal.gcal-modal-wide {
+  width: 820px;
+  max-width: 96vw;
+}
 .gcal-modal-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 20px;
