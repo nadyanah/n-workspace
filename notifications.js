@@ -940,12 +940,6 @@ const NotificationPanel = {
                 </div>
                 <div class="notif-item-right" style="align-items: center;">
                   <span class="notif-time-badge">{{ entry.item.endTime ? entry.item.time + '–' + entry.item.endTime : entry.item.time }}</span>
-                    <!-- Hapus manual reminder -->
-                    <button v-if="entry.item.isManual && !entry.item.done" @click.stop="deleteManualReminder(entry.item.id)"
-                            title="Hapus pengingat ini"
-                            style="background:none; border:none; cursor:pointer; padding:2px; color:#ef4444; display:flex; align-items:center;">
-                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                    </button>
                     <svg v-if="!entry.item.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                   </div>
                 </div>

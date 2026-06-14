@@ -8767,8 +8767,8 @@ const GoogleCalendar = {
                 class="gcal-agenda-allday-item"
                 :class="{ 'gcal-agenda-item-done': item.done }"
                 :style="{ background: localTintColor(item.color, 0.16), borderColor: localTintColor(item.color, 0.45), color: item.color, cursor: 'pointer' }"
-                @click.stop="item.isTaskPlan ? localGoToLogbook() : (item.type === 'habit' ? localGoToHabitTracker() : (item.actionable ? localHandleAgendaAction(item) : null))"
-                :title="item.isTaskPlan ? 'Buka Job Logbook' : (item.type === 'habit' ? 'Klik untuk buka Habit Tracker · klik bulet untuk tandai selesai' : (item.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai'))">
+                @click.stop="item.isTaskPlan ? localGoToLogbook() : (item.type === 'habit' ? localGoToHabitTracker() : (item.type === 'manual' ? localShowAgendaDetail(item) : (item.actionable ? localHandleAgendaAction(item) : null)))"
+                :title="item.isTaskPlan ? 'Buka Job Logbook' : (item.type === 'habit' ? 'Klik untuk buka Habit Tracker · klik bulet untuk tandai selesai' : (item.type === 'manual' ? 'Lihat detail pengingat' : (item.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai')))"
                 <span class="gcal-agenda-check-icon"
                   @click.stop="item.actionable ? localHandleAgendaAction(item) : null"
                   style="cursor:pointer;"
@@ -8807,8 +8807,8 @@ const GoogleCalendar = {
                     width: 'calc(' + (100/block.totalCols) + '% - 4px)',
                     cursor: 'pointer'
                   }"
-                  :title="block.isTaskPlan ? 'Buka Job Logbook' : (block.type === 'habit' ? 'Klik untuk buka Habit Tracker · klik bulet untuk tandai selesai' : (block.actionable ? (block.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai') : block.title + ' (' + block.startLabel + ' - ' + block.endLabel + ')'))"
-                  @click.stop="block.isTaskPlan ? localGoToLogbook() : (block.type === 'habit' ? localGoToHabitTracker() : (block.actionable ? localHandleAgendaAction(block) : (block.type==='event' && localDeleteEvent(block.raw))))"
+                  :title="block.isTaskPlan ? 'Buka Job Logbook' : (block.type === 'habit' ? 'Klik untuk buka Habit Tracker · klik bulet untuk tandai selesai' : (block.type === 'manual' ? 'Lihat detail pengingat' : (block.actionable ? (block.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai') : block.title + ' (' + block.startLabel + ' - ' + block.endLabel + ')')))"
+                  @click.stop="block.isTaskPlan ? localGoToLogbook() : (block.type === 'habit' ? localGoToHabitTracker() : (block.type === 'manual' ? localShowAgendaDetail(block) : (block.actionable ? localHandleAgendaAction(block) : (block.type==='event' && localDeleteEvent(block.raw)))))"
                 >
                   <span v-if="block.actionable" class="gcal-agenda-check-icon"
                     @click.stop="localHandleAgendaAction(block)"
@@ -8832,6 +8832,132 @@ const GoogleCalendar = {
           <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" :style="{ background: agendaFilterColors.manual }"></span>Pengingat</span>
           <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" style="background:#4285F4;"></span>Acara</span>
         </div>
+
+        <!-- ========== AGENDA DETAIL POPUP (mirip Google Calendar) ========== -->
+        <transition name="agenda-detail-pop">
+          <div v-if="agendaDetailItem" class="agenda-detail-overlay" @click.self="agendaDetailItem = null">
+            <div class="agenda-detail-card" :style="{ '--agenda-detail-color': agendaDetailItem.color || '#D67B52' }">
+              <!-- Top action bar: edit, delete, close -->
+              <div class="agenda-detail-topbar">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <!-- Edit button (hanya untuk manual) -->
+                  <button v-if="agendaDetailItem.type === 'manual'"
+                    @click="localEditFromDetail(agendaDetailItem)"
+                    class="agenda-detail-icon-btn"
+                    title="Edit pengingat">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <!-- Delete button (hanya untuk manual) -->
+                  <button v-if="agendaDetailItem.type === 'manual'"
+                    @click="localDeleteFromDetail(agendaDetailItem)"
+                    class="agenda-detail-icon-btn agenda-detail-icon-btn-danger"
+                    title="Hapus pengingat">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  </button>
+                </div>
+                <button @click="agendaDetailItem = null" class="agenda-detail-icon-btn" title="Tutup">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+
+              <!-- Title row with color dot -->
+              <div class="agenda-detail-title-row">
+                <span class="agenda-detail-color-dot" :style="{ background: agendaDetailItem.color || '#D67B52' }"></span>
+                <div>
+                  <div class="agenda-detail-title" :style="agendaDetailItem.done ? 'text-decoration:line-through; opacity:0.5;' : ''">{{ agendaDetailItem.title }}</div>
+                  <div class="agenda-detail-badge-row">
+                    <span v-if="agendaDetailItem.done" class="agenda-detail-badge agenda-detail-badge-done">✓ Selesai</span>
+                    <span v-else-if="agendaDetailItem.type === 'manual'" class="agenda-detail-badge agenda-detail-badge-manual">Pengingat</span>
+                    <span v-else-if="agendaDetailItem.type === 'habit'" class="agenda-detail-badge agenda-detail-badge-habit">Habit</span>
+                    <span v-else-if="agendaDetailItem.type === 'task'" class="agenda-detail-badge agenda-detail-badge-task">Task Plan</span>
+                    <span v-else-if="agendaDetailItem.type === 'event'" class="agenda-detail-badge agenda-detail-badge-event">Acara</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Detail rows -->
+              <div class="agenda-detail-body">
+
+                <!-- Waktu -->
+                <div class="agenda-detail-row">
+                  <span class="agenda-detail-row-icon">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </span>
+                  <span class="agenda-detail-row-text">
+                    <template v-if="agendaDetailItem.startLabel && agendaDetailItem.endLabel">
+                      {{ localFmtDateLabel(agendaDetailItem.dateStr) }} · {{ agendaDetailItem.startLabel }} – {{ agendaDetailItem.endLabel }}
+                    </template>
+                    <template v-else-if="agendaDetailItem.startLabel">
+                      {{ localFmtDateLabel(agendaDetailItem.dateStr) }} · {{ agendaDetailItem.startLabel }}
+                    </template>
+                    <template v-else>
+                      {{ localFmtDateLabel(agendaDetailItem.dateStr) }} · Sepanjang hari
+                    </template>
+                    <!-- Recurrence label -->
+                    <span v-if="agendaDetailItem.raw && agendaDetailItem.raw.recurrence && agendaDetailItem.raw.recurrence !== 'none'"
+                      class="agenda-detail-recur-badge">
+                      {{ localRecurrenceLabel(agendaDetailItem.raw.recurrence, agendaDetailItem.raw.date) }}
+                    </span>
+                  </span>
+                </div>
+
+                <!-- Keterangan / subtitle -->
+                <div v-if="agendaDetailItem.raw && agendaDetailItem.raw.subtitle" class="agenda-detail-row">
+                  <span class="agenda-detail-row-icon">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+                  </span>
+                  <span class="agenda-detail-row-text">{{ agendaDetailItem.raw.subtitle }}</span>
+                </div>
+
+                <!-- Kategori (untuk manual) -->
+                <div v-if="agendaDetailItem.type === 'manual' && agendaDetailItem.raw" class="agenda-detail-row">
+                  <span class="agenda-detail-row-icon">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                  </span>
+                  <span class="agenda-detail-row-text">
+                    {{ localCategoryLabel(agendaDetailItem.raw.category) }}
+                  </span>
+                </div>
+
+                <!-- Arahkan ke halaman (untuk manual) -->
+                <div v-if="agendaDetailItem.type === 'manual' && agendaDetailItem.raw && agendaDetailItem.raw.page" class="agenda-detail-row">
+                  <span class="agenda-detail-row-icon">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  </span>
+                  <span class="agenda-detail-row-text" style="color: var(--color-terracotta, #D67B52); font-weight:600; cursor:pointer;" @click="localNavigateFromDetail(agendaDetailItem.raw.page)">
+                    {{ localPageLabel(agendaDetailItem.raw.page) }}
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:4px; vertical-align:middle;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  </span>
+                </div>
+
+                <!-- Visibilitas (untuk manual) -->
+                <div v-if="agendaDetailItem.type === 'manual'" class="agenda-detail-row">
+                  <span class="agenda-detail-row-icon">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </span>
+                  <span class="agenda-detail-row-text">Hanya saya</span>
+                </div>
+
+              </div>
+
+              <!-- Footer: Tandai Selesai -->
+              <div v-if="agendaDetailItem.actionable" class="agenda-detail-footer">
+                <button v-if="!agendaDetailItem.done"
+                  @click="localMarkDoneFromDetail(agendaDetailItem)"
+                  class="agenda-detail-btn-done">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Tandai selesai
+                </button>
+                <button v-else
+                  @click="localMarkDoneFromDetail(agendaDetailItem)"
+                  class="agenda-detail-btn-undone">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+                  Batalkan selesai
+                </button>
+              </div>
+            </div>
+          </div>
+        </transition>
 
         <!-- ========== MODAL: FORM SET PENGINGAT MANUAL ========== -->
         <div v-if="localShowForm" class="gcal-modal-overlay" @click.self="localShowForm=false">
@@ -9137,6 +9263,7 @@ const GoogleCalendar = {
         } catch(_e) { return []; }
       })(),
       localStorageTick: 0,
+      agendaDetailItem: null,
       agendaFilterOpen: false,
       agendaFilters: { task: true, habit: true, manual: true },
       // agendaFilterOptions moved to computed (includes custom categories)
@@ -9611,6 +9738,122 @@ const GoogleCalendar = {
     localSaveEvents() {
       try { localStorage.setItem('gcal_local_events', JSON.stringify(this.localEvents)); } catch(_e){ /* ignore */ }
     },
+
+    // ─────────────────────────────────────────────
+    // AGENDA DETAIL POPUP METHODS
+    // ─────────────────────────────────────────────
+    localShowAgendaDetail(block) {
+      // Gabungkan data block dengan dateStr halaman yang sedang tampil
+      const ds = this.localSelectedDate || this.localFmtDate(new Date());
+      this.agendaDetailItem = { ...block, dateStr: ds };
+    },
+
+    localFmtDateLabel(dateStr) {
+      if (!dateStr) return '';
+      try {
+        const dt = new Date(dateStr + 'T12:00:00');
+        const days   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        return `${days[dt.getDay()]}, ${dt.getDate()} ${months[dt.getMonth()]} ${dt.getFullYear()}`;
+      } catch(_e) { return dateStr; }
+    },
+
+    localRecurrenceLabel(rec, startDate) {
+      if (!rec || rec === 'none') return 'Tidak berulang';
+      if (rec === 'daily') return 'Setiap hari';
+      if (rec === 'weekday') return 'Setiap hari kerja (Sen–Jum)';
+      if (rec === 'monthly') return 'Bulanan';
+      if (rec === 'yearly') return 'Tahunan';
+      if (rec === 'weekly') {
+        if (startDate) {
+          const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+          const d = new Date(startDate + 'T12:00:00');
+          return `Setiap ${days[d.getDay()]}`;
+        }
+        return 'Mingguan';
+      }
+      return rec;
+    },
+
+    localCategoryLabel(cat) {
+      if (!cat || cat === 'manual') return 'Pengingat';
+      // Cek custom categories
+      const custom = this.customReminderCategories.find(c => c.key === cat);
+      if (custom) return custom.label;
+      return cat;
+    },
+
+    localPageLabel(page) {
+      const map = {
+        jobLogbook: 'Job Logbook',
+        calendarMoment: 'Calendar Moment',
+        contentTracker: 'Content Tracker',
+        interviewPractice: 'Interview Practice',
+        dailyNutrition: 'Daily Nutrition',
+        habitTracker: 'Habit Tracker',
+        pomodoroTimer: 'Pomodoro Timer',
+        googleCalendar: 'Daily n (Kalender)',
+        financialTracker: 'Financial Tracker',
+      };
+      return map[page] || page;
+    },
+
+    localNavigateFromDetail(page) {
+      if (!page) return;
+      globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: page }));
+      this.agendaDetailItem = null;
+    },
+
+    localMarkDoneFromDetail(block) {
+      if (!block) return;
+      this.localHandleAgendaAction(block);
+      // Update the popup state to reflect new done status
+      const ds = block.dateStr || this.localSelectedDate || this.localFmtDate(new Date());
+      const storageKey = (block.raw && block.raw.id) ? block.raw.id : block.id;
+      try {
+        const raw = WorkspaceStorage.getItem('ws_notif_action_status');
+        const s = raw ? JSON.parse(raw) : {};
+        const nowDone = !!(s[ds] && s[ds][storageKey]);
+        this.agendaDetailItem = { ...this.agendaDetailItem, done: nowDone };
+      } catch(_e) { /* ignore */ }
+    },
+
+    localDeleteFromDetail(block) {
+      if (!block || !block.raw) return;
+      const rawId = block.raw.id;
+      if (!rawId) return;
+      try {
+        const raw = WorkspaceStorage.getItem('ws_manual_notifs');
+        let manuals = raw ? JSON.parse(raw) : [];
+        manuals = manuals.filter(m => m.id !== rawId);
+        WorkspaceStorage.setItem('ws_manual_notifs', JSON.stringify(manuals));
+        this.localStorageTick++;
+        // Dispatch event ke panel notif supaya badge update
+        globalThis.dispatchEvent(new CustomEvent('ws-manual-notif-updated'));
+        this.agendaDetailItem = null;
+      } catch(_e) { /* ignore */ }
+    },
+
+    localEditFromDetail(block) {
+      if (!block || !block.raw) return;
+      // Prefill form edit dengan data existing
+      const m = block.raw;
+      this.localNewReminder = {
+        title: m.title || '',
+        subtitle: m.subtitle || '',
+        date: m.date || this.localFmtDate(new Date()),
+        endDate: m.endDate || '',
+        time: m.time || '',
+        endTime: m.endTime || '',
+        page: m.page || '',
+        category: m.category || 'manual',
+        recurrence: m.recurrence || 'none',
+        _editId: m.id,  // simpan id lama untuk update di saveLocalReminder
+      };
+      this.agendaDetailItem = null;
+      this.localShowForm = true;
+    },
+
     // ── SHARED HELPER: semua item (semua tipe) untuk satu tanggal, dihormati filter ──
     localAllItemsForDate(dateStr) {
       void this.localStorageTick;
@@ -9802,12 +10045,16 @@ const GoogleCalendar = {
         const [eh, em] = this.localNewReminder.endTime.split(':').map(Number);
         endTimeVal = eh * 60 + (em || 0);
       }
-      const id = 'manual_' + Date.now();
+      // Jika mode edit (_editId ada), pertahankan id lama; kalau baru, buat id baru
+      const editId = this.localNewReminder._editId || null;
+      const id = editId || ('manual_' + Date.now());
       let manuals = [];
       try {
         const raw = WorkspaceStorage.getItem('ws_manual_notifs');
         manuals = raw ? JSON.parse(raw) : [];
       } catch(_e) { manuals = []; }
+      // Hapus entri lama (jika edit mode)
+      if (editId) manuals = manuals.filter(m => m.id !== editId);
       manuals.push({
         id,
         date: this.localNewReminder.date,
@@ -9826,7 +10073,7 @@ const GoogleCalendar = {
       });
       WorkspaceStorage.setItem('ws_manual_notifs', JSON.stringify(manuals));
       this.localStorageTick++;
-      this.localSuccess = 'Pengingat "' + this.localNewReminder.title.trim() + '" berhasil disimpan!';
+      this.localSuccess = (editId ? 'Pengingat berhasil diperbarui!' : 'Pengingat "' + this.localNewReminder.title.trim() + '" berhasil disimpan!');
       this.localError = null;
       this.localShowForm = false;
       this.localShowRecurrenceDropdown = false;
