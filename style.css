@@ -5699,8 +5699,11 @@ input:checked + .switch-slider:before {
   border-radius: 18px;
   width: 480px;
   max-width: 95vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 16px 48px rgba(44,38,33,0.2);
-  overflow: hidden;
+  overflow: visible;
 }
 .gcal-modal.gcal-modal-wide {
   width: 820px;
@@ -5711,6 +5714,8 @@ input:checked + .switch-slider:before {
   padding: 16px 20px;
   border-bottom: 1.5px solid var(--color-sand);
   background: var(--bg-card);
+  border-radius: 18px 18px 0 0;
+  flex-shrink: 0;
 }
 .gcal-modal-close {
   width: 32px; height: 32px;
@@ -5721,7 +5726,7 @@ input:checked + .switch-slider:before {
   transition: background 0.12s, color 0.12s;
 }
 .gcal-modal-close:hover { background: var(--color-sand); color: var(--text-dark); }
-.gcal-modal-body { padding: 20px; }
+.gcal-modal-body { padding: 20px; overflow-y: auto; flex: 1; border-radius: 0 0 18px 18px; }
 .gcal-label {
   display: block;
   font-size: 10px;

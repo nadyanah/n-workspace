@@ -8979,17 +8979,17 @@ const GoogleCalendar = {
               <!-- ── 2-kolom layout utama ── -->
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start;">
 
-                <!-- ── KOLOM KIRI: Judul, Keterangan, Waktu, Tanggal, Ulangi ── -->
-                <div>
-                  <div style="margin-bottom:13px;">
+                <!-- ── KOLOM KIRI: Judul, Keterangan, Waktu, Tanggal ── -->
+                <div style="display:flex; flex-direction:column; gap:13px;">
+                  <div>
                     <label class="gcal-label">Judul Pengingat *</label>
                     <input type="text" class="gcal-input" v-model="localNewReminder.title" placeholder="cth., Minum obat, Hubungi klien..." maxlength="60" />
                   </div>
-                  <div style="margin-bottom:13px;">
+                  <div>
                     <label class="gcal-label">Keterangan (opsional)</label>
                     <textarea class="gcal-input" v-model="localNewReminder.subtitle" rows="2" style="resize:none;" maxlength="80" placeholder="Catatan singkat..."></textarea>
                   </div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px;">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                     <div>
                       <label class="gcal-label">Jam Mulai *</label>
                       <input type="time" class="gcal-input" v-model="localNewReminder.time" />
@@ -8999,7 +8999,7 @@ const GoogleCalendar = {
                       <input type="time" class="gcal-input" v-model="localNewReminder.endTime" />
                     </div>
                   </div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                     <div>
                       <label class="gcal-label">Tanggal Mulai *</label>
                       <input type="date" class="gcal-input" v-model="localNewReminder.date" />
@@ -9009,28 +9009,9 @@ const GoogleCalendar = {
                       <input type="date" class="gcal-input" v-model="localNewReminder.endDate" :min="localNewReminder.date" />
                     </div>
                   </div>
-                  <p style="font-size:10.5px; color:var(--text-muted); margin:0 0 13px; line-height:1.5;">
+                  <p style="font-size:10.5px; color:var(--text-muted); margin:0; line-height:1.5;">
                     Tanggal Selesai membatasi kapan aturan ulang berakhir — kosongkan agar berlaku terus.
                   </p>
-
-                  <!-- Ulangi -->
-                  <div style="margin-bottom:0; position:relative;">
-                    <label class="gcal-label">Ulangi</label>
-                    <button type="button" class="gcal-input" @click="localShowRecurrenceDropdown = !localShowRecurrenceDropdown"
-                      style="width:100%; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; background:#fff;">
-                      <span>{{ localRecurrenceLabel(localNewReminder.recurrence, localNewReminder.date) }}</span>
-                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: localShowRecurrenceDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }"><polyline points="6 9 12 15 18 9"/></svg>
-                    </button>
-                    <div v-if="localShowRecurrenceDropdown" @click.stop
-                      style="position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:50; background:#fff; border:1px solid #dadce0; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.15); overflow:hidden;">
-                      <div v-for="opt in ['none','daily','weekly','monthly','yearly','weekday']" :key="opt"
-                        @click="localNewReminder.recurrence = opt; localShowRecurrenceDropdown = false"
-                        :class="{ 'gcal-recurrence-opt-active': localNewReminder.recurrence === opt }"
-                        class="gcal-recurrence-opt">
-                        {{ localRecurrenceLabel(opt, localNewReminder.date) }}
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 <!-- ── KOLOM KANAN: Halaman → Section → Item + Kategori ── -->
@@ -9107,8 +9088,27 @@ const GoogleCalendar = {
                     <p style="font-size:11px; color:var(--text-muted); margin:0; line-height:1.6;">Pilih halaman untuk mengarahkan pengingat ini ke section & item tertentu.</p>
                   </div>
 
-                  <!-- Kategori — di bawah cascading, masih di kolom kanan -->
-                  <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--color-sand,#D6CEC5);">
+                  <!-- Ulangi — dipindah ke kolom kanan agar dropdown punya ruang terbuka -->
+                  <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--color-sand,#D6CEC5); position:relative;">
+                    <label class="gcal-label">Ulangi</label>
+                    <button type="button" class="gcal-input" @click="localShowRecurrenceDropdown = !localShowRecurrenceDropdown"
+                      style="width:100%; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; background:#fff;">
+                      <span>{{ localRecurrenceLabel(localNewReminder.recurrence, localNewReminder.date) }}</span>
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: localShowRecurrenceDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div v-if="localShowRecurrenceDropdown" @click.stop
+                      style="position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:999; background:#fff; border:1px solid #dadce0; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.15); overflow-y:auto; max-height:220px;">
+                      <div v-for="opt in ['none','daily','weekly','monthly','yearly','weekday']" :key="opt"
+                        @click="localNewReminder.recurrence = opt; localShowRecurrenceDropdown = false"
+                        :class="{ 'gcal-recurrence-opt-active': localNewReminder.recurrence === opt }"
+                        class="gcal-recurrence-opt">
+                        {{ localRecurrenceLabel(opt, localNewReminder.date) }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Kategori Pengingat -->
+                  <div style="margin-top:12px;">
                     <label class="gcal-label">Kategori Pengingat</label>
                     <select v-model="localNewReminder.category" class="gcal-input" style="cursor:pointer;">
                       <option value="manual">Pengingat (Default)</option>
