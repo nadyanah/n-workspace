@@ -11859,3 +11859,748 @@ const InspirationBoard = {
   },
 };
 
+
+// ============================================================================
+// 11. CAREER FOUNDATION Component
+// ============================================================================
+const CareerFoundation = {
+  template: `
+  <div class="fin-tracker">
+
+    <!-- ══ TOP NAV TABS ══ -->
+    <div style="margin-bottom:28px;">
+      <!-- Page header -->
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+        <div>
+          <h2 style="display:flex; align-items:center; gap:10px; font-size:24px; font-weight:800; color:var(--text-dark); margin:0 0 4px 0;">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Career Foundation
+          </h2>
+          <p style="color:var(--text-muted); font-size:13px; margin:0;">Semua dokumen karir — siap pakai, tinggal kirim.</p>
+        </div>
+      </div>
+
+      <!-- Tab pills -->
+      <div style="display:flex; flex-wrap:wrap; gap:8px; padding:4px 0 2px;">
+        <button
+          v-for="tab in tabs" :key="tab.key"
+          @click="activeTab = tab.key"
+          :style="activeTab === tab.key
+            ? { background: tab.color, color: '#fff', borderColor: tab.color, boxShadow: '0 4px 14px ' + tab.shadowColor }
+            : { background: '#fff', color: 'var(--text-muted)', borderColor: 'var(--color-sand)', boxShadow: 'none' }"
+          style="display:inline-flex; align-items:center; gap:7px; padding:9px 18px; border-radius:50px; border:1.5px solid; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.18s; white-space:nowrap; font-family:inherit;">
+          <span style="font-size:15px; line-height:1;">{{ tab.emoji }}</span>
+          {{ tab.label }}
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         TAB 1 — PROFIL & RESUME
+    ══════════════════════════════════════════════════════════════ -->
+    <transition name="cf-fade">
+    <div v-if="activeTab === 'resume'" key="resume">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+        <span style="font-size:11px; font-weight:700; letter-spacing:0.08em; color:var(--color-terracotta); text-transform:uppercase;">01 — Profil & Resume</span>
+        <button @click="editResume" style="display:inline-flex; align-items:center; gap:6px; padding:7px 16px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:8px; font-size:12px; font-weight:600; color:var(--text-dark); cursor:pointer;">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit Profil
+        </button>
+      </div>
+
+      <div style="background:#fff; border:1.5px solid var(--color-sand); border-radius:16px; overflow:hidden; box-shadow:var(--shadow-sm);">
+        <!-- Name bar -->
+        <div style="background:linear-gradient(135deg, var(--color-terracotta) 0%, #C4673E 100%); padding:24px 28px;">
+          <h3 style="font-size:22px; font-weight:800; color:#fff; letter-spacing:0.3px; margin:0 0 2px;">{{ resume.name || 'Nama Lengkap' }}</h3>
+          <p style="font-size:13px; color:rgba(255,255,255,0.85); margin:0 0 12px; font-weight:500;">{{ resume.title || 'Posisi / Bidang Karir' }}</p>
+          <div style="display:flex; flex-wrap:wrap; gap:14px;">
+            <span v-if="resume.email" style="display:inline-flex; align-items:center; gap:5px; font-size:11.5px; color:rgba(255,255,255,0.9);">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              {{ resume.email }}
+            </span>
+            <span v-if="resume.phone" style="display:inline-flex; align-items:center; gap:5px; font-size:11.5px; color:rgba(255,255,255,0.9);">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.42C1.61 2.22 2.5 1.22 3.7 1H6.7a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.29 6.29l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              {{ resume.phone }}
+            </span>
+            <span v-if="resume.location" style="display:inline-flex; align-items:center; gap:5px; font-size:11.5px; color:rgba(255,255,255,0.9);">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              {{ resume.location }}
+            </span>
+            <span v-if="resume.linkedin" style="display:inline-flex; align-items:center; gap:5px; font-size:11.5px; color:rgba(255,255,255,0.9);">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+              {{ resume.linkedin }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Resume body -->
+        <div v-if="resume.summary || resume.skills || resume.experience || resume.education || resume.languages" style="padding:24px 28px; display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+          <div style="grid-column:1/-1;" v-if="resume.summary">
+            <p style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--color-terracotta); margin:0 0 7px;">Tentang Saya</p>
+            <p style="font-size:13.5px; color:var(--text-dark); line-height:1.75; white-space:pre-wrap; margin:0;">{{ resume.summary }}</p>
+          </div>
+          <div v-if="resume.skills">
+            <p style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--color-terracotta); margin:0 0 7px;">Keahlian</p>
+            <p style="font-size:13px; color:var(--text-dark); line-height:1.8; white-space:pre-wrap; margin:0;">{{ resume.skills }}</p>
+          </div>
+          <div v-if="resume.experience">
+            <p style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--color-terracotta); margin:0 0 7px;">Pengalaman</p>
+            <p style="font-size:13px; color:var(--text-dark); line-height:1.8; white-space:pre-wrap; margin:0;">{{ resume.experience }}</p>
+          </div>
+          <div v-if="resume.education">
+            <p style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--color-terracotta); margin:0 0 7px;">Pendidikan</p>
+            <p style="font-size:13px; color:var(--text-dark); line-height:1.8; white-space:pre-wrap; margin:0;">{{ resume.education }}</p>
+          </div>
+          <div v-if="resume.languages">
+            <p style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--color-terracotta); margin:0 0 7px;">Bahasa</p>
+            <p style="font-size:13px; color:var(--text-dark); line-height:1.8; white-space:pre-wrap; margin:0;">{{ resume.languages }}</p>
+          </div>
+        </div>
+        <div v-else style="padding:40px 24px; text-align:center; color:var(--text-muted);">
+          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="var(--color-sand)" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px; display:block;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <p style="font-size:14px; font-weight:700; margin:0 0 4px;">Profil belum diisi</p>
+          <p style="font-size:12.5px; margin:0;">Klik <strong>Edit Profil</strong> untuk mulai mengisi resume kamu.</p>
+        </div>
+      </div>
+    </div>
+    </transition>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         TAB 2 — CV ATS
+    ══════════════════════════════════════════════════════════════ -->
+    <transition name="cf-fade">
+    <div v-if="activeTab === 'cv'" key="cv">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+        <span style="font-size:11px; font-weight:700; letter-spacing:0.08em; color:#6366F1; text-transform:uppercase;">📄 CV ATS — Applicant Tracking System</span>
+        <button @click="openAddDocOfType('cv')" style="display:inline-flex; align-items:center; gap:6px; padding:7px 16px; background:#6366F1; border:none; border-radius:8px; font-size:12px; font-weight:600; color:#fff; cursor:pointer;">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah CV
+        </button>
+      </div>
+
+      <!-- ATS tip banner -->
+      <div style="background:linear-gradient(135deg,#EEF2FF,#E0E7FF); border:1.5px solid #C7D2FE; border-radius:12px; padding:14px 18px; margin-bottom:20px; display:flex; gap:12px; align-items:flex-start;">
+        <span style="font-size:20px; flex-shrink:0;">💡</span>
+        <div>
+          <p style="font-size:12px; font-weight:700; color:#4338CA; margin:0 0 4px;">Tips CV ATS-Friendly</p>
+          <p style="font-size:11.5px; color:#4338CA; line-height:1.6; margin:0;">Gunakan format teks biasa, hindari tabel/kolom kompleks, cantumkan kata kunci dari deskripsi pekerjaan, dan gunakan heading standar (Pengalaman, Pendidikan, Keahlian).</p>
+        </div>
+      </div>
+
+      <div v-if="docsByType('cv').length === 0" style="text-align:center; padding:48px 20px; background:var(--bg-cream); border-radius:14px; border:2px dashed var(--color-sand);">
+        <span style="font-size:40px; display:block; margin-bottom:12px;">📄</span>
+        <p style="font-size:14px; font-weight:700; color:var(--text-dark); margin:0 0 4px;">Belum ada CV tersimpan</p>
+        <p style="font-size:12.5px; color:var(--text-muted); margin:0;">Buat CV ATS-friendly pertama kamu.</p>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px;">
+        <div v-for="doc in docsByType('cv')" :key="doc.id"
+          style="background:#fff; border:1.5px solid #C7D2FE; border-radius:14px; overflow:hidden; display:flex; flex-direction:column; transition:box-shadow 0.18s;"
+          @mouseenter="e => e.currentTarget.style.boxShadow='0 8px 24px rgba(99,102,241,0.12)'"
+          @mouseleave="e => e.currentTarget.style.boxShadow='none'">
+          <div style="background:linear-gradient(135deg,#6366F1,#4F46E5); padding:14px 16px; display:flex; align-items:center; gap:10px;">
+            <span style="font-size:20px;">📄</span>
+            <div style="flex:1; min-width:0;">
+              <p style="font-size:12.5px; font-weight:700; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ doc.title }}</p>
+              <p v-if="doc.target" style="font-size:11px; color:rgba(255,255,255,0.75); margin:2px 0 0;">{{ doc.target }}</p>
+            </div>
+          </div>
+          <div style="padding:12px 16px; flex:1;">
+            <p style="font-size:12px; color:var(--text-muted); line-height:1.6; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-wrap; margin:0;">{{ doc.content || '(Belum ada isi)' }}</p>
+            <p v-if="doc.updatedAt" style="font-size:10.5px; color:var(--text-muted); margin:8px 0 0; opacity:0.7;">{{ formatLastUpdated(doc.updatedAt) }}</p>
+          </div>
+          <div style="padding:10px 16px 14px; display:flex; gap:8px; border-top:1px solid #E0E7FF;">
+            <button @click="viewDoc(doc)" style="flex:1; padding:7px; background:#EEF2FF; border:1.5px solid #C7D2FE; border-radius:8px; font-size:12px; font-weight:600; color:#4338CA; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Lihat
+            </button>
+            <button @click="editDoc(doc)" style="flex:1; padding:7px; background:#EEF2FF; border:1.5px solid #C7D2FE; border-radius:8px; font-size:12px; font-weight:600; color:#4338CA; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+            <button @click="deleteDoc(doc.id)" style="padding:7px 10px; background:transparent; border:1.5px solid #FCA5A5; border-radius:8px; color:#EF4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </transition>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         TAB 3 — COVER LETTER
+    ══════════════════════════════════════════════════════════════ -->
+    <transition name="cf-fade">
+    <div v-if="activeTab === 'cover_letter'" key="cover_letter">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+        <span style="font-size:11px; font-weight:700; letter-spacing:0.08em; color:var(--color-terracotta); text-transform:uppercase;">✉️ Cover Letter (Bahasa Inggris)</span>
+        <button @click="openAddDocOfType('cover_letter')" style="display:inline-flex; align-items:center; gap:6px; padding:7px 16px; background:var(--color-terracotta); border:none; border-radius:8px; font-size:12px; font-weight:600; color:#fff; cursor:pointer;">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah Cover Letter
+        </button>
+      </div>
+
+      <!-- Cover letter tip -->
+      <div style="background:linear-gradient(135deg,#FFF5F0,#FFEDE5); border:1.5px solid #FDD0BB; border-radius:12px; padding:14px 18px; margin-bottom:20px; display:flex; gap:12px; align-items:flex-start;">
+        <span style="font-size:20px; flex-shrink:0;">✍️</span>
+        <div>
+          <p style="font-size:12px; font-weight:700; color:#C4673E; margin:0 0 4px;">Struktur Cover Letter yang Kuat</p>
+          <p style="font-size:11.5px; color:#C4673E; line-height:1.6; margin:0;">Opening hook → Kenapa kamu tertarik → Apa yang kamu bawa → Closing CTA. Jaga di bawah 300 kata, personal, dan spesifik ke perusahaan.</p>
+        </div>
+      </div>
+
+      <div v-if="docsByType('cover_letter').length === 0" style="text-align:center; padding:48px 20px; background:var(--bg-cream); border-radius:14px; border:2px dashed var(--color-sand);">
+        <span style="font-size:40px; display:block; margin-bottom:12px;">✉️</span>
+        <p style="font-size:14px; font-weight:700; color:var(--text-dark); margin:0 0 4px;">Belum ada Cover Letter</p>
+        <p style="font-size:12.5px; color:var(--text-muted); margin:0;">Buat cover letter impresif untuk tiap lamaran.</p>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px;">
+        <div v-for="doc in docsByType('cover_letter')" :key="doc.id"
+          style="background:#fff; border:1.5px solid #FDD0BB; border-radius:14px; overflow:hidden; display:flex; flex-direction:column; transition:box-shadow 0.18s;"
+          @mouseenter="e => e.currentTarget.style.boxShadow='0 8px 24px rgba(214,123,82,0.12)'"
+          @mouseleave="e => e.currentTarget.style.boxShadow='none'">
+          <div style="background:linear-gradient(135deg,var(--color-terracotta),#C4673E); padding:14px 16px; display:flex; align-items:center; gap:10px;">
+            <span style="font-size:20px;">✉️</span>
+            <div style="flex:1; min-width:0;">
+              <p style="font-size:12.5px; font-weight:700; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ doc.title }}</p>
+              <p v-if="doc.target" style="font-size:11px; color:rgba(255,255,255,0.75); margin:2px 0 0;">🎯 {{ doc.target }}</p>
+            </div>
+          </div>
+          <div style="padding:12px 16px; flex:1;">
+            <p style="font-size:12px; color:var(--text-muted); line-height:1.6; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-wrap; margin:0;">{{ doc.content || '(Belum ada isi)' }}</p>
+            <p v-if="doc.updatedAt" style="font-size:10.5px; color:var(--text-muted); margin:8px 0 0; opacity:0.7;">{{ formatLastUpdated(doc.updatedAt) }}</p>
+          </div>
+          <div style="padding:10px 16px 14px; display:flex; gap:8px; border-top:1px solid #FDD0BB;">
+            <button @click="viewDoc(doc)" style="flex:1; padding:7px; background:#FFF5F0; border:1.5px solid #FDD0BB; border-radius:8px; font-size:12px; font-weight:600; color:var(--color-terracotta); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Lihat
+            </button>
+            <button @click="editDoc(doc)" style="flex:1; padding:7px; background:#FFF5F0; border:1.5px solid #FDD0BB; border-radius:8px; font-size:12px; font-weight:600; color:var(--color-terracotta); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+            <button @click="deleteDoc(doc.id)" style="padding:7px 10px; background:transparent; border:1.5px solid #FCA5A5; border-radius:8px; color:#EF4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </transition>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         TAB 4 — SURAT LAMARAN
+    ══════════════════════════════════════════════════════════════ -->
+    <transition name="cf-fade">
+    <div v-if="activeTab === 'surat_lamaran'" key="surat_lamaran">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+        <span style="font-size:11px; font-weight:700; letter-spacing:0.08em; color:#059669; text-transform:uppercase;">📝 Surat Lamaran (Bahasa Indonesia)</span>
+        <button @click="openAddDocOfType('surat_lamaran')" style="display:inline-flex; align-items:center; gap:6px; padding:7px 16px; background:#059669; border:none; border-radius:8px; font-size:12px; font-weight:600; color:#fff; cursor:pointer;">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah Surat Lamaran
+        </button>
+      </div>
+
+      <!-- Tip surat lamaran -->
+      <div style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7); border:1.5px solid #A7F3D0; border-radius:12px; padding:14px 18px; margin-bottom:20px; display:flex; gap:12px; align-items:flex-start;">
+        <span style="font-size:20px; flex-shrink:0;">📌</span>
+        <div>
+          <p style="font-size:12px; font-weight:700; color:#065F46; margin:0 0 4px;">Surat Lamaran Formal yang Efektif</p>
+          <p style="font-size:11.5px; color:#065F46; line-height:1.6; margin:0;">Sertakan: tanggal, nama HRD, perkenalan diri, posisi yang dilamar, pengalaman relevan, dan penutup sopan. Gunakan bahasa baku dan hindari typo!</p>
+        </div>
+      </div>
+
+      <div v-if="docsByType('surat_lamaran').length === 0" style="text-align:center; padding:48px 20px; background:var(--bg-cream); border-radius:14px; border:2px dashed var(--color-sand);">
+        <span style="font-size:40px; display:block; margin-bottom:12px;">📝</span>
+        <p style="font-size:14px; font-weight:700; color:var(--text-dark); margin:0 0 4px;">Belum ada Surat Lamaran</p>
+        <p style="font-size:12.5px; color:var(--text-muted); margin:0;">Buat surat lamaran formal untuk tiap perusahaan.</p>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px;">
+        <div v-for="doc in docsByType('surat_lamaran')" :key="doc.id"
+          style="background:#fff; border:1.5px solid #A7F3D0; border-radius:14px; overflow:hidden; display:flex; flex-direction:column; transition:box-shadow 0.18s;"
+          @mouseenter="e => e.currentTarget.style.boxShadow='0 8px 24px rgba(5,150,105,0.12)'"
+          @mouseleave="e => e.currentTarget.style.boxShadow='none'">
+          <div style="background:linear-gradient(135deg,#059669,#047857); padding:14px 16px; display:flex; align-items:center; gap:10px;">
+            <span style="font-size:20px;">📝</span>
+            <div style="flex:1; min-width:0;">
+              <p style="font-size:12.5px; font-weight:700; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ doc.title }}</p>
+              <p v-if="doc.target" style="font-size:11px; color:rgba(255,255,255,0.75); margin:2px 0 0;">🎯 {{ doc.target }}</p>
+            </div>
+          </div>
+          <div style="padding:12px 16px; flex:1;">
+            <p style="font-size:12px; color:var(--text-muted); line-height:1.6; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-wrap; margin:0;">{{ doc.content || '(Belum ada isi)' }}</p>
+            <p v-if="doc.updatedAt" style="font-size:10.5px; color:var(--text-muted); margin:8px 0 0; opacity:0.7;">{{ formatLastUpdated(doc.updatedAt) }}</p>
+          </div>
+          <div style="padding:10px 16px 14px; display:flex; gap:8px; border-top:1px solid #A7F3D0;">
+            <button @click="viewDoc(doc)" style="flex:1; padding:7px; background:#F0FDF4; border:1.5px solid #A7F3D0; border-radius:8px; font-size:12px; font-weight:600; color:#059669; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Lihat
+            </button>
+            <button @click="editDoc(doc)" style="flex:1; padding:7px; background:#F0FDF4; border:1.5px solid #A7F3D0; border-radius:8px; font-size:12px; font-weight:600; color:#059669; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+            <button @click="deleteDoc(doc.id)" style="padding:7px 10px; background:transparent; border:1.5px solid #FCA5A5; border-radius:8px; color:#EF4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </transition>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         TAB 5 — BODY EMAIL
+    ══════════════════════════════════════════════════════════════ -->
+    <transition name="cf-fade">
+    <div v-if="activeTab === 'body_email'" key="body_email">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+        <span style="font-size:11px; font-weight:700; letter-spacing:0.08em; color:#0369A1; text-transform:uppercase;">📧 Body Email Lamaran</span>
+        <button @click="openAddDocOfType('body_email')" style="display:inline-flex; align-items:center; gap:6px; padding:7px 16px; background:#0369A1; border:none; border-radius:8px; font-size:12px; font-weight:600; color:#fff; cursor:pointer;">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah Body Email
+        </button>
+      </div>
+
+      <!-- Tip email -->
+      <div style="background:linear-gradient(135deg,#F0F9FF,#E0F2FE); border:1.5px solid #BAE6FD; border-radius:12px; padding:14px 18px; margin-bottom:20px; display:flex; gap:12px; align-items:flex-start;">
+        <span style="font-size:20px; flex-shrink:0;">📬</span>
+        <div>
+          <p style="font-size:12px; font-weight:700; color:#075985; margin:0 0 4px;">Formula Body Email yang Dilirik HRD</p>
+          <p style="font-size:11.5px; color:#075985; line-height:1.6; margin:0;">Subject jelas (Nama | Posisi), salam profesional, 2–3 paragraf padat: perkenalan → nilai tambah → lampiran, dan tutup dengan salam hormat.</p>
+        </div>
+      </div>
+
+      <div v-if="docsByType('body_email').length === 0" style="text-align:center; padding:48px 20px; background:var(--bg-cream); border-radius:14px; border:2px dashed var(--color-sand);">
+        <span style="font-size:40px; display:block; margin-bottom:12px;">📧</span>
+        <p style="font-size:14px; font-weight:700; color:var(--text-dark); margin:0 0 4px;">Belum ada Body Email</p>
+        <p style="font-size:12.5px; color:var(--text-muted); margin:0;">Simpan template email lamaranmu di sini.</p>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px;">
+        <div v-for="doc in docsByType('body_email')" :key="doc.id"
+          style="background:#fff; border:1.5px solid #BAE6FD; border-radius:14px; overflow:hidden; display:flex; flex-direction:column; transition:box-shadow 0.18s;"
+          @mouseenter="e => e.currentTarget.style.boxShadow='0 8px 24px rgba(3,105,161,0.12)'"
+          @mouseleave="e => e.currentTarget.style.boxShadow='none'">
+          <div style="background:linear-gradient(135deg,#0369A1,#0284C7); padding:14px 16px; display:flex; align-items:center; gap:10px;">
+            <span style="font-size:20px;">📧</span>
+            <div style="flex:1; min-width:0;">
+              <p style="font-size:12.5px; font-weight:700; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ doc.title }}</p>
+              <p v-if="doc.target" style="font-size:11px; color:rgba(255,255,255,0.75); margin:2px 0 0;">🎯 {{ doc.target }}</p>
+            </div>
+          </div>
+          <div style="padding:12px 16px; flex:1;">
+            <p style="font-size:12px; color:var(--text-muted); line-height:1.6; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-wrap; margin:0;">{{ doc.content || '(Belum ada isi)' }}</p>
+            <p v-if="doc.updatedAt" style="font-size:10.5px; color:var(--text-muted); margin:8px 0 0; opacity:0.7;">{{ formatLastUpdated(doc.updatedAt) }}</p>
+          </div>
+          <div style="padding:10px 16px 14px; display:flex; gap:8px; border-top:1px solid #BAE6FD;">
+            <button @click="viewDoc(doc)" style="flex:1; padding:7px; background:#F0F9FF; border:1.5px solid #BAE6FD; border-radius:8px; font-size:12px; font-weight:600; color:#0369A1; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Lihat
+            </button>
+            <button @click="editDoc(doc)" style="flex:1; padding:7px; background:#F0F9FF; border:1.5px solid #BAE6FD; border-radius:8px; font-size:12px; font-weight:600; color:#0369A1; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+            <button @click="deleteDoc(doc.id)" style="padding:7px 10px; background:transparent; border:1.5px solid #FCA5A5; border-radius:8px; color:#EF4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </transition>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         TAB 6 — SEMUA DOKUMEN
+    ══════════════════════════════════════════════════════════════ -->
+    <transition name="cf-fade">
+    <div v-if="activeTab === 'all'" key="all">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+        <span style="font-size:11px; font-weight:700; letter-spacing:0.08em; color:var(--text-muted); text-transform:uppercase;">📂 Semua Dokumen ({{ docs.length }})</span>
+        <button @click="openAddDoc" style="display:inline-flex; align-items:center; gap:6px; padding:7px 16px; background:var(--color-forest); border:none; border-radius:8px; font-size:12px; font-weight:600; color:#fff; cursor:pointer;">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah Dokumen
+        </button>
+      </div>
+
+      <div v-if="docs.length === 0" style="text-align:center; padding:48px 20px; background:var(--bg-cream); border-radius:14px; border:2px dashed var(--color-sand);">
+        <span style="font-size:40px; display:block; margin-bottom:12px;">📂</span>
+        <p style="font-size:14px; font-weight:700; color:var(--text-dark); margin:0 0 4px;">Belum ada dokumen</p>
+        <p style="font-size:12.5px; color:var(--text-muted); margin:0;">Tambahkan dokumen karir pertamamu.</p>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px;">
+        <div v-for="doc in docs" :key="doc.id"
+          style="background:#fff; border:1.5px solid var(--color-sand); border-radius:14px; overflow:hidden; display:flex; flex-direction:column; transition:box-shadow 0.18s;"
+          @mouseenter="e => e.currentTarget.style.boxShadow='var(--shadow-md)'"
+          @mouseleave="e => e.currentTarget.style.boxShadow='none'">
+          <div :style="{ background: 'linear-gradient(135deg,' + docTypeColor(doc.type) + ',' + docTypeColorDark(doc.type) + ')', padding:'14px 16px', display:'flex', alignItems:'center', gap:'10px' }">
+            <span style="font-size:20px;">{{ docTypeEmoji(doc.type) }}</span>
+            <div style="flex:1; min-width:0;">
+              <p style="font-size:12.5px; font-weight:700; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ doc.title }}</p>
+              <p style="font-size:10.5px; color:rgba(255,255,255,0.75); margin:2px 0 0;">{{ docTypeLabel(doc.type) }}</p>
+            </div>
+          </div>
+          <div style="padding:12px 16px; flex:1;">
+            <p style="font-size:12px; color:var(--text-muted); line-height:1.6; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-wrap; margin:0;">{{ doc.content || '(Belum ada isi)' }}</p>
+            <p v-if="doc.target" style="font-size:11px; color:var(--color-terracotta); font-weight:600; margin:8px 0 0;">🎯 {{ doc.target }}</p>
+            <p v-if="doc.updatedAt" style="font-size:10.5px; color:var(--text-muted); margin:6px 0 0; opacity:0.7;">{{ formatLastUpdated(doc.updatedAt) }}</p>
+          </div>
+          <div style="padding:10px 16px 14px; display:flex; gap:8px; border-top:1px solid var(--color-sand);">
+            <button @click="viewDoc(doc)" style="flex:1; padding:7px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:8px; font-size:12px; font-weight:600; color:var(--text-dark); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Lihat
+            </button>
+            <button @click="editDoc(doc)" style="flex:1; padding:7px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:8px; font-size:12px; font-weight:600; color:var(--text-dark); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+            <button @click="deleteDoc(doc.id)" style="padding:7px 10px; background:transparent; border:1.5px solid #FCA5A5; border-radius:8px; color:#EF4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </transition>
+
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         MODAL: Edit Resume
+    ══════════════════════════════════════════════════════════════════ -->
+    <transition name="cf-fade">
+      <div v-if="showResumeModal" style="position:fixed; inset:0; z-index:9990; background:rgba(44,38,33,0.45); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:16px;" @click.self="showResumeModal=false">
+        <div style="background:#fff; border-radius:18px; width:min(640px,100%); max-height:88vh; overflow-y:auto; box-shadow:var(--shadow-lg); display:flex; flex-direction:column;">
+          <div style="padding:20px 24px 14px; border-bottom:1.5px solid var(--color-sand); display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; background:#fff; z-index:1;">
+            <h3 style="font-size:16px; font-weight:800; color:var(--text-dark);">✏️ Edit Profil & Resume</h3>
+            <button @click="showResumeModal=false" style="background:none; border:none; cursor:pointer; color:var(--text-muted); padding:4px;">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div style="padding:20px 24px; display:flex; flex-direction:column; gap:14px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div>
+                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Nama Lengkap *</label>
+                <input v-model="resumeForm.name" placeholder="Nadya Rahma Putri" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; box-sizing:border-box;"/>
+              </div>
+              <div>
+                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Posisi / Bidang</label>
+                <input v-model="resumeForm.title" placeholder="Social Media Specialist" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; box-sizing:border-box;"/>
+              </div>
+              <div>
+                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Email</label>
+                <input v-model="resumeForm.email" placeholder="nadya@email.com" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; box-sizing:border-box;"/>
+              </div>
+              <div>
+                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">No. HP</label>
+                <input v-model="resumeForm.phone" placeholder="08xx-xxxx-xxxx" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; box-sizing:border-box;"/>
+              </div>
+              <div>
+                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Lokasi</label>
+                <input v-model="resumeForm.location" placeholder="Bandung, Jawa Barat" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; box-sizing:border-box;"/>
+              </div>
+              <div>
+                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">LinkedIn / Portofolio</label>
+                <input v-model="resumeForm.linkedin" placeholder="linkedin.com/in/nadya" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; box-sizing:border-box;"/>
+              </div>
+            </div>
+            <div>
+              <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Tentang Saya / Summary</label>
+              <textarea v-model="resumeForm.summary" rows="4" placeholder="Perkenalan singkat tentang diri kamu..." style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; resize:vertical; line-height:1.6; box-sizing:border-box;"></textarea>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div>
+                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Keahlian (satu baris = satu skill)</label>
+                <textarea v-model="resumeForm.skills" rows="4" placeholder="Copywriting&#10;Social Media Management&#10;Canva & Adobe Suite" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; resize:vertical; line-height:1.7; box-sizing:border-box;"></textarea>
+              </div>
+              <div>
+                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Pengalaman Kerja</label>
+                <textarea v-model="resumeForm.experience" rows="4" placeholder="2023–kini · Content Creator @ Brand X&#10;2022–2023 · Admin Sosmed @ Startup Y" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; resize:vertical; line-height:1.7; box-sizing:border-box;"></textarea>
+              </div>
+              <div>
+                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Pendidikan</label>
+                <textarea v-model="resumeForm.education" rows="3" placeholder="S1 Ilmu Komunikasi · Univ. X · 2020–2024" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; resize:vertical; line-height:1.7; box-sizing:border-box;"></textarea>
+              </div>
+              <div>
+                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Bahasa</label>
+                <textarea v-model="resumeForm.languages" rows="3" placeholder="Indonesia (Native)&#10;Inggris (Aktif)" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; resize:vertical; line-height:1.7; box-sizing:border-box;"></textarea>
+              </div>
+            </div>
+          </div>
+          <div style="padding:14px 24px 20px; border-top:1.5px solid var(--color-sand); display:flex; gap:10px; justify-content:flex-end; position:sticky; bottom:0; background:#fff; z-index:1;">
+            <button @click="showResumeModal=false" style="padding:9px 18px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; font-weight:600; color:var(--text-muted); cursor:pointer;">Batal</button>
+            <button @click="saveResume" style="padding:9px 22px; background:var(--color-terracotta); border:none; border-radius:8px; font-size:13px; font-weight:700; color:#fff; cursor:pointer;">Simpan Profil</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         MODAL: Tambah / Edit Dokumen
+    ══════════════════════════════════════════════════════════════════ -->
+    <transition name="cf-fade">
+      <div v-if="showDocModal" style="position:fixed; inset:0; z-index:9990; background:rgba(44,38,33,0.45); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:16px;" @click.self="showDocModal=false">
+        <div style="background:#fff; border-radius:18px; width:min(560px,100%); max-height:88vh; overflow-y:auto; box-shadow:var(--shadow-lg); display:flex; flex-direction:column;">
+          <div style="padding:20px 24px 14px; border-bottom:1.5px solid var(--color-sand); display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; background:#fff; z-index:1;">
+            <h3 style="font-size:16px; font-weight:800; color:var(--text-dark);">{{ editingDocId ? 'Edit Dokumen' : 'Tambah Dokumen' }}</h3>
+            <button @click="showDocModal=false" style="background:none; border:none; cursor:pointer; color:var(--text-muted); padding:4px;">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div style="padding:20px 24px; display:flex; flex-direction:column; gap:14px;">
+            <div>
+              <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:8px;">Jenis Dokumen *</label>
+              <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                <button v-for="t in docTypes" :key="t.key" @click="docForm.type=t.key"
+                  style="padding:7px 14px; border-radius:20px; border:1.5px solid; font-size:12px; font-weight:600; cursor:pointer; transition:all 0.15s; font-family:inherit;"
+                  :style="docForm.type===t.key ? { background: t.color, color:'#fff', borderColor: t.color } : { background:'transparent', color:'var(--text-muted)', borderColor:'var(--color-sand)' }">
+                  {{ t.emoji }} {{ t.label }}
+                </button>
+              </div>
+            </div>
+            <div>
+              <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Judul Dokumen *</label>
+              <input v-model="docForm.title" placeholder="mis. CV Umum — Fresh Graduate 2025" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; box-sizing:border-box;"/>
+            </div>
+            <div>
+              <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Target Perusahaan / Posisi</label>
+              <input v-model="docForm.target" placeholder="mis. Posisi Content Creator di Shopee" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; box-sizing:border-box;"/>
+            </div>
+            <div>
+              <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Isi Dokumen</label>
+              <textarea v-model="docForm.content" :rows="docForm.type==='cv' ? 7 : 11" :placeholder="docContentPlaceholder" style="width:100%; padding:10px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; resize:vertical; line-height:1.75; box-sizing:border-box;"></textarea>
+            </div>
+          </div>
+          <div style="padding:14px 24px 20px; border-top:1.5px solid var(--color-sand); display:flex; gap:10px; justify-content:flex-end; position:sticky; bottom:0; background:#fff; z-index:1;">
+            <button @click="showDocModal=false" style="padding:9px 18px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; font-weight:600; color:var(--text-muted); cursor:pointer;">Batal</button>
+            <button @click="saveDoc" :disabled="!docForm.title" style="padding:9px 22px; border:none; border-radius:8px; font-size:13px; font-weight:700; color:#fff; cursor:pointer;"
+              :style="{ background: docTypeColor(docForm.type), opacity: docForm.title ? 1 : 0.5 }">Simpan</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         MODAL: View Dokumen
+    ══════════════════════════════════════════════════════════════════ -->
+    <transition name="cf-fade">
+      <div v-if="showViewModal && viewingDoc" style="position:fixed; inset:0; z-index:9990; background:rgba(44,38,33,0.45); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:16px;" @click.self="showViewModal=false">
+        <div style="background:#fff; border-radius:18px; width:min(640px,100%); max-height:90vh; overflow-y:auto; box-shadow:var(--shadow-lg); display:flex; flex-direction:column;">
+          <div :style="{ background: 'linear-gradient(135deg,' + docTypeColor(viewingDoc.type) + ',' + docTypeColorDark(viewingDoc.type) + ')', padding:'18px 24px', display:'flex', alignItems:'center', justifyContent:'space-between', borderRadius:'16px 16px 0 0' }">
+            <div>
+              <p style="font-size:11px; font-weight:700; color:rgba(255,255,255,0.75); text-transform:uppercase; letter-spacing:0.06em; margin:0 0 3px;">{{ docTypeLabel(viewingDoc.type) }}</p>
+              <h3 style="font-size:17px; font-weight:800; color:#fff; margin:0;">{{ viewingDoc.title }}</h3>
+              <p v-if="viewingDoc.target" style="font-size:12px; color:rgba(255,255,255,0.8); margin:4px 0 0;">🎯 {{ viewingDoc.target }}</p>
+            </div>
+            <button @click="showViewModal=false" style="background:rgba(255,255,255,0.22); border:none; cursor:pointer; color:#fff; padding:7px; border-radius:8px; flex-shrink:0;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div style="padding:24px; flex:1;">
+            <pre style="font-family:'Outfit',sans-serif; font-size:14px; color:var(--text-dark); line-height:1.85; white-space:pre-wrap; word-break:break-word; margin:0;">{{ viewingDoc.content || '(Dokumen masih kosong)' }}</pre>
+          </div>
+          <div style="padding:14px 24px 20px; border-top:1.5px solid var(--color-sand); display:flex; gap:10px; justify-content:flex-end; position:sticky; bottom:0; background:#fff;">
+            <button @click="copyDocContent(viewingDoc)" style="padding:9px 16px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:8px; font-size:12.5px; font-weight:600; color:var(--text-dark); cursor:pointer; display:flex; align-items:center; gap:6px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              {{ copySuccess ? '✓ Tersalin!' : 'Salin Teks' }}
+            </button>
+            <button @click="editDoc(viewingDoc); showViewModal=false" style="padding:9px 16px; border:none; border-radius:8px; font-size:12.5px; font-weight:700; color:#fff; cursor:pointer; display:flex; align-items:center; gap:6px;"
+              :style="{ background: docTypeColor(viewingDoc.type) }">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+  </div>
+  `,
+
+  data() {
+    return {
+      activeTab: 'resume',
+      tabs: [
+        { key: 'resume',        label: 'Profil & Resume',  emoji: '👤', color: 'var(--color-terracotta)', shadowColor: 'rgba(214,123,82,0.3)' },
+        { key: 'cv',            label: 'CV ATS',           emoji: '📄', color: '#6366F1',                 shadowColor: 'rgba(99,102,241,0.3)' },
+        { key: 'cover_letter',  label: 'Cover Letter',     emoji: '✉️',  color: '#D67B52',                 shadowColor: 'rgba(214,123,82,0.3)' },
+        { key: 'surat_lamaran', label: 'Surat Lamaran',    emoji: '📝', color: '#059669',                 shadowColor: 'rgba(5,150,105,0.3)' },
+        { key: 'body_email',    label: 'Body Email',       emoji: '📧', color: '#0369A1',                 shadowColor: 'rgba(3,105,161,0.3)' },
+        { key: 'all',           label: 'Semua Dokumen',    emoji: '📂', color: 'var(--color-forest)',      shadowColor: 'rgba(40,54,24,0.3)' },
+      ],
+
+      // Resume
+      resume: {
+        name: '', title: '', email: '', phone: '', location: '', linkedin: '',
+        summary: '', skills: '', experience: '', education: '', languages: ''
+      },
+      resumeForm: {
+        name: '', title: '', email: '', phone: '', location: '', linkedin: '',
+        summary: '', skills: '', experience: '', education: '', languages: ''
+      },
+      showResumeModal: false,
+
+      // Docs
+      docs: [],
+      docForm: { type: 'cover_letter', title: '', target: '', content: '' },
+      editingDocId: null,
+      showDocModal: false,
+
+      // View
+      showViewModal: false,
+      viewingDoc: null,
+      copySuccess: false,
+
+      // Meta
+      lastUpdated: null,
+
+      // Doc types catalog
+      docTypes: [
+        { key: 'cv',            label: 'CV ATS',          emoji: '📄', color: '#6366F1' },
+        { key: 'cover_letter',  label: 'Cover Letter',    emoji: '✉️',  color: '#D67B52' },
+        { key: 'surat_lamaran', label: 'Surat Lamaran',   emoji: '📝', color: '#059669' },
+        { key: 'body_email',    label: 'Body Email',      emoji: '📧', color: '#0369A1' },
+      ],
+    };
+  },
+
+  computed: {
+    docContentPlaceholder() {
+      const map = {
+        cv:            'Ringkasan poin-poin CV kamu — pengalaman, keahlian, pendidikan...',
+        cover_letter:  'Dear Hiring Manager,\n\nSaya sangat tertarik dengan posisi ... di perusahaan Bapak/Ibu ...\n\n...',
+        surat_lamaran: 'Kepada Yth.\nBapak/Ibu HRD ...\n\nDengan hormat,\nSaya yang bertanda tangan di bawah ini ...',
+        body_email:    'Subjek: Lamaran Pekerjaan — [Posisi] | [Nama Kamu]\n\nYth. Bapak/Ibu HRD,\n\nSaya ...',
+      };
+      return map[this.docForm.type] || 'Tulis isi dokumen di sini...';
+    }
+  },
+
+  methods: {
+    // ── Resume ──
+    editResume() {
+      this.resumeForm = { ...this.resume };
+      this.showResumeModal = true;
+    },
+    saveResume() {
+      this.resume = { ...this.resumeForm };
+      this.lastUpdated = new Date().toISOString();
+      this.saveAll();
+      this.showResumeModal = false;
+    },
+
+    // ── Docs ──
+    docsByType(type) {
+      return this.docs.filter(d => d.type === type);
+    },
+    openAddDoc() {
+      this.editingDocId = null;
+      this.docForm = { type: 'cover_letter', title: '', target: '', content: '' };
+      this.showDocModal = true;
+    },
+    openAddDocOfType(type) {
+      this.editingDocId = null;
+      this.docForm = { type, title: '', target: '', content: '' };
+      this.showDocModal = true;
+    },
+    editDoc(doc) {
+      this.editingDocId = doc.id;
+      this.docForm = { type: doc.type, title: doc.title, target: doc.target || '', content: doc.content || '' };
+      this.showDocModal = true;
+    },
+    saveDoc() {
+      if (!this.docForm.title.trim()) return;
+      const now = new Date().toISOString();
+      if (this.editingDocId) {
+        const idx = this.docs.findIndex(d => d.id === this.editingDocId);
+        if (idx !== -1) {
+          this.docs[idx] = { ...this.docs[idx], ...this.docForm, updatedAt: now };
+        }
+      } else {
+        this.docs.push({
+          id: Date.now().toString(),
+          ...this.docForm,
+          updatedAt: now,
+        });
+      }
+      this.lastUpdated = now;
+      this.saveAll();
+      this.showDocModal = false;
+    },
+    deleteDoc(id) {
+      if (!confirm('Hapus dokumen ini?')) return;
+      this.docs = this.docs.filter(d => d.id !== id);
+      this.lastUpdated = new Date().toISOString();
+      this.saveAll();
+    },
+    viewDoc(doc) {
+      this.viewingDoc = doc;
+      this.copySuccess = false;
+      this.showViewModal = true;
+    },
+    copyDocContent(doc) {
+      if (!doc.content) return;
+      navigator.clipboard.writeText(doc.content).then(() => {
+        this.copySuccess = true;
+        setTimeout(() => { this.copySuccess = false; }, 2000);
+      });
+    },
+
+    // ── Doc type helpers ──
+    docTypeColor(type) {
+      const t = this.docTypes.find(d => d.key === type);
+      return t ? t.color : '#6E6359';
+    },
+    docTypeColorDark(type) {
+      const map = {
+        cv: '#4F46E5',
+        cover_letter: '#C4673E',
+        surat_lamaran: '#047857',
+        body_email: '#0284C7',
+      };
+      return map[type] || '#555';
+    },
+    docTypeEmoji(type) {
+      const t = this.docTypes.find(d => d.key === type);
+      return t ? t.emoji : '📄';
+    },
+    docTypeLabel(type) {
+      const t = this.docTypes.find(d => d.key === type);
+      return t ? t.label : type;
+    },
+
+    // ── Storage ──
+    saveAll() {
+      WorkspaceStorage.setItem('career_resume', JSON.stringify(this.resume));
+      WorkspaceStorage.setItem('career_docs', JSON.stringify(this.docs));
+      WorkspaceStorage.setItem('career_last_updated', this.lastUpdated);
+    },
+
+    // ── Formatting ──
+    formatLastUpdated(iso) {
+      if (!iso) return null;
+      try {
+        const d = new Date(iso);
+        const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+        const hours = String(d.getHours()).padStart(2,'0');
+        const mins = String(d.getMinutes()).padStart(2,'0');
+        return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()} · ${hours}:${mins}`;
+      } catch(_e) { return null; }
+    },
+  },
+
+  async mounted() {
+    await globalThis._workspaceStorageReady;
+    try {
+      const r = WorkspaceStorage.getItem('career_resume');
+      if (r) this.resume = { ...this.resume, ...JSON.parse(r) };
+    } catch(_e) {}
+    try {
+      const d = WorkspaceStorage.getItem('career_docs');
+      if (d) this.docs = JSON.parse(d);
+    } catch(_e) {}
+    try {
+      const lu = WorkspaceStorage.getItem('career_last_updated');
+      if (lu) this.lastUpdated = lu;
+    } catch(_e) {}
+  },
+};

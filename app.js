@@ -230,6 +230,14 @@ const App = {
         customUrl: '',
         label: '9. Financial Tracker',
         num: '09'
+      },
+      careerFoundation: {
+        iconId: 'notebook',
+        x: 55,
+        y: 80,
+        customUrl: '',
+        label: '11. Career Foundation',
+        num: '11'
       }
     };
 
@@ -258,6 +266,9 @@ const App = {
         }
         if (!assignedIcons.financialTracker) {
           assignedIcons.financialTracker = { ...defaultAssignedIcons.financialTracker };
+        }
+        if (!assignedIcons.careerFoundation) {
+          assignedIcons.careerFoundation = { ...defaultAssignedIcons.careerFoundation };
         }
         saveConfig();
       } else {
@@ -705,6 +716,7 @@ app.component('google-calendar', GoogleCalendar);
 app.component('icon-manager', IconManager);
 app.component('floating-countdown-timer', FloatingCountdownTimer);
 app.component('financial-tracker', FinancialTracker);
+app.component('career-foundation', CareerFoundation);
 app.component('notification-panel', NotificationPanel);
 app.component('reminder-popup', ReminderPopup);
 app.component('missed-tasks-page', MissedTasksPage);
