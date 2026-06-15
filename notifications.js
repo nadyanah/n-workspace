@@ -962,6 +962,7 @@ const NotificationPanel = {
                 <div v-else
                      class="notif-item notif-item-action"
                      :class="{ 'notif-item-done': entry.item.done }"
+                     :title="entry.item.done ? 'Klik untuk batalkan (tandai belum selesai)' : 'Klik untuk tandai selesai'"
                      @click="handleActionClick(entry.item)">
                   <div class="notif-item-icon" :class="entry.item.done ? 'notif-icon-done' : 'notif-icon-action'" :style="entry.item.isHabit && !entry.item.done ? { backgroundColor: entry.item.color + '22', border: '1.5px solid ' + entry.item.color + '55' } : {}">
                     <svg v-if="entry.item.done" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -979,12 +980,14 @@ const NotificationPanel = {
                         <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         {{ manualCategoryLabel(entry.item) }}
                       </span>
-                      {{ entry.item.done ? 'Sudah dikerjakan ✓' : entry.item.subtitle }}
+                      <span v-if="entry.item.done">Sudah dikerjakan ✓ <span style="opacity:0.6;">· klik untuk batalkan</span></span>
+                      <span v-else>{{ entry.item.subtitle }}</span>
                     </div>
                   </div>
-                  <div class="notif-item-right" style="align-items: center;">
+                  <div class="notif-item-right">
                     <span class="notif-time-badge">{{ entry.item.endTime ? entry.item.time + '–' + entry.item.endTime : entry.item.time }}</span>
                     <svg v-if="!entry.item.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    <svg v-else viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);" title="Klik untuk batalkan"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></svg>
                   </div>
                 </div>
               </template>
@@ -1063,6 +1066,7 @@ const NotificationPanel = {
                 <div v-else
                      class="notif-item notif-item-action"
                      :class="{ 'notif-item-done': entry.item.done }"
+                     :title="entry.item.done ? 'Klik untuk batalkan (tandai belum selesai)' : 'Klik untuk tandai selesai'"
                      @click="handleActionClick(entry.item)">
                   <div class="notif-item-icon" :class="entry.item.done ? 'notif-icon-done' : 'notif-icon-action'" :style="entry.item.isHabit && !entry.item.done ? { backgroundColor: entry.item.color + '22', border: '1.5px solid ' + entry.item.color + '55' } : {}">
                     <svg v-if="entry.item.done" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -1080,12 +1084,14 @@ const NotificationPanel = {
                         <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         {{ manualCategoryLabel(entry.item) }}
                       </span>
-                      {{ entry.item.done ? 'Sudah dikerjakan ✓' : entry.item.subtitle }}
+                      <span v-if="entry.item.done">Sudah dikerjakan ✓ <span style="opacity:0.6;">· klik untuk batalkan</span></span>
+                      <span v-else>{{ entry.item.subtitle }}</span>
                     </div>
                   </div>
-                  <div class="notif-item-right" style="align-items: center;">
+                  <div class="notif-item-right">
                     <span class="notif-time-badge">{{ entry.item.endTime ? entry.item.time + '–' + entry.item.endTime : entry.item.time }}</span>
                     <svg v-if="!entry.item.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    <svg v-else viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);" title="Klik untuk batalkan"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></svg>
                   </div>
                 </div>
               </template>
@@ -1164,6 +1170,7 @@ const NotificationPanel = {
                 <div v-else
                      class="notif-item notif-item-action"
                      :class="{ 'notif-item-done': entry.item.done }"
+                     :title="entry.item.done ? 'Klik untuk batalkan (tandai belum selesai)' : 'Klik untuk tandai selesai'"
                      @click="handleActionClick(entry.item)">
                   <div class="notif-item-icon" :class="entry.item.done ? 'notif-icon-done' : 'notif-icon-action'" :style="entry.item.isHabit && !entry.item.done ? { backgroundColor: entry.item.color + '22', border: '1.5px solid ' + entry.item.color + '55' } : {}">
                     <svg v-if="entry.item.done" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -1181,12 +1188,14 @@ const NotificationPanel = {
                         <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         {{ manualCategoryLabel(entry.item) }}
                       </span>
-                      {{ entry.item.done ? 'Sudah dikerjakan ✓' : entry.item.subtitle }}
+                      <span v-if="entry.item.done">Sudah dikerjakan ✓ <span style="opacity:0.6;">· klik untuk batalkan</span></span>
+                      <span v-else>{{ entry.item.subtitle }}</span>
                     </div>
                   </div>
-                  <div class="notif-item-right" style="align-items: center;">
+                  <div class="notif-item-right">
                     <span class="notif-time-badge">{{ entry.item.endTime ? entry.item.time + '–' + entry.item.endTime : entry.item.time }}</span>
                     <svg v-if="!entry.item.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    <svg v-else viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);" title="Klik untuk batalkan"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></svg>
                   </div>
                 </div>
               </template>
@@ -1756,7 +1765,10 @@ const NotificationPanel = {
     },
 
     handleActionClick(notif) {
-      if (notif.done) return;
+      if (notif.done) {
+        this.undoActionClick(notif);
+        return;
+      }
       // Play suara checklist dulu
       NotifSound.playCheck();
       // Tandai selesai di notif status
@@ -1814,6 +1826,48 @@ const NotificationPanel = {
       // Navigasi ke halaman (skip kalau null, misal tahajud)
       if (notif.page) this.$emit('navigate', notif.page);
       this.$emit('close');
+    },
+
+    // ── Batalkan tandai selesai (misal salah klik notifikasi) ──
+    // Tidak navigate / tidak close panel, supaya user bisa langsung klik item yang benar.
+    undoActionClick(notif) {
+      NotifSound.playCheck();
+      if (this.actionStatus[this.todayStr]) {
+        delete this.actionStatus[this.todayStr][notif.id];
+        WorkspaceStorage.setItem('ws_notif_action_status', JSON.stringify(this.actionStatus));
+      }
+
+      // Kalau ini habit → hapus juga centangan hari ini di histori habit tracker
+      if (notif.isHabit) {
+        try {
+          const habitId = notif.id.replace(/^habit_/, '');
+          const raw = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+          if (raw) {
+            const habits = JSON.parse(raw);
+            const today = new Date();
+            const ym = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+            const day = today.getDate();
+            const updated = habits.map(h => {
+              if (h.id !== habitId) return h;
+              const hist = { ...h.history };
+              hist[ym] = (hist[ym] || []).filter(d => d !== day);
+              return { ...h, history: hist };
+            });
+            WorkspaceStorage.setItem('aesthetic_habit_tracker_habits', JSON.stringify(updated));
+            window.dispatchEvent(new CustomEvent('ws-plans-updated'));
+          }
+        } catch(e) {}
+      }
+
+      // Beri tahu Agenda View (Google Calendar) bahwa status berubah lagi
+      window.dispatchEvent(new CustomEvent('ws-notif-status-updated', {
+        detail: { date: this.todayStr, id: notif.id, done: false, source: 'notifPanel' }
+      }));
+
+      // Emit count terbaru supaya badge bertambah lagi
+      this.$nextTick(() => {
+        this.$emit('unread-count-changed', this.totalUnread);
+      });
     },
 
     resetDoneToday() {
