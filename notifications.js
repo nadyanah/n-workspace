@@ -583,7 +583,8 @@ const ReminderPopup = {
             id: 'content-' + item.id,
             icon: '🎬',
             title: item.title,
-            sub: `Content · ${item.platform || ''} · ${label}`
+            sub: `Content · ${item.platform || ''} · ${label}`,
+            time: item.dueTime || null
           });
         });
       } catch(e) {}
@@ -1517,6 +1518,13 @@ const NotificationPanel = {
           return; // tidak urgen, skip
         }
 
+        // Konversi Target Jam Rilis "HH:MM" ke menit untuk sorting (kalau diisi)
+        let timeVal = 9998;
+        if (item.dueTime) {
+          const [hh, mm] = item.dueTime.split(':').map(Number);
+          timeVal = hh * 60 + mm;
+        }
+
         list.push({
           id: 'content-' + item.id,
           type: 'content-today',
@@ -1525,9 +1533,9 @@ const NotificationPanel = {
           badge,
           badgeColor,
           page: 'contentTracker',
-          time: null,
-          timeVal: 9998,
-          hasTime: false
+          time: item.dueTime || null,
+          timeVal,
+          hasTime: !!item.dueTime
         });
       });
 

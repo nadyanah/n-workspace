@@ -8780,8 +8780,8 @@ const GoogleCalendar = {
                 class="gcal-agenda-allday-item"
                 :class="{ 'gcal-agenda-item-done': item.done }"
                 :style="{ background: localTintColor(item.color, 0.16), borderColor: localTintColor(item.color, 0.45), color: item.color, cursor: 'pointer' }"
-                @click.stop="item.isTaskPlan ? localGoToLogbook() : (item.type === 'habit' ? localGoToHabitTracker() : (item.type === 'manual' ? localShowAgendaDetail(item) : (item.actionable ? localHandleAgendaAction(item) : null)))"
-                :title="item.isTaskPlan ? 'Buka Job Logbook' : (item.type === 'habit' ? 'Klik untuk buka Habit Tracker · klik bulet untuk tandai selesai' : (item.type === 'manual' ? 'Lihat detail pengingat' : (item.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai')))"
+                @click.stop="item.isTaskPlan ? localGoToLogbook() : (item.type === 'habit' ? localGoToHabitTracker() : ((item.type === 'manual' || item.type === 'content') ? localShowAgendaDetail(item) : (item.actionable ? localHandleAgendaAction(item) : null)))"
+                :title="item.isTaskPlan ? 'Buka Job Logbook' : (item.type === 'habit' ? 'Klik untuk buka Habit Tracker · klik bulet untuk tandai selesai' : ((item.type === 'manual' || item.type === 'content') ? 'Lihat detail' : (item.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai')))"
                 <span class="gcal-agenda-check-icon"
                   @click.stop="item.actionable ? localHandleAgendaAction(item) : null"
                   style="cursor:pointer;"
@@ -8791,6 +8791,7 @@ const GoogleCalendar = {
                   <span v-else-if="item.type==='task'">📋</span>
                   <span v-else-if="item.type==='habit'">✅</span>
                   <span v-else-if="item.type==='manual'">⏰</span>
+                  <span v-else-if="item.type==='content'">🎬</span>
                   <span v-else>🎉</span>
                 </span>
                 <span class="gcal-agenda-allday-item-title" :style="item.done ? 'text-decoration:line-through; opacity:0.55;' : ''">{{ item.title }}</span>
@@ -8820,8 +8821,8 @@ const GoogleCalendar = {
                     width: 'calc(' + (100/block.totalCols) + '% - 4px)',
                     cursor: 'pointer'
                   }"
-                  :title="block.isTaskPlan ? 'Buka Job Logbook' : (block.type === 'habit' ? 'Klik untuk buka Habit Tracker · klik bulet untuk tandai selesai' : (block.type === 'manual' ? 'Lihat detail pengingat' : (block.actionable ? (block.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai') : block.title + ' (' + block.startLabel + ' - ' + block.endLabel + ')')))"
-                  @click.stop="block.isTaskPlan ? localGoToLogbook() : (block.type === 'habit' ? localGoToHabitTracker() : (block.type === 'manual' ? localShowAgendaDetail(block) : (block.actionable ? localHandleAgendaAction(block) : (block.type==='event' && localDeleteEvent(block.raw)))))"
+                  :title="block.isTaskPlan ? 'Buka Job Logbook' : (block.type === 'habit' ? 'Klik untuk buka Habit Tracker · klik bulet untuk tandai selesai' : ((block.type === 'manual' || block.type === 'content') ? 'Lihat detail' : (block.actionable ? (block.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai') : block.title + ' (' + block.startLabel + ' - ' + block.endLabel + ')')))"
+                  @click.stop="block.isTaskPlan ? localGoToLogbook() : (block.type === 'habit' ? localGoToHabitTracker() : ((block.type === 'manual' || block.type === 'content') ? localShowAgendaDetail(block) : (block.actionable ? localHandleAgendaAction(block) : (block.type==='event' && localDeleteEvent(block.raw)))))"
                 >
                   <span v-if="block.actionable" class="gcal-agenda-check-icon"
                     @click.stop="localHandleAgendaAction(block)"
@@ -8843,6 +8844,7 @@ const GoogleCalendar = {
           <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" :style="{ background: agendaFilterColors.task }"></span>Task Plan</span>
           <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" :style="{ background: agendaFilterColors.habit }"></span>Habit</span>
           <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" :style="{ background: agendaFilterColors.manual }"></span>Pengingat</span>
+          <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" :style="{ background: agendaFilterColors.content }"></span>Content Plan</span>
           <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" style="background:#4285F4;"></span>Acara</span>
         </div>
 
@@ -8883,6 +8885,7 @@ const GoogleCalendar = {
                     <span v-else-if="agendaDetailItem.type === 'manual'" class="agenda-detail-badge agenda-detail-badge-manual">Pengingat</span>
                     <span v-else-if="agendaDetailItem.type === 'habit'" class="agenda-detail-badge agenda-detail-badge-habit">Habit</span>
                     <span v-else-if="agendaDetailItem.type === 'task'" class="agenda-detail-badge agenda-detail-badge-task">Task Plan</span>
+                    <span v-else-if="agendaDetailItem.type === 'content'" class="agenda-detail-badge agenda-detail-badge-content">Content Plan</span>
                     <span v-else-if="agendaDetailItem.type === 'event'" class="agenda-detail-badge agenda-detail-badge-event">Acara</span>
                   </div>
                 </div>
@@ -8947,6 +8950,17 @@ const GoogleCalendar = {
                       <span style="opacity:0.5; font-weight:400; margin:0 3px;">›</span>
                       <span style="color:var(--text-secondary); font-weight:500; font-size:11.5px;">{{ agendaDetailItem.raw.targetItem }}</span>
                     </template>
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:4px; vertical-align:middle;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  </span>
+                </div>
+
+                <!-- Arahkan ke halaman (untuk content plan) -->
+                <div v-if="agendaDetailItem.type === 'content'" class="agenda-detail-row">
+                  <span class="agenda-detail-row-icon">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  </span>
+                  <span class="agenda-detail-row-text" style="color: var(--color-terracotta, #D67B52); font-weight:600; cursor:pointer; line-height:1.6;" @click="localNavigateFromDetail('contentTracker')">
+                    Content Tracker
                     <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:4px; vertical-align:middle;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                   </span>
                 </div>
@@ -9354,11 +9368,11 @@ const GoogleCalendar = {
       localStorageTick: 0,
       agendaDetailItem: null,
       agendaFilterOpen: false,
-      agendaFilters: { task: true, habit: true, manual: true },
+      agendaFilters: { task: true, habit: true, manual: true, content: true },
       // agendaFilterOptions moved to computed (includes custom categories)
       // Warna kustom per kategori filter agenda (bisa diubah lewat color picker)
       agendaFilterColors: (() => {
-        const defaults = { task: '#D67B52', habit: '#A3B18A', manual: '#F59E0B' };
+        const defaults = { task: '#D67B52', habit: '#A3B18A', manual: '#F59E0B', content: '#8E7CC3' };
         try {
           const raw = WorkspaceStorage.getItem('gcal_agenda_filter_colors');
           return raw ? { ...defaults, ...JSON.parse(raw) } : { ...defaults };
@@ -9470,6 +9484,7 @@ const GoogleCalendar = {
         { key: 'task',   label: 'Task Plan (Job Logbook)', color: '#D67B52' },
         { key: 'habit',  label: 'Habit (Habit Tracker)',   color: '#A3B18A' },
         { key: 'manual', label: 'Pengingat (edit by n)',   color: '#F59E0B' },
+        { key: 'content', label: 'Content Plan (Content Tracker)', color: '#8E7CC3' },
       ];
       const custom = this.customReminderCategories.map(cat => ({
         key: cat.key, label: cat.label + ' (Kategori Custom)', color: cat.color || '#9CA3AF'
@@ -9729,6 +9744,25 @@ const GoogleCalendar = {
         });
       } catch(_e) { /* ignore */ }
 
+      // --- Content Plan (Content Tracker) — berdasarkan Target Tanggal & Jam Rilis ---
+      if (this.agendaFilters.content) {
+        try {
+          const contents = JSON.parse(WorkspaceStorage.getItem('personal_workspace_content_items') || '[]');
+          contents.filter(c => c.dueDate === ds).forEach(c => {
+            const id = 'content-' + c.id;
+            const subtitle = `Content · ${c.platform || ''}${c.username ? ' · ' + c.username : ''} · ${c.status || ''}`;
+            if (c.dueTime) {
+              const [sh, sm] = c.dueTime.split(':').map(Number);
+              const startMin = sh * 60 + (sm || 0);
+              const endMin = startMin + 30;
+              timed.push({ id, title: c.title, type: 'content', color: TYPE_COLORS.content, startMin, endMin, raw: { ...c, subtitle }, actionable: false });
+            } else {
+              allDayItems.push({ id, title: c.title, type: 'content', color: TYPE_COLORS.content, raw: { ...c, subtitle }, actionable: false });
+            }
+          });
+        } catch(_e) { /* ignore */ }
+      }
+
       // --- Assign overlap columns for timed items ---
       timed.sort((a, b) => a.startMin - b.startMin || a.endMin - b.endMin);
       const columns = []; // each: last endMin
@@ -9800,7 +9834,7 @@ const GoogleCalendar = {
       this.localStorageTick++;
     },
     localResetFilterColors() {
-      this.agendaFilterColors = { task: '#D67B52', habit: '#A3B18A', manual: '#F59E0B' };
+      this.agendaFilterColors = { task: '#D67B52', habit: '#A3B18A', manual: '#F59E0B', content: '#8E7CC3' };
       try { WorkspaceStorage.setItem('gcal_agenda_filter_colors', JSON.stringify(this.agendaFilterColors)); } catch(_e) { /* ignore */ }
       this.localStorageTick++;
     },
