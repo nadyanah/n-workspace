@@ -840,7 +840,29 @@ const NotificationPanel = {
           </div>
 
           <!-- Toggle Notifikasi Background (Web Push) -->
-          <push-notif-toggle></push-notif-toggle>
+          <div style="border-bottom: 1px solid var(--color-sand, #D6CEC5);">
+            <!-- Toggle Header -->
+            <button
+              @click="showPushSettings = !showPushSettings"
+              style="width:100%; display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:none; border:none; cursor:pointer; font-family:inherit;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div style="width:26px; height:26px; background:var(--color-terracotta,#D67B52); border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                </div>
+                <span style="font-size:12px; font-weight:700; color:var(--text-dark); letter-spacing:0.3px;">Pengaturan Notifikasi</span>
+              </div>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--text-muted)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                :style="{ transform: showPushSettings ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s' }">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <!-- Collapsible Content -->
+            <transition name="notif-settings-slide">
+              <div v-if="showPushSettings" style="padding: 0 16px 14px;">
+                <push-notif-toggle></push-notif-toggle>
+              </div>
+            </transition>
+          </div>
 
           <!-- Tabs -->
           <div class="notif-tabs">
@@ -862,90 +884,315 @@ const NotificationPanel = {
             ══════════════════════════════ -->
             <template v-if="activeTab === 'today'">
 
-            <!-- ══ SECTION GABUNGAN: HARI INI (info + pengingat, urut waktu) ══ -->
-            <div class="notif-section-label">
-              <span class="notif-section-dot notif-dot-info"></span>
-              Hari Ini
-            </div>
-
+            <!-- ══ SECTION 3 SLOT WAKTU: PAGI / SIANG / MALAM ══ -->
             <div v-if="mergedTodayPanelItems.length === 0" class="notif-empty">
               <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-sand); margin-bottom:6px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
               <span>Tidak ada agenda hari ini</span>
             </div>
 
-            <template v-for="entry in mergedTodayPanelItems" :key="entry.key">
-              <!-- ═ INFO ITEM ═ -->
-              <template v-if="entry.kind === 'info'">
-                <!-- Task dengan waktu: tampil seperti style pengingat (ada time badge di kanan) -->
-                <div v-if="entry.item.hasTime"
-                     class="notif-item notif-item-info notif-item-clickable"
-                     style="border-left: 2.5px solid var(--color-terracotta, #D67B52);"
-                     @click="handleInfoClick(entry.item)">
-                  <div class="notif-item-icon notif-icon-task">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <!-- ══ SLOT: PAGI ══ -->
+            <div style="margin-bottom:6px; border-radius:10px; overflow:visible; border:1px solid var(--color-sand);">
+              <button @click="openSlotPagi = !openSlotPagi"
+                style="width:100%; display:flex; align-items:center; justify-content:space-between; padding:9px 12px; background:rgba(221,161,94,0.08); border:none; cursor:pointer; font-family:inherit; border-radius:10px;">
+                <div style="display:flex; align-items:center; gap:9px;">
+                  <div style="width:28px; height:28px; background:var(--color-gold, #DDA15E); border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#fff;">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg>
                   </div>
-                  <div class="notif-item-content">
-                    <div class="notif-item-title">{{ entry.item.title }}</div>
-                    <div class="notif-item-sub">{{ entry.item.subtitle }}</div>
-                  </div>
-                  <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
-                    <span class="notif-time-badge">{{ entry.item.time }}</span>
-                    <span v-if="entry.item.badge" class="notif-badge" :class="'notif-badge-' + entry.item.badgeColor" style="margin-top:2px;">{{ entry.item.badge }}</span>
+                  <div style="text-align:left;">
+                    <div style="font-size:11.5px; font-weight:700; color:var(--text-dark); letter-spacing:0.2px;">Pagi</div>
+                    <div style="font-size:10px; color:var(--text-muted); margin-top:1px;">00:00 – 11:59</div>
                   </div>
                 </div>
-
-                <!-- Task tanpa waktu: tampil seperti biasa (badge priority di kanan) -->
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span v-if="slotPagi.length > 0"
+                    style="font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; background:var(--color-sand); color:var(--text-dark);">
+                    {{ slotPagi.length }}
+                  </span>
+                  <span v-else style="font-size:10px; color:var(--text-muted); opacity:0.55;">kosong</span>
+                  <span style="color:var(--text-muted);" :style="{ transform: openSlotPagi ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.22s', display:'inline-flex' }">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </span>
+                </div>
+              </button>
+              <transition name="notif-slot-slide">
+                <div v-if="openSlotPagi">
+                  <div v-if="slotPagi.length === 0" class="notif-empty" style="padding:12px 0 10px;">
+                    <span style="font-size:11.5px; color:var(--text-muted);">Tidak ada agenda</span>
+                  </div>
+                  <template v-for="slot in [slotPagi]" :key="'slotPagi'">
+              <template v-for="entry in slot" :key="entry.key">
+                <!-- ═ INFO ITEM ═ -->
+                <template v-if="entry.kind === 'info'">
+                  <div v-if="entry.item.hasTime"
+                       class="notif-item notif-item-info notif-item-clickable"
+                       style="border-left: 2.5px solid var(--color-terracotta, #D67B52);"
+                       @click="handleInfoClick(entry.item)">
+                    <div class="notif-item-icon notif-icon-task">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </div>
+                    <div class="notif-item-content">
+                      <div class="notif-item-title">{{ entry.item.title }}</div>
+                      <div class="notif-item-sub">{{ entry.item.subtitle }}</div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
+                      <span class="notif-time-badge">{{ entry.item.time }}</span>
+                      <span v-if="entry.item.badge" class="notif-badge" :class="'notif-badge-' + entry.item.badgeColor" style="margin-top:2px;">{{ entry.item.badge }}</span>
+                    </div>
+                  </div>
+                  <div v-else
+                       class="notif-item notif-item-info notif-item-clickable"
+                       @click="handleInfoClick(entry.item)">
+                    <div class="notif-item-icon" :class="'notif-icon-' + entry.item.type">
+                      <svg v-if="entry.item.type === 'task'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                      <svg v-else-if="entry.item.type === 'content-today'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                      <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div class="notif-item-content">
+                      <div class="notif-item-title">{{ entry.item.title }}</div>
+                      <div class="notif-item-sub">{{ entry.item.subtitle }}</div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
+                      <span v-if="entry.item.badge" class="notif-badge" :class="'notif-badge-' + entry.item.badgeColor">{{ entry.item.badge }}</span>
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); margin-top: 2px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </div>
+                  </div>
+                </template>
+                <!-- ═ PENGINGAT ITEM ═ -->
                 <div v-else
-                     class="notif-item notif-item-info notif-item-clickable"
-                     @click="handleInfoClick(entry.item)">
-                  <div class="notif-item-icon" :class="'notif-icon-' + entry.item.type">
-                    <svg v-if="entry.item.type === 'task'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                    <svg v-else-if="entry.item.type === 'content-today'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                     class="notif-item notif-item-action"
+                     :class="{ 'notif-item-done': entry.item.done }"
+                     @click="handleActionClick(entry.item)">
+                  <div class="notif-item-icon" :class="entry.item.done ? 'notif-icon-done' : 'notif-icon-action'" :style="entry.item.isHabit && !entry.item.done ? { backgroundColor: entry.item.color + '22', border: '1.5px solid ' + entry.item.color + '55' } : {}">
+                    <svg v-if="entry.item.done" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg v-else-if="entry.item.isHabit" viewBox="0 0 24 24" width="14" height="14" fill="none" :stroke="entry.item.color" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
                     <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   </div>
                   <div class="notif-item-content">
-                    <div class="notif-item-title">{{ entry.item.title }}</div>
-                    <div class="notif-item-sub">{{ entry.item.subtitle }}</div>
+                    <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : ''">{{ entry.item.title }}</div>
+                    <div class="notif-item-sub" style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
+                      <span v-if="entry.item.isHabit && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #f0fdf4; color: #16a34a; border: 1px solid #86efac;">
+                        <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
+                        Habit
+                      </span>
+                      <span v-if="entry.item.isManual && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #fefce8; color: #a16207; border: 1px solid #fde68a;">
+                        <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        {{ manualCategoryLabel(entry.item) }}
+                      </span>
+                      {{ entry.item.done ? 'Sudah dikerjakan ✓' : entry.item.subtitle }}
+                    </div>
                   </div>
-                  <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
-                    <span v-if="entry.item.badge" class="notif-badge" :class="'notif-badge-' + entry.item.badgeColor">{{ entry.item.badge }}</span>
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); margin-top: 2px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                  </div>
-                </div>
-              </template>
-
-              <!-- ═ PENGINGAT ITEM ═ -->
-              <div v-else
-                   class="notif-item notif-item-action"
-                   :class="{ 'notif-item-done': entry.item.done }"
-                   @click="handleActionClick(entry.item)">
-                <div class="notif-item-icon" :class="entry.item.done ? 'notif-icon-done' : 'notif-icon-action'" :style="entry.item.isHabit && !entry.item.done ? { backgroundColor: entry.item.color + '22', border: '1.5px solid ' + entry.item.color + '55' } : {}">
-                  <svg v-if="entry.item.done" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  <svg v-else-if="entry.item.isHabit" viewBox="0 0 24 24" width="14" height="14" fill="none" :stroke="entry.item.color" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
-                  <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                </div>
-                <div class="notif-item-content">
-                  <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : ''">{{ entry.item.title }}</div>
-                  <div class="notif-item-sub" style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
-                    <span v-if="entry.item.isHabit && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #f0fdf4; color: #16a34a; border: 1px solid #86efac;">
-                      <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
-                      Habit
-                    </span>
-                    <span v-if="entry.item.isManual && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #fefce8; color: #a16207; border: 1px solid #fde68a;">
-                      <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                      {{ manualCategoryLabel(entry.item) }}
-                    </span>
-                    {{ entry.item.done ? 'Sudah dikerjakan ✓' : entry.item.subtitle }}
-                  </div>
-                </div>
-                <div class="notif-item-right" style="align-items: center;">
-                  <span class="notif-time-badge">{{ entry.item.endTime ? entry.item.time + '–' + entry.item.endTime : entry.item.time }}</span>
+                  <div class="notif-item-right" style="align-items: center;">
+                    <span class="notif-time-badge">{{ entry.item.endTime ? entry.item.time + '–' + entry.item.endTime : entry.item.time }}</span>
                     <svg v-if="!entry.item.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                   </div>
                 </div>
-              </div>
-            </template>
-
+              </template>
+                  </template>
+                </div>
+              </transition>
+            </div>
+            <!-- ══ SLOT: SIANG ══ -->
+            <div style="margin-bottom:6px; border-radius:10px; overflow:visible; border:1px solid var(--color-sand);">
+              <button @click="openSlotSiang = !openSlotSiang"
+                style="width:100%; display:flex; align-items:center; justify-content:space-between; padding:9px 12px; background:rgba(214,123,82,0.07); border:none; cursor:pointer; font-family:inherit; border-radius:10px;">
+                <div style="display:flex; align-items:center; gap:9px;">
+                  <div style="width:28px; height:28px; background:var(--color-terracotta, #D67B52); border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#fff;">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                  </div>
+                  <div style="text-align:left;">
+                    <div style="font-size:11.5px; font-weight:700; color:var(--text-dark); letter-spacing:0.2px;">Siang</div>
+                    <div style="font-size:10px; color:var(--text-muted); margin-top:1px;">12:00 – 17:59</div>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span v-if="slotSiang.length > 0"
+                    style="font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; background:var(--color-sand); color:var(--text-dark);">
+                    {{ slotSiang.length }}
+                  </span>
+                  <span v-else style="font-size:10px; color:var(--text-muted); opacity:0.55;">kosong</span>
+                  <span style="color:var(--text-muted);" :style="{ transform: openSlotSiang ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.22s', display:'inline-flex' }">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </span>
+                </div>
+              </button>
+              <transition name="notif-slot-slide">
+                <div v-if="openSlotSiang">
+                  <div v-if="slotSiang.length === 0" class="notif-empty" style="padding:12px 0 10px;">
+                    <span style="font-size:11.5px; color:var(--text-muted);">Tidak ada agenda</span>
+                  </div>
+                  <template v-for="slot in [slotSiang]" :key="'slotSiang'">
+              <template v-for="entry in slot" :key="entry.key">
+                <!-- ═ INFO ITEM ═ -->
+                <template v-if="entry.kind === 'info'">
+                  <div v-if="entry.item.hasTime"
+                       class="notif-item notif-item-info notif-item-clickable"
+                       style="border-left: 2.5px solid var(--color-terracotta, #D67B52);"
+                       @click="handleInfoClick(entry.item)">
+                    <div class="notif-item-icon notif-icon-task">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </div>
+                    <div class="notif-item-content">
+                      <div class="notif-item-title">{{ entry.item.title }}</div>
+                      <div class="notif-item-sub">{{ entry.item.subtitle }}</div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
+                      <span class="notif-time-badge">{{ entry.item.time }}</span>
+                      <span v-if="entry.item.badge" class="notif-badge" :class="'notif-badge-' + entry.item.badgeColor" style="margin-top:2px;">{{ entry.item.badge }}</span>
+                    </div>
+                  </div>
+                  <div v-else
+                       class="notif-item notif-item-info notif-item-clickable"
+                       @click="handleInfoClick(entry.item)">
+                    <div class="notif-item-icon" :class="'notif-icon-' + entry.item.type">
+                      <svg v-if="entry.item.type === 'task'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                      <svg v-else-if="entry.item.type === 'content-today'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                      <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div class="notif-item-content">
+                      <div class="notif-item-title">{{ entry.item.title }}</div>
+                      <div class="notif-item-sub">{{ entry.item.subtitle }}</div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
+                      <span v-if="entry.item.badge" class="notif-badge" :class="'notif-badge-' + entry.item.badgeColor">{{ entry.item.badge }}</span>
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); margin-top: 2px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </div>
+                  </div>
+                </template>
+                <!-- ═ PENGINGAT ITEM ═ -->
+                <div v-else
+                     class="notif-item notif-item-action"
+                     :class="{ 'notif-item-done': entry.item.done }"
+                     @click="handleActionClick(entry.item)">
+                  <div class="notif-item-icon" :class="entry.item.done ? 'notif-icon-done' : 'notif-icon-action'" :style="entry.item.isHabit && !entry.item.done ? { backgroundColor: entry.item.color + '22', border: '1.5px solid ' + entry.item.color + '55' } : {}">
+                    <svg v-if="entry.item.done" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg v-else-if="entry.item.isHabit" viewBox="0 0 24 24" width="14" height="14" fill="none" :stroke="entry.item.color" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
+                    <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
+                  <div class="notif-item-content">
+                    <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : ''">{{ entry.item.title }}</div>
+                    <div class="notif-item-sub" style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
+                      <span v-if="entry.item.isHabit && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #f0fdf4; color: #16a34a; border: 1px solid #86efac;">
+                        <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
+                        Habit
+                      </span>
+                      <span v-if="entry.item.isManual && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #fefce8; color: #a16207; border: 1px solid #fde68a;">
+                        <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        {{ manualCategoryLabel(entry.item) }}
+                      </span>
+                      {{ entry.item.done ? 'Sudah dikerjakan ✓' : entry.item.subtitle }}
+                    </div>
+                  </div>
+                  <div class="notif-item-right" style="align-items: center;">
+                    <span class="notif-time-badge">{{ entry.item.endTime ? entry.item.time + '–' + entry.item.endTime : entry.item.time }}</span>
+                    <svg v-if="!entry.item.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  </div>
+                </div>
+              </template>
+                  </template>
+                </div>
+              </transition>
+            </div>
+            <!-- ══ SLOT: MALAM ══ -->
+            <div style="margin-bottom:6px; border-radius:10px; overflow:visible; border:1px solid var(--color-sand);">
+              <button @click="openSlotMalam = !openSlotMalam"
+                style="width:100%; display:flex; align-items:center; justify-content:space-between; padding:9px 12px; background:rgba(40,54,24,0.05); border:none; cursor:pointer; font-family:inherit; border-radius:10px;">
+                <div style="display:flex; align-items:center; gap:9px;">
+                  <div style="width:28px; height:28px; background:var(--color-forest, #283618); border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#fff;">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                  </div>
+                  <div style="text-align:left;">
+                    <div style="font-size:11.5px; font-weight:700; color:var(--text-dark); letter-spacing:0.2px;">Malam</div>
+                    <div style="font-size:10px; color:var(--text-muted); margin-top:1px;">18:00 – 23:59</div>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span v-if="slotMalam.length > 0"
+                    style="font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; background:var(--color-sand); color:var(--text-dark);">
+                    {{ slotMalam.length }}
+                  </span>
+                  <span v-else style="font-size:10px; color:var(--text-muted); opacity:0.55;">kosong</span>
+                  <span style="color:var(--text-muted);" :style="{ transform: openSlotMalam ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.22s', display:'inline-flex' }">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </span>
+                </div>
+              </button>
+              <transition name="notif-slot-slide">
+                <div v-if="openSlotMalam">
+                  <div v-if="slotMalam.length === 0" class="notif-empty" style="padding:12px 0 10px;">
+                    <span style="font-size:11.5px; color:var(--text-muted);">Tidak ada agenda</span>
+                  </div>
+                  <template v-for="slot in [slotMalam]" :key="'slotMalam'">
+              <template v-for="entry in slot" :key="entry.key">
+                <!-- ═ INFO ITEM ═ -->
+                <template v-if="entry.kind === 'info'">
+                  <div v-if="entry.item.hasTime"
+                       class="notif-item notif-item-info notif-item-clickable"
+                       style="border-left: 2.5px solid var(--color-terracotta, #D67B52);"
+                       @click="handleInfoClick(entry.item)">
+                    <div class="notif-item-icon notif-icon-task">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </div>
+                    <div class="notif-item-content">
+                      <div class="notif-item-title">{{ entry.item.title }}</div>
+                      <div class="notif-item-sub">{{ entry.item.subtitle }}</div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
+                      <span class="notif-time-badge">{{ entry.item.time }}</span>
+                      <span v-if="entry.item.badge" class="notif-badge" :class="'notif-badge-' + entry.item.badgeColor" style="margin-top:2px;">{{ entry.item.badge }}</span>
+                    </div>
+                  </div>
+                  <div v-else
+                       class="notif-item notif-item-info notif-item-clickable"
+                       @click="handleInfoClick(entry.item)">
+                    <div class="notif-item-icon" :class="'notif-icon-' + entry.item.type">
+                      <svg v-if="entry.item.type === 'task'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                      <svg v-else-if="entry.item.type === 'content-today'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                      <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div class="notif-item-content">
+                      <div class="notif-item-title">{{ entry.item.title }}</div>
+                      <div class="notif-item-sub">{{ entry.item.subtitle }}</div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
+                      <span v-if="entry.item.badge" class="notif-badge" :class="'notif-badge-' + entry.item.badgeColor">{{ entry.item.badge }}</span>
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); margin-top: 2px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </div>
+                  </div>
+                </template>
+                <!-- ═ PENGINGAT ITEM ═ -->
+                <div v-else
+                     class="notif-item notif-item-action"
+                     :class="{ 'notif-item-done': entry.item.done }"
+                     @click="handleActionClick(entry.item)">
+                  <div class="notif-item-icon" :class="entry.item.done ? 'notif-icon-done' : 'notif-icon-action'" :style="entry.item.isHabit && !entry.item.done ? { backgroundColor: entry.item.color + '22', border: '1.5px solid ' + entry.item.color + '55' } : {}">
+                    <svg v-if="entry.item.done" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg v-else-if="entry.item.isHabit" viewBox="0 0 24 24" width="14" height="14" fill="none" :stroke="entry.item.color" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
+                    <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
+                  <div class="notif-item-content">
+                    <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : ''">{{ entry.item.title }}</div>
+                    <div class="notif-item-sub" style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
+                      <span v-if="entry.item.isHabit && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #f0fdf4; color: #16a34a; border: 1px solid #86efac;">
+                        <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
+                        Habit
+                      </span>
+                      <span v-if="entry.item.isManual && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #fefce8; color: #a16207; border: 1px solid #fde68a;">
+                        <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        {{ manualCategoryLabel(entry.item) }}
+                      </span>
+                      {{ entry.item.done ? 'Sudah dikerjakan ✓' : entry.item.subtitle }}
+                    </div>
+                  </div>
+                  <div class="notif-item-right" style="align-items: center;">
+                    <span class="notif-time-badge">{{ entry.item.endTime ? entry.item.time + '–' + entry.item.endTime : entry.item.time }}</span>
+                    <svg v-if="!entry.item.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  </div>
+                </div>
+              </template>
+                  </template>
+                </div>
+              </transition>
+            </div>
             <!-- Reset completed untuk hari ini -->
             <div v-if="anyDone" style="margin-top: 12px; text-align: center;">
               <button class="notif-reset-btn" @click="resetDoneToday">
@@ -1197,7 +1444,11 @@ const NotificationPanel = {
       })(),
       activeTab: 'today',
       missedLog: [],
-      expandedMissedDays: []
+      expandedMissedDays: [],
+      showPushSettings: false,
+      openSlotPagi: true,
+      openSlotSiang: true,
+      openSlotMalam: true
     };
   },
 
@@ -1366,7 +1617,20 @@ const NotificationPanel = {
       });
 
       return result.sort((a, b) => a.timeVal - b.timeVal);
-    }
+    },
+
+    // Slot Pagi: 00:00–11:59 (timeVal 0–719) + item tanpa waktu (timeVal -1)
+    slotPagi() {
+      return this.mergedTodayPanelItems.filter(e => e.timeVal < 720);
+    },
+    // Slot Siang: 12:00–17:59 (timeVal 720–1079)
+    slotSiang() {
+      return this.mergedTodayPanelItems.filter(e => e.timeVal >= 720 && e.timeVal < 1080);
+    },
+    // Slot Malam: 18:00–23:59 (timeVal 1080–1439)
+    slotMalam() {
+      return this.mergedTodayPanelItems.filter(e => e.timeVal >= 1080);
+    },
   },
 
   watch: {

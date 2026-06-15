@@ -6464,6 +6464,32 @@ input:checked + .switch-slider:before {
   transform: translateY(-6px);
 }
 
+/* Collapsible Pengaturan Notifikasi */
+.notif-settings-slide-enter-active,
+.notif-settings-slide-leave-active {
+  transition: max-height 0.28s ease, opacity 0.22s;
+  overflow: hidden;
+  max-height: 300px;
+}
+.notif-settings-slide-enter-from,
+.notif-settings-slide-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* Collapsible Slot Waktu (Pagi / Siang / Malam) */
+.notif-slot-slide-enter-active,
+.notif-slot-slide-leave-active {
+  transition: max-height 0.28s ease, opacity 0.2s;
+  overflow: hidden;
+  max-height: 800px;
+}
+.notif-slot-slide-enter-from,
+.notif-slot-slide-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
 /* Expand animation for the checklist inside */
 .agenda-filter-expand-enter-active,
 .agenda-filter-expand-leave-active {

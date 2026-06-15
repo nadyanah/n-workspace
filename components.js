@@ -3879,7 +3879,7 @@ const ContentTracker = {
                 <div class="board-card-footer" style="border-top: 1px dashed #FAF6F0; padding-top: 8px; margin-top: 8px;">
                   <span class="text-mono" v-if="visibility.dueDate" style="font-size: 10px; color: #000000; display: inline-flex; align-items: center; gap: 4px;">
                     <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #000000;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    {{ item.dueDate }}
+                    {{ item.dueDate }}<span v-if="item.dueTime"> · {{ item.dueTime }}</span>
                   </span>
                   <span class="text-mono" v-else></span>
                   
@@ -3971,6 +3971,13 @@ const ContentTracker = {
               <div class="form-group">
                 <label>Target Tanggal Rilis</label>
                 <input type="date" class="form-input" v-model="form.dueDate" required style="height: 38px;" />
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label>Target Jam Rilis</label>
+                <input type="time" class="form-input" v-model="form.dueTime" style="height: 38px;" />
               </div>
             </div>
 
@@ -4225,6 +4232,7 @@ const ContentTracker = {
         title: '',
         platform: 'Instagram',
         dueDate: new Date().toISOString().split('T')[0],
+        dueTime: '',
         notes: '',
         username: '@nadya'
       }
@@ -4448,6 +4456,7 @@ const ContentTracker = {
       this.editingItemId = null;
       this.form.title = '';
       this.form.notes = '';
+      this.form.dueTime = '';
       this.form.platform = this.platforms[0] || 'Instagram';
       this.form.username = this.usernames[0] || '@nadya';
       this.customPlatformName = '';
@@ -4474,6 +4483,7 @@ const ContentTracker = {
       }
       
       this.form.dueDate = item.dueDate;
+      this.form.dueTime = item.dueTime || '';
       
       const hasUser = this.usernames.includes(item.username);
       if (hasUser) {
@@ -4523,6 +4533,7 @@ const ContentTracker = {
           existing.title = this.form.title;
           existing.platform = finalPlatform;
           existing.dueDate = this.form.dueDate;
+          existing.dueTime = this.form.dueTime;
           existing.notes = this.form.notes;
           existing.username = finalUsername;
         }
@@ -4533,6 +4544,7 @@ const ContentTracker = {
           title: this.form.title,
           platform: finalPlatform,
           dueDate: this.form.dueDate,
+          dueTime: this.form.dueTime,
           notes: this.form.notes,
           username: finalUsername
         };
@@ -4546,6 +4558,7 @@ const ContentTracker = {
       this.editingItemId = null;
       this.form.title = '';
       this.form.notes = '';
+      this.form.dueTime = '';
       this.form.platform = this.platforms[0] || 'Instagram';
       this.form.username = this.usernames[0] || '@nadya';
       this.customPlatformName = '';
