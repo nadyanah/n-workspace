@@ -10752,6 +10752,10 @@ const FinancialTracker = {
             Financial Tracker
           </h2>
           <p style="color:var(--text-muted); font-size:13.5px; margin-top:4px;">Pantau tabungan, pengeluaran & reimburse (Global Ledger)</p>
+          <div v-if="lastUpdated" style="display:inline-flex; align-items:center; gap:5px; margin-top:6px; background:#F0FDF4; border:1.5px solid #A7F3D0; border-radius:20px; padding:3px 10px;">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span style="font-size:11px; font-weight:600; color:#059669;">Update terakhir: {{ formatLastUpdated(lastUpdated) }}</span>
+          </div>
         </div>
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
 
@@ -10926,6 +10930,27 @@ const FinancialTracker = {
               ? { background: tab.color, color: '#fff', borderColor: tab.color }
               : { background: 'transparent', color: 'var(--text-muted)', borderColor: 'var(--color-sand)' }">
             {{ tab.label }}
+          </button>
+        </div>
+
+        <!-- Filter by Bank row -->
+        <div style="padding:10px 22px 0; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <span style="font-size:11.5px; font-weight:700; color:var(--text-muted); white-space:nowrap;">🏦 Filter Bank:</span>
+          <button @click="filterBankId = 'all'"
+            style="font-size:11.5px; font-weight:600; padding:4px 12px; border-radius:20px; cursor:pointer; border:1.5px solid; transition:all 0.15s; white-space:nowrap;"
+            :style="filterBankId === 'all'
+              ? { background: 'var(--text-dark)', color: '#fff', borderColor: 'var(--text-dark)' }
+              : { background: 'transparent', color: 'var(--text-muted)', borderColor: 'var(--color-sand)' }">
+            Semua Bank
+          </button>
+          <button v-for="bank in banks" :key="bank.id" @click="filterBankId = bank.id"
+            style="font-size:11.5px; font-weight:600; padding:4px 12px; border-radius:20px; cursor:pointer; border:1.5px solid; transition:all 0.15s; display:inline-flex; align-items:center; gap:5px; white-space:nowrap;"
+            :style="filterBankId === bank.id
+              ? { background: bank.color, color: '#fff', borderColor: bank.color }
+              : { background: 'transparent', color: 'var(--text-muted)', borderColor: 'var(--color-sand)' }">
+            <span style="width:7px; height:7px; border-radius:50%; display:inline-block; flex-shrink:0;"
+              :style="{ background: filterBankId === bank.id ? '#fff' : bank.color }"></span>
+            {{ bank.name }}
           </button>
         </div>
 
@@ -11223,6 +11248,10 @@ const FinancialTracker = {
       finRangeCalYear: new Date().getFullYear(),
       finRangeCalMonth: new Date().getMonth(),
 
+      filterBankId: 'all',
+
+      lastUpdated: null,
+
       tabs: [
         { key: 'all', label: 'Semua', color: 'var(--text-dark)' },
         { key: 'income', label: '↑ Masuk', color: '#10B981' },
@@ -11244,7 +11273,10 @@ const FinancialTracker = {
 
   computed: {
     filteredTransactions() {
-      const txs = [...this.finDateFilteredTx].sort((a, b) => new Date(b.date) - new Date(a.date));
+      let txs = [...this.finDateFilteredTx].sort((a, b) => new Date(b.date) - new Date(a.date));
+      if (this.filterBankId && this.filterBankId !== 'all') {
+        txs = txs.filter(t => t.bankId === this.filterBankId);
+      }
       if (this.activeTab === 'income') return txs.filter(t => t.type === 'income' && !t.isTransfer);
       if (this.activeTab === 'expense') return txs.filter(t => t.type === 'expense' && !t.isReimburse && !t.isTransfer);
       if (this.activeTab === 'reimburse') return txs.filter(t => t.isReimburse);
@@ -11346,6 +11378,21 @@ const FinancialTracker = {
     formatDate(d) {
       try { return new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }); }
       catch(_e) { return d; }
+    },
+    formatLastUpdated(iso) {
+      if (!iso) return null;
+      try {
+        const d = new Date(iso);
+        const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+        const dayName = days[d.getDay()];
+        const date = d.getDate();
+        const month = months[d.getMonth()];
+        const year = d.getFullYear();
+        const hours = String(d.getHours()).padStart(2,'0');
+        const mins = String(d.getMinutes()).padStart(2,'0');
+        return `${dayName}, ${date} ${month} ${year} · ${hours}:${mins}`;
+      } catch(_e) { return null; }
     },
     getTxColor(tx) {
       if (tx.isTransfer) return '#3B82F6';
@@ -11592,8 +11639,10 @@ const FinancialTracker = {
     },
 
     saveAll() {
+      this.lastUpdated = new Date().toISOString();
       WorkspaceStorage.setItem('fin_banks', JSON.stringify(this.banks));
       WorkspaceStorage.setItem('fin_transactions', JSON.stringify(this.transactions));
+      WorkspaceStorage.setItem('fin_last_updated', this.lastUpdated);
     },
   },
 
@@ -11621,6 +11670,10 @@ const FinancialTracker = {
     } catch(_e) { this.transactions = []; }
     this._closeFinRangePicker = () => { if (this.showFinRangePicker) this.showFinRangePicker = false; };
     document.addEventListener('click', this._closeFinRangePicker);
+    try {
+      const savedLastUpdated = WorkspaceStorage.getItem('fin_last_updated');
+      if (savedLastUpdated) this.lastUpdated = savedLastUpdated;
+    } catch(_e) { this.lastUpdated = null; }
   },
   unmounted() {
     if (this._closeFinRangePicker) document.removeEventListener('click', this._closeFinRangePicker);
