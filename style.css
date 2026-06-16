@@ -6830,6 +6830,22 @@ input:checked + .switch-slider:before {
   transition: background 0.14s, transform 0.1s;
 }
 .cf-btn-primary:hover { background: #C06A43; transform: translateY(-1px); }
+.cf-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  background: none;
+  border: 1.5px solid #fcc;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #c0392b;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.14s, border-color 0.14s;
+}
+.cf-btn-danger:hover { background: #fff0f0; border-color: #f5a8a8; }
 
 /* ── Profile card ── */
 .cf-profile-card {
@@ -7427,6 +7443,32 @@ input:checked + .switch-slider:before {
   align-items: baseline;
   gap: 8px;
 }
+.cv2-entry-head-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+/* Hide edit button by default, show on hover */
+.cv2-entry-editable .cv2-entry-edit-btn { opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+.cv2-entry-editable:hover .cv2-entry-edit-btn { opacity: 1; pointer-events: auto; }
+.cv2-entry-edit-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  color: #aaa;
+  transition: all 0.12s;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+.cv2-entry-edit-btn:hover { background: #faf0ea; color: var(--color-terracotta, #D67B52); border-color: #f0d9cc; }
 .cv2-entry-role { font-weight: 700; font-size: 13px; color: #1a1a1a; }
 .cv2-entry-period {
   font-size: 11px;

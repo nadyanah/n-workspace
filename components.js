@@ -49,6 +49,26 @@ if (typeof reminderOccursOnDate === 'undefined') {
   };
 }
 
+// ── Helper global: format tanggal ke 'YYYY-MM-DD' berdasarkan LOCAL timezone ──
+// Menggantikan new Date().toISOString().split('T')[0] yang pakai UTC dan bisa
+// "geser" mundur 1 hari saat user di timezone +UTC (WIB = UTC+7) sebelum jam 07.00.
+if (typeof localDateStr === 'undefined') {
+  var localDateStr = function(date) {
+    const d = date instanceof Date ? date : new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+  // Helper untuk YYYY-MM (bulan & tahun lokal)
+  var localMonthStr = function(date) {
+    const d = date instanceof Date ? date : new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}`;
+  };
+}
+
 // 1. My 8-4 Job Logbook Component
 const JobLogbook = {
   template: `
@@ -1285,7 +1305,7 @@ const JobLogbook = {
       planFilterPriority: '',
       planFilterSchedule: '',
       planForm: {
-        date: new Date().toISOString().split('T')[0],
+        date: localDateStr(),
         time: '',
         timeEnd: '',
         category: 'Administrasi',
@@ -1309,7 +1329,7 @@ const JobLogbook = {
       pendingNextActionSourceLogId: null,
       pendingNextActionItemIdx: -1,
       form: {
-        date: new Date().toISOString().split('T')[0],
+        date: localDateStr(),
         category: 'Administrasi',
         tasks: '',
         achievements: '',
@@ -1327,7 +1347,7 @@ const JobLogbook = {
       noteFilterStartDate: '',
       noteFilterEndDate: '',
       noteShowRangePicker: false,
-      noteRangeCalViewDate: new Date().toISOString().slice(0,7),
+      noteRangeCalViewDate: localMonthStr(),
       noteFilterSchedule: '',
       showNoteFilterCatDD: false,
       showNoteJadwalDD: false,
@@ -1347,12 +1367,12 @@ const JobLogbook = {
   computed: {
     // Computed Logbook (Existing)
     todayStr() {
-      return new Date().toISOString().split('T')[0];
+      return localDateStr();
     },
     tomorrowStr() {
       const d = new Date();
       d.setDate(d.getDate() + 1);
-      return d.toISOString().split('T')[0];
+      return localDateStr(d);
     },
     noteColorOptions() {
       return [
@@ -1516,11 +1536,11 @@ const JobLogbook = {
       }).sort((a, b) => new Date(b.date) - new Date(a.date));
     },
     noteRangeCalMonthLabel() {
-      const [y, m] = (this.noteRangeCalViewDate || new Date().toISOString().slice(0,7)).split('-').map(Number);
+      const [y, m] = (this.noteRangeCalViewDate || localMonthStr()).split('-').map(Number);
       return new Date(y, m - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
     },
     noteRangeCalCells() {
-      const [y, m] = (this.noteRangeCalViewDate || new Date().toISOString().slice(0,7)).split('-').map(Number);
+      const [y, m] = (this.noteRangeCalViewDate || localMonthStr()).split('-').map(Number);
       const firstDay = new Date(y, m - 1, 1).getDay();
       const daysInMonth = new Date(y, m, 0).getDate();
       const cells = [];
@@ -1929,7 +1949,7 @@ const JobLogbook = {
       const worksheet = XLSX.utils.json_to_sheet(dataToExport);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Job Logbook');
-      XLSX.writeFile(workbook, 'Job_Logbook_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+      XLSX.writeFile(workbook, 'Job_Logbook_' + localDateStr() + '.xlsx');
     },
     exportToPDF() {
       const { jsPDF } = globalThis.jspdf;
@@ -1947,7 +1967,7 @@ const JobLogbook = {
         alternateRowStyles: { fillColor: [253, 251, 247] },
         margin: { left: 14, right: 14 }
       });
-      doc.save('Job_Logbook_' + new Date().toISOString().slice(0, 10) + '.pdf');
+      doc.save('Job_Logbook_' + localDateStr() + '.pdf');
     },
 
     // ── Methods Khusus Fitur Notes ──
@@ -1994,7 +2014,7 @@ const JobLogbook = {
       } else {
         const newN = {
           id: 'note-' + Date.now(),
-          date: new Date().toISOString().split('T')[0],
+          date: localDateStr(),
           category: this.noteForm.category,
           title: this.noteForm.title,
           body: this.noteForm.body,
@@ -4231,7 +4251,7 @@ const ContentTracker = {
       form: {
         title: '',
         platform: 'Instagram',
-        dueDate: new Date().toISOString().split('T')[0],
+        dueDate: localDateStr(),
         dueTime: '',
         notes: '',
         username: '@nadya'
@@ -6120,7 +6140,7 @@ const DailyNutrition = {
       editingInsightId: null,
       viewingInsight: null,
       form: {
-        date: new Date().toISOString().split('T')[0],
+        date: localDateStr(),
         category: 'Teknologi',
         source: '',
         url: '',
@@ -6226,7 +6246,7 @@ const DailyNutrition = {
     },
     getCalCellStyle(cell) {
       if (!cell.date) return { visibility: 'hidden' };
-      const today = new Date().toISOString().split('T')[0];
+      const today = localDateStr();
       const isStart = cell.date === this.filterStartDate, isEnd = cell.date === this.filterEndDate;
       const inRange = this.filterStartDate && this.filterEndDate && cell.date > this.filterStartDate && cell.date < this.filterEndDate;
       if (isStart || isEnd) return { background: 'var(--color-terracotta)', color: '#fff', fontWeight: 'bold', borderRadius: '50%' };
@@ -6328,7 +6348,7 @@ const DailyNutrition = {
         this.pendingConvertPlanIdx = null;
       }
       this.saveToStorage();
-      this.form = { date: new Date().toISOString().split('T')[0], category: this.form.category, source: '', url: '', title: '', details: '', takeaway: '' };
+      this.form = { date: localDateStr(), category: this.form.category, source: '', url: '', title: '', details: '', takeaway: '' };
       this.showAddLog = false;
       this.$nextTick(() => {
         const ed = this.$refs.detailsEditor; if (ed) ed.innerHTML = '';
@@ -6346,7 +6366,7 @@ const DailyNutrition = {
     cancelEditInsight() {
       this.editingInsightId = null;
       this.pendingConvertPlanIdx = null;
-      this.form = { date: new Date().toISOString().split('T')[0], category: 'Teknologi', source: '', url: '', title: '', details: '', takeaway: '' };
+      this.form = { date: localDateStr(), category: 'Teknologi', source: '', url: '', title: '', details: '', takeaway: '' };
       this.showAddLog = false;
       this.$nextTick(() => {
         const ed = this.$refs.detailsEditor; if (ed) ed.innerHTML = '';
@@ -6428,7 +6448,7 @@ const DailyNutrition = {
       this.editingInsightId = null;
       this.pendingConvertPlanIdx = idx;
       this.form = {
-        date: new Date().toISOString().split('T')[0],
+        date: localDateStr(),
         category: plan.category,
         source: plan.source || '',
         url: plan.url || '',
@@ -9394,7 +9414,7 @@ const GoogleCalendar = {
   computed: {
     filteredEvents() {
       if (this.filterGroup === 'all') return this.events;
-      const todayStr = new Date().toISOString().split('T')[0];
+      const todayStr = localDateStr();
       if (this.filterGroup === 'today') {
         return this.events.filter(e => {
           const eDate = e.start?.dateTime || e.start?.date || '';
@@ -11232,7 +11252,7 @@ const FinancialTracker = {
       txForm: {
         type: 'expense',
         bankId: '',
-        date: new Date().toISOString().split('T')[0],
+        date: localDateStr(),
         amount: null,
         description: '',
         category: '',
@@ -11266,7 +11286,7 @@ const FinancialTracker = {
         fromBankId: '',
         toBankId: '',
         amount: null,
-        date: new Date().toISOString().split('T')[0],
+        date: localDateStr(),
         notes: '',
       },
     };
@@ -11288,7 +11308,7 @@ const FinancialTracker = {
       return this.finDateFilteredTx.length;
     },
     finTodayStr() {
-      return new Date().toISOString().split('T')[0];
+      return localDateStr();
     },
     finRangeCalMonthLabel() {
       const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -11444,7 +11464,7 @@ const FinancialTracker = {
       this.txForm = {
         type: type || 'expense',
         bankId: this.banks[0].id,
-        date: new Date().toISOString().split('T')[0],
+        date: localDateStr(),
         amount: null,
         description: '',
         category: '',
@@ -11532,7 +11552,7 @@ const FinancialTracker = {
           id: 'tx-refund-' + Date.now(),
           bankId: tx.bankId,
           type: 'income',
-          date: new Date().toISOString().split('T')[0],
+          date: localDateStr(),
           amount: tx.amount,
           description: 'Pencairan Reimburse: ' + tx.description,
           category: 'Reimburse Lunas',
@@ -11577,7 +11597,7 @@ const FinancialTracker = {
         fromBankId: this.banks[0].id,
         toBankId: this.banks[1].id,
         amount: null,
-        date: new Date().toISOString().split('T')[0],
+        date: localDateStr(),
         notes: '',
       };
       this.showTransferModal = true;
@@ -12049,10 +12069,16 @@ const CareerFoundation = {
               </div>
             </div>
             <div v-if="atsCV.experience">
-              <div v-for="(exp, idx) in parsedExperience" :key="idx" class="cv2-entry">
+              <div v-for="(exp, idx) in parsedExperience" :key="idx" class="cv2-entry cv2-entry-editable">
                 <div class="cv2-entry-head">
                   <span class="cv2-entry-role">{{ exp.role }}<span v-if="exp.company">, {{ exp.company }}</span></span>
-                  <span v-if="exp.period" class="cv2-entry-period">{{ exp.period }}</span>
+                  <div class="cv2-entry-head-right">
+                    <span v-if="exp.period" class="cv2-entry-period">{{ exp.period }}</span>
+                    <button class="cv2-entry-edit-btn" @click="openAtsEditExperienceEntry(idx)" title="Edit entri ini">
+                      <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      Edit
+                    </button>
+                  </div>
                 </div>
                 <ul v-if="exp.points.length" class="cv2-entry-points">
                   <li v-for="(pt, i) in exp.points" :key="i">{{ pt }}</li>
@@ -12541,6 +12567,37 @@ const CareerFoundation = {
       </div>
     </transition>
 
+    <!-- ══ MODAL: Edit Experience Entry ══ -->
+    <transition name="cf-fade">
+      <div v-if="showExpEntryModal" class="cf-modal-overlay" @click.self="showExpEntryModal=false">
+        <div class="cf-modal">
+          <div class="cf-modal-header">
+            <h3 class="cf-modal-title">Edit Pengalaman Kerja</h3>
+            <button class="cf-modal-close" @click="showExpEntryModal=false">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="cf-modal-body">
+            <div class="cf-input-grid-2">
+              <div style="grid-column:1/-1"><label class="cf-field-label">Jabatan</label><input class="cf-input" v-model="atsExpEntryForm.role" placeholder="Content Creator"/></div>
+              <div><label class="cf-field-label">Perusahaan / Instansi</label><input class="cf-input" v-model="atsExpEntryForm.company" placeholder="Brand X"/></div>
+              <div><label class="cf-field-label">Periode</label><input class="cf-input" v-model="atsExpEntryForm.period" placeholder="Jan 2023 – kini"/></div>
+            </div>
+            <div style="margin-top:10px">
+              <label class="cf-field-label">Poin Pencapaian</label>
+              <p style="font-size:11px; color:#AAA; margin:2px 0 6px;">Satu poin per baris. Gunakan tanda <code style="background:rgba(255,255,255,0.08);padding:1px 4px;border-radius:3px;">-</code> di awal tiap poin (opsional).</p>
+              <textarea class="cf-textarea" v-model="atsExpEntryForm.pointsText" rows="5" placeholder="- Mengelola konten Instagram dengan rata-rata reach 50K/bulan&#10;- Meningkatkan engagement rate dari 2% ke 5,8%&#10;- Berkolaborasi dengan tim desainer untuk kampanye brand"></textarea>
+            </div>
+          </div>
+          <div class="cf-modal-footer">
+            <button class="cf-btn-danger" @click="deleteAtsExperienceEntry(atsEditingExpIdx)" style="margin-right:auto">Hapus</button>
+            <button class="cf-btn-ghost" @click="showExpEntryModal=false">Batal</button>
+            <button class="cf-btn-primary" @click="saveAtsExperienceEntry">Simpan</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <!-- ══ MODAL: Edit ATS CV Section ══ -->
     <transition name="cf-fade">
       <div v-if="showAtsCVModal" class="cf-modal-overlay" @click.self="showAtsCVModal=false">
@@ -12663,6 +12720,11 @@ const CareerFoundation = {
       showAtsCVModal: false,
       atsEditingSection: null,
       atsCopySuccess: false,
+
+      // Experience per-entry editing
+      showExpEntryModal: false,
+      atsEditingExpIdx: null,
+      atsExpEntryForm: { role: '', company: '', period: '', pointsText: '' },
 
       // CV v2 Custom Sections
       cv2ShowCustomModal: false,
@@ -12919,6 +12981,40 @@ const CareerFoundation = {
         this.atsCopySuccess = true;
         setTimeout(() => { this.atsCopySuccess = false; }, 2000);
       });
+    },
+
+    // ── Experience per-entry edit ──
+    openAtsEditExperienceEntry(idx) {
+      const exp = this.parsedExperience[idx];
+      this.atsEditingExpIdx = idx;
+      this.atsExpEntryForm = {
+        role: exp.role,
+        company: exp.company,
+        period: exp.period,
+        pointsText: exp.points.map(p => '- ' + p).join('\n'),
+      };
+      this.showExpEntryModal = true;
+    },
+    saveAtsExperienceEntry() {
+      const { role, company, period, pointsText } = this.atsExpEntryForm;
+      const header = [role, company, period].filter(Boolean).join(' | ');
+      const pointLines = pointsText.split('\n').map(l => l.trim()).filter(Boolean).map(l => /^[-\u2022]/.test(l) ? l : '- ' + l);
+      const newBlock = [header, ...pointLines].join('\n');
+      const blocks = this.atsCV.experience ? this.atsCV.experience.split(/\n\n+/) : [];
+      blocks[this.atsEditingExpIdx] = newBlock;
+      this.atsCV.experience = blocks.join('\n\n');
+      this.atsCV.lastUpdated = new Date().toISOString();
+      this.saveAll();
+      this.showExpEntryModal = false;
+    },
+    deleteAtsExperienceEntry(idx) {
+      if (!confirm('Hapus entri pengalaman kerja ini?')) return;
+      const blocks = this.atsCV.experience ? this.atsCV.experience.split(/\n\n+/) : [];
+      blocks.splice(idx, 1);
+      this.atsCV.experience = blocks.join('\n\n');
+      this.atsCV.lastUpdated = new Date().toISOString();
+      this.saveAll();
+      this.showExpEntryModal = false;
     },
 
     // ── CV v2 Custom Sections ──
