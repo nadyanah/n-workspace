@@ -6658,7 +6658,9 @@ input:checked + .switch-slider:before {
 .cf-clean {
   font-family: 'Outfit', sans-serif;
   color: var(--text-dark, #2C2621);
-  max-width: 780px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* ── Hero Header ── */
@@ -6719,7 +6721,7 @@ input:checked + .switch-slider:before {
   color: var(--text-muted, #6E6359);
   margin: 0 0 20px;
   line-height: 1.6;
-  max-width: 480px;
+  max-width: 680px;
 }
 .cf-hero-stats {
   display: flex;
