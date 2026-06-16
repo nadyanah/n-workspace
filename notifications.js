@@ -187,17 +187,12 @@ const ReminderPopup = {
               <template v-for="entry in mergedTodayItems" :key="entry.key">
                 <!-- Info item (task plan / content) -->
                 <div v-if="entry.kind === 'info'" class="reminder-popup-item reminder-popup-item-info">
+                  <div v-if="entry.item.time" class="reminder-popup-item-time">{{ entry.item.time }}</div>
                   <div class="reminder-popup-item-icon">{{ entry.item.icon }}</div>
                   <div class="reminder-popup-item-info-text" style="flex:1; min-width:0;">
                     <div class="reminder-popup-item-title">{{ entry.item.title }}</div>
                     <div class="reminder-popup-item-sub">{{ entry.item.sub }}</div>
                   </div>
-                  <!-- Badge waktu mulai–selesai kalau ada -->
-                  <span v-if="entry.item.time"
-                    style="flex-shrink:0; margin-left:8px; display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; color:var(--color-terracotta,#D67B52); background:rgba(214,123,82,0.10); padding:3px 8px; border-radius:7px; white-space:nowrap;">
-                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    {{ entry.item.time }}
-                  </span>
                 </div>
 
                 <!-- Pengingat item -->
