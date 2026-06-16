@@ -11972,153 +11972,264 @@ const CareerFoundation = {
     </div>
     </transition>
 
-    <!-- ══ TAB: CV ATS ══ -->
+    <!-- ══ TAB: CV ATS v2 ══ -->
     <transition name="cf-fade">
     <div v-if="activeTab === 'cv'" key="cv">
-      <div class="cf-section-bar">
-        <span class="cf-section-label">CV ATS</span>
-        <button class="cf-btn-ghost" @click="copyAtsCVText">
-          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          {{ atsCopySuccess ? 'Tersalin!' : 'Salin teks CV' }}
-        </button>
+
+      <!-- Toolbar -->
+      <div class="cv2-toolbar">
+        <span class="cv2-toolbar-label">Preview CV ATS</span>
+        <div class="cv2-toolbar-actions">
+          <button class="cf-btn-ghost" @click="cv2AddSection">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah Section
+          </button>
+          <button class="cf-btn-ghost" @click="copyAtsCVText">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            {{ atsCopySuccess ? 'Tersalin!' : 'Salin teks CV' }}
+          </button>
+        </div>
       </div>
-      <div class="cf-tip">
-        <p class="cf-tip-title">CV ATS-Friendly</p>
-        <p class="cf-tip-text">Teks bersih, heading standar, tanpa kolom atau tabel kompleks. Klik tombol edit di tiap bagian untuk mengisi konten.</p>
-      </div>
-      <div class="cf-ats-wrap">
-        <div class="cf-ats-head">
-          <button class="cf-ats-edit-btn" @click="openAtsEditSection('header')">Edit</button>
-          <h3 class="cf-ats-name">{{ atsCV.name || 'Nama Lengkap' }}</h3>
-          <p class="cf-ats-role">{{ atsCV.title || 'Posisi yang Dilamar / Bidang Keahlian' }}</p>
-          <div class="cf-ats-contacts">
-            <span class="cf-ats-contact">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-              {{ atsCV.email || 'email@kamu.com' }}
-            </span>
-            <span class="cf-ats-contact">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.42C1.61 2.22 2.5 1.22 3.7 1H6.7a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.29 6.29l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              {{ atsCV.phone || '08xx-xxxx-xxxx' }}
-            </span>
-            <span v-if="atsCV.location" class="cf-ats-contact">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              {{ atsCV.location }}
-            </span>
-            <span v-if="atsCV.linkedin" class="cf-ats-contact">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
-              {{ atsCV.linkedin }}
-            </span>
-            <span v-if="atsCV.portfolio" class="cf-ats-contact">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-              {{ atsCV.portfolio }}
-            </span>
+
+      <!-- Paper CV Preview -->
+      <div class="cv2-page">
+
+        <!-- HEADER -->
+        <div class="cv2-header">
+          <div class="cv2-header-top">
+            <div style="flex:1; min-width:0;">
+              <h2 class="cv2-name">{{ atsCV.name || 'NAMA LENGKAP' }}</h2>
+              <p class="cv2-jobtitle">{{ atsCV.title || 'Posisi / Bidang Keahlian' }}</p>
+              <div class="cv2-contacts">
+                <span v-if="atsCV.location">{{ atsCV.location }}</span>
+                <span v-if="atsCV.location && (atsCV.email || atsCV.phone || atsCV.linkedin || atsCV.portfolio)" class="cv2-contact-sep">|</span>
+                <span v-if="atsCV.email">{{ atsCV.email }}</span>
+                <span v-if="atsCV.email && (atsCV.phone || atsCV.linkedin || atsCV.portfolio)" class="cv2-contact-sep">|</span>
+                <span v-if="atsCV.phone">{{ atsCV.phone }}</span>
+                <span v-if="atsCV.phone && (atsCV.linkedin || atsCV.portfolio)" class="cv2-contact-sep">|</span>
+                <span v-if="atsCV.linkedin">{{ atsCV.linkedin }}</span>
+                <span v-if="atsCV.linkedin && atsCV.portfolio" class="cv2-contact-sep">|</span>
+                <span v-if="atsCV.portfolio">{{ atsCV.portfolio }}</span>
+              </div>
+            </div>
+            <button class="cv2-edit-btn" @click="openAtsEditSection('header')">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
           </div>
         </div>
-        <div class="cf-ats-body">
-          <!-- Ringkasan -->
-          <div class="cf-ats-section">
-            <div class="cf-ats-section-bar">
-              <p class="cf-ats-section-title">Ringkasan Profesional</p>
-              <button class="cf-ats-section-btn" @click="openAtsEditSection('summary')">Edit</button>
+
+        <!-- BODY -->
+        <div class="cv2-body">
+
+          <!-- SUMMARY -->
+          <div class="cv2-section">
+            <div class="cv2-section-head">
+              <p class="cv2-section-title">Summary</p>
+              <div class="cv2-section-actions">
+                <button class="cv2-sec-btn" @click="openAtsEditSection('summary')">
+                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Edit
+                </button>
+              </div>
             </div>
-            <p v-if="atsCV.summary" class="cf-ats-text">{{ atsCV.summary }}</p>
-            <p v-else class="cf-ats-empty-field" @click="openAtsEditSection('summary')">+ Klik untuk mengisi ringkasan profesional</p>
+            <p v-if="atsCV.summary" class="cv2-summary">{{ atsCV.summary }}</p>
+            <span v-else class="cv2-empty" @click="openAtsEditSection('summary')">+ Klik untuk mengisi ringkasan profesional</span>
           </div>
-          <!-- Pengalaman -->
-          <div class="cf-ats-section">
-            <div class="cf-ats-section-bar">
-              <p class="cf-ats-section-title">Pengalaman Kerja</p>
-              <button class="cf-ats-section-btn" @click="openAtsEditSection('experience')">Edit</button>
+
+          <!-- PROFESSIONAL EXPERIENCE -->
+          <div class="cv2-section">
+            <div class="cv2-section-head">
+              <p class="cv2-section-title">Professional Experience</p>
+              <div class="cv2-section-actions">
+                <button class="cv2-sec-btn" @click="openAtsEditSection('experience')">
+                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Edit
+                </button>
+              </div>
             </div>
             <div v-if="atsCV.experience">
-              <div v-for="(exp, idx) in parsedExperience" :key="idx" class="cf-ats-exp-entry">
-                <p class="cf-ats-exp-role">{{ exp.role }}</p>
-                <p class="cf-ats-exp-company">{{ exp.company }}</p>
-                <p class="cf-ats-exp-period">{{ exp.period }}</p>
-                <ul class="cf-ats-exp-points">
-                  <li v-for="(pt, i) in exp.points" :key="i" class="cf-ats-exp-point">{{ pt }}</li>
+              <div v-for="(exp, idx) in parsedExperience" :key="idx" class="cv2-entry">
+                <div class="cv2-entry-head">
+                  <span class="cv2-entry-role">{{ exp.role }}<span v-if="exp.company">, {{ exp.company }}</span></span>
+                  <span v-if="exp.period" class="cv2-entry-period">{{ exp.period }}</span>
+                </div>
+                <ul v-if="exp.points.length" class="cv2-entry-points">
+                  <li v-for="(pt, i) in exp.points" :key="i">{{ pt }}</li>
                 </ul>
               </div>
             </div>
-            <div v-else>
-              <p class="cf-ats-empty-field" @click="openAtsEditSection('experience')">+ Klik untuk mengisi pengalaman kerja</p>
-              <p style="font-size:11px; color:#CCC; margin:4px 0 0; font-family:'Hack',monospace,sans-serif;">Format: Jabatan | Perusahaan | Periode</p>
-            </div>
+            <span v-else class="cv2-empty" @click="openAtsEditSection('experience')">+ Klik untuk mengisi pengalaman kerja</span>
           </div>
-          <!-- Pendidikan -->
-          <div class="cf-ats-section">
-            <div class="cf-ats-section-bar">
-              <p class="cf-ats-section-title">Pendidikan</p>
-              <button class="cf-ats-section-btn" @click="openAtsEditSection('education')">Edit</button>
+
+          <!-- PROJECTS -->
+          <div v-if="atsCV.projects !== undefined" class="cv2-section">
+            <div class="cv2-section-head">
+              <p class="cv2-section-title">Projects</p>
+              <div class="cv2-section-actions">
+                <button class="cv2-sec-btn" @click="openAtsEditSection('projects')">
+                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Edit
+                </button>
+              </div>
+            </div>
+            <div v-if="atsCV.projects">
+              <div v-for="(proj, idx) in parsedProjects" :key="idx" class="cv2-entry">
+                <div class="cv2-entry-head">
+                  <span class="cv2-entry-role">{{ proj.name }}</span>
+                  <span v-if="proj.period" class="cv2-entry-period">{{ proj.period }}</span>
+                </div>
+                <p v-if="proj.desc" class="cv2-entry-desc">{{ proj.desc }}</p>
+                <ul v-if="proj.points.length" class="cv2-entry-points">
+                  <li v-for="(pt, i) in proj.points" :key="i">{{ pt }}</li>
+                </ul>
+              </div>
+            </div>
+            <span v-else class="cv2-empty" @click="openAtsEditSection('projects')">+ Klik untuk mengisi projects</span>
+          </div>
+
+          <!-- SKILLS — 2 kolom -->
+          <div class="cv2-section">
+            <div class="cv2-section-head">
+              <p class="cv2-section-title">Skills</p>
+              <div class="cv2-section-actions">
+                <button class="cv2-sec-btn" @click="openAtsEditSection('skills')">
+                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Edit
+                </button>
+              </div>
+            </div>
+            <div v-if="atsCV.skills" class="cv2-skills-grid">
+              <span v-for="(sk, i) in parsedSkills" :key="i" class="cv2-skill-item">{{ sk }}</span>
+            </div>
+            <span v-else class="cv2-empty" @click="openAtsEditSection('skills')">+ Klik untuk mengisi keahlian</span>
+          </div>
+
+          <!-- EDUCATION -->
+          <div class="cv2-section">
+            <div class="cv2-section-head">
+              <p class="cv2-section-title">Education</p>
+              <div class="cv2-section-actions">
+                <button class="cv2-sec-btn" @click="openAtsEditSection('education')">
+                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Edit
+                </button>
+              </div>
             </div>
             <div v-if="atsCV.education">
-              <div v-for="(edu, idx) in parsedEducation" :key="idx" class="cf-ats-exp-entry">
-                <p class="cf-ats-exp-role">{{ edu.degree }}</p>
-                <p class="cf-ats-exp-company">{{ edu.school }}</p>
-                <p v-if="edu.period" class="cf-ats-exp-period">{{ edu.period }}</p>
-                <p v-if="edu.detail" style="font-size:12px; color:#888; margin:0;">{{ edu.detail }}</p>
+              <div v-for="(edu, idx) in parsedEducation" :key="idx" class="cv2-edu-entry">
+                <div class="cv2-entry-head">
+                  <span class="cv2-entry-role">{{ edu.degree }}</span>
+                  <span v-if="edu.period" class="cv2-entry-period">{{ edu.period }}</span>
+                </div>
+                <p class="cv2-entry-company">{{ edu.school }}</p>
+                <p v-if="edu.detail" class="cv2-edu-detail">{{ edu.detail }}</p>
               </div>
             </div>
-            <p v-else class="cf-ats-empty-field" @click="openAtsEditSection('education')">+ Klik untuk mengisi pendidikan</p>
+            <span v-else class="cv2-empty" @click="openAtsEditSection('education')">+ Klik untuk mengisi pendidikan</span>
           </div>
-          <!-- Keahlian -->
-          <div class="cf-ats-section">
-            <div class="cf-ats-section-bar">
-              <p class="cf-ats-section-title">Keahlian</p>
-              <button class="cf-ats-section-btn" @click="openAtsEditSection('skills')">Edit</button>
+
+          <!-- ADDITIONAL INFORMATION -->
+          <div v-if="atsCV.languages || atsCV.certifications || (!atsCV.languages && !atsCV.certifications)" class="cv2-section">
+            <div class="cv2-section-head">
+              <p class="cv2-section-title">Additional Information</p>
+              <div class="cv2-section-actions">
+                <button class="cv2-sec-btn" @click="openAtsEditSection('languages')">Edit Bahasa</button>
+                <button class="cv2-sec-btn" @click="openAtsEditSection('certifications')">Edit Sertifikasi</button>
+              </div>
             </div>
-            <div v-if="atsCV.skills" class="cf-skills-wrap">
-              <span v-for="(sk, i) in parsedSkills" :key="i" class="cf-skill-tag">{{ sk }}</span>
+            <div v-if="atsCV.languages">
+              <p style="font-size:12.5px; font-weight:700; color:#1a1a1a; margin:0 0 2px;">Languages:</p>
+              <p style="font-size:12.5px; color:#333; margin:0 0 8px;">{{ parsedLanguages.map(function(l){ return l.name + (l.level ? ' ('+l.level+')' : ''); }).join(', ') }}</p>
             </div>
-            <p v-else class="cf-ats-empty-field" @click="openAtsEditSection('skills')">+ Klik untuk mengisi keahlian</p>
+            <div v-if="atsCV.certifications">
+              <p style="font-size:12.5px; font-weight:700; color:#1a1a1a; margin:0 0 2px;">Certifications:</p>
+              <p v-for="(cert, i) in parsedCertifications" :key="i" class="cv2-cert-item">{{ cert }}</p>
+            </div>
+            <span v-if="!atsCV.languages && !atsCV.certifications" class="cv2-empty" @click="openAtsEditSection('languages')">+ Klik untuk mengisi informasi tambahan</span>
           </div>
-          <!-- Organisasi -->
-          <div class="cf-ats-section">
-            <div class="cf-ats-section-bar">
-              <p class="cf-ats-section-title">Organisasi & Aktivitas</p>
-              <button class="cf-ats-section-btn" @click="openAtsEditSection('organization')">Edit</button>
+
+          <!-- ORGANISASI -->
+          <div v-if="atsCV.organization !== undefined" class="cv2-section">
+            <div class="cv2-section-head">
+              <p class="cv2-section-title">Organization & Activities</p>
+              <div class="cv2-section-actions">
+                <button class="cv2-sec-btn" @click="openAtsEditSection('organization')">
+                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Edit
+                </button>
+              </div>
             </div>
             <div v-if="atsCV.organization">
-              <div v-for="(org, idx) in parsedOrganization" :key="idx" class="cf-ats-exp-entry">
-                <p class="cf-ats-exp-role">{{ org.role }}</p>
-                <p class="cf-ats-exp-company">{{ org.org }}</p>
-                <p v-if="org.period" class="cf-ats-exp-period">{{ org.period }}</p>
-                <ul class="cf-ats-exp-points">
-                  <li v-for="(pt, i) in org.points" :key="i" class="cf-ats-exp-point">{{ pt }}</li>
+              <div v-for="(org, idx) in parsedOrganization" :key="idx" class="cv2-entry">
+                <div class="cv2-entry-head">
+                  <span class="cv2-entry-role">{{ org.role }}<span v-if="org.org"> · {{ org.org }}</span></span>
+                  <span v-if="org.period" class="cv2-entry-period">{{ org.period }}</span>
+                </div>
+                <ul v-if="org.points.length" class="cv2-entry-points">
+                  <li v-for="(pt, i) in org.points" :key="i">{{ pt }}</li>
                 </ul>
               </div>
             </div>
-            <p v-else class="cf-ats-empty-field" @click="openAtsEditSection('organization')">+ Klik untuk mengisi organisasi</p>
+            <span v-else class="cv2-empty" @click="openAtsEditSection('organization')">+ Klik untuk mengisi organisasi & aktivitas</span>
           </div>
-          <!-- Bahasa -->
-          <div class="cf-ats-section">
-            <div class="cf-ats-section-bar">
-              <p class="cf-ats-section-title">Kemampuan Bahasa</p>
-              <button class="cf-ats-section-btn" @click="openAtsEditSection('languages')">Edit</button>
-            </div>
-            <div v-if="atsCV.languages">
-              <div v-for="(lang, i) in parsedLanguages" :key="i" class="cf-lang-item">
-                <span>{{ lang.name }}</span>
-                <span v-if="lang.level" class="cf-lang-level">{{ lang.level }}</span>
+
+          <!-- CUSTOM SECTIONS -->
+          <div v-for="(sec, idx) in (atsCV.customSections || [])" :key="sec.id" class="cv2-section">
+            <div class="cv2-section-head">
+              <p class="cv2-section-title">{{ sec.title }}</p>
+              <div class="cv2-section-actions">
+                <button class="cv2-sec-btn" @click="cv2EditCustomSection(idx)">
+                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Edit
+                </button>
+                <button class="cv2-sec-btn danger" @click="cv2DeleteCustomSection(idx)">
+                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                  Hapus
+                </button>
               </div>
             </div>
-            <p v-else class="cf-ats-empty-field" @click="openAtsEditSection('languages')">+ Klik untuk mengisi kemampuan bahasa</p>
+            <div v-if="sec.content" style="white-space:pre-wrap; font-size:12.5px; color:#333; line-height:1.7;">{{ sec.content }}</div>
+            <span v-else class="cv2-empty" @click="cv2EditCustomSection(idx)">+ Klik untuk mengisi section ini</span>
           </div>
-          <!-- Sertifikasi -->
-          <div class="cf-ats-section">
-            <div class="cf-ats-section-bar">
-              <p class="cf-ats-section-title">Sertifikasi & Penghargaan</p>
-              <button class="cf-ats-section-btn" @click="openAtsEditSection('certifications')">Edit</button>
+
+          <!-- Tombol tambah section -->
+          <button class="cv2-add-section-btn" @click="cv2AddSection">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah Section Baru
+          </button>
+
+        </div><!-- /cv2-body -->
+      </div><!-- /cv2-page -->
+
+      <!-- MODAL: Tambah / Edit Custom Section -->
+      <transition name="cf-fade">
+        <div v-if="cv2ShowCustomModal" class="cv2-modal-overlay" @click.self="cv2ShowCustomModal=false">
+          <div class="cv2-modal">
+            <div class="cv2-modal-head">
+              <h3 class="cv2-modal-title">{{ cv2EditingCustomIdx !== null ? 'Edit Section' : 'Tambah Section Baru' }}</h3>
+              <button class="cv2-modal-close" @click="cv2ShowCustomModal=false">✕</button>
             </div>
-            <div v-if="atsCV.certifications">
-              <ul class="cf-cert-list">
-                <li v-for="(cert, i) in parsedCertifications" :key="i" class="cf-cert-item">{{ cert }}</li>
-              </ul>
+            <div class="cv2-modal-body">
+              <div>
+                <label class="cv2-field-label">Nama Section *</label>
+                <input class="cv2-input" v-model="cv2CustomForm.title" placeholder="mis. Volunteer, Achievements, Publications..." />
+              </div>
+              <div>
+                <label class="cv2-field-label">Isi Section</label>
+                <textarea class="cv2-textarea" v-model="cv2CustomForm.content" rows="7"
+                  placeholder="Tulis isi section di sini...&#10;&#10;Format bebas, atau pakai format entri:&#10;Jabatan / Nama | Organisasi | Periode&#10;- Poin 1&#10;- Poin 2"></textarea>
+                <p class="cv2-hint">Format bebas. Gunakan baris baru untuk tiap poin.</p>
+              </div>
             </div>
-            <p v-else class="cf-ats-empty-field" @click="openAtsEditSection('certifications')">+ Klik untuk mengisi sertifikasi</p>
+            <div class="cv2-modal-foot">
+              <button class="cf-btn-ghost" @click="cv2ShowCustomModal=false">Batal</button>
+              <button class="cf-btn-primary" @click="cv2SaveCustomSection">Simpan Section</button>
+            </div>
           </div>
         </div>
-      </div>
+      </transition>
+
     </div>
     </transition>
 
@@ -12471,6 +12582,9 @@ const CareerFoundation = {
             <template v-if="atsEditingSection === 'languages'">
               <textarea class="cf-textarea" v-model="atsCVForm.languages" rows="4" placeholder="Indonesia (Native)&#10;Inggris (Aktif — TOEFL 550)&#10;Mandarin (Pasif)"></textarea>
             </template>
+            <template v-if="atsEditingSection === 'projects'">
+              <textarea class="cf-textarea" v-model="atsCVForm.projects" rows="10" placeholder="Nama Project | Periode&#10;Deskripsi singkat project ini.&#10;- Poin pencapaian 1&#10;- Poin pencapaian 2&#10;&#10;Nama Project 2 | Periode&#10;- Poin pencapaian"></textarea>
+            </template>
             <template v-if="atsEditingSection === 'certifications'">
               <textarea class="cf-textarea" v-model="atsCVForm.certifications" rows="5" placeholder="Google Digital Marketing Certificate · 2024&#10;Meta Blueprint Certified · 2023"></textarea>
             </template>
@@ -12536,16 +12650,24 @@ const CareerFoundation = {
         name: '', title: '', email: '', phone: '', location: '', linkedin: '', portfolio: '',
         summary: '', experience: '', education: '', skills: '',
         organization: '', languages: '', certifications: '',
+        projects: '',
+        customSections: [],
         lastUpdated: null,
       },
       atsCVForm: {
         name: '', title: '', email: '', phone: '', location: '', linkedin: '', portfolio: '',
         summary: '', experience: '', education: '', skills: '',
         organization: '', languages: '', certifications: '',
+        projects: '',
       },
       showAtsCVModal: false,
       atsEditingSection: null,
       atsCopySuccess: false,
+
+      // CV v2 Custom Sections
+      cv2ShowCustomModal: false,
+      cv2EditingCustomIdx: null,
+      cv2CustomForm: { title: '', content: '' },
     };
   },
 
@@ -12565,6 +12687,7 @@ const CareerFoundation = {
         header: 'Identitas & Kontak',
         summary: 'Ringkasan Profesional',
         experience: 'Pengalaman Kerja',
+        projects: 'Projects',
         education: 'Pendidikan',
         skills: 'Keahlian',
         organization: 'Organisasi & Aktivitas',
@@ -12579,6 +12702,7 @@ const CareerFoundation = {
         header: 'Isi data diri yang akan tampil di bagian atas CV',
         summary: '2-4 kalimat yang merangkum profil karir kamu',
         experience: 'Format: Jabatan | Perusahaan | Periode, lalu poin pencapaian dengan tanda -',
+        projects: 'Format: Nama Project | Periode, lalu deskripsi atau poin dengan tanda -',
         education: 'Format: Gelar | Institusi | Periode | Detail (IPK, dll)',
         skills: 'Pisahkan setiap keahlian dengan tanda koma',
         organization: 'Format: Jabatan | Organisasi | Periode, lalu poin kegiatan',
@@ -12586,6 +12710,20 @@ const CareerFoundation = {
         certifications: 'Satu sertifikasi / penghargaan per baris',
       };
       return hints[this.atsEditingSection] || '';
+    },
+
+    parsedProjects() {
+      if (!this.atsCV.projects) return [];
+      const blocks = this.atsCV.projects.split(/\n\n+/);
+      return blocks.map(block => {
+        const lines = block.trim().split('\n');
+        const header = lines[0] || '';
+        const parts = header.split('|').map(s => s.trim());
+        const rest = lines.slice(1).filter(l => l.trim());
+        const points = rest.filter(l => /^[-•]/.test(l.trim())).map(l => l.replace(/^[-•]\s*/, '').trim());
+        const desc = rest.filter(l => !/^[-•]/.test(l.trim())).join(' ');
+        return { name: parts[0] || '', period: parts[1] || '', desc, points };
+      }).filter(p => p.name);
     },
 
     parsedExperience() {
@@ -12749,6 +12887,8 @@ const CareerFoundation = {
       } else if (this.atsEditingSection) {
         this.atsCV[this.atsEditingSection] = this.atsCVForm[this.atsEditingSection];
       }
+      // Ensure customSections array persists
+      if (!this.atsCV.customSections) this.atsCV.customSections = [];
       this.atsCV.lastUpdated = now;
       this.saveAll();
       this.showAtsCVModal = false;
@@ -12760,19 +12900,62 @@ const CareerFoundation = {
       if (cv.name) text += cv.name + '\n';
       if (cv.title) text += cv.title + '\n';
       const contacts = [cv.email, cv.phone, cv.location, cv.linkedin, cv.portfolio].filter(Boolean);
-      if (contacts.length) text += contacts.join(' · ') + '\n';
+      if (contacts.length) text += contacts.join(' | ') + '\n';
       text += '\n';
-      if (cv.summary) text += 'RINGKASAN PROFESIONAL\n' + cv.summary + '\n\n';
-      if (cv.experience) text += 'PENGALAMAN KERJA\n' + cv.experience + '\n\n';
-      if (cv.education) text += 'PENDIDIKAN\n' + cv.education + '\n\n';
-      if (cv.skills) text += 'KEAHLIAN\n' + cv.skills + '\n\n';
-      if (cv.organization) text += 'ORGANISASI & AKTIVITAS\n' + cv.organization + '\n\n';
-      if (cv.languages) text += 'BAHASA\n' + cv.languages + '\n\n';
-      if (cv.certifications) text += 'SERTIFIKASI & PENGHARGAAN\n' + cv.certifications + '\n\n';
+      if (cv.summary) text += 'SUMMARY\n' + cv.summary + '\n\n';
+      if (cv.experience) text += 'PROFESSIONAL EXPERIENCE\n' + cv.experience + '\n\n';
+      if (cv.projects) text += 'PROJECTS\n' + cv.projects + '\n\n';
+      if (cv.skills) text += 'SKILLS\n' + cv.skills + '\n\n';
+      if (cv.education) text += 'EDUCATION\n' + cv.education + '\n\n';
+      if (cv.organization) text += 'ORGANIZATION & ACTIVITIES\n' + cv.organization + '\n\n';
+      if (cv.languages) text += 'LANGUAGES\n' + cv.languages + '\n\n';
+      if (cv.certifications) text += 'CERTIFICATIONS & AWARDS\n' + cv.certifications + '\n\n';
+      if (cv.customSections && cv.customSections.length) {
+        cv.customSections.forEach(sec => {
+          if (sec.content) text += sec.title.toUpperCase() + '\n' + sec.content + '\n\n';
+        });
+      }
       navigator.clipboard.writeText(text.trim()).then(() => {
         this.atsCopySuccess = true;
         setTimeout(() => { this.atsCopySuccess = false; }, 2000);
       });
+    },
+
+    // ── CV v2 Custom Sections ──
+    cv2AddSection() {
+      this.cv2EditingCustomIdx = null;
+      this.cv2CustomForm = { title: '', content: '' };
+      this.cv2ShowCustomModal = true;
+    },
+    cv2EditCustomSection(idx) {
+      this.cv2EditingCustomIdx = idx;
+      const sec = this.atsCV.customSections[idx];
+      this.cv2CustomForm = { title: sec.title, content: sec.content };
+      this.cv2ShowCustomModal = true;
+    },
+    cv2DeleteCustomSection(idx) {
+      if (!confirm('Hapus section ini?')) return;
+      this.atsCV.customSections.splice(idx, 1);
+      this.saveAll();
+    },
+    cv2SaveCustomSection() {
+      if (!this.cv2CustomForm.title.trim()) return alert('Nama section wajib diisi!');
+      if (!this.atsCV.customSections) this.atsCV.customSections = [];
+      if (this.cv2EditingCustomIdx !== null) {
+        this.atsCV.customSections[this.cv2EditingCustomIdx] = {
+          ...this.atsCV.customSections[this.cv2EditingCustomIdx],
+          title: this.cv2CustomForm.title.trim(),
+          content: this.cv2CustomForm.content,
+        };
+      } else {
+        this.atsCV.customSections.push({
+          id: 'csec-' + Date.now(),
+          title: this.cv2CustomForm.title.trim(),
+          content: this.cv2CustomForm.content,
+        });
+      }
+      this.saveAll();
+      this.cv2ShowCustomModal = false;
     },
 
     // ── Storage ──
@@ -12813,7 +12996,12 @@ const CareerFoundation = {
     } catch(_e) {}
     try {
       const ats = WorkspaceStorage.getItem('career_ats_cv');
-      if (ats) this.atsCV = { ...this.atsCV, ...JSON.parse(ats) };
+      if (ats) {
+        const parsed = JSON.parse(ats);
+        if (!parsed.customSections) parsed.customSections = [];
+        if (parsed.projects === undefined) parsed.projects = '';
+        this.atsCV = { ...this.atsCV, ...parsed };
+      }
     } catch(_e) {}
   },
 };
