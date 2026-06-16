@@ -232,10 +232,10 @@ const App = {
         num: '09'
       },
       careerFoundation: {
-        iconId: 'notebook',
+        iconId: 'alarm_clock',
         x: 55,
         y: 80,
-        customUrl: '',
+        customUrl: 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2080%2080%22%20fill%3D%22none%22%3E%3Cellipse%20cx%3D%2240%22%20cy%3D%2272%22%20rx%3D%2228%22%20ry%3D%225%22%20fill%3D%22rgba%2861%2C46%2C34%2C0.10%29%22/%3E%3Crect%20x%3D%2210%22%20y%3D%2230%22%20width%3D%2260%22%20height%3D%2240%22%20rx%3D%226%22%20fill%3D%22%23FAF7F2%22%20stroke%3D%22%23E8DFD8%22%20stroke-width%3D%222%22/%3E%3Crect%20x%3D%2210%22%20y%3D%2230%22%20width%3D%2260%22%20height%3D%2210%22%20rx%3D%226%22%20fill%3D%22%23F0EAE2%22/%3E%3Crect%20x%3D%2210%22%20y%3D%2236%22%20width%3D%2260%22%20height%3D%224%22%20fill%3D%22%23F0EAE2%22/%3E%3Crect%20x%3D%2232%22%20y%3D%2246%22%20width%3D%2216%22%20height%3D%2210%22%20rx%3D%223%22%20fill%3D%22%23D67B52%22%20opacity%3D%220.9%22/%3E%3Ccircle%20cx%3D%2240%22%20cy%3D%2251%22%20r%3D%222.5%22%20fill%3D%22%23FAF7F2%22/%3E%3Cpath%20d%3D%22M28%2030%20C28%2022%2052%2022%2052%2030%22%20stroke%3D%22%23C8BDB5%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22/%3E%3Ctext%20x%3D%2254%22%20y%3D%2222%22%20font-size%3D%2210%22%20fill%3D%22%23D67B52%22%20opacity%3D%220.8%22%3E%26%2310022%3B%3C/text%3E%3Cline%20x1%3D%2210%22%20y1%3D%2240%22%20x2%3D%2270%22%20y2%3D%2240%22%20stroke%3D%22%23E8DFD8%22%20stroke-width%3D%221.5%22/%3E%3C/svg%3E',
         label: '11. Career Foundation',
         num: '11'
       }
@@ -269,6 +269,10 @@ const App = {
         }
         if (!assignedIcons.careerFoundation) {
           assignedIcons.careerFoundation = { ...defaultAssignedIcons.careerFoundation };
+        }
+        // Force-update customUrl jika sebelumnya pakai iconId 'notebook' yang tidak ada di assets
+        if (!assignedIcons.careerFoundation.customUrl && assignedIcons.careerFoundation.iconId === 'notebook') {
+          assignedIcons.careerFoundation.customUrl = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2080%2080%22%20fill%3D%22none%22%3E%3Cellipse%20cx%3D%2240%22%20cy%3D%2272%22%20rx%3D%2228%22%20ry%3D%225%22%20fill%3D%22rgba%2861%2C46%2C34%2C0.10%29%22/%3E%3Crect%20x%3D%2210%22%20y%3D%2230%22%20width%3D%2260%22%20height%3D%2240%22%20rx%3D%226%22%20fill%3D%22%23FAF7F2%22%20stroke%3D%22%23E8DFD8%22%20stroke-width%3D%222%22/%3E%3Crect%20x%3D%2210%22%20y%3D%2230%22%20width%3D%2260%22%20height%3D%2210%22%20rx%3D%226%22%20fill%3D%22%23F0EAE2%22/%3E%3Crect%20x%3D%2210%22%20y%3D%2236%22%20width%3D%2260%22%20height%3D%224%22%20fill%3D%22%23F0EAE2%22/%3E%3Crect%20x%3D%2232%22%20y%3D%2246%22%20width%3D%2216%22%20height%3D%2210%22%20rx%3D%223%22%20fill%3D%22%23D67B52%22%20opacity%3D%220.9%22/%3E%3Ccircle%20cx%3D%2240%22%20cy%3D%2251%22%20r%3D%222.5%22%20fill%3D%22%23FAF7F2%22/%3E%3Cpath%20d%3D%22M28%2030%20C28%2022%2052%2022%2052%2030%22%20stroke%3D%22%23C8BDB5%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22/%3E%3Ctext%20x%3D%2254%22%20y%3D%2222%22%20font-size%3D%2210%22%20fill%3D%22%23D67B52%22%20opacity%3D%220.8%22%3E%26%2310022%3B%3C/text%3E%3Cline%20x1%3D%2210%22%20y1%3D%2240%22%20x2%3D%2270%22%20y2%3D%2240%22%20stroke%3D%22%23E8DFD8%22%20stroke-width%3D%221.5%22/%3E%3C/svg%3E';
         }
         saveConfig();
       } else {

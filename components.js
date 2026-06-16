@@ -7536,7 +7536,8 @@ const IconManager = {
         { id: 6, key: 'habitTracker', num: 6, name: 'personal habit tracker' },
         { id: 7, key: 'pomodoroTimer', num: 7, name: 'jam pasir pomodoro' },
         { id: 8, key: 'googleCalendar', num: 8, name: 'daily n' },
-        { id: 9, key: 'financialTracker', num: 9, name: 'financial tracker' }
+        { id: 9, key: 'financialTracker', num: 9, name: 'financial tracker' },
+        { id: 11, key: 'careerFoundation', num: 11, name: 'career foundation' }
       ]
     };
   },
@@ -8761,6 +8762,11 @@ const GoogleCalendar = {
         <!-- ========== AGENDA VIEW ========== -->
         <div v-if="localView==='agenda'" class="gcal-agenda-wrap">
 
+          <div v-if="localAgendaItems[0].allDayItems.length===0 && localAgendaItems[0].timedBlocks.length===0" class="gcal-agenda-empty">
+            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.4" style="color:#bdc1c6; margin:0 auto 12px; display:block;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <p style="font-size:15px;color:#5f6368;font-weight:600;">Tidak ada acara mendatang</p>
+            <p style="font-size:13px;color:#9aa0a6;margin-top:4px;">Klik "Set Pengingat" untuk menambahkan pengingat baru.</p>
+          </div>
 
           <template v-for="group in localAgendaItems" :key="group.dateStr">
             <!-- Date header -->
@@ -8801,12 +8807,6 @@ const GoogleCalendar = {
               <div class="gcal-agenda-timeline-col">
                 <div v-for="h in localHours" :key="h" class="gcal-agenda-hour-cell"></div>
                 <div v-if="group.nowLineTop !== null" class="gcal-agenda-now-line" :style="{top: (group.nowLineTop*1) + 'px'}"></div>
-                <!-- Empty state overlay when no items -->
-                <div v-if="group.allDayItems.length === 0 && group.timedBlocks.length === 0" class="gcal-agenda-empty-overlay">
-                  <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.4" style="color:#bdc1c6; margin-bottom:8px;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x1="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                  <p style="font-size:13px;color:#5f6368;font-weight:600;margin:0 0 4px;">Belum ada jadwal</p>
-                  <p style="font-size:11.5px;color:#9aa0a6;margin:0;">Klik <strong>Set Pengingat</strong> di atas untuk menambahkan.</p>
-                </div>
                 <div
                   v-for="block in group.timedBlocks"
                   :key="block.id"
@@ -12411,257 +12411,6 @@ const CareerFoundation = {
       .cf-fade-enter-active { transition: opacity 0.15s ease; }
       .cf-fade-leave-active { transition: opacity 0.1s ease; }
       .cf-fade-enter-from, .cf-fade-leave-to { opacity: 0; }
-
-      /* ── Job Board ── */
-      .jb-hero {
-        background: linear-gradient(135deg, var(--color-forest, #283618) 0%, #3E4A2A 100%);
-        border-radius: 14px;
-        padding: 28px 28px 24px;
-        margin-bottom: 20px;
-        position: relative;
-        overflow: hidden;
-      }
-      .jb-hero::before {
-        content: '';
-        position: absolute;
-        top: -30px; right: -30px;
-        width: 160px; height: 160px;
-        border-radius: 50%;
-        background: rgba(214,123,82,0.12);
-        pointer-events: none;
-      }
-      .jb-hero::after {
-        content: '';
-        position: absolute;
-        bottom: -20px; right: 60px;
-        width: 90px; height: 90px;
-        border-radius: 50%;
-        background: rgba(163,177,138,0.10);
-        pointer-events: none;
-      }
-      .jb-hero-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--color-sage, #A3B18A);
-        margin-bottom: 8px;
-      }
-      .jb-hero-title {
-        font-size: 22px;
-        font-weight: 800;
-        color: #fff;
-        margin: 0 0 6px;
-        letter-spacing: -0.4px;
-        line-height: 1.15;
-      }
-      .jb-hero-sub {
-        font-size: 12.5px;
-        color: rgba(255,255,255,0.6);
-        margin: 0 0 18px;
-        line-height: 1.6;
-        max-width: 420px;
-      }
-      .jb-hero-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 18px;
-        background: var(--color-terracotta, #D67B52);
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        font-size: 12.5px;
-        font-weight: 700;
-        cursor: pointer;
-        font-family: inherit;
-        transition: background 0.14s, transform 0.1s;
-      }
-      .jb-hero-btn:hover { background: #C0693E; transform: translateY(-1px); }
-
-      /* Filters */
-      .jb-filters {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-bottom: 18px;
-      }
-      .jb-filter-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 5px 13px;
-        background: transparent;
-        border: 1.5px solid var(--color-sand, #E8DFD8);
-        border-radius: 20px;
-        font-size: 11.5px;
-        font-weight: 600;
-        color: var(--text-muted, #6E6359);
-        cursor: pointer;
-        font-family: inherit;
-        transition: all 0.14s;
-      }
-      .jb-filter-pill:hover { border-color: var(--color-terracotta, #D67B52); color: var(--color-terracotta, #D67B52); }
-      .jb-filter-pill.active {
-        background: var(--color-terracotta, #D67B52);
-        border-color: var(--color-terracotta, #D67B52);
-        color: #fff;
-      }
-      .jb-filter-count {
-        background: rgba(0,0,0,0.1);
-        border-radius: 10px;
-        padding: 0 5px;
-        font-size: 10px;
-        line-height: 1.6;
-        min-width: 16px;
-        text-align: center;
-      }
-      .jb-filter-pill.active .jb-filter-count { background: rgba(255,255,255,0.25); }
-
-      /* Empty */
-      .jb-empty {
-        padding: 56px 20px;
-        text-align: center;
-      }
-      .jb-empty-icon { font-size: 36px; margin-bottom: 10px; }
-      .jb-empty-label { font-size: 13.5px; font-weight: 700; color: var(--text-muted, #6E6359); margin: 0 0 4px; }
-      .jb-empty-sub { font-size: 12px; color: #BBB; margin: 0; }
-
-      /* Job Card List */
-      .jb-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-      .jb-card {
-        display: flex;
-        border: 1.5px solid var(--color-sand, #E8DFD8);
-        border-radius: 12px;
-        overflow: hidden;
-        background: #fff;
-        transition: box-shadow 0.16s, transform 0.14s;
-      }
-      .jb-card:hover {
-        box-shadow: 0 4px 18px rgba(61,46,34,0.09);
-        transform: translateY(-1px);
-      }
-      .jb-card-ribbon {
-        width: 4px;
-        flex-shrink: 0;
-        border-radius: 0;
-      }
-      .jb-card-body { flex: 1; padding: 14px 16px 12px; min-width: 0; }
-      .jb-card-top {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 10px;
-        margin-bottom: 8px;
-      }
-      .jb-card-info { flex: 1; min-width: 0; }
-      .jb-card-title {
-        font-size: 14.5px;
-        font-weight: 800;
-        color: var(--text-dark, #2C2621);
-        margin: 0 0 3px;
-        letter-spacing: -0.2px;
-      }
-      .jb-card-company {
-        font-size: 12px;
-        color: var(--text-muted, #6E6359);
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        flex-wrap: wrap;
-      }
-      .jb-card-loc {
-        display: inline-flex;
-        align-items: center;
-        gap: 3px;
-        opacity: 0.7;
-      }
-      .jb-card-right { flex-shrink: 0; }
-      .jb-status-badge {
-        font-size: 10.5px;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        padding: 3px 9px;
-        border-radius: 20px;
-        border: 1px solid;
-        white-space: nowrap;
-      }
-
-      /* Tags */
-      .jb-card-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-        margin-bottom: 8px;
-      }
-      .jb-tag {
-        font-size: 10.5px;
-        font-weight: 600;
-        padding: 2px 8px;
-        border-radius: 4px;
-        display: inline-flex;
-        align-items: center;
-        gap: 3px;
-        border: 1px solid transparent;
-      }
-      .jb-tag--type { background: rgba(163,177,138,0.15); color: var(--color-forest, #283618); border-color: rgba(163,177,138,0.3); }
-      .jb-tag--salary { background: rgba(221,161,94,0.12); color: #8A6020; border-color: rgba(221,161,94,0.25); }
-      .jb-tag--date { background: rgba(232,223,216,0.6); color: var(--text-muted, #6E6359); border-color: var(--color-sand, #E8DFD8); }
-      .jb-tag--urgent { background: rgba(239,68,68,0.08); color: #DC2626; border-color: rgba(239,68,68,0.2); }
-      .jb-tag--source { background: rgba(99,102,241,0.08); color: #4338CA; border-color: rgba(99,102,241,0.18); }
-
-      /* Notes */
-      .jb-card-notes {
-        font-size: 11.5px;
-        color: var(--text-muted, #6E6359);
-        line-height: 1.6;
-        margin: 0 0 8px;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-
-      /* Footer */
-      .jb-card-footer {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-top: 4px;
-      }
-      .jb-card-date {
-        font-size: 10.5px;
-        color: #C5BCB6;
-        font-family: 'Hack', monospace;
-      }
-      .jb-card-actions {
-        display: flex;
-        gap: 2px;
-        opacity: 0;
-        transition: opacity 0.14s;
-      }
-      .jb-card:hover .jb-card-actions { opacity: 1; }
-      .jb-action-btn {
-        padding: 5px 7px;
-        background: transparent;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        color: var(--text-muted, #6E6359);
-        transition: background 0.1s, color 0.1s;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .jb-action-btn:hover { background: var(--color-sand, #E8DFD8); color: var(--text-dark, #2C2621); }
-      .jb-action-btn--del:hover { background: rgba(239,68,68,0.08); color: #DC2626; }
     </style>
 
     <!-- ── Page Header ── -->
@@ -13052,166 +12801,6 @@ const CareerFoundation = {
     </div>
     </transition>
 
-    <!-- ══ TAB: JOB BOARD ══ -->
-    <transition name="cf-fade">
-    <div v-if="activeTab === 'job_board'" key="job_board">
-
-      <!-- Hero Banner -->
-      <div class="jb-hero">
-        <div class="jb-hero-badge">🔍 Eksplorasi Karir</div>
-        <h2 class="jb-hero-title">Temukan Peluangmu</h2>
-        <p class="jb-hero-sub">Catat lowongan yang kamu incar, pantau statusnya, dan kelola proses lamaran dari satu tempat.</p>
-        <button class="jb-hero-btn" @click="openAddJob">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Tambah Lowongan
-        </button>
-      </div>
-
-      <!-- Filter Kategori -->
-      <div class="jb-filters">
-        <button
-          v-for="f in jobFilters" :key="f.key"
-          class="jb-filter-pill"
-          :class="{ active: jobFilter === f.key }"
-          @click="jobFilter = f.key">
-          {{ f.label }}
-          <span v-if="f.key !== 'all'" class="jb-filter-count">{{ jobCountByStatus(f.key) }}</span>
-        </button>
-      </div>
-
-      <!-- Kosong state -->
-      <div v-if="filteredJobs.length === 0" class="jb-empty">
-        <div class="jb-empty-icon">📋</div>
-        <p class="jb-empty-label">{{ jobFilter === 'all' ? 'Belum ada lowongan' : 'Tidak ada di kategori ini' }}</p>
-        <p class="jb-empty-sub">{{ jobFilter === 'all' ? 'Tambahkan lowongan pertama yang ingin kamu lamar.' : 'Coba pilih filter lain atau tambah lowongan baru.' }}</p>
-        <button v-if="jobFilter === 'all'" class="jb-hero-btn" style="margin-top:12px;" @click="openAddJob">Tambah Lowongan</button>
-      </div>
-
-      <!-- Job List -->
-      <div v-else class="jb-list">
-        <div
-          v-for="job in filteredJobs" :key="job.id"
-          class="jb-card"
-          :class="'jb-card--' + job.status">
-
-          <!-- Status ribbon -->
-          <div class="jb-card-ribbon" :style="{ background: jobStatusColor(job.status) }"></div>
-
-          <div class="jb-card-body">
-            <div class="jb-card-top">
-              <div class="jb-card-info">
-                <h3 class="jb-card-title">{{ job.position }}</h3>
-                <div class="jb-card-company">
-                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                  {{ job.company }}
-                  <span v-if="job.location" class="jb-card-loc">
-                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    {{ job.location }}
-                  </span>
-                </div>
-              </div>
-              <div class="jb-card-right">
-                <span class="jb-status-badge" :style="{ background: jobStatusColor(job.status) + '18', color: jobStatusColor(job.status), borderColor: jobStatusColor(job.status) + '40' }">
-                  {{ jobStatusLabel(job.status) }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Tags -->
-            <div class="jb-card-tags">
-              <span v-if="job.type" class="jb-tag jb-tag--type">{{ job.type }}</span>
-              <span v-if="job.salary" class="jb-tag jb-tag--salary">💰 {{ job.salary }}</span>
-              <span v-if="job.deadline" class="jb-tag" :class="isDeadlineNear(job.deadline) ? 'jb-tag--urgent' : 'jb-tag--date'">
-                <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                {{ formatDeadline(job.deadline) }}
-              </span>
-              <span v-if="job.source" class="jb-tag jb-tag--source">🔗 {{ job.source }}</span>
-            </div>
-
-            <!-- Notes -->
-            <p v-if="job.notes" class="jb-card-notes">{{ job.notes }}</p>
-
-            <!-- Footer -->
-            <div class="jb-card-footer">
-              <span class="jb-card-date">Ditambah {{ formatLastUpdated(job.createdAt) }}</span>
-              <div class="jb-card-actions">
-                <button class="jb-action-btn" @click="editJob(job)" title="Edit">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                </button>
-                <button class="jb-action-btn jb-action-btn--del" @click="deleteJob(job.id)" title="Hapus">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-    </transition>
-
-    <!-- ══ MODAL: Tambah / Edit Job ══ -->
-    <transition name="cf-fade">
-      <div v-if="showJobModal" class="cf-modal-overlay" @click.self="showJobModal=false">
-        <div class="cf-modal cf-modal-wide">
-          <div class="cf-modal-header">
-            <h3 class="cf-modal-title">{{ editingJobId ? 'Edit Lowongan' : 'Tambah Lowongan' }}</h3>
-            <button class="cf-modal-close" @click="showJobModal=false">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
-          <div class="cf-modal-body">
-            <div class="cf-input-grid-2">
-              <div>
-                <label class="cf-field-label">Posisi / Jabatan *</label>
-                <input class="cf-input" v-model="jobForm.position" placeholder="mis. Product Designer"/>
-              </div>
-              <div>
-                <label class="cf-field-label">Perusahaan *</label>
-                <input class="cf-input" v-model="jobForm.company" placeholder="mis. Tokopedia"/>
-              </div>
-              <div>
-                <label class="cf-field-label">Lokasi</label>
-                <input class="cf-input" v-model="jobForm.location" placeholder="mis. Jakarta / Remote"/>
-              </div>
-              <div>
-                <label class="cf-field-label">Tipe Kerja</label>
-                <div class="cf-type-pills" style="margin-top:4px;">
-                  <button v-for="t in jobTypes" :key="t" class="cf-type-pill" :class="{ active: jobForm.type === t }" @click="jobForm.type = t">{{ t }}</button>
-                </div>
-              </div>
-              <div>
-                <label class="cf-field-label">Gaji / Range</label>
-                <input class="cf-input" v-model="jobForm.salary" placeholder="mis. 8–12 jt / bulan"/>
-              </div>
-              <div>
-                <label class="cf-field-label">Deadline Lamaran</label>
-                <input class="cf-input" type="date" v-model="jobForm.deadline"/>
-              </div>
-              <div>
-                <label class="cf-field-label">Sumber Lowongan</label>
-                <input class="cf-input" v-model="jobForm.source" placeholder="mis. LinkedIn, Glints, Jobstreet"/>
-              </div>
-              <div>
-                <label class="cf-field-label">Status</label>
-                <div class="cf-type-pills" style="margin-top:4px;">
-                  <button v-for="s in jobStatuses" :key="s.key" class="cf-type-pill" :class="{ active: jobForm.status === s.key }" @click="jobForm.status = s.key">{{ s.label }}</button>
-                </div>
-              </div>
-            </div>
-            <div>
-              <label class="cf-field-label">Catatan</label>
-              <textarea class="cf-textarea" v-model="jobForm.notes" rows="3" placeholder="Hal yang perlu diingat: kontak HRD, dokumen yang diminta, jadwal interview..."></textarea>
-            </div>
-          </div>
-          <div class="cf-modal-footer">
-            <button class="cf-btn-ghost" @click="showJobModal=false">Batal</button>
-            <button class="cf-btn-primary" @click="saveJob">Simpan</button>
-          </div>
-        </div>
-      </div>
-    </transition>
-
     <!-- ══ MODAL: Edit Resume ══ -->
     <transition name="cf-fade">
       <div v-if="showResumeModal" class="cf-modal-overlay" @click.self="showResumeModal=false">
@@ -13413,7 +13002,6 @@ const CareerFoundation = {
         { key: 'surat_lamaran', label: 'Surat Lamaran',    emoji: '📝', color: '#059669',                 shadowColor: 'rgba(5,150,105,0.3)' },
         { key: 'body_email',    label: 'Body Email',       emoji: '📧', color: '#0369A1',                 shadowColor: 'rgba(3,105,161,0.3)' },
         { key: 'all',           label: 'Semua Dokumen',    emoji: '📂', color: 'var(--color-forest)',      shadowColor: 'rgba(40,54,24,0.3)' },
-        { key: 'job_board',     label: 'Job Board',        emoji: '🎯', color: '#D67B52',                 shadowColor: 'rgba(214,123,82,0.3)' },
       ],
 
       // Resume
@@ -13464,29 +13052,6 @@ const CareerFoundation = {
       showAtsCVModal: false,
       atsEditingSection: null,
       atsCopySuccess: false,
-
-      // Job Board
-      jobs: [],
-      jobForm: { position: '', company: '', location: '', type: '', salary: '', deadline: '', source: '', status: 'wishlist', notes: '' },
-      editingJobId: null,
-      showJobModal: false,
-      jobFilter: 'all',
-      jobTypes: ['Full-time', 'Part-time', 'Remote', 'Hybrid', 'Freelance', 'Internship'],
-      jobStatuses: [
-        { key: 'wishlist',   label: 'Wishlist' },
-        { key: 'applied',    label: 'Dilamar' },
-        { key: 'interview',  label: 'Interview' },
-        { key: 'offer',      label: 'Penawaran' },
-        { key: 'rejected',   label: 'Ditolak' },
-      ],
-      jobFilters: [
-        { key: 'all',       label: 'Semua' },
-        { key: 'wishlist',  label: 'Wishlist' },
-        { key: 'applied',   label: 'Dilamar' },
-        { key: 'interview', label: 'Interview' },
-        { key: 'offer',     label: 'Penawaran' },
-        { key: 'rejected',  label: 'Ditolak' },
-      ],
     };
   },
 
