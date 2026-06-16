@@ -5497,6 +5497,19 @@ input:checked + .switch-slider:before {
 /* ---- AGENDA VIEW ---- */
 .gcal-agenda-wrap { background: var(--bg-card); border: 1.5px solid var(--color-sand); border-radius: 12px; overflow: hidden; margin-top: 0; }
 .gcal-agenda-empty { text-align: center; padding: 56px 24px; }
+.gcal-agenda-empty-overlay {
+  position: absolute;
+  top: 180px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
 .gcal-agenda-group {
   display: flex;
   border-bottom: 1px solid rgba(232,223,216,0.7);
