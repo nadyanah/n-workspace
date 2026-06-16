@@ -8709,16 +8709,19 @@ const GoogleCalendar = {
                 v-if="monthHoverDate===cell.dateStr && localTotalItemsForDate(cell.dateStr) > 0"
                 class="gcal-cell-tooltip"
                 @click.stop
+                @wheel.stop
               >
                 <div class="gcal-cell-tooltip-date">{{ localTooltipDateLabel(cell.dateStr) }}</div>
-                <div
-                  v-for="item in localAllItemsForDate(cell.dateStr)"
-                  :key="item.id"
-                  class="gcal-cell-tooltip-item"
-                >
-                  <span class="gcal-cell-tooltip-dot" :style="{ background: item.color }"></span>
-                  <span class="gcal-cell-tooltip-title" :style="item.done ? 'text-decoration:line-through;opacity:0.5;' : ''">{{ item.title }}</span>
-                  <span v-if="item.startMin !== null" class="gcal-cell-tooltip-time">{{ localFmtMin(item.startMin) }}</span>
+                <div class="gcal-cell-tooltip-items">
+                  <div
+                    v-for="item in localAllItemsForDate(cell.dateStr)"
+                    :key="item.id"
+                    class="gcal-cell-tooltip-item"
+                  >
+                    <span class="gcal-cell-tooltip-dot" :style="{ background: item.color }"></span>
+                    <span class="gcal-cell-tooltip-title" :style="item.done ? 'text-decoration:line-through;opacity:0.5;' : ''">{{ item.title }}</span>
+                    <span v-if="item.startMin !== null" class="gcal-cell-tooltip-time">{{ localFmtMin(item.startMin) }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -11865,221 +11868,817 @@ const InspirationBoard = {
 // ============================================================================
 const CareerFoundation = {
   template: `
-  <div class="fin-tracker">
+  <div class="cf-clean">
+    <style>
+      /* ── Career Foundation — Clean Redesign ── */
+      .cf-clean {
+        font-family: 'Outfit', sans-serif;
+        color: #111;
+        max-width: 760px;
+      }
 
-    <!-- ══ TOP NAV TABS ══ -->
-    <div style="margin-bottom:28px;">
-      <!-- Page header -->
-      <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
-        <div>
-          <h2 style="display:flex; align-items:center; gap:10px; font-size:24px; font-weight:800; color:var(--text-dark); margin:0 0 4px 0;">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            Career Foundation
-          </h2>
-          <p style="color:var(--text-muted); font-size:13px; margin:0;">Semua dokumen karir — siap pakai, tinggal kirim.</p>
-        </div>
-      </div>
+      /* Header */
+      .cf-header {
+        padding-bottom: 24px;
+        border-bottom: 1px solid #E5E5E5;
+        margin-bottom: 24px;
+      }
+      .cf-eyebrow {
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #999;
+        margin: 0 0 8px;
+      }
+      .cf-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: #111;
+        margin: 0 0 6px;
+        letter-spacing: -0.5px;
+        line-height: 1.1;
+      }
+      .cf-sub {
+        font-size: 13.5px;
+        color: #777;
+        margin: 0;
+        line-height: 1.5;
+      }
 
-      <!-- Tab pills -->
-      <div style="display:flex; flex-wrap:wrap; gap:8px; padding:4px 0 2px;">
-        <button
-          v-for="tab in tabs" :key="tab.key"
-          @click="activeTab = tab.key"
-          :style="activeTab === tab.key
-            ? { background: tab.color, color: '#fff', borderColor: tab.color, boxShadow: '0 4px 14px ' + tab.shadowColor }
-            : { background: '#fff', color: 'var(--text-muted)', borderColor: 'var(--color-sand)', boxShadow: 'none' }"
-          style="display:inline-flex; align-items:center; gap:7px; padding:9px 18px; border-radius:50px; border:1.5px solid; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.18s; white-space:nowrap; font-family:inherit;">
-          <span style="font-size:15px; line-height:1;">{{ tab.emoji }}</span>
-          {{ tab.label }}
-        </button>
-      </div>
+      /* Tab strip */
+      .cf-tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 1px solid #E5E5E5;
+        margin-bottom: 28px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .cf-tabs::-webkit-scrollbar { display: none; }
+      .cf-tab {
+        padding: 10px 16px 9px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #999;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        white-space: nowrap;
+        font-family: inherit;
+        transition: color 0.14s, border-color 0.14s;
+        margin-bottom: -1px;
+        letter-spacing: 0.01em;
+      }
+      .cf-tab:hover { color: #333; }
+      .cf-tab.active {
+        color: #111;
+        border-bottom-color: #111;
+      }
+
+      /* Section label + action row */
+      .cf-section-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .cf-section-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: #AAAAAA;
+        margin: 0;
+      }
+      .cf-btn-ghost {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 14px;
+        background: transparent;
+        border: 1px solid #DDDDD;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #555;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background 0.12s, border-color 0.12s;
+      }
+      .cf-btn-ghost:hover { background: #F4F4F4; border-color: #CCC; }
+      .cf-btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 14px;
+        background: #111;
+        border: 1px solid #111;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #fff;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background 0.12s;
+      }
+      .cf-btn-primary:hover { background: #333; }
+
+      /* ── Profil card ── */
+      .cf-profile-card {
+        border: 1px solid #E5E5E5;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .cf-profile-head {
+        padding: 20px 24px;
+        border-bottom: 1px solid #E5E5E5;
+        background: #FAFAFA;
+      }
+      .cf-profile-name {
+        font-size: 20px;
+        font-weight: 800;
+        color: #111;
+        margin: 0 0 2px;
+        letter-spacing: -0.3px;
+      }
+      .cf-profile-title {
+        font-size: 13px;
+        color: #777;
+        margin: 0 0 10px;
+      }
+      .cf-profile-contacts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .cf-profile-contact {
+        font-size: 12px;
+        color: #555;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .cf-profile-body {
+        padding: 20px 24px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+      }
+      .cf-profile-section-full { grid-column: 1 / -1; }
+      .cf-profile-section-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #BBB;
+        margin: 0 0 6px;
+        display: block;
+      }
+      .cf-profile-section-text {
+        font-size: 13px;
+        color: #333;
+        line-height: 1.7;
+        white-space: pre-wrap;
+        margin: 0;
+      }
+      .cf-profile-empty {
+        padding: 40px 24px;
+        text-align: center;
+        color: #BBB;
+      }
+      .cf-profile-empty-text {
+        font-size: 13px;
+        font-weight: 600;
+        color: #CCC;
+        margin: 0 0 4px;
+      }
+      .cf-profile-empty-sub {
+        font-size: 12px;
+        color: #DDD;
+        margin: 0;
+      }
+
+      /* ── Doc list (linear rows) ── */
+      .cf-doc-list {
+        border-top: 1px solid #E5E5E5;
+      }
+      .cf-doc-row {
+        display: flex;
+        align-items: center;
+        padding: 13px 0;
+        border-bottom: 1px solid #EFEFEF;
+        gap: 12px;
+        transition: background 0.1s;
+      }
+      .cf-doc-row:hover { background: #FAFAFA; margin: 0 -12px; padding: 13px 12px; }
+      .cf-doc-type-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .cf-doc-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .cf-doc-title {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: #111;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cf-doc-meta {
+        font-size: 11.5px;
+        color: #AAA;
+        margin: 2px 0 0;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .cf-doc-type-badge {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 2px 7px;
+        border-radius: 3px;
+      }
+      .cf-doc-actions {
+        display: flex;
+        gap: 2px;
+        flex-shrink: 0;
+        opacity: 0;
+        transition: opacity 0.15s;
+      }
+      .cf-doc-row:hover .cf-doc-actions { opacity: 1; }
+      .cf-doc-action-btn {
+        padding: 5px 8px;
+        background: transparent;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        color: #888;
+        font-size: 11.5px;
+        font-weight: 600;
+        font-family: inherit;
+        transition: background 0.1s, color 0.1s;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .cf-doc-action-btn:hover { background: #EFEFEF; color: #333; }
+      .cf-doc-action-btn.del:hover { background: #FFF0F0; color: #EF4444; }
+
+      /* Empty state */
+      .cf-empty {
+        padding: 48px 20px;
+        text-align: center;
+      }
+      .cf-empty-label {
+        font-size: 13px;
+        font-weight: 700;
+        color: #CCC;
+        margin: 0 0 4px;
+      }
+      .cf-empty-sub {
+        font-size: 12px;
+        color: #DDD;
+        margin: 0;
+      }
+
+      /* ── ATS CV inside tab ── */
+      .cf-ats-wrap {
+        background: #fff;
+        border: 1px solid #E5E5E5;
+        border-radius: 10px;
+        overflow: hidden;
+        max-width: 680px;
+      }
+      .cf-ats-head {
+        background: #111;
+        padding: 24px 28px 20px;
+        position: relative;
+      }
+      .cf-ats-edit-btn {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.25);
+        border-radius: 5px;
+        color: rgba(255,255,255,0.75);
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 10px;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background 0.12s;
+      }
+      .cf-ats-edit-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+      .cf-ats-name {
+        font-size: 22px;
+        font-weight: 800;
+        color: #fff;
+        margin: 0 0 3px;
+        letter-spacing: -0.3px;
+      }
+      .cf-ats-role {
+        font-size: 13px;
+        color: rgba(255,255,255,0.6);
+        margin: 0 0 14px;
+        font-style: italic;
+      }
+      .cf-ats-contacts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+      .cf-ats-contact {
+        font-size: 11.5px;
+        color: rgba(255,255,255,0.7);
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .cf-ats-body { padding: 4px 28px 24px; }
+      .cf-ats-section {
+        border-top: 1px solid #EFEFEF;
+        padding-top: 18px;
+        margin-top: 18px;
+      }
+      .cf-ats-section-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+      .cf-ats-section-title {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #AAAAAA;
+        margin: 0;
+      }
+      .cf-ats-section-btn {
+        font-size: 11px;
+        font-weight: 600;
+        color: #999;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-family: inherit;
+        padding: 3px 0;
+        transition: color 0.12s;
+      }
+      .cf-ats-section-btn:hover { color: #111; }
+      .cf-ats-text {
+        font-size: 13px;
+        color: #333;
+        line-height: 1.75;
+        white-space: pre-wrap;
+        margin: 0;
+      }
+      .cf-ats-empty-field {
+        font-size: 12.5px;
+        color: #CCC;
+        cursor: pointer;
+        padding: 10px 0;
+      }
+      .cf-ats-empty-field:hover { color: #999; }
+      .cf-ats-exp-entry { margin-bottom: 14px; }
+      .cf-ats-exp-role { font-size: 13.5px; font-weight: 700; color: #111; margin: 0 0 1px; }
+      .cf-ats-exp-company { font-size: 12px; color: #777; font-weight: 600; margin: 0 0 1px; }
+      .cf-ats-exp-period { font-size: 11px; color: #BBB; font-weight: 600; margin: 0 0 6px; }
+      .cf-ats-exp-points { padding-left: 14px; margin: 0; }
+      .cf-ats-exp-point { font-size: 12.5px; color: #444; line-height: 1.65; margin-bottom: 2px; }
+      .cf-skills-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+      .cf-skill-tag { font-size: 12px; color: #555; background: #F4F4F4; border-radius: 4px; padding: 3px 9px; }
+      .cf-cert-list { list-style: none; padding: 0; margin: 0; }
+      .cf-cert-item { font-size: 13px; color: #333; padding: 3px 0; }
+      .cf-cert-item::before { content: '—'; color: #CCC; margin-right: 8px; }
+      .cf-lang-item { font-size: 13px; color: #333; display: flex; justify-content: space-between; padding: 3px 0; }
+      .cf-lang-level { color: #AAA; font-size: 12px; }
+
+      /* ── Tip banner slim ── */
+      .cf-tip {
+        border-left: 2px solid #E5E5E5;
+        padding: 8px 0 8px 14px;
+        margin-bottom: 20px;
+      }
+      .cf-tip-title {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #555;
+        margin: 0 0 2px;
+      }
+      .cf-tip-text {
+        font-size: 11.5px;
+        color: #888;
+        line-height: 1.6;
+        margin: 0;
+      }
+
+      /* ── Modals ── */
+      .cf-modal-overlay {
+        position: fixed; inset: 0; z-index: 9990;
+        background: rgba(0,0,0,0.35);
+        backdrop-filter: blur(3px);
+        display: flex; align-items: center; justify-content: center;
+        padding: 16px;
+      }
+      .cf-modal {
+        background: #fff;
+        border-radius: 12px;
+        width: min(560px, 100%);
+        max-height: 88vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+        display: flex;
+        flex-direction: column;
+      }
+      .cf-modal-wide { width: min(640px, 100%); }
+      .cf-modal-header {
+        padding: 18px 22px 14px;
+        border-bottom: 1px solid #EFEFEF;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky; top: 0; background: #fff; z-index: 1;
+      }
+      .cf-modal-title {
+        font-size: 15px;
+        font-weight: 800;
+        color: #111;
+        margin: 0;
+      }
+      .cf-modal-close {
+        background: none; border: none; cursor: pointer;
+        color: #AAA; padding: 4px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 5px;
+        transition: color 0.12s;
+      }
+      .cf-modal-close:hover { color: #111; }
+      .cf-modal-body {
+        padding: 20px 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .cf-modal-footer {
+        padding: 14px 22px 18px;
+        border-top: 1px solid #EFEFEF;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        position: sticky; bottom: 0; background: #fff; z-index: 1;
+      }
+      .cf-field-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #999;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 5px;
+      }
+      .cf-input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #E0E0E0;
+        border-radius: 7px;
+        font-size: 13px;
+        color: #111;
+        background: #FAFAFA;
+        outline: none;
+        font-family: inherit;
+        box-sizing: border-box;
+        transition: border-color 0.14s;
+      }
+      .cf-input:focus { border-color: #999; background: #fff; }
+      .cf-textarea {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #E0E0E0;
+        border-radius: 7px;
+        font-size: 13px;
+        color: #111;
+        background: #FAFAFA;
+        outline: none;
+        font-family: inherit;
+        box-sizing: border-box;
+        resize: vertical;
+        line-height: 1.7;
+        transition: border-color 0.14s;
+      }
+      .cf-textarea:focus { border-color: #999; background: #fff; }
+      .cf-input-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .cf-type-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+      .cf-type-pill {
+        padding: 6px 13px;
+        border-radius: 20px;
+        border: 1px solid #E0E0E0;
+        font-size: 12px;
+        font-weight: 600;
+        color: #888;
+        cursor: pointer;
+        font-family: inherit;
+        background: transparent;
+        transition: all 0.13s;
+      }
+      .cf-type-pill.active { background: #111; color: #fff; border-color: #111; }
+
+      /* ── Copy success ── */
+      .cf-copy-btn { font-size: 12px; font-weight: 600; }
+
+      /* View modal text */
+      .cf-view-content {
+        font-size: 13.5px;
+        color: #333;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        min-height: 120px;
+      }
+
+      /* Fade animation */
+      .cf-fade-enter-active { transition: opacity 0.15s ease; }
+      .cf-fade-leave-active { transition: opacity 0.1s ease; }
+      .cf-fade-enter-from, .cf-fade-leave-to { opacity: 0; }
+    </style>
+
+    <!-- ── Page Header ── -->
+    <div class="cf-header">
+      <p class="cf-eyebrow">Dokumen Karir</p>
+      <h2 class="cf-title">Career Foundation</h2>
+      <p class="cf-sub">Semua dokumen siap kirim — CV, cover letter, surat lamaran, dan template email dalam satu tempat.</p>
     </div>
 
-    <!-- ══════════════════════════════════════════════════════════════
-         TAB 1 — PROFIL & RESUME
-    ══════════════════════════════════════════════════════════════ -->
+    <!-- ── Tab strip ── -->
+    <div class="cf-tabs">
+      <button
+        v-for="tab in tabs" :key="tab.key"
+        class="cf-tab"
+        :class="{ active: activeTab === tab.key }"
+        @click="activeTab = tab.key">
+        {{ tab.label }}
+      </button>
+    </div>
+
+    <!-- ══ TAB: PROFIL & RESUME ══ -->
     <transition name="cf-fade">
     <div v-if="activeTab === 'resume'" key="resume">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
-        <span style="font-size:11px; font-weight:700; letter-spacing:0.08em; color:var(--color-terracotta); text-transform:uppercase;">01 — Profil & Resume</span>
-        <button @click="editResume" style="display:inline-flex; align-items:center; gap:6px; padding:7px 16px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:8px; font-size:12px; font-weight:600; color:var(--text-dark); cursor:pointer;">
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          Edit Profil
+      <div class="cf-section-bar">
+        <span class="cf-section-label">Profil</span>
+        <button class="cf-btn-ghost" @click="editResume">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit profil
         </button>
       </div>
-
-      <div style="background:#fff; border:1.5px solid var(--color-sand); border-radius:16px; overflow:hidden; box-shadow:var(--shadow-sm);">
-        <!-- Name bar -->
-        <div style="background:linear-gradient(135deg, var(--color-terracotta) 0%, #C4673E 100%); padding:24px 28px;">
-          <h3 style="font-size:22px; font-weight:800; color:#fff; letter-spacing:0.3px; margin:0 0 2px;">{{ resume.name || 'Nama Lengkap' }}</h3>
-          <p style="font-size:13px; color:rgba(255,255,255,0.85); margin:0 0 12px; font-weight:500;">{{ resume.title || 'Posisi / Bidang Karir' }}</p>
-          <div style="display:flex; flex-wrap:wrap; gap:14px;">
-            <span v-if="resume.email" style="display:inline-flex; align-items:center; gap:5px; font-size:11.5px; color:rgba(255,255,255,0.9);">
+      <div class="cf-profile-card">
+        <div class="cf-profile-head">
+          <p class="cf-profile-name">{{ resume.name || 'Nama Lengkap' }}</p>
+          <p class="cf-profile-title">{{ resume.title || 'Posisi / Bidang Karir' }}</p>
+          <div class="cf-profile-contacts">
+            <span v-if="resume.email" class="cf-profile-contact">
               <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
               {{ resume.email }}
             </span>
-            <span v-if="resume.phone" style="display:inline-flex; align-items:center; gap:5px; font-size:11.5px; color:rgba(255,255,255,0.9);">
+            <span v-if="resume.phone" class="cf-profile-contact">
               <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.42C1.61 2.22 2.5 1.22 3.7 1H6.7a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.29 6.29l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
               {{ resume.phone }}
             </span>
-            <span v-if="resume.location" style="display:inline-flex; align-items:center; gap:5px; font-size:11.5px; color:rgba(255,255,255,0.9);">
+            <span v-if="resume.location" class="cf-profile-contact">
               <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               {{ resume.location }}
             </span>
-            <span v-if="resume.linkedin" style="display:inline-flex; align-items:center; gap:5px; font-size:11.5px; color:rgba(255,255,255,0.9);">
+            <span v-if="resume.linkedin" class="cf-profile-contact">
               <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
               {{ resume.linkedin }}
             </span>
           </div>
         </div>
-
-        <!-- Resume body -->
-        <div v-if="resume.summary || resume.skills || resume.experience || resume.education || resume.languages" style="padding:24px 28px; display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-          <div style="grid-column:1/-1;" v-if="resume.summary">
-            <p style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--color-terracotta); margin:0 0 7px;">Tentang Saya</p>
-            <p style="font-size:13.5px; color:var(--text-dark); line-height:1.75; white-space:pre-wrap; margin:0;">{{ resume.summary }}</p>
+        <div v-if="resume.summary || resume.skills || resume.experience || resume.education || resume.languages" class="cf-profile-body">
+          <div v-if="resume.summary" class="cf-profile-section-full">
+            <span class="cf-profile-section-label">Tentang Saya</span>
+            <p class="cf-profile-section-text">{{ resume.summary }}</p>
           </div>
           <div v-if="resume.skills">
-            <p style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--color-terracotta); margin:0 0 7px;">Keahlian</p>
-            <p style="font-size:13px; color:var(--text-dark); line-height:1.8; white-space:pre-wrap; margin:0;">{{ resume.skills }}</p>
+            <span class="cf-profile-section-label">Keahlian</span>
+            <p class="cf-profile-section-text">{{ resume.skills }}</p>
           </div>
           <div v-if="resume.experience">
-            <p style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--color-terracotta); margin:0 0 7px;">Pengalaman</p>
-            <p style="font-size:13px; color:var(--text-dark); line-height:1.8; white-space:pre-wrap; margin:0;">{{ resume.experience }}</p>
+            <span class="cf-profile-section-label">Pengalaman</span>
+            <p class="cf-profile-section-text">{{ resume.experience }}</p>
           </div>
           <div v-if="resume.education">
-            <p style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--color-terracotta); margin:0 0 7px;">Pendidikan</p>
-            <p style="font-size:13px; color:var(--text-dark); line-height:1.8; white-space:pre-wrap; margin:0;">{{ resume.education }}</p>
+            <span class="cf-profile-section-label">Pendidikan</span>
+            <p class="cf-profile-section-text">{{ resume.education }}</p>
           </div>
           <div v-if="resume.languages">
-            <p style="font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--color-terracotta); margin:0 0 7px;">Bahasa</p>
-            <p style="font-size:13px; color:var(--text-dark); line-height:1.8; white-space:pre-wrap; margin:0;">{{ resume.languages }}</p>
+            <span class="cf-profile-section-label">Bahasa</span>
+            <p class="cf-profile-section-text">{{ resume.languages }}</p>
           </div>
         </div>
-        <div v-else style="padding:40px 24px; text-align:center; color:var(--text-muted);">
-          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="var(--color-sand)" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px; display:block;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <p style="font-size:14px; font-weight:700; margin:0 0 4px;">Profil belum diisi</p>
-          <p style="font-size:12.5px; margin:0;">Klik <strong>Edit Profil</strong> untuk mulai mengisi resume kamu.</p>
+        <div v-else class="cf-profile-empty">
+          <p class="cf-profile-empty-text">Profil belum diisi</p>
+          <p class="cf-profile-empty-sub">Klik Edit profil untuk mulai mengisi resume kamu.</p>
         </div>
       </div>
     </div>
     </transition>
 
-    <!-- ══════════════════════════════════════════════════════════════
-         TAB 2 — CV ATS
-    ══════════════════════════════════════════════════════════════ -->
+    <!-- ══ TAB: CV ATS ══ -->
     <transition name="cf-fade">
     <div v-if="activeTab === 'cv'" key="cv">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
-        <span style="font-size:11px; font-weight:700; letter-spacing:0.08em; color:#6366F1; text-transform:uppercase;">📄 CV ATS — Applicant Tracking System</span>
-        <button @click="openAddDocOfType('cv')" style="display:inline-flex; align-items:center; gap:6px; padding:7px 16px; background:#6366F1; border:none; border-radius:8px; font-size:12px; font-weight:600; color:#fff; cursor:pointer;">
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Tambah CV
+      <div class="cf-section-bar">
+        <span class="cf-section-label">CV ATS</span>
+        <button class="cf-btn-ghost" @click="copyAtsCVText">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          {{ atsCopySuccess ? 'Tersalin!' : 'Salin teks CV' }}
         </button>
       </div>
-
-      <!-- ATS tip banner -->
-      <div style="background:linear-gradient(135deg,#EEF2FF,#E0E7FF); border:1.5px solid #C7D2FE; border-radius:12px; padding:14px 18px; margin-bottom:20px; display:flex; gap:12px; align-items:flex-start;">
-        <span style="font-size:20px; flex-shrink:0;">💡</span>
-        <div>
-          <p style="font-size:12px; font-weight:700; color:#4338CA; margin:0 0 4px;">Tips CV ATS-Friendly</p>
-          <p style="font-size:11.5px; color:#4338CA; line-height:1.6; margin:0;">Gunakan format teks biasa, hindari tabel/kolom kompleks, cantumkan kata kunci dari deskripsi pekerjaan, dan gunakan heading standar (Pengalaman, Pendidikan, Keahlian).</p>
+      <div class="cf-tip">
+        <p class="cf-tip-title">CV ATS-Friendly</p>
+        <p class="cf-tip-text">Teks bersih, heading standar, tanpa kolom atau tabel kompleks. Klik tombol edit di tiap bagian untuk mengisi konten.</p>
+      </div>
+      <div class="cf-ats-wrap">
+        <div class="cf-ats-head">
+          <button class="cf-ats-edit-btn" @click="openAtsEditSection('header')">Edit</button>
+          <h3 class="cf-ats-name">{{ atsCV.name || 'Nama Lengkap' }}</h3>
+          <p class="cf-ats-role">{{ atsCV.title || 'Posisi yang Dilamar / Bidang Keahlian' }}</p>
+          <div class="cf-ats-contacts">
+            <span class="cf-ats-contact">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              {{ atsCV.email || 'email@kamu.com' }}
+            </span>
+            <span class="cf-ats-contact">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.42C1.61 2.22 2.5 1.22 3.7 1H6.7a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.29 6.29l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              {{ atsCV.phone || '08xx-xxxx-xxxx' }}
+            </span>
+            <span v-if="atsCV.location" class="cf-ats-contact">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              {{ atsCV.location }}
+            </span>
+            <span v-if="atsCV.linkedin" class="cf-ats-contact">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+              {{ atsCV.linkedin }}
+            </span>
+            <span v-if="atsCV.portfolio" class="cf-ats-contact">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              {{ atsCV.portfolio }}
+            </span>
+          </div>
         </div>
-      </div>
-
-      <div v-if="docsByType('cv').length === 0" style="text-align:center; padding:48px 20px; background:var(--bg-cream); border-radius:14px; border:2px dashed var(--color-sand);">
-        <span style="font-size:40px; display:block; margin-bottom:12px;">📄</span>
-        <p style="font-size:14px; font-weight:700; color:var(--text-dark); margin:0 0 4px;">Belum ada CV tersimpan</p>
-        <p style="font-size:12.5px; color:var(--text-muted); margin:0;">Buat CV ATS-friendly pertama kamu.</p>
-      </div>
-      <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px;">
-        <div v-for="doc in docsByType('cv')" :key="doc.id"
-          style="background:#fff; border:1.5px solid #C7D2FE; border-radius:14px; overflow:hidden; display:flex; flex-direction:column; transition:box-shadow 0.18s;"
-          @mouseenter="e => e.currentTarget.style.boxShadow='0 8px 24px rgba(99,102,241,0.12)'"
-          @mouseleave="e => e.currentTarget.style.boxShadow='none'">
-          <div style="background:linear-gradient(135deg,#6366F1,#4F46E5); padding:14px 16px; display:flex; align-items:center; gap:10px;">
-            <span style="font-size:20px;">📄</span>
-            <div style="flex:1; min-width:0;">
-              <p style="font-size:12.5px; font-weight:700; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ doc.title }}</p>
-              <p v-if="doc.target" style="font-size:11px; color:rgba(255,255,255,0.75); margin:2px 0 0;">{{ doc.target }}</p>
+        <div class="cf-ats-body">
+          <!-- Ringkasan -->
+          <div class="cf-ats-section">
+            <div class="cf-ats-section-bar">
+              <p class="cf-ats-section-title">Ringkasan Profesional</p>
+              <button class="cf-ats-section-btn" @click="openAtsEditSection('summary')">Edit</button>
+            </div>
+            <p v-if="atsCV.summary" class="cf-ats-text">{{ atsCV.summary }}</p>
+            <p v-else class="cf-ats-empty-field" @click="openAtsEditSection('summary')">+ Klik untuk mengisi ringkasan profesional</p>
+          </div>
+          <!-- Pengalaman -->
+          <div class="cf-ats-section">
+            <div class="cf-ats-section-bar">
+              <p class="cf-ats-section-title">Pengalaman Kerja</p>
+              <button class="cf-ats-section-btn" @click="openAtsEditSection('experience')">Edit</button>
+            </div>
+            <div v-if="atsCV.experience">
+              <div v-for="(exp, idx) in parsedExperience" :key="idx" class="cf-ats-exp-entry">
+                <p class="cf-ats-exp-role">{{ exp.role }}</p>
+                <p class="cf-ats-exp-company">{{ exp.company }}</p>
+                <p class="cf-ats-exp-period">{{ exp.period }}</p>
+                <ul class="cf-ats-exp-points">
+                  <li v-for="(pt, i) in exp.points" :key="i" class="cf-ats-exp-point">{{ pt }}</li>
+                </ul>
+              </div>
+            </div>
+            <div v-else>
+              <p class="cf-ats-empty-field" @click="openAtsEditSection('experience')">+ Klik untuk mengisi pengalaman kerja</p>
+              <p style="font-size:11px; color:#CCC; margin:4px 0 0; font-family:'Hack',monospace,sans-serif;">Format: Jabatan | Perusahaan | Periode</p>
             </div>
           </div>
-          <div style="padding:12px 16px; flex:1;">
-            <p style="font-size:12px; color:var(--text-muted); line-height:1.6; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-wrap; margin:0;">{{ doc.content || '(Belum ada isi)' }}</p>
-            <p v-if="doc.updatedAt" style="font-size:10.5px; color:var(--text-muted); margin:8px 0 0; opacity:0.7;">{{ formatLastUpdated(doc.updatedAt) }}</p>
+          <!-- Pendidikan -->
+          <div class="cf-ats-section">
+            <div class="cf-ats-section-bar">
+              <p class="cf-ats-section-title">Pendidikan</p>
+              <button class="cf-ats-section-btn" @click="openAtsEditSection('education')">Edit</button>
+            </div>
+            <div v-if="atsCV.education">
+              <div v-for="(edu, idx) in parsedEducation" :key="idx" class="cf-ats-exp-entry">
+                <p class="cf-ats-exp-role">{{ edu.degree }}</p>
+                <p class="cf-ats-exp-company">{{ edu.school }}</p>
+                <p v-if="edu.period" class="cf-ats-exp-period">{{ edu.period }}</p>
+                <p v-if="edu.detail" style="font-size:12px; color:#888; margin:0;">{{ edu.detail }}</p>
+              </div>
+            </div>
+            <p v-else class="cf-ats-empty-field" @click="openAtsEditSection('education')">+ Klik untuk mengisi pendidikan</p>
           </div>
-          <div style="padding:10px 16px 14px; display:flex; gap:8px; border-top:1px solid #E0E7FF;">
-            <button @click="viewDoc(doc)" style="flex:1; padding:7px; background:#EEF2FF; border:1.5px solid #C7D2FE; border-radius:8px; font-size:12px; font-weight:600; color:#4338CA; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              Lihat
-            </button>
-            <button @click="editDoc(doc)" style="flex:1; padding:7px; background:#EEF2FF; border:1.5px solid #C7D2FE; border-radius:8px; font-size:12px; font-weight:600; color:#4338CA; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              Edit
-            </button>
-            <button @click="deleteDoc(doc.id)" style="padding:7px 10px; background:transparent; border:1.5px solid #FCA5A5; border-radius:8px; color:#EF4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-            </button>
+          <!-- Keahlian -->
+          <div class="cf-ats-section">
+            <div class="cf-ats-section-bar">
+              <p class="cf-ats-section-title">Keahlian</p>
+              <button class="cf-ats-section-btn" @click="openAtsEditSection('skills')">Edit</button>
+            </div>
+            <div v-if="atsCV.skills" class="cf-skills-wrap">
+              <span v-for="(sk, i) in parsedSkills" :key="i" class="cf-skill-tag">{{ sk }}</span>
+            </div>
+            <p v-else class="cf-ats-empty-field" @click="openAtsEditSection('skills')">+ Klik untuk mengisi keahlian</p>
+          </div>
+          <!-- Organisasi -->
+          <div class="cf-ats-section">
+            <div class="cf-ats-section-bar">
+              <p class="cf-ats-section-title">Organisasi & Aktivitas</p>
+              <button class="cf-ats-section-btn" @click="openAtsEditSection('organization')">Edit</button>
+            </div>
+            <div v-if="atsCV.organization">
+              <div v-for="(org, idx) in parsedOrganization" :key="idx" class="cf-ats-exp-entry">
+                <p class="cf-ats-exp-role">{{ org.role }}</p>
+                <p class="cf-ats-exp-company">{{ org.org }}</p>
+                <p v-if="org.period" class="cf-ats-exp-period">{{ org.period }}</p>
+                <ul class="cf-ats-exp-points">
+                  <li v-for="(pt, i) in org.points" :key="i" class="cf-ats-exp-point">{{ pt }}</li>
+                </ul>
+              </div>
+            </div>
+            <p v-else class="cf-ats-empty-field" @click="openAtsEditSection('organization')">+ Klik untuk mengisi organisasi</p>
+          </div>
+          <!-- Bahasa -->
+          <div class="cf-ats-section">
+            <div class="cf-ats-section-bar">
+              <p class="cf-ats-section-title">Kemampuan Bahasa</p>
+              <button class="cf-ats-section-btn" @click="openAtsEditSection('languages')">Edit</button>
+            </div>
+            <div v-if="atsCV.languages">
+              <div v-for="(lang, i) in parsedLanguages" :key="i" class="cf-lang-item">
+                <span>{{ lang.name }}</span>
+                <span v-if="lang.level" class="cf-lang-level">{{ lang.level }}</span>
+              </div>
+            </div>
+            <p v-else class="cf-ats-empty-field" @click="openAtsEditSection('languages')">+ Klik untuk mengisi kemampuan bahasa</p>
+          </div>
+          <!-- Sertifikasi -->
+          <div class="cf-ats-section">
+            <div class="cf-ats-section-bar">
+              <p class="cf-ats-section-title">Sertifikasi & Penghargaan</p>
+              <button class="cf-ats-section-btn" @click="openAtsEditSection('certifications')">Edit</button>
+            </div>
+            <div v-if="atsCV.certifications">
+              <ul class="cf-cert-list">
+                <li v-for="(cert, i) in parsedCertifications" :key="i" class="cf-cert-item">{{ cert }}</li>
+              </ul>
+            </div>
+            <p v-else class="cf-ats-empty-field" @click="openAtsEditSection('certifications')">+ Klik untuk mengisi sertifikasi</p>
           </div>
         </div>
       </div>
     </div>
     </transition>
 
-    <!-- ══════════════════════════════════════════════════════════════
-         TAB 3 — COVER LETTER
-    ══════════════════════════════════════════════════════════════ -->
+    <!-- ══ TAB: COVER LETTER ══ -->
     <transition name="cf-fade">
     <div v-if="activeTab === 'cover_letter'" key="cover_letter">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
-        <span style="font-size:11px; font-weight:700; letter-spacing:0.08em; color:var(--color-terracotta); text-transform:uppercase;">✉️ Cover Letter (Bahasa Inggris)</span>
-        <button @click="openAddDocOfType('cover_letter')" style="display:inline-flex; align-items:center; gap:6px; padding:7px 16px; background:var(--color-terracotta); border:none; border-radius:8px; font-size:12px; font-weight:600; color:#fff; cursor:pointer;">
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Tambah Cover Letter
+      <div class="cf-section-bar">
+        <span class="cf-section-label">Cover Letter · {{ docsByType('cover_letter').length }} dokumen</span>
+        <button class="cf-btn-primary" @click="openAddDocOfType('cover_letter')">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah
         </button>
       </div>
-
-      <!-- Cover letter tip -->
-      <div style="background:linear-gradient(135deg,#FFF5F0,#FFEDE5); border:1.5px solid #FDD0BB; border-radius:12px; padding:14px 18px; margin-bottom:20px; display:flex; gap:12px; align-items:flex-start;">
-        <span style="font-size:20px; flex-shrink:0;">✍️</span>
-        <div>
-          <p style="font-size:12px; font-weight:700; color:#C4673E; margin:0 0 4px;">Struktur Cover Letter yang Kuat</p>
-          <p style="font-size:11.5px; color:#C4673E; line-height:1.6; margin:0;">Opening hook → Kenapa kamu tertarik → Apa yang kamu bawa → Closing CTA. Jaga di bawah 300 kata, personal, dan spesifik ke perusahaan.</p>
-        </div>
+      <div class="cf-tip">
+        <p class="cf-tip-title">Struktur Cover Letter</p>
+        <p class="cf-tip-text">Opening hook → kenapa kamu tertarik → apa yang kamu bawa → closing CTA. Jaga di bawah 300 kata, personal, dan spesifik ke perusahaan.</p>
       </div>
-
-      <div v-if="docsByType('cover_letter').length === 0" style="text-align:center; padding:48px 20px; background:var(--bg-cream); border-radius:14px; border:2px dashed var(--color-sand);">
-        <span style="font-size:40px; display:block; margin-bottom:12px;">✉️</span>
-        <p style="font-size:14px; font-weight:700; color:var(--text-dark); margin:0 0 4px;">Belum ada Cover Letter</p>
-        <p style="font-size:12.5px; color:var(--text-muted); margin:0;">Buat cover letter impresif untuk tiap lamaran.</p>
+      <div v-if="docsByType('cover_letter').length === 0" class="cf-empty">
+        <p class="cf-empty-label">Belum ada Cover Letter</p>
+        <p class="cf-empty-sub">Buat cover letter impresif untuk tiap lamaran.</p>
       </div>
-      <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px;">
-        <div v-for="doc in docsByType('cover_letter')" :key="doc.id"
-          style="background:#fff; border:1.5px solid #FDD0BB; border-radius:14px; overflow:hidden; display:flex; flex-direction:column; transition:box-shadow 0.18s;"
-          @mouseenter="e => e.currentTarget.style.boxShadow='0 8px 24px rgba(214,123,82,0.12)'"
-          @mouseleave="e => e.currentTarget.style.boxShadow='none'">
-          <div style="background:linear-gradient(135deg,var(--color-terracotta),#C4673E); padding:14px 16px; display:flex; align-items:center; gap:10px;">
-            <span style="font-size:20px;">✉️</span>
-            <div style="flex:1; min-width:0;">
-              <p style="font-size:12.5px; font-weight:700; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ doc.title }}</p>
-              <p v-if="doc.target" style="font-size:11px; color:rgba(255,255,255,0.75); margin:2px 0 0;">🎯 {{ doc.target }}</p>
+      <div v-else class="cf-doc-list">
+        <div v-for="doc in docsByType('cover_letter')" :key="doc.id" class="cf-doc-row">
+          <span class="cf-doc-type-dot" style="background:#D67B52;"></span>
+          <div class="cf-doc-info">
+            <p class="cf-doc-title">{{ doc.title }}</p>
+            <div class="cf-doc-meta">
+              <span v-if="doc.target">{{ doc.target }}</span>
+              <span v-if="doc.updatedAt">{{ formatLastUpdated(doc.updatedAt) }}</span>
             </div>
           </div>
-          <div style="padding:12px 16px; flex:1;">
-            <p style="font-size:12px; color:var(--text-muted); line-height:1.6; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-wrap; margin:0;">{{ doc.content || '(Belum ada isi)' }}</p>
-            <p v-if="doc.updatedAt" style="font-size:10.5px; color:var(--text-muted); margin:8px 0 0; opacity:0.7;">{{ formatLastUpdated(doc.updatedAt) }}</p>
-          </div>
-          <div style="padding:10px 16px 14px; display:flex; gap:8px; border-top:1px solid #FDD0BB;">
-            <button @click="viewDoc(doc)" style="flex:1; padding:7px; background:#FFF5F0; border:1.5px solid #FDD0BB; border-radius:8px; font-size:12px; font-weight:600; color:var(--color-terracotta); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              Lihat
-            </button>
-            <button @click="editDoc(doc)" style="flex:1; padding:7px; background:#FFF5F0; border:1.5px solid #FDD0BB; border-radius:8px; font-size:12px; font-weight:600; color:var(--color-terracotta); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              Edit
-            </button>
-            <button @click="deleteDoc(doc.id)" style="padding:7px 10px; background:transparent; border:1.5px solid #FCA5A5; border-radius:8px; color:#EF4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          <div class="cf-doc-actions">
+            <button class="cf-doc-action-btn" @click="viewDoc(doc)">Lihat</button>
+            <button class="cf-doc-action-btn" @click="editDoc(doc)">Edit</button>
+            <button class="cf-doc-action-btn del" @click="deleteDoc(doc.id)">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
             </button>
           </div>
         </div>
@@ -12087,60 +12686,39 @@ const CareerFoundation = {
     </div>
     </transition>
 
-    <!-- ══════════════════════════════════════════════════════════════
-         TAB 4 — SURAT LAMARAN
-    ══════════════════════════════════════════════════════════════ -->
+    <!-- ══ TAB: SURAT LAMARAN ══ -->
     <transition name="cf-fade">
     <div v-if="activeTab === 'surat_lamaran'" key="surat_lamaran">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
-        <span style="font-size:11px; font-weight:700; letter-spacing:0.08em; color:#059669; text-transform:uppercase;">📝 Surat Lamaran (Bahasa Indonesia)</span>
-        <button @click="openAddDocOfType('surat_lamaran')" style="display:inline-flex; align-items:center; gap:6px; padding:7px 16px; background:#059669; border:none; border-radius:8px; font-size:12px; font-weight:600; color:#fff; cursor:pointer;">
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Tambah Surat Lamaran
+      <div class="cf-section-bar">
+        <span class="cf-section-label">Surat Lamaran · {{ docsByType('surat_lamaran').length }} dokumen</span>
+        <button class="cf-btn-primary" @click="openAddDocOfType('surat_lamaran')">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah
         </button>
       </div>
-
-      <!-- Tip surat lamaran -->
-      <div style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7); border:1.5px solid #A7F3D0; border-radius:12px; padding:14px 18px; margin-bottom:20px; display:flex; gap:12px; align-items:flex-start;">
-        <span style="font-size:20px; flex-shrink:0;">📌</span>
-        <div>
-          <p style="font-size:12px; font-weight:700; color:#065F46; margin:0 0 4px;">Surat Lamaran Formal yang Efektif</p>
-          <p style="font-size:11.5px; color:#065F46; line-height:1.6; margin:0;">Sertakan: tanggal, nama HRD, perkenalan diri, posisi yang dilamar, pengalaman relevan, dan penutup sopan. Gunakan bahasa baku dan hindari typo!</p>
-        </div>
+      <div class="cf-tip">
+        <p class="cf-tip-title">Surat Lamaran Formal</p>
+        <p class="cf-tip-text">Sertakan: tanggal, nama HRD, perkenalan diri, posisi yang dilamar, pengalaman relevan, dan penutup sopan. Gunakan bahasa baku.</p>
       </div>
-
-      <div v-if="docsByType('surat_lamaran').length === 0" style="text-align:center; padding:48px 20px; background:var(--bg-cream); border-radius:14px; border:2px dashed var(--color-sand);">
-        <span style="font-size:40px; display:block; margin-bottom:12px;">📝</span>
-        <p style="font-size:14px; font-weight:700; color:var(--text-dark); margin:0 0 4px;">Belum ada Surat Lamaran</p>
-        <p style="font-size:12.5px; color:var(--text-muted); margin:0;">Buat surat lamaran formal untuk tiap perusahaan.</p>
+      <div v-if="docsByType('surat_lamaran').length === 0" class="cf-empty">
+        <p class="cf-empty-label">Belum ada Surat Lamaran</p>
+        <p class="cf-empty-sub">Buat surat lamaran formal untuk tiap perusahaan.</p>
       </div>
-      <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px;">
-        <div v-for="doc in docsByType('surat_lamaran')" :key="doc.id"
-          style="background:#fff; border:1.5px solid #A7F3D0; border-radius:14px; overflow:hidden; display:flex; flex-direction:column; transition:box-shadow 0.18s;"
-          @mouseenter="e => e.currentTarget.style.boxShadow='0 8px 24px rgba(5,150,105,0.12)'"
-          @mouseleave="e => e.currentTarget.style.boxShadow='none'">
-          <div style="background:linear-gradient(135deg,#059669,#047857); padding:14px 16px; display:flex; align-items:center; gap:10px;">
-            <span style="font-size:20px;">📝</span>
-            <div style="flex:1; min-width:0;">
-              <p style="font-size:12.5px; font-weight:700; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ doc.title }}</p>
-              <p v-if="doc.target" style="font-size:11px; color:rgba(255,255,255,0.75); margin:2px 0 0;">🎯 {{ doc.target }}</p>
+      <div v-else class="cf-doc-list">
+        <div v-for="doc in docsByType('surat_lamaran')" :key="doc.id" class="cf-doc-row">
+          <span class="cf-doc-type-dot" style="background:#059669;"></span>
+          <div class="cf-doc-info">
+            <p class="cf-doc-title">{{ doc.title }}</p>
+            <div class="cf-doc-meta">
+              <span v-if="doc.target">{{ doc.target }}</span>
+              <span v-if="doc.updatedAt">{{ formatLastUpdated(doc.updatedAt) }}</span>
             </div>
           </div>
-          <div style="padding:12px 16px; flex:1;">
-            <p style="font-size:12px; color:var(--text-muted); line-height:1.6; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-wrap; margin:0;">{{ doc.content || '(Belum ada isi)' }}</p>
-            <p v-if="doc.updatedAt" style="font-size:10.5px; color:var(--text-muted); margin:8px 0 0; opacity:0.7;">{{ formatLastUpdated(doc.updatedAt) }}</p>
-          </div>
-          <div style="padding:10px 16px 14px; display:flex; gap:8px; border-top:1px solid #A7F3D0;">
-            <button @click="viewDoc(doc)" style="flex:1; padding:7px; background:#F0FDF4; border:1.5px solid #A7F3D0; border-radius:8px; font-size:12px; font-weight:600; color:#059669; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              Lihat
-            </button>
-            <button @click="editDoc(doc)" style="flex:1; padding:7px; background:#F0FDF4; border:1.5px solid #A7F3D0; border-radius:8px; font-size:12px; font-weight:600; color:#059669; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              Edit
-            </button>
-            <button @click="deleteDoc(doc.id)" style="padding:7px 10px; background:transparent; border:1.5px solid #FCA5A5; border-radius:8px; color:#EF4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          <div class="cf-doc-actions">
+            <button class="cf-doc-action-btn" @click="viewDoc(doc)">Lihat</button>
+            <button class="cf-doc-action-btn" @click="editDoc(doc)">Edit</button>
+            <button class="cf-doc-action-btn del" @click="deleteDoc(doc.id)">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
             </button>
           </div>
         </div>
@@ -12148,60 +12726,39 @@ const CareerFoundation = {
     </div>
     </transition>
 
-    <!-- ══════════════════════════════════════════════════════════════
-         TAB 5 — BODY EMAIL
-    ══════════════════════════════════════════════════════════════ -->
+    <!-- ══ TAB: BODY EMAIL ══ -->
     <transition name="cf-fade">
     <div v-if="activeTab === 'body_email'" key="body_email">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
-        <span style="font-size:11px; font-weight:700; letter-spacing:0.08em; color:#0369A1; text-transform:uppercase;">📧 Body Email Lamaran</span>
-        <button @click="openAddDocOfType('body_email')" style="display:inline-flex; align-items:center; gap:6px; padding:7px 16px; background:#0369A1; border:none; border-radius:8px; font-size:12px; font-weight:600; color:#fff; cursor:pointer;">
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Tambah Body Email
+      <div class="cf-section-bar">
+        <span class="cf-section-label">Body Email · {{ docsByType('body_email').length }} dokumen</span>
+        <button class="cf-btn-primary" @click="openAddDocOfType('body_email')">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah
         </button>
       </div>
-
-      <!-- Tip email -->
-      <div style="background:linear-gradient(135deg,#F0F9FF,#E0F2FE); border:1.5px solid #BAE6FD; border-radius:12px; padding:14px 18px; margin-bottom:20px; display:flex; gap:12px; align-items:flex-start;">
-        <span style="font-size:20px; flex-shrink:0;">📬</span>
-        <div>
-          <p style="font-size:12px; font-weight:700; color:#075985; margin:0 0 4px;">Formula Body Email yang Dilirik HRD</p>
-          <p style="font-size:11.5px; color:#075985; line-height:1.6; margin:0;">Subject jelas (Nama | Posisi), salam profesional, 2–3 paragraf padat: perkenalan → nilai tambah → lampiran, dan tutup dengan salam hormat.</p>
-        </div>
+      <div class="cf-tip">
+        <p class="cf-tip-title">Formula Email yang Dilirik HRD</p>
+        <p class="cf-tip-text">Subject jelas (Nama | Posisi), salam profesional, 2–3 paragraf padat: perkenalan → nilai tambah → lampiran, lalu tutup dengan salam.</p>
       </div>
-
-      <div v-if="docsByType('body_email').length === 0" style="text-align:center; padding:48px 20px; background:var(--bg-cream); border-radius:14px; border:2px dashed var(--color-sand);">
-        <span style="font-size:40px; display:block; margin-bottom:12px;">📧</span>
-        <p style="font-size:14px; font-weight:700; color:var(--text-dark); margin:0 0 4px;">Belum ada Body Email</p>
-        <p style="font-size:12.5px; color:var(--text-muted); margin:0;">Simpan template email lamaranmu di sini.</p>
+      <div v-if="docsByType('body_email').length === 0" class="cf-empty">
+        <p class="cf-empty-label">Belum ada Body Email</p>
+        <p class="cf-empty-sub">Simpan template email lamaranmu di sini.</p>
       </div>
-      <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px;">
-        <div v-for="doc in docsByType('body_email')" :key="doc.id"
-          style="background:#fff; border:1.5px solid #BAE6FD; border-radius:14px; overflow:hidden; display:flex; flex-direction:column; transition:box-shadow 0.18s;"
-          @mouseenter="e => e.currentTarget.style.boxShadow='0 8px 24px rgba(3,105,161,0.12)'"
-          @mouseleave="e => e.currentTarget.style.boxShadow='none'">
-          <div style="background:linear-gradient(135deg,#0369A1,#0284C7); padding:14px 16px; display:flex; align-items:center; gap:10px;">
-            <span style="font-size:20px;">📧</span>
-            <div style="flex:1; min-width:0;">
-              <p style="font-size:12.5px; font-weight:700; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ doc.title }}</p>
-              <p v-if="doc.target" style="font-size:11px; color:rgba(255,255,255,0.75); margin:2px 0 0;">🎯 {{ doc.target }}</p>
+      <div v-else class="cf-doc-list">
+        <div v-for="doc in docsByType('body_email')" :key="doc.id" class="cf-doc-row">
+          <span class="cf-doc-type-dot" style="background:#0369A1;"></span>
+          <div class="cf-doc-info">
+            <p class="cf-doc-title">{{ doc.title }}</p>
+            <div class="cf-doc-meta">
+              <span v-if="doc.target">{{ doc.target }}</span>
+              <span v-if="doc.updatedAt">{{ formatLastUpdated(doc.updatedAt) }}</span>
             </div>
           </div>
-          <div style="padding:12px 16px; flex:1;">
-            <p style="font-size:12px; color:var(--text-muted); line-height:1.6; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-wrap; margin:0;">{{ doc.content || '(Belum ada isi)' }}</p>
-            <p v-if="doc.updatedAt" style="font-size:10.5px; color:var(--text-muted); margin:8px 0 0; opacity:0.7;">{{ formatLastUpdated(doc.updatedAt) }}</p>
-          </div>
-          <div style="padding:10px 16px 14px; display:flex; gap:8px; border-top:1px solid #BAE6FD;">
-            <button @click="viewDoc(doc)" style="flex:1; padding:7px; background:#F0F9FF; border:1.5px solid #BAE6FD; border-radius:8px; font-size:12px; font-weight:600; color:#0369A1; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              Lihat
-            </button>
-            <button @click="editDoc(doc)" style="flex:1; padding:7px; background:#F0F9FF; border:1.5px solid #BAE6FD; border-radius:8px; font-size:12px; font-weight:600; color:#0369A1; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              Edit
-            </button>
-            <button @click="deleteDoc(doc.id)" style="padding:7px 10px; background:transparent; border:1.5px solid #FCA5A5; border-radius:8px; color:#EF4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          <div class="cf-doc-actions">
+            <button class="cf-doc-action-btn" @click="viewDoc(doc)">Lihat</button>
+            <button class="cf-doc-action-btn" @click="editDoc(doc)">Edit</button>
+            <button class="cf-doc-action-btn del" @click="deleteDoc(doc.id)">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
             </button>
           </div>
         </div>
@@ -12209,52 +12766,36 @@ const CareerFoundation = {
     </div>
     </transition>
 
-    <!-- ══════════════════════════════════════════════════════════════
-         TAB 6 — SEMUA DOKUMEN
-    ══════════════════════════════════════════════════════════════ -->
+    <!-- ══ TAB: SEMUA DOKUMEN ══ -->
     <transition name="cf-fade">
     <div v-if="activeTab === 'all'" key="all">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
-        <span style="font-size:11px; font-weight:700; letter-spacing:0.08em; color:var(--text-muted); text-transform:uppercase;">📂 Semua Dokumen ({{ docs.length }})</span>
-        <button @click="openAddDoc" style="display:inline-flex; align-items:center; gap:6px; padding:7px 16px; background:var(--color-forest); border:none; border-radius:8px; font-size:12px; font-weight:600; color:#fff; cursor:pointer;">
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <div class="cf-section-bar">
+        <span class="cf-section-label">Semua Dokumen · {{ docs.length }}</span>
+        <button class="cf-btn-primary" @click="openAddDoc">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Tambah Dokumen
         </button>
       </div>
-
-      <div v-if="docs.length === 0" style="text-align:center; padding:48px 20px; background:var(--bg-cream); border-radius:14px; border:2px dashed var(--color-sand);">
-        <span style="font-size:40px; display:block; margin-bottom:12px;">📂</span>
-        <p style="font-size:14px; font-weight:700; color:var(--text-dark); margin:0 0 4px;">Belum ada dokumen</p>
-        <p style="font-size:12.5px; color:var(--text-muted); margin:0;">Tambahkan dokumen karir pertamamu.</p>
+      <div v-if="docs.length === 0" class="cf-empty">
+        <p class="cf-empty-label">Belum ada dokumen</p>
+        <p class="cf-empty-sub">Tambahkan dokumen karir pertamamu.</p>
       </div>
-      <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px;">
-        <div v-for="doc in docs" :key="doc.id"
-          style="background:#fff; border:1.5px solid var(--color-sand); border-radius:14px; overflow:hidden; display:flex; flex-direction:column; transition:box-shadow 0.18s;"
-          @mouseenter="e => e.currentTarget.style.boxShadow='var(--shadow-md)'"
-          @mouseleave="e => e.currentTarget.style.boxShadow='none'">
-          <div :style="{ background: 'linear-gradient(135deg,' + docTypeColor(doc.type) + ',' + docTypeColorDark(doc.type) + ')', padding:'14px 16px', display:'flex', alignItems:'center', gap:'10px' }">
-            <span style="font-size:20px;">{{ docTypeEmoji(doc.type) }}</span>
-            <div style="flex:1; min-width:0;">
-              <p style="font-size:12.5px; font-weight:700; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ doc.title }}</p>
-              <p style="font-size:10.5px; color:rgba(255,255,255,0.75); margin:2px 0 0;">{{ docTypeLabel(doc.type) }}</p>
+      <div v-else class="cf-doc-list">
+        <div v-for="doc in docs" :key="doc.id" class="cf-doc-row">
+          <span class="cf-doc-type-dot" :style="{ background: docTypeColor(doc.type) }"></span>
+          <div class="cf-doc-info">
+            <p class="cf-doc-title">{{ doc.title }}</p>
+            <div class="cf-doc-meta">
+              <span class="cf-doc-type-badge" :style="{ background: docTypeColor(doc.type) + '18', color: docTypeColor(doc.type) }">{{ docTypeLabel(doc.type) }}</span>
+              <span v-if="doc.target">{{ doc.target }}</span>
+              <span v-if="doc.updatedAt">{{ formatLastUpdated(doc.updatedAt) }}</span>
             </div>
           </div>
-          <div style="padding:12px 16px; flex:1;">
-            <p style="font-size:12px; color:var(--text-muted); line-height:1.6; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-wrap; margin:0;">{{ doc.content || '(Belum ada isi)' }}</p>
-            <p v-if="doc.target" style="font-size:11px; color:var(--color-terracotta); font-weight:600; margin:8px 0 0;">🎯 {{ doc.target }}</p>
-            <p v-if="doc.updatedAt" style="font-size:10.5px; color:var(--text-muted); margin:6px 0 0; opacity:0.7;">{{ formatLastUpdated(doc.updatedAt) }}</p>
-          </div>
-          <div style="padding:10px 16px 14px; display:flex; gap:8px; border-top:1px solid var(--color-sand);">
-            <button @click="viewDoc(doc)" style="flex:1; padding:7px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:8px; font-size:12px; font-weight:600; color:var(--text-dark); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              Lihat
-            </button>
-            <button @click="editDoc(doc)" style="flex:1; padding:7px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:8px; font-size:12px; font-weight:600; color:var(--text-dark); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              Edit
-            </button>
-            <button @click="deleteDoc(doc.id)" style="padding:7px 10px; background:transparent; border:1.5px solid #FCA5A5; border-radius:8px; color:#EF4444; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          <div class="cf-doc-actions">
+            <button class="cf-doc-action-btn" @click="viewDoc(doc)">Lihat</button>
+            <button class="cf-doc-action-btn" @click="editDoc(doc)">Edit</button>
+            <button class="cf-doc-action-btn del" @click="deleteDoc(doc.id)">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
             </button>
           </div>
         </div>
@@ -12262,151 +12803,189 @@ const CareerFoundation = {
     </div>
     </transition>
 
-
-    <!-- ══════════════════════════════════════════════════════════════════
-         MODAL: Edit Resume
-    ══════════════════════════════════════════════════════════════════ -->
+    <!-- ══ MODAL: Edit Resume ══ -->
     <transition name="cf-fade">
-      <div v-if="showResumeModal" style="position:fixed; inset:0; z-index:9990; background:rgba(44,38,33,0.45); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:16px;" @click.self="showResumeModal=false">
-        <div style="background:#fff; border-radius:18px; width:min(640px,100%); max-height:88vh; overflow-y:auto; box-shadow:var(--shadow-lg); display:flex; flex-direction:column;">
-          <div style="padding:20px 24px 14px; border-bottom:1.5px solid var(--color-sand); display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; background:#fff; z-index:1;">
-            <h3 style="font-size:16px; font-weight:800; color:var(--text-dark);">✏️ Edit Profil & Resume</h3>
-            <button @click="showResumeModal=false" style="background:none; border:none; cursor:pointer; color:var(--text-muted); padding:4px;">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <div v-if="showResumeModal" class="cf-modal-overlay" @click.self="showResumeModal=false">
+        <div class="cf-modal cf-modal-wide">
+          <div class="cf-modal-header">
+            <h3 class="cf-modal-title">Edit Profil & Resume</h3>
+            <button class="cf-modal-close" @click="showResumeModal=false">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
-          <div style="padding:20px 24px; display:flex; flex-direction:column; gap:14px;">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="cf-modal-body">
+            <div class="cf-input-grid-2">
               <div>
-                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Nama Lengkap *</label>
-                <input v-model="resumeForm.name" placeholder="Nadya Rahma Putri" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; box-sizing:border-box;"/>
+                <label class="cf-field-label">Nama Lengkap *</label>
+                <input class="cf-input" v-model="resumeForm.name" placeholder="Nadya Rahma Putri"/>
               </div>
               <div>
-                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Posisi / Bidang</label>
-                <input v-model="resumeForm.title" placeholder="Social Media Specialist" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; box-sizing:border-box;"/>
+                <label class="cf-field-label">Posisi / Bidang</label>
+                <input class="cf-input" v-model="resumeForm.title" placeholder="Social Media Specialist"/>
               </div>
               <div>
-                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Email</label>
-                <input v-model="resumeForm.email" placeholder="nadya@email.com" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; box-sizing:border-box;"/>
+                <label class="cf-field-label">Email</label>
+                <input class="cf-input" v-model="resumeForm.email" placeholder="nadya@email.com"/>
               </div>
               <div>
-                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">No. HP</label>
-                <input v-model="resumeForm.phone" placeholder="08xx-xxxx-xxxx" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; box-sizing:border-box;"/>
+                <label class="cf-field-label">No. HP</label>
+                <input class="cf-input" v-model="resumeForm.phone" placeholder="08xx-xxxx-xxxx"/>
               </div>
               <div>
-                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Lokasi</label>
-                <input v-model="resumeForm.location" placeholder="Bandung, Jawa Barat" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; box-sizing:border-box;"/>
+                <label class="cf-field-label">Lokasi</label>
+                <input class="cf-input" v-model="resumeForm.location" placeholder="Bandung, Jawa Barat"/>
               </div>
               <div>
-                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">LinkedIn / Portofolio</label>
-                <input v-model="resumeForm.linkedin" placeholder="linkedin.com/in/nadya" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; box-sizing:border-box;"/>
+                <label class="cf-field-label">LinkedIn / Portofolio</label>
+                <input class="cf-input" v-model="resumeForm.linkedin" placeholder="linkedin.com/in/nadya"/>
               </div>
             </div>
             <div>
-              <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Tentang Saya / Summary</label>
-              <textarea v-model="resumeForm.summary" rows="4" placeholder="Perkenalan singkat tentang diri kamu..." style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; resize:vertical; line-height:1.6; box-sizing:border-box;"></textarea>
+              <label class="cf-field-label">Tentang Saya / Summary</label>
+              <textarea class="cf-textarea" v-model="resumeForm.summary" rows="4" placeholder="Perkenalan singkat tentang diri kamu..."></textarea>
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="cf-input-grid-2">
               <div>
-                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Keahlian (satu baris = satu skill)</label>
-                <textarea v-model="resumeForm.skills" rows="4" placeholder="Copywriting&#10;Social Media Management&#10;Canva & Adobe Suite" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; resize:vertical; line-height:1.7; box-sizing:border-box;"></textarea>
+                <label class="cf-field-label">Keahlian (satu baris = satu skill)</label>
+                <textarea class="cf-textarea" v-model="resumeForm.skills" rows="4" placeholder="Copywriting&#10;Social Media Management&#10;Canva & Adobe Suite"></textarea>
               </div>
               <div>
-                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Pengalaman Kerja</label>
-                <textarea v-model="resumeForm.experience" rows="4" placeholder="2023–kini · Content Creator @ Brand X&#10;2022–2023 · Admin Sosmed @ Startup Y" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; resize:vertical; line-height:1.7; box-sizing:border-box;"></textarea>
+                <label class="cf-field-label">Pengalaman Kerja</label>
+                <textarea class="cf-textarea" v-model="resumeForm.experience" rows="4" placeholder="2023–kini · Content Creator @ Brand X&#10;2022–2023 · Admin Sosmed @ Startup Y"></textarea>
               </div>
               <div>
-                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Pendidikan</label>
-                <textarea v-model="resumeForm.education" rows="3" placeholder="S1 Ilmu Komunikasi · Univ. X · 2020–2024" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; resize:vertical; line-height:1.7; box-sizing:border-box;"></textarea>
+                <label class="cf-field-label">Pendidikan</label>
+                <textarea class="cf-textarea" v-model="resumeForm.education" rows="3" placeholder="S1 Ilmu Komunikasi · Univ. X · 2020–2024"></textarea>
               </div>
               <div>
-                <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Bahasa</label>
-                <textarea v-model="resumeForm.languages" rows="3" placeholder="Indonesia (Native)&#10;Inggris (Aktif)" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; resize:vertical; line-height:1.7; box-sizing:border-box;"></textarea>
+                <label class="cf-field-label">Bahasa</label>
+                <textarea class="cf-textarea" v-model="resumeForm.languages" rows="3" placeholder="Indonesia (Native)&#10;Inggris (Aktif)"></textarea>
               </div>
             </div>
           </div>
-          <div style="padding:14px 24px 20px; border-top:1.5px solid var(--color-sand); display:flex; gap:10px; justify-content:flex-end; position:sticky; bottom:0; background:#fff; z-index:1;">
-            <button @click="showResumeModal=false" style="padding:9px 18px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; font-weight:600; color:var(--text-muted); cursor:pointer;">Batal</button>
-            <button @click="saveResume" style="padding:9px 22px; background:var(--color-terracotta); border:none; border-radius:8px; font-size:13px; font-weight:700; color:#fff; cursor:pointer;">Simpan Profil</button>
+          <div class="cf-modal-footer">
+            <button class="cf-btn-ghost" @click="showResumeModal=false">Batal</button>
+            <button class="cf-btn-primary" @click="saveResume">Simpan Profil</button>
           </div>
         </div>
       </div>
     </transition>
 
-    <!-- ══════════════════════════════════════════════════════════════════
-         MODAL: Tambah / Edit Dokumen
-    ══════════════════════════════════════════════════════════════════ -->
+    <!-- ══ MODAL: Tambah / Edit Dokumen ══ -->
     <transition name="cf-fade">
-      <div v-if="showDocModal" style="position:fixed; inset:0; z-index:9990; background:rgba(44,38,33,0.45); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:16px;" @click.self="showDocModal=false">
-        <div style="background:#fff; border-radius:18px; width:min(560px,100%); max-height:88vh; overflow-y:auto; box-shadow:var(--shadow-lg); display:flex; flex-direction:column;">
-          <div style="padding:20px 24px 14px; border-bottom:1.5px solid var(--color-sand); display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; background:#fff; z-index:1;">
-            <h3 style="font-size:16px; font-weight:800; color:var(--text-dark);">{{ editingDocId ? 'Edit Dokumen' : 'Tambah Dokumen' }}</h3>
-            <button @click="showDocModal=false" style="background:none; border:none; cursor:pointer; color:var(--text-muted); padding:4px;">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <div v-if="showDocModal" class="cf-modal-overlay" @click.self="showDocModal=false">
+        <div class="cf-modal">
+          <div class="cf-modal-header">
+            <h3 class="cf-modal-title">{{ editingDocId ? 'Edit Dokumen' : 'Tambah Dokumen' }}</h3>
+            <button class="cf-modal-close" @click="showDocModal=false">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
-          <div style="padding:20px 24px; display:flex; flex-direction:column; gap:14px;">
+          <div class="cf-modal-body">
             <div>
-              <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:8px;">Jenis Dokumen *</label>
-              <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                <button v-for="t in docTypes" :key="t.key" @click="docForm.type=t.key"
-                  style="padding:7px 14px; border-radius:20px; border:1.5px solid; font-size:12px; font-weight:600; cursor:pointer; transition:all 0.15s; font-family:inherit;"
-                  :style="docForm.type===t.key ? { background: t.color, color:'#fff', borderColor: t.color } : { background:'transparent', color:'var(--text-muted)', borderColor:'var(--color-sand)' }">
-                  {{ t.emoji }} {{ t.label }}
+              <label class="cf-field-label">Jenis Dokumen *</label>
+              <div class="cf-type-pills">
+                <button v-for="t in docTypes" :key="t.key"
+                  class="cf-type-pill"
+                  :class="{ active: docForm.type === t.key }"
+                  @click="docForm.type = t.key">
+                  {{ t.label }}
                 </button>
               </div>
             </div>
             <div>
-              <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Judul Dokumen *</label>
-              <input v-model="docForm.title" placeholder="mis. CV Umum — Fresh Graduate 2025" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; box-sizing:border-box;"/>
+              <label class="cf-field-label">Judul Dokumen *</label>
+              <input class="cf-input" v-model="docForm.title" placeholder="mis. CV Umum — Fresh Graduate 2025"/>
             </div>
             <div>
-              <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Target Perusahaan / Posisi</label>
-              <input v-model="docForm.target" placeholder="mis. Posisi Content Creator di Shopee" style="width:100%; padding:9px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; box-sizing:border-box;"/>
+              <label class="cf-field-label">Target Perusahaan / Posisi</label>
+              <input class="cf-input" v-model="docForm.target" placeholder="mis. Posisi Content Creator di Shopee"/>
             </div>
             <div>
-              <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Isi Dokumen</label>
-              <textarea v-model="docForm.content" :rows="docForm.type==='cv' ? 7 : 11" :placeholder="docContentPlaceholder" style="width:100%; padding:10px 12px; border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; color:var(--text-dark); background:var(--bg-cream); outline:none; font-family:inherit; resize:vertical; line-height:1.75; box-sizing:border-box;"></textarea>
+              <label class="cf-field-label">Isi Dokumen</label>
+              <textarea class="cf-textarea" v-model="docForm.content" :placeholder="docContentPlaceholder" rows="10"></textarea>
             </div>
           </div>
-          <div style="padding:14px 24px 20px; border-top:1.5px solid var(--color-sand); display:flex; gap:10px; justify-content:flex-end; position:sticky; bottom:0; background:#fff; z-index:1;">
-            <button @click="showDocModal=false" style="padding:9px 18px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:8px; font-size:13px; font-weight:600; color:var(--text-muted); cursor:pointer;">Batal</button>
-            <button @click="saveDoc" :disabled="!docForm.title" style="padding:9px 22px; border:none; border-radius:8px; font-size:13px; font-weight:700; color:#fff; cursor:pointer;"
-              :style="{ background: docTypeColor(docForm.type), opacity: docForm.title ? 1 : 0.5 }">Simpan</button>
+          <div class="cf-modal-footer">
+            <button class="cf-btn-ghost" @click="showDocModal=false">Batal</button>
+            <button class="cf-btn-primary" @click="saveDoc">Simpan</button>
           </div>
         </div>
       </div>
     </transition>
 
-    <!-- ══════════════════════════════════════════════════════════════════
-         MODAL: View Dokumen
-    ══════════════════════════════════════════════════════════════════ -->
+    <!-- ══ MODAL: Lihat Dokumen ══ -->
     <transition name="cf-fade">
-      <div v-if="showViewModal && viewingDoc" style="position:fixed; inset:0; z-index:9990; background:rgba(44,38,33,0.45); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:16px;" @click.self="showViewModal=false">
-        <div style="background:#fff; border-radius:18px; width:min(640px,100%); max-height:90vh; overflow-y:auto; box-shadow:var(--shadow-lg); display:flex; flex-direction:column;">
-          <div :style="{ background: 'linear-gradient(135deg,' + docTypeColor(viewingDoc.type) + ',' + docTypeColorDark(viewingDoc.type) + ')', padding:'18px 24px', display:'flex', alignItems:'center', justifyContent:'space-between', borderRadius:'16px 16px 0 0' }">
+      <div v-if="showViewModal && viewingDoc" class="cf-modal-overlay" @click.self="showViewModal=false">
+        <div class="cf-modal cf-modal-wide">
+          <div class="cf-modal-header">
             <div>
-              <p style="font-size:11px; font-weight:700; color:rgba(255,255,255,0.75); text-transform:uppercase; letter-spacing:0.06em; margin:0 0 3px;">{{ docTypeLabel(viewingDoc.type) }}</p>
-              <h3 style="font-size:17px; font-weight:800; color:#fff; margin:0;">{{ viewingDoc.title }}</h3>
-              <p v-if="viewingDoc.target" style="font-size:12px; color:rgba(255,255,255,0.8); margin:4px 0 0;">🎯 {{ viewingDoc.target }}</p>
+              <h3 class="cf-modal-title">{{ viewingDoc.title }}</h3>
+              <p v-if="viewingDoc.target" style="font-size:11.5px; color:#AAA; margin:3px 0 0;">{{ viewingDoc.target }}</p>
             </div>
-            <button @click="showViewModal=false" style="background:rgba(255,255,255,0.22); border:none; cursor:pointer; color:#fff; padding:7px; border-radius:8px; flex-shrink:0;">
+            <button class="cf-modal-close" @click="showViewModal=false">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
-          <div style="padding:24px; flex:1;">
-            <pre style="font-family:'Outfit',sans-serif; font-size:14px; color:var(--text-dark); line-height:1.85; white-space:pre-wrap; word-break:break-word; margin:0;">{{ viewingDoc.content || '(Dokumen masih kosong)' }}</pre>
+          <div class="cf-modal-body">
+            <p class="cf-view-content">{{ viewingDoc.content || '(Belum ada isi)' }}</p>
           </div>
-          <div style="padding:14px 24px 20px; border-top:1.5px solid var(--color-sand); display:flex; gap:10px; justify-content:flex-end; position:sticky; bottom:0; background:#fff;">
-            <button @click="copyDocContent(viewingDoc)" style="padding:9px 16px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:8px; font-size:12.5px; font-weight:600; color:var(--text-dark); cursor:pointer; display:flex; align-items:center; gap:6px;">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              {{ copySuccess ? '✓ Tersalin!' : 'Salin Teks' }}
+          <div class="cf-modal-footer">
+            <button class="cf-btn-ghost" @click="copyDocContent(viewingDoc)">{{ copySuccess ? 'Tersalin!' : 'Salin teks' }}</button>
+            <button class="cf-btn-primary" @click="editDoc(viewingDoc); showViewModal=false">Edit</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- ══ MODAL: Edit ATS CV Section ══ -->
+    <transition name="cf-fade">
+      <div v-if="showAtsCVModal" class="cf-modal-overlay" @click.self="showAtsCVModal=false">
+        <div class="cf-modal">
+          <div class="cf-modal-header">
+            <h3 class="cf-modal-title">{{ atsSectionLabel }}</h3>
+            <button class="cf-modal-close" @click="showAtsCVModal=false">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
-            <button @click="editDoc(viewingDoc); showViewModal=false" style="padding:9px 16px; border:none; border-radius:8px; font-size:12.5px; font-weight:700; color:#fff; cursor:pointer; display:flex; align-items:center; gap:6px;"
-              :style="{ background: docTypeColor(viewingDoc.type) }">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              Edit
-            </button>
+          </div>
+          <div class="cf-modal-body">
+            <p v-if="atsSectionHint" style="font-size:11.5px; color:#AAA; margin:0; line-height:1.6;">{{ atsSectionHint }}</p>
+            <template v-if="atsEditingSection === 'header'">
+              <div class="cf-input-grid-2">
+                <div><label class="cf-field-label">Nama Lengkap</label><input class="cf-input" v-model="atsCVForm.name" placeholder="Nadya Rahma Putri"/></div>
+                <div><label class="cf-field-label">Posisi / Bidang</label><input class="cf-input" v-model="atsCVForm.title" placeholder="Social Media Specialist"/></div>
+                <div><label class="cf-field-label">Email</label><input class="cf-input" v-model="atsCVForm.email" placeholder="nadya@email.com"/></div>
+                <div><label class="cf-field-label">No. HP</label><input class="cf-input" v-model="atsCVForm.phone" placeholder="08xx-xxxx-xxxx"/></div>
+                <div><label class="cf-field-label">Lokasi</label><input class="cf-input" v-model="atsCVForm.location" placeholder="Bandung, Jawa Barat"/></div>
+                <div><label class="cf-field-label">LinkedIn</label><input class="cf-input" v-model="atsCVForm.linkedin" placeholder="linkedin.com/in/nadya"/></div>
+                <div class="cf-input-grid-2" style="grid-column:1/-1;"><div><label class="cf-field-label">Portofolio</label><input class="cf-input" v-model="atsCVForm.portfolio" placeholder="nadya.design"/></div></div>
+              </div>
+            </template>
+            <template v-if="atsEditingSection === 'summary'">
+              <textarea class="cf-textarea" v-model="atsCVForm.summary" rows="6" placeholder="2-4 kalimat yang merangkum profil karir kamu..."></textarea>
+            </template>
+            <template v-if="atsEditingSection === 'experience'">
+              <textarea class="cf-textarea" v-model="atsCVForm.experience" rows="10" placeholder="Jabatan | Perusahaan | Periode&#10;- Poin pencapaian 1&#10;- Poin pencapaian 2&#10;&#10;Jabatan lain | Perusahaan | Periode&#10;- Poin pencapaian"></textarea>
+            </template>
+            <template v-if="atsEditingSection === 'education'">
+              <textarea class="cf-textarea" v-model="atsCVForm.education" rows="6" placeholder="S1 Ilmu Komunikasi | Universitas Padjadjaran | 2020 - 2024 | IPK: 3.78&#10;&#10;SMA | SMAN 5 Bandung | 2017 - 2020"></textarea>
+            </template>
+            <template v-if="atsEditingSection === 'skills'">
+              <textarea class="cf-textarea" v-model="atsCVForm.skills" rows="5" placeholder="Copywriting, Canva, Adobe Premiere, Microsoft Office, Google Analytics"></textarea>
+            </template>
+            <template v-if="atsEditingSection === 'organization'">
+              <textarea class="cf-textarea" v-model="atsCVForm.organization" rows="8" placeholder="Ketua Divisi Kreatif | BEM Universitas | 2022 - 2023&#10;- Memimpin tim 8 orang untuk mengelola publikasi kampus"></textarea>
+            </template>
+            <template v-if="atsEditingSection === 'languages'">
+              <textarea class="cf-textarea" v-model="atsCVForm.languages" rows="4" placeholder="Indonesia (Native)&#10;Inggris (Aktif — TOEFL 550)&#10;Mandarin (Pasif)"></textarea>
+            </template>
+            <template v-if="atsEditingSection === 'certifications'">
+              <textarea class="cf-textarea" v-model="atsCVForm.certifications" rows="5" placeholder="Google Digital Marketing Certificate · 2024&#10;Meta Blueprint Certified · 2023"></textarea>
+            </template>
+          </div>
+          <div class="cf-modal-footer">
+            <button class="cf-btn-ghost" @click="showAtsCVModal=false">Batal</button>
+            <button class="cf-btn-primary" @click="saveAtsCVSection">Simpan</button>
           </div>
         </div>
       </div>
@@ -12459,6 +13038,22 @@ const CareerFoundation = {
         { key: 'surat_lamaran', label: 'Surat Lamaran',   emoji: '📝', color: '#059669' },
         { key: 'body_email',    label: 'Body Email',      emoji: '📧', color: '#0369A1' },
       ],
+
+      // ATS CV Template
+      atsCV: {
+        name: '', title: '', email: '', phone: '', location: '', linkedin: '', portfolio: '',
+        summary: '', experience: '', education: '', skills: '',
+        organization: '', languages: '', certifications: '',
+        lastUpdated: null,
+      },
+      atsCVForm: {
+        name: '', title: '', email: '', phone: '', location: '', linkedin: '', portfolio: '',
+        summary: '', experience: '', education: '', skills: '',
+        organization: '', languages: '', certifications: '',
+      },
+      showAtsCVModal: false,
+      atsEditingSection: null,
+      atsCopySuccess: false,
     };
   },
 
@@ -12471,7 +13066,86 @@ const CareerFoundation = {
         body_email:    'Subjek: Lamaran Pekerjaan — [Posisi] | [Nama Kamu]\n\nYth. Bapak/Ibu HRD,\n\nSaya ...',
       };
       return map[this.docForm.type] || 'Tulis isi dokumen di sini...';
-    }
+    },
+
+    atsSectionLabel() {
+      const labels = {
+        header: 'Identitas & Kontak',
+        summary: 'Ringkasan Profesional',
+        experience: 'Pengalaman Kerja',
+        education: 'Pendidikan',
+        skills: 'Keahlian',
+        organization: 'Organisasi & Aktivitas',
+        languages: 'Kemampuan Bahasa',
+        certifications: 'Sertifikasi & Penghargaan',
+      };
+      return labels[this.atsEditingSection] || 'Edit Bagian CV';
+    },
+
+    atsSectionHint() {
+      const hints = {
+        header: 'Isi data diri yang akan tampil di bagian atas CV',
+        summary: '2-4 kalimat yang merangkum profil karir kamu',
+        experience: 'Format: Jabatan | Perusahaan | Periode, lalu poin pencapaian dengan tanda -',
+        education: 'Format: Gelar | Institusi | Periode | Detail (IPK, dll)',
+        skills: 'Pisahkan setiap keahlian dengan tanda koma',
+        organization: 'Format: Jabatan | Organisasi | Periode, lalu poin kegiatan',
+        languages: 'Satu bahasa per baris, sertakan level kemampuan',
+        certifications: 'Satu sertifikasi / penghargaan per baris',
+      };
+      return hints[this.atsEditingSection] || '';
+    },
+
+    parsedExperience() {
+      if (!this.atsCV.experience) return [];
+      const blocks = this.atsCV.experience.split(/\n\n+/);
+      return blocks.map(block => {
+        const lines = block.trim().split('\n');
+        const header = lines[0] || '';
+        const parts = header.split('|').map(s => s.trim());
+        const points = lines.slice(1).filter(l => l.trim()).map(l => l.replace(/^[-•]\s*/, '').trim());
+        return { role: parts[0] || '', company: parts[1] || '', period: parts[2] || '', points };
+      }).filter(e => e.role);
+    },
+
+    parsedEducation() {
+      if (!this.atsCV.education) return [];
+      const blocks = this.atsCV.education.split(/\n\n+/);
+      return blocks.map(block => {
+        const parts = block.trim().split('|').map(s => s.trim());
+        return { degree: parts[0] || '', school: parts[1] || '', period: parts[2] || '', detail: parts[3] || '' };
+      }).filter(e => e.degree);
+    },
+
+    parsedSkills() {
+      if (!this.atsCV.skills) return [];
+      return this.atsCV.skills.split(',').map(s => s.trim()).filter(Boolean);
+    },
+
+    parsedOrganization() {
+      if (!this.atsCV.organization) return [];
+      const blocks = this.atsCV.organization.split(/\n\n+/);
+      return blocks.map(block => {
+        const lines = block.trim().split('\n');
+        const parts = (lines[0] || '').split('|').map(s => s.trim());
+        const points = lines.slice(1).filter(l => l.trim()).map(l => l.replace(/^[-•]\s*/, '').trim());
+        return { role: parts[0] || '', org: parts[1] || '', period: parts[2] || '', points };
+      }).filter(e => e.role);
+    },
+
+    parsedLanguages() {
+      if (!this.atsCV.languages) return [];
+      return this.atsCV.languages.split('\n').map(line => {
+        const m = line.match(/^(.+?)\s*[\(（](.+?)[\)）]\s*$/);
+        if (m) return { name: m[1].trim(), level: m[2].trim() };
+        return { name: line.trim(), level: '' };
+      }).filter(l => l.name);
+    },
+
+    parsedCertifications() {
+      if (!this.atsCV.certifications) return [];
+      return this.atsCV.certifications.split('\n').map(s => s.trim()).filter(Boolean);
+    },
   },
 
   methods: {
@@ -12567,11 +13241,54 @@ const CareerFoundation = {
       return t ? t.label : type;
     },
 
+    // ── ATS CV ──
+    openAtsEditSection(section) {
+      this.atsEditingSection = section;
+      // Copy current values into form
+      this.atsCVForm = { ...this.atsCV };
+      this.showAtsCVModal = true;
+    },
+
+    saveAtsCVSection() {
+      const now = new Date().toISOString();
+      if (this.atsEditingSection === 'header') {
+        const { name, title, email, phone, location, linkedin, portfolio } = this.atsCVForm;
+        Object.assign(this.atsCV, { name, title, email, phone, location, linkedin, portfolio });
+      } else if (this.atsEditingSection) {
+        this.atsCV[this.atsEditingSection] = this.atsCVForm[this.atsEditingSection];
+      }
+      this.atsCV.lastUpdated = now;
+      this.saveAll();
+      this.showAtsCVModal = false;
+    },
+
+    copyAtsCVText() {
+      const cv = this.atsCV;
+      let text = '';
+      if (cv.name) text += cv.name + '\n';
+      if (cv.title) text += cv.title + '\n';
+      const contacts = [cv.email, cv.phone, cv.location, cv.linkedin, cv.portfolio].filter(Boolean);
+      if (contacts.length) text += contacts.join(' · ') + '\n';
+      text += '\n';
+      if (cv.summary) text += 'RINGKASAN PROFESIONAL\n' + cv.summary + '\n\n';
+      if (cv.experience) text += 'PENGALAMAN KERJA\n' + cv.experience + '\n\n';
+      if (cv.education) text += 'PENDIDIKAN\n' + cv.education + '\n\n';
+      if (cv.skills) text += 'KEAHLIAN\n' + cv.skills + '\n\n';
+      if (cv.organization) text += 'ORGANISASI & AKTIVITAS\n' + cv.organization + '\n\n';
+      if (cv.languages) text += 'BAHASA\n' + cv.languages + '\n\n';
+      if (cv.certifications) text += 'SERTIFIKASI & PENGHARGAAN\n' + cv.certifications + '\n\n';
+      navigator.clipboard.writeText(text.trim()).then(() => {
+        this.atsCopySuccess = true;
+        setTimeout(() => { this.atsCopySuccess = false; }, 2000);
+      });
+    },
+
     // ── Storage ──
     saveAll() {
       WorkspaceStorage.setItem('career_resume', JSON.stringify(this.resume));
       WorkspaceStorage.setItem('career_docs', JSON.stringify(this.docs));
       WorkspaceStorage.setItem('career_last_updated', this.lastUpdated);
+      WorkspaceStorage.setItem('career_ats_cv', JSON.stringify(this.atsCV));
     },
 
     // ── Formatting ──
@@ -12601,6 +13318,10 @@ const CareerFoundation = {
     try {
       const lu = WorkspaceStorage.getItem('career_last_updated');
       if (lu) this.lastUpdated = lu;
+    } catch(_e) {}
+    try {
+      const ats = WorkspaceStorage.getItem('career_ats_cv');
+      if (ats) this.atsCV = { ...this.atsCV, ...JSON.parse(ats) };
     } catch(_e) {}
   },
 };
