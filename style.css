@@ -6650,15 +6650,660 @@ input:checked + .switch-slider:before {
 
 
 /* ══════════════════════════════════════════════
-   Career Foundation — Modal Fade Transition
+   CAREER FOUNDATION — Job Board Redesign
+   CSS moved from inline template to stylesheet
 ══════════════════════════════════════════════ */
-.cf-fade-enter-active {
-  animation: cfPopIn 0.26s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+/* ── Career Foundation — Job Board Redesign ── */
+.cf-clean {
+  font-family: 'Outfit', sans-serif;
+  color: var(--text-dark, #2C2621);
+  max-width: 780px;
 }
-.cf-fade-leave-active {
-  animation: cfPopIn 0.16s ease-in reverse;
+
+/* ── Hero Header ── */
+.cf-hero {
+  background: linear-gradient(135deg, var(--bg-cream, #FDFBF7) 60%, #F5EDE5 100%);
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 16px;
+  padding: 32px 28px 28px;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
 }
-@keyframes cfPopIn {
-  from { opacity: 0; transform: scale(0.90) translateY(14px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
+.cf-hero::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(214,123,82,0.13) 0%, transparent 70%);
+  pointer-events: none;
 }
+.cf-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Hack', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-terracotta, #D67B52);
+  background: rgba(214,123,82,0.1);
+  border: 1px solid rgba(214,123,82,0.22);
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin: 0 0 14px;
+}
+.cf-hero-badge-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--color-terracotta, #D67B52);
+  animation: cfPulse 2s ease-in-out infinite;
+}
+@keyframes cfPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+.cf-hero-title {
+  font-family: 'Hack', monospace;
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--text-dark, #2C2621);
+  margin: 0 0 10px;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+}
+.cf-hero-sub {
+  font-size: 13.5px;
+  color: var(--text-muted, #6E6359);
+  margin: 0 0 20px;
+  line-height: 1.6;
+  max-width: 480px;
+}
+.cf-hero-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.cf-hero-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted, #6E6359);
+}
+.cf-hero-stat-num {
+  font-family: 'Hack', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dark, #2C2621);
+}
+
+/* ── Filter pills (job board style) ── */
+.cf-filter-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  align-items: center;
+}
+.cf-filter-pill {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted, #6E6359);
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.cf-filter-pill:hover {
+  border-color: var(--color-terracotta, #D67B52);
+  color: var(--color-terracotta, #D67B52);
+  background: rgba(214,123,82,0.05);
+}
+.cf-filter-pill.active {
+  background: var(--text-dark, #2C2621);
+  border-color: var(--text-dark, #2C2621);
+  color: #fff;
+}
+
+/* ── Section bar ── */
+.cf-section-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.cf-section-label {
+  font-family: 'Hack', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted, #6E6359);
+  margin: 0;
+}
+
+/* ── Buttons ── */
+.cf-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  background: transparent;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted, #6E6359);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.14s;
+}
+.cf-btn-ghost:hover {
+  background: var(--color-sand, #E8DFD8);
+  border-color: #C8BDB5;
+  color: var(--text-dark, #2C2621);
+}
+.cf-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  background: var(--color-terracotta, #D67B52);
+  border: 1.5px solid var(--color-terracotta, #D67B52);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.14s, transform 0.1s;
+}
+.cf-btn-primary:hover { background: #C06A43; transform: translateY(-1px); }
+
+/* ── Profile card ── */
+.cf-profile-card {
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+.cf-profile-head {
+  padding: 22px 24px;
+  border-bottom: 1.5px solid var(--color-sand, #E8DFD8);
+  background: var(--bg-cream, #FDFBF7);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.cf-profile-name {
+  font-family: 'Hack', monospace;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-dark, #2C2621);
+  margin: 0 0 2px;
+}
+.cf-profile-title {
+  font-size: 13px;
+  color: var(--color-terracotta, #D67B52);
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+.cf-profile-contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.cf-profile-contact {
+  font-size: 11.5px;
+  color: var(--text-muted, #6E6359);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(232,223,216,0.45);
+  padding: 3px 9px;
+  border-radius: 6px;
+}
+.cf-profile-body {
+  padding: 22px 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.cf-profile-section-full { grid-column: 1 / -1; }
+.cf-profile-section-label {
+  font-family: 'Hack', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-terracotta, #D67B52);
+  margin: 0 0 7px;
+  display: block;
+}
+.cf-profile-section-text {
+  font-size: 13px;
+  color: var(--text-dark, #2C2621);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  margin: 0;
+}
+.cf-profile-empty {
+  padding: 48px 24px;
+  text-align: center;
+}
+.cf-profile-empty-text {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-sand, #E8DFD8);
+  margin: 0 0 4px;
+}
+.cf-profile-empty-sub {
+  font-size: 12px;
+  color: #C8BDB5;
+  margin: 0;
+}
+
+/* ── Doc list — job board card rows ── */
+.cf-doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.cf-doc-row {
+  display: flex;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1.5px solid var(--color-sand, #E8DFD8);
+  gap: 14px;
+  transition: all 0.15s;
+  cursor: default;
+}
+.cf-doc-row:last-child { border-bottom: none; }
+.cf-doc-row:hover { padding-left: 4px; }
+.cf-doc-type-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.cf-doc-info {
+  flex: 1;
+  min-width: 0;
+}
+.cf-doc-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dark, #2C2621);
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cf-doc-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.cf-doc-type-badge {
+  font-family: 'Hack', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.cf-doc-actions {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+  align-items: center;
+}
+.cf-doc-row:hover .cf-doc-actions { opacity: 1; }
+.cf-doc-action-btn {
+  padding: 5px 10px;
+  background: transparent;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-muted, #6E6359);
+  font-size: 11.5px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all 0.12s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.cf-doc-action-btn:hover { background: var(--color-sand, #E8DFD8); color: var(--text-dark, #2C2621); }
+.cf-doc-action-btn.del:hover { background: #FFF0F0; border-color: #FECACA; color: #EF4444; }
+
+/* ── Apply-style action button ── */
+.cf-doc-apply-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted, #6E6359);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.14s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.cf-doc-apply-btn:hover {
+  background: var(--color-terracotta, #D67B52);
+  border-color: var(--color-terracotta, #D67B52);
+  color: #fff;
+}
+
+/* Empty state */
+.cf-empty {
+  padding: 48px 20px;
+  text-align: center;
+  border: 1.5px dashed var(--color-sand, #E8DFD8);
+  border-radius: 12px;
+}
+.cf-empty-label {
+  font-family: 'Hack', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #C8BDB5;
+  margin: 0 0 4px;
+}
+.cf-empty-sub {
+  font-size: 12px;
+  color: #D8D0CA;
+  margin: 0;
+}
+
+/* ── ATS CV inside tab ── */
+.cf-ats-wrap {
+  background: #fff;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 12px;
+  overflow: hidden;
+  max-width: 680px;
+}
+.cf-ats-head {
+  background: var(--text-dark, #2C2621);
+  padding: 26px 28px 22px;
+  position: relative;
+}
+.cf-ats-edit-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 6px;
+  color: rgba(255,255,255,0.75);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s;
+}
+.cf-ats-edit-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+.cf-ats-name {
+  font-family: 'Hack', monospace;
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+}
+.cf-ats-role {
+  font-size: 13px;
+  color: var(--color-gold, #DDA15E);
+  margin: 0 0 14px;
+  font-weight: 600;
+}
+.cf-ats-contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.cf-ats-contact {
+  font-size: 11.5px;
+  color: rgba(255,255,255,0.7);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.cf-ats-body { padding: 4px 28px 24px; }
+.cf-ats-section {
+  border-top: 1.5px solid var(--color-sand, #E8DFD8);
+  padding-top: 18px;
+  margin-top: 18px;
+}
+.cf-ats-section-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.cf-ats-section-title {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted, #6E6359);
+  margin: 0;
+}
+.cf-ats-section-btn {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted, #6E6359);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 3px 0;
+  transition: color 0.12s;
+}
+.cf-ats-section-btn:hover { color: var(--color-terracotta, #D67B52); }
+.cf-ats-text {
+  font-size: 13px;
+  color: var(--text-dark, #2C2621);
+  line-height: 1.75;
+  white-space: pre-wrap;
+  margin: 0;
+}
+.cf-ats-empty-field {
+  font-size: 12.5px;
+  color: #C8BDB5;
+  cursor: pointer;
+  padding: 10px 0;
+  font-style: italic;
+}
+.cf-ats-empty-field:hover { color: var(--color-terracotta, #D67B52); }
+.cf-ats-exp-entry { margin-bottom: 16px; }
+.cf-ats-exp-role { font-family: 'Hack', monospace; font-size: 13px; font-weight: 700; color: var(--text-dark, #2C2621); margin: 0 0 2px; }
+.cf-ats-exp-company { font-size: 12px; color: var(--color-terracotta, #D67B52); font-weight: 600; margin: 0 0 1px; }
+.cf-ats-exp-period { font-family: 'Hack', monospace; font-size: 10.5px; color: #C8BDB5; font-weight: 600; margin: 0 0 6px; }
+.cf-ats-exp-points { padding-left: 14px; margin: 0; }
+.cf-ats-exp-point { font-size: 12.5px; color: var(--text-muted, #6E6359); line-height: 1.65; margin-bottom: 2px; }
+.cf-skills-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.cf-skill-tag { font-size: 12px; color: var(--text-muted, #6E6359); background: rgba(232,223,216,0.5); border: 1px solid var(--color-sand, #E8DFD8); border-radius: 20px; padding: 3px 10px; }
+.cf-cert-list { list-style: none; padding: 0; margin: 0; }
+.cf-cert-item { font-size: 13px; color: var(--text-dark, #2C2621); padding: 3px 0; }
+.cf-cert-item::before { content: '✦'; color: var(--color-terracotta, #D67B52); margin-right: 8px; font-size: 9px; }
+.cf-lang-item { font-size: 13px; color: var(--text-dark, #2C2621); display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--color-sand, #E8DFD8); }
+.cf-lang-item:last-child { border-bottom: none; }
+.cf-lang-level { color: #C8BDB5; font-size: 12px; font-family: 'Hack', monospace; }
+
+/* ── Tip banner slim ── */
+.cf-tip {
+  border-left: 2.5px solid var(--color-terracotta, #D67B52);
+  padding: 8px 0 8px 14px;
+  margin-bottom: 20px;
+  background: rgba(214,123,82,0.04);
+  border-radius: 0 6px 6px 0;
+}
+.cf-tip-title {
+  font-family: 'Hack', monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--color-terracotta, #D67B52);
+  margin: 0 0 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.cf-tip-text {
+  font-size: 11.5px;
+  color: var(--text-muted, #6E6359);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Modals ── */
+.cf-modal-overlay {
+  position: fixed; inset: 0; z-index: 9990;
+  background: rgba(44,38,33,0.4);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.cf-modal {
+  background: var(--bg-cream, #FDFBF7);
+  border-radius: 14px;
+  width: min(560px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(44,38,33,0.22);
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+}
+.cf-modal-wide { width: min(640px, 100%); }
+.cf-modal-header {
+  padding: 18px 22px 14px;
+  border-bottom: 1.5px solid var(--color-sand, #E8DFD8);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; background: var(--bg-cream, #FDFBF7); z-index: 1;
+}
+.cf-modal-title {
+  font-family: 'Hack', monospace;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-dark, #2C2621);
+  margin: 0;
+}
+.cf-modal-close {
+  background: none; border: none; cursor: pointer;
+  color: #C8BDB5; padding: 4px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  transition: color 0.12s, background 0.12s;
+}
+.cf-modal-close:hover { color: var(--text-dark, #2C2621); background: var(--color-sand, #E8DFD8); }
+.cf-modal-body {
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.cf-modal-footer {
+  padding: 14px 22px 18px;
+  border-top: 1.5px solid var(--color-sand, #E8DFD8);
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  position: sticky; bottom: 0; background: var(--bg-cream, #FDFBF7); z-index: 1;
+}
+.cf-field-label {
+  font-family: 'Hack', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted, #6E6359);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 5px;
+}
+.cf-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-dark, #2C2621);
+  background: #fff;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.14s, box-shadow 0.14s;
+}
+.cf-input:focus { border-color: var(--color-terracotta, #D67B52); box-shadow: 0 0 0 3px rgba(214,123,82,0.09); }
+.cf-textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-dark, #2C2621);
+  background: #fff;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  resize: vertical;
+  line-height: 1.7;
+  transition: border-color 0.14s, box-shadow 0.14s;
+}
+.cf-textarea:focus { border-color: var(--color-terracotta, #D67B52); background: #fff; box-shadow: 0 0 0 3px rgba(214,123,82,0.09); }
+.cf-input-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.cf-type-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.cf-type-pill {
+  padding: 6px 13px;
+  border-radius: 20px;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted, #6E6359);
+  cursor: pointer;
+  font-family: inherit;
+  background: transparent;
+  transition: all 0.13s;
+}
+.cf-type-pill.active { background: var(--color-terracotta, #D67B52); color: #fff; border-color: var(--color-terracotta, #D67B52); }
+
+/* ── Copy success ── */
+.cf-copy-btn { font-size: 12px; font-weight: 600; }
+
+/* View modal text */
+.cf-view-content {
+  font-size: 13.5px;
+  color: var(--text-dark, #2C2621);
+  line-height: 1.8;
+  white-space: pre-wrap;
+  min-height: 120px;
+}
+
+/* Fade animation */
+.cf-fade-enter-active { transition: opacity 0.15s ease; }
+.cf-fade-leave-active { transition: opacity 0.1s ease; }
+.cf-fade-enter-from, .cf-fade-leave-to { opacity: 0; }

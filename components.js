@@ -11867,564 +11867,36 @@ const InspirationBoard = {
 const CareerFoundation = {
   template: `
   <div class="cf-clean">
-    <style>
-      /* ── Career Foundation — Clean Redesign ── */
-      .cf-clean {
-        font-family: 'Outfit', sans-serif;
-        color: #111;
-        max-width: 760px;
-      }
 
-      /* Header */
-      .cf-header {
-        padding-bottom: 24px;
-        border-bottom: 1px solid #E5E5E5;
-        margin-bottom: 24px;
-      }
-      .cf-eyebrow {
-        font-size: 10.5px;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: #999;
-        margin: 0 0 8px;
-      }
-      .cf-title {
-        font-size: 28px;
-        font-weight: 800;
-        color: #111;
-        margin: 0 0 6px;
-        letter-spacing: -0.5px;
-        line-height: 1.1;
-      }
-      .cf-sub {
-        font-size: 13.5px;
-        color: #777;
-        margin: 0;
-        line-height: 1.5;
-      }
-
-      /* Tab strip */
-      .cf-tabs {
-        display: flex;
-        gap: 0;
-        border-bottom: 1px solid #E5E5E5;
-        margin-bottom: 28px;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-      }
-      .cf-tabs::-webkit-scrollbar { display: none; }
-      .cf-tab {
-        padding: 10px 16px 9px;
-        font-size: 12.5px;
-        font-weight: 600;
-        color: #999;
-        background: none;
-        border: none;
-        border-bottom: 2px solid transparent;
-        cursor: pointer;
-        white-space: nowrap;
-        font-family: inherit;
-        transition: color 0.14s, border-color 0.14s;
-        margin-bottom: -1px;
-        letter-spacing: 0.01em;
-      }
-      .cf-tab:hover { color: #333; }
-      .cf-tab.active {
-        color: #111;
-        border-bottom-color: #111;
-      }
-
-      /* Section label + action row */
-      .cf-section-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-      .cf-section-label {
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.09em;
-        text-transform: uppercase;
-        color: #AAAAAA;
-        margin: 0;
-      }
-      .cf-btn-ghost {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 6px 14px;
-        background: transparent;
-        border: 1px solid #DDDDD;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        color: #555;
-        cursor: pointer;
-        font-family: inherit;
-        transition: background 0.12s, border-color 0.12s;
-      }
-      .cf-btn-ghost:hover { background: #F4F4F4; border-color: #CCC; }
-      .cf-btn-primary {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 6px 14px;
-        background: #111;
-        border: 1px solid #111;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        color: #fff;
-        cursor: pointer;
-        font-family: inherit;
-        transition: background 0.12s;
-      }
-      .cf-btn-primary:hover { background: #333; }
-
-      /* ── Profil card ── */
-      .cf-profile-card {
-        border: 1px solid #E5E5E5;
-        border-radius: 10px;
-        overflow: hidden;
-      }
-      .cf-profile-head {
-        padding: 20px 24px;
-        border-bottom: 1px solid #E5E5E5;
-        background: #FAFAFA;
-      }
-      .cf-profile-name {
-        font-size: 20px;
-        font-weight: 800;
-        color: #111;
-        margin: 0 0 2px;
-        letter-spacing: -0.3px;
-      }
-      .cf-profile-title {
-        font-size: 13px;
-        color: #777;
-        margin: 0 0 10px;
-      }
-      .cf-profile-contacts {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-      }
-      .cf-profile-contact {
-        font-size: 12px;
-        color: #555;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-      }
-      .cf-profile-body {
-        padding: 20px 24px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 18px;
-      }
-      .cf-profile-section-full { grid-column: 1 / -1; }
-      .cf-profile-section-label {
-        font-size: 10px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: #BBB;
-        margin: 0 0 6px;
-        display: block;
-      }
-      .cf-profile-section-text {
-        font-size: 13px;
-        color: #333;
-        line-height: 1.7;
-        white-space: pre-wrap;
-        margin: 0;
-      }
-      .cf-profile-empty {
-        padding: 40px 24px;
-        text-align: center;
-        color: #BBB;
-      }
-      .cf-profile-empty-text {
-        font-size: 13px;
-        font-weight: 600;
-        color: #CCC;
-        margin: 0 0 4px;
-      }
-      .cf-profile-empty-sub {
-        font-size: 12px;
-        color: #DDD;
-        margin: 0;
-      }
-
-      /* ── Doc list (linear rows) ── */
-      .cf-doc-list {
-        border-top: 1px solid #E5E5E5;
-      }
-      .cf-doc-row {
-        display: flex;
-        align-items: center;
-        padding: 13px 0;
-        border-bottom: 1px solid #EFEFEF;
-        gap: 12px;
-        transition: background 0.1s;
-      }
-      .cf-doc-row:hover { background: #FAFAFA; margin: 0 -12px; padding: 13px 12px; }
-      .cf-doc-type-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        flex-shrink: 0;
-      }
-      .cf-doc-info {
-        flex: 1;
-        min-width: 0;
-      }
-      .cf-doc-title {
-        font-size: 13.5px;
-        font-weight: 600;
-        color: #111;
-        margin: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .cf-doc-meta {
-        font-size: 11.5px;
-        color: #AAA;
-        margin: 2px 0 0;
-        display: flex;
-        gap: 10px;
-        align-items: center;
-      }
-      .cf-doc-type-badge {
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        padding: 2px 7px;
-        border-radius: 3px;
-      }
-      .cf-doc-actions {
-        display: flex;
-        gap: 2px;
-        flex-shrink: 0;
-        opacity: 0;
-        transition: opacity 0.15s;
-      }
-      .cf-doc-row:hover .cf-doc-actions { opacity: 1; }
-      .cf-doc-action-btn {
-        padding: 5px 8px;
-        background: transparent;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        color: #888;
-        font-size: 11.5px;
-        font-weight: 600;
-        font-family: inherit;
-        transition: background 0.1s, color 0.1s;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-      }
-      .cf-doc-action-btn:hover { background: #EFEFEF; color: #333; }
-      .cf-doc-action-btn.del:hover { background: #FFF0F0; color: #EF4444; }
-
-      /* Empty state */
-      .cf-empty {
-        padding: 48px 20px;
-        text-align: center;
-      }
-      .cf-empty-label {
-        font-size: 13px;
-        font-weight: 700;
-        color: #CCC;
-        margin: 0 0 4px;
-      }
-      .cf-empty-sub {
-        font-size: 12px;
-        color: #DDD;
-        margin: 0;
-      }
-
-      /* ── ATS CV inside tab ── */
-      .cf-ats-wrap {
-        background: #fff;
-        border: 1px solid #E5E5E5;
-        border-radius: 10px;
-        overflow: hidden;
-        max-width: 680px;
-      }
-      .cf-ats-head {
-        background: #111;
-        padding: 24px 28px 20px;
-        position: relative;
-      }
-      .cf-ats-edit-btn {
-        position: absolute;
-        top: 14px;
-        right: 14px;
-        background: rgba(255,255,255,0.1);
-        border: 1px solid rgba(255,255,255,0.25);
-        border-radius: 5px;
-        color: rgba(255,255,255,0.75);
-        font-size: 11px;
-        font-weight: 600;
-        padding: 4px 10px;
-        cursor: pointer;
-        font-family: inherit;
-        transition: background 0.12s;
-      }
-      .cf-ats-edit-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
-      .cf-ats-name {
-        font-size: 22px;
-        font-weight: 800;
-        color: #fff;
-        margin: 0 0 3px;
-        letter-spacing: -0.3px;
-      }
-      .cf-ats-role {
-        font-size: 13px;
-        color: rgba(255,255,255,0.6);
-        margin: 0 0 14px;
-        font-style: italic;
-      }
-      .cf-ats-contacts {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 14px;
-      }
-      .cf-ats-contact {
-        font-size: 11.5px;
-        color: rgba(255,255,255,0.7);
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-      }
-      .cf-ats-body { padding: 4px 28px 24px; }
-      .cf-ats-section {
-        border-top: 1px solid #EFEFEF;
-        padding-top: 18px;
-        margin-top: 18px;
-      }
-      .cf-ats-section-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 10px;
-      }
-      .cf-ats-section-title {
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: #AAAAAA;
-        margin: 0;
-      }
-      .cf-ats-section-btn {
-        font-size: 11px;
-        font-weight: 600;
-        color: #999;
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-family: inherit;
-        padding: 3px 0;
-        transition: color 0.12s;
-      }
-      .cf-ats-section-btn:hover { color: #111; }
-      .cf-ats-text {
-        font-size: 13px;
-        color: #333;
-        line-height: 1.75;
-        white-space: pre-wrap;
-        margin: 0;
-      }
-      .cf-ats-empty-field {
-        font-size: 12.5px;
-        color: #CCC;
-        cursor: pointer;
-        padding: 10px 0;
-      }
-      .cf-ats-empty-field:hover { color: #999; }
-      .cf-ats-exp-entry { margin-bottom: 14px; }
-      .cf-ats-exp-role { font-size: 13.5px; font-weight: 700; color: #111; margin: 0 0 1px; }
-      .cf-ats-exp-company { font-size: 12px; color: #777; font-weight: 600; margin: 0 0 1px; }
-      .cf-ats-exp-period { font-size: 11px; color: #BBB; font-weight: 600; margin: 0 0 6px; }
-      .cf-ats-exp-points { padding-left: 14px; margin: 0; }
-      .cf-ats-exp-point { font-size: 12.5px; color: #444; line-height: 1.65; margin-bottom: 2px; }
-      .cf-skills-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
-      .cf-skill-tag { font-size: 12px; color: #555; background: #F4F4F4; border-radius: 4px; padding: 3px 9px; }
-      .cf-cert-list { list-style: none; padding: 0; margin: 0; }
-      .cf-cert-item { font-size: 13px; color: #333; padding: 3px 0; }
-      .cf-cert-item::before { content: '—'; color: #CCC; margin-right: 8px; }
-      .cf-lang-item { font-size: 13px; color: #333; display: flex; justify-content: space-between; padding: 3px 0; }
-      .cf-lang-level { color: #AAA; font-size: 12px; }
-
-      /* ── Tip banner slim ── */
-      .cf-tip {
-        border-left: 2px solid #E5E5E5;
-        padding: 8px 0 8px 14px;
-        margin-bottom: 20px;
-      }
-      .cf-tip-title {
-        font-size: 11.5px;
-        font-weight: 700;
-        color: #555;
-        margin: 0 0 2px;
-      }
-      .cf-tip-text {
-        font-size: 11.5px;
-        color: #888;
-        line-height: 1.6;
-        margin: 0;
-      }
-
-      /* ── Modals ── */
-      .cf-modal-overlay {
-        position: fixed; inset: 0; z-index: 9990;
-        background: rgba(0,0,0,0.35);
-        backdrop-filter: blur(3px);
-        display: flex; align-items: center; justify-content: center;
-        padding: 16px;
-      }
-      .cf-modal {
-        background: #fff;
-        border-radius: 12px;
-        width: min(560px, 100%);
-        max-height: 88vh;
-        overflow-y: auto;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.18);
-        display: flex;
-        flex-direction: column;
-      }
-      .cf-modal-wide { width: min(640px, 100%); }
-      .cf-modal-header {
-        padding: 18px 22px 14px;
-        border-bottom: 1px solid #EFEFEF;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        position: sticky; top: 0; background: #fff; z-index: 1;
-      }
-      .cf-modal-title {
-        font-size: 15px;
-        font-weight: 800;
-        color: #111;
-        margin: 0;
-      }
-      .cf-modal-close {
-        background: none; border: none; cursor: pointer;
-        color: #AAA; padding: 4px;
-        display: flex; align-items: center; justify-content: center;
-        border-radius: 5px;
-        transition: color 0.12s;
-      }
-      .cf-modal-close:hover { color: #111; }
-      .cf-modal-body {
-        padding: 20px 22px;
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-      }
-      .cf-modal-footer {
-        padding: 14px 22px 18px;
-        border-top: 1px solid #EFEFEF;
-        display: flex;
-        gap: 8px;
-        justify-content: flex-end;
-        position: sticky; bottom: 0; background: #fff; z-index: 1;
-      }
-      .cf-field-label {
-        font-size: 11px;
-        font-weight: 700;
-        color: #999;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        display: block;
-        margin-bottom: 5px;
-      }
-      .cf-input {
-        width: 100%;
-        padding: 9px 12px;
-        border: 1px solid #E0E0E0;
-        border-radius: 7px;
-        font-size: 13px;
-        color: #111;
-        background: #FAFAFA;
-        outline: none;
-        font-family: inherit;
-        box-sizing: border-box;
-        transition: border-color 0.14s;
-      }
-      .cf-input:focus { border-color: #999; background: #fff; }
-      .cf-textarea {
-        width: 100%;
-        padding: 9px 12px;
-        border: 1px solid #E0E0E0;
-        border-radius: 7px;
-        font-size: 13px;
-        color: #111;
-        background: #FAFAFA;
-        outline: none;
-        font-family: inherit;
-        box-sizing: border-box;
-        resize: vertical;
-        line-height: 1.7;
-        transition: border-color 0.14s;
-      }
-      .cf-textarea:focus { border-color: #999; background: #fff; }
-      .cf-input-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-      .cf-type-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-      .cf-type-pill {
-        padding: 6px 13px;
-        border-radius: 20px;
-        border: 1px solid #E0E0E0;
-        font-size: 12px;
-        font-weight: 600;
-        color: #888;
-        cursor: pointer;
-        font-family: inherit;
-        background: transparent;
-        transition: all 0.13s;
-      }
-      .cf-type-pill.active { background: #111; color: #fff; border-color: #111; }
-
-      /* ── Copy success ── */
-      .cf-copy-btn { font-size: 12px; font-weight: 600; }
-
-      /* View modal text */
-      .cf-view-content {
-        font-size: 13.5px;
-        color: #333;
-        line-height: 1.8;
-        white-space: pre-wrap;
-        min-height: 120px;
-      }
-
-      /* Fade animation */
-      .cf-fade-enter-active { transition: opacity 0.15s ease; }
-      .cf-fade-leave-active { transition: opacity 0.1s ease; }
-      .cf-fade-enter-from, .cf-fade-leave-to { opacity: 0; }
-    </style>
-
-    <!-- ── Page Header ── -->
-    <div class="cf-header">
-      <p class="cf-eyebrow">Dokumen Karir</p>
-      <h2 class="cf-title">Career Foundation</h2>
-      <p class="cf-sub">Semua dokumen siap kirim — CV, cover letter, surat lamaran, dan template email dalam satu tempat.</p>
+    <!-- ── Hero Header (job board style) ── -->
+    <div class="cf-hero">
+      <div class="cf-hero-badge">
+        <span class="cf-hero-badge-dot"></span>
+        Dokumen Karir
+      </div>
+      <h2 class="cf-hero-title">Career Foundation</h2>
+      <p class="cf-hero-sub">Semua dokumen siap kirim — CV, cover letter, surat lamaran, dan template email dalam satu tempat.</p>
+      <div class="cf-hero-stats">
+        <div class="cf-hero-stat">
+          <span class="cf-hero-stat-num">{{ docs.length }}</span>
+          <span>dokumen tersimpan</span>
+        </div>
+        <div class="cf-hero-stat">
+          <span class="cf-hero-stat-num">{{ docsByType('cover_letter').length }}</span>
+          <span>cover letter</span>
+        </div>
+        <div class="cf-hero-stat">
+          <span class="cf-hero-stat-num">{{ docsByType('surat_lamaran').length }}</span>
+          <span>surat lamaran</span>
+        </div>
+      </div>
     </div>
 
-    <!-- ── Tab strip ── -->
-    <div class="cf-tabs">
+    <!-- ── Filter pills (job board category filter) ── -->
+    <div class="cf-filter-row">
       <button
         v-for="tab in tabs" :key="tab.key"
-        class="cf-tab"
+        class="cf-filter-pill"
         :class="{ active: activeTab === tab.key }"
         @click="activeTab = tab.key">
         {{ tab.label }}
@@ -12443,26 +11915,32 @@ const CareerFoundation = {
       </div>
       <div class="cf-profile-card">
         <div class="cf-profile-head">
-          <p class="cf-profile-name">{{ resume.name || 'Nama Lengkap' }}</p>
-          <p class="cf-profile-title">{{ resume.title || 'Posisi / Bidang Karir' }}</p>
-          <div class="cf-profile-contacts">
-            <span v-if="resume.email" class="cf-profile-contact">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-              {{ resume.email }}
-            </span>
-            <span v-if="resume.phone" class="cf-profile-contact">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.42C1.61 2.22 2.5 1.22 3.7 1H6.7a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.29 6.29l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              {{ resume.phone }}
-            </span>
-            <span v-if="resume.location" class="cf-profile-contact">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              {{ resume.location }}
-            </span>
-            <span v-if="resume.linkedin" class="cf-profile-contact">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
-              {{ resume.linkedin }}
-            </span>
+          <div>
+            <p class="cf-profile-name">{{ resume.name || 'Nama Lengkap' }}</p>
+            <p class="cf-profile-title">{{ resume.title || 'Posisi / Bidang Karir' }}</p>
+            <div class="cf-profile-contacts">
+              <span v-if="resume.email" class="cf-profile-contact">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                {{ resume.email }}
+              </span>
+              <span v-if="resume.phone" class="cf-profile-contact">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.42C1.61 2.22 2.5 1.22 3.7 1H6.7a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.29 6.29l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                {{ resume.phone }}
+              </span>
+              <span v-if="resume.location" class="cf-profile-contact">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                {{ resume.location }}
+              </span>
+              <span v-if="resume.linkedin" class="cf-profile-contact">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                {{ resume.linkedin }}
+              </span>
+            </div>
           </div>
+          <button class="cf-btn-ghost" @click="editResume" style="flex-shrink:0; align-self:flex-start;">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
         </div>
         <div v-if="resume.summary || resume.skills || resume.experience || resume.education || resume.languages" class="cf-profile-body">
           <div v-if="resume.summary" class="cf-profile-section-full">
@@ -12668,8 +12146,8 @@ const CareerFoundation = {
           <div class="cf-doc-info">
             <p class="cf-doc-title">{{ doc.title }}</p>
             <div class="cf-doc-meta">
-              <span v-if="doc.target">{{ doc.target }}</span>
-              <span v-if="doc.updatedAt">{{ formatLastUpdated(doc.updatedAt) }}</span>
+              <span v-if="doc.target" style="font-size:11.5px;color:var(--text-muted,#6E6359);">{{ doc.target }}</span>
+              <span v-if="doc.updatedAt" style="font-size:11px;color:#C8BDB5;font-family:'Hack',monospace;">{{ formatLastUpdated(doc.updatedAt) }}</span>
             </div>
           </div>
           <div class="cf-doc-actions">
@@ -12679,6 +12157,10 @@ const CareerFoundation = {
               <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
             </button>
           </div>
+          <button class="cf-doc-apply-btn" @click="viewDoc(doc)">
+            Buka
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </button>
         </div>
       </div>
     </div>
@@ -12708,8 +12190,8 @@ const CareerFoundation = {
           <div class="cf-doc-info">
             <p class="cf-doc-title">{{ doc.title }}</p>
             <div class="cf-doc-meta">
-              <span v-if="doc.target">{{ doc.target }}</span>
-              <span v-if="doc.updatedAt">{{ formatLastUpdated(doc.updatedAt) }}</span>
+              <span v-if="doc.target" style="font-size:11.5px;color:var(--text-muted,#6E6359);">{{ doc.target }}</span>
+              <span v-if="doc.updatedAt" style="font-size:11px;color:#C8BDB5;font-family:'Hack',monospace;">{{ formatLastUpdated(doc.updatedAt) }}</span>
             </div>
           </div>
           <div class="cf-doc-actions">
@@ -12719,6 +12201,10 @@ const CareerFoundation = {
               <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
             </button>
           </div>
+          <button class="cf-doc-apply-btn" @click="viewDoc(doc)">
+            Buka
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </button>
         </div>
       </div>
     </div>
@@ -12748,8 +12234,8 @@ const CareerFoundation = {
           <div class="cf-doc-info">
             <p class="cf-doc-title">{{ doc.title }}</p>
             <div class="cf-doc-meta">
-              <span v-if="doc.target">{{ doc.target }}</span>
-              <span v-if="doc.updatedAt">{{ formatLastUpdated(doc.updatedAt) }}</span>
+              <span v-if="doc.target" style="font-size:11.5px;color:var(--text-muted,#6E6359);">{{ doc.target }}</span>
+              <span v-if="doc.updatedAt" style="font-size:11px;color:#C8BDB5;font-family:'Hack',monospace;">{{ formatLastUpdated(doc.updatedAt) }}</span>
             </div>
           </div>
           <div class="cf-doc-actions">
@@ -12759,6 +12245,10 @@ const CareerFoundation = {
               <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
             </button>
           </div>
+          <button class="cf-doc-apply-btn" @click="viewDoc(doc)">
+            Buka
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </button>
         </div>
       </div>
     </div>
@@ -12785,8 +12275,8 @@ const CareerFoundation = {
             <p class="cf-doc-title">{{ doc.title }}</p>
             <div class="cf-doc-meta">
               <span class="cf-doc-type-badge" :style="{ background: docTypeColor(doc.type) + '18', color: docTypeColor(doc.type) }">{{ docTypeLabel(doc.type) }}</span>
-              <span v-if="doc.target">{{ doc.target }}</span>
-              <span v-if="doc.updatedAt">{{ formatLastUpdated(doc.updatedAt) }}</span>
+              <span v-if="doc.target" style="font-size:11.5px;color:var(--text-muted,#6E6359);">{{ doc.target }}</span>
+              <span v-if="doc.updatedAt" style="font-size:11px;color:#C8BDB5;font-family:'Hack',monospace;">{{ formatLastUpdated(doc.updatedAt) }}</span>
             </div>
           </div>
           <div class="cf-doc-actions">
@@ -12796,6 +12286,10 @@ const CareerFoundation = {
               <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
             </button>
           </div>
+          <button class="cf-doc-apply-btn" @click="viewDoc(doc)">
+            Buka
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </button>
         </div>
       </div>
     </div>
