@@ -7334,11 +7334,11 @@ input:checked + .switch-slider:before {
   border: 1.5px solid var(--color-sand, #E8DFD8);
   border-radius: 12px;
   max-width: 720px;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Calibri', sans-serif;
   font-size: 13px;
   color: #1a1a1a;
   box-shadow: 0 4px 24px rgba(44,38,33,0.08);
-  overflow: hidden;
+  overflow: clip;
 }
 .cv2-header {
   padding: 26px 30px 16px;
@@ -7411,6 +7411,35 @@ input:checked + .switch-slider:before {
   margin: 0;
 }
 .cv2-section-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+/* Section head left: drag handle + title */
+.cv2-section-head-left {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.cv2-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
+  cursor: grab;
+  padding: 0 2px;
+  border-radius: 3px;
+  transition: color 0.12s, background 0.12s;
+  flex-shrink: 0;
+  user-select: none;
+}
+.cv2-section:hover .cv2-drag-handle { color: #aaa; }
+.cv2-drag-handle:hover { color: var(--color-terracotta, #D67B52) !important; background: #faf0ea; }
+.cv2-drag-handle:active { cursor: grabbing; }
+/* Drag-over highlight */
+.cv2-section-drag-over {
+  outline: 2px dashed var(--color-terracotta, #D67B52);
+  outline-offset: 3px;
+  border-radius: 4px;
+  background: rgba(214,123,82,0.04);
+}
 .cv2-sec-btn {
   background: none;
   border: 1px solid transparent;
@@ -7440,18 +7469,32 @@ input:checked + .switch-slider:before {
 .cv2-entry-head {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
 }
+.cv2-entry-role { font-weight: 700; font-size: 13px; color: #1a1a1a; flex: 1; min-width: 0; }
+.cv2-entry-period {
+  font-size: 11px;
+  color: #666;
+  white-space: nowrap;
+  font-family: 'Hack', monospace, sans-serif;
+}
+/* Per-entry edit button (experience) */
 .cv2-entry-head-right {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   flex-shrink: 0;
 }
-/* Hide edit button by default, show on hover */
-.cv2-entry-editable .cv2-entry-edit-btn { opacity: 0; pointer-events: none; transition: opacity 0.15s; }
-.cv2-entry-editable:hover .cv2-entry-edit-btn { opacity: 1; pointer-events: auto; }
+.cv2-entry-editable .cv2-entry-edit-btn {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+.cv2-entry-editable:hover .cv2-entry-edit-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
 .cv2-entry-edit-btn {
   background: none;
   border: 1px solid transparent;
@@ -7467,14 +7510,13 @@ input:checked + .switch-slider:before {
   align-items: center;
   gap: 3px;
   white-space: nowrap;
+  position: relative;
+  z-index: 1;
 }
-.cv2-entry-edit-btn:hover { background: #faf0ea; color: var(--color-terracotta, #D67B52); border-color: #f0d9cc; }
-.cv2-entry-role { font-weight: 700; font-size: 13px; color: #1a1a1a; }
-.cv2-entry-period {
-  font-size: 11px;
-  color: #666;
-  white-space: nowrap;
-  font-family: 'Hack', monospace, sans-serif;
+.cv2-entry-edit-btn:hover {
+  background: #faf0ea;
+  color: var(--color-terracotta, #D67B52);
+  border-color: #f0d9cc;
 }
 .cv2-entry-company { font-size: 12.5px; font-style: italic; color: #444; margin: 1px 0 5px; }
 .cv2-entry-points { margin: 4px 0 0; padding-left: 16px; }

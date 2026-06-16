@@ -12042,182 +12042,312 @@ const CareerFoundation = {
         <!-- BODY -->
         <div class="cv2-body">
 
-          <!-- SUMMARY -->
-          <div class="cv2-section">
-            <div class="cv2-section-head">
-              <p class="cv2-section-title">Summary</p>
-              <div class="cv2-section-actions">
-                <button class="cv2-sec-btn" @click="openAtsEditSection('summary')">
-                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  Edit
-                </button>
-              </div>
-            </div>
-            <p v-if="atsCV.summary" class="cv2-summary">{{ atsCV.summary }}</p>
-            <span v-else class="cv2-empty" @click="openAtsEditSection('summary')">+ Klik untuk mengisi ringkasan profesional</span>
-          </div>
+          <!-- Sections rendered in sectionOrder -->
+          <template v-for="(skey, si) in sectionOrder" :key="skey">
 
-          <!-- PROFESSIONAL EXPERIENCE -->
-          <div class="cv2-section">
-            <div class="cv2-section-head">
-              <p class="cv2-section-title">Professional Experience</p>
-              <div class="cv2-section-actions">
-                <button class="cv2-sec-btn" @click="openAtsEditSection('experience')">
-                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  Edit
-                </button>
+            <!-- ── SUMMARY ── -->
+            <div v-if="skey === 'summary'" class="cv2-section"
+              :class="{ 'cv2-section-drag-over': dragOverIdx === si }"
+              draggable="true"
+              @dragstart="onSectionDragStart(si, $event)"
+              @dragover.prevent="onSectionDragOver(si, $event)"
+              @dragleave="onSectionDragLeave"
+              @drop.prevent="onSectionDrop(si)"
+              @dragend="onSectionDragEnd">
+              <div class="cv2-section-head">
+                <div class="cv2-section-head-left">
+                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan">
+                    <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><circle cx="7" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="7" cy="10" r="1.5"/><circle cx="13" cy="10" r="1.5"/><circle cx="7" cy="15" r="1.5"/><circle cx="13" cy="15" r="1.5"/></svg>
+                  </span>
+                  <p class="cv2-section-title">Summary</p>
+                </div>
+                <div class="cv2-section-actions">
+                  <button class="cv2-sec-btn" @click.stop="openAtsEditSection('summary')">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit
+                  </button>
+                  <button class="cv2-sec-btn danger" @click.stop="deleteBuiltinSection('summary')" title="Hapus section">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    Hapus
+                  </button>
+                </div>
               </div>
+              <p v-if="atsCV.summary" class="cv2-summary">{{ atsCV.summary }}</p>
+              <span v-else class="cv2-empty" @click="openAtsEditSection('summary')">+ Klik untuk mengisi ringkasan profesional</span>
             </div>
-            <div v-if="atsCV.experience">
-              <div v-for="(exp, idx) in parsedExperience" :key="idx" class="cv2-entry cv2-entry-editable">
-                <div class="cv2-entry-head">
-                  <span class="cv2-entry-role">{{ exp.role }}<span v-if="exp.company">, {{ exp.company }}</span></span>
-                  <div class="cv2-entry-head-right">
-                    <span v-if="exp.period" class="cv2-entry-period">{{ exp.period }}</span>
-                    <button class="cv2-entry-edit-btn" @click="openAtsEditExperienceEntry(idx)" title="Edit entri ini">
-                      <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                      Edit
-                    </button>
+
+            <!-- ── PROFESSIONAL EXPERIENCE ── -->
+            <div v-if="skey === 'experience'" class="cv2-section"
+              :class="{ 'cv2-section-drag-over': dragOverIdx === si }"
+              draggable="true"
+              @dragstart="onSectionDragStart(si, $event)"
+              @dragover.prevent="onSectionDragOver(si, $event)"
+              @dragleave="onSectionDragLeave"
+              @drop.prevent="onSectionDrop(si)"
+              @dragend="onSectionDragEnd">
+              <div class="cv2-section-head">
+                <div class="cv2-section-head-left">
+                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan">
+                    <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><circle cx="7" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="7" cy="10" r="1.5"/><circle cx="13" cy="10" r="1.5"/><circle cx="7" cy="15" r="1.5"/><circle cx="13" cy="15" r="1.5"/></svg>
+                  </span>
+                  <p class="cv2-section-title">Professional Experience</p>
+                </div>
+                <div class="cv2-section-actions">
+                  <button class="cv2-sec-btn" @click.stop="openAtsEditSection('experience')">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit
+                  </button>
+                  <button class="cv2-sec-btn danger" @click.stop="deleteBuiltinSection('experience')" title="Hapus section">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    Hapus
+                  </button>
+                </div>
+              </div>
+              <div v-if="atsCV.experience">
+                <div v-for="(exp, idx) in parsedExperience" :key="idx" class="cv2-entry cv2-entry-editable" draggable="false">
+                  <div class="cv2-entry-head">
+                    <span class="cv2-entry-role">{{ exp.role }}<span v-if="exp.company">, {{ exp.company }}</span></span>
+                    <div class="cv2-entry-head-right">
+                      <span v-if="exp.period" class="cv2-entry-period">{{ exp.period }}</span>
+                      <button class="cv2-entry-edit-btn" @click.stop="openAtsEditExperienceEntry(idx)" title="Edit entri ini">
+                        <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        Edit
+                      </button>
+                    </div>
                   </div>
+                  <ul v-if="exp.points.length" class="cv2-entry-points">
+                    <li v-for="(pt, i) in exp.points" :key="i">{{ pt }}</li>
+                  </ul>
                 </div>
-                <ul v-if="exp.points.length" class="cv2-entry-points">
-                  <li v-for="(pt, i) in exp.points" :key="i">{{ pt }}</li>
-                </ul>
               </div>
+              <span v-else class="cv2-empty" @click="openAtsEditSection('experience')">+ Klik untuk mengisi pengalaman kerja</span>
             </div>
-            <span v-else class="cv2-empty" @click="openAtsEditSection('experience')">+ Klik untuk mengisi pengalaman kerja</span>
-          </div>
 
-          <!-- PROJECTS -->
-          <div v-if="atsCV.projects !== undefined" class="cv2-section">
-            <div class="cv2-section-head">
-              <p class="cv2-section-title">Projects</p>
-              <div class="cv2-section-actions">
-                <button class="cv2-sec-btn" @click="openAtsEditSection('projects')">
-                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  Edit
-                </button>
-              </div>
-            </div>
-            <div v-if="atsCV.projects">
-              <div v-for="(proj, idx) in parsedProjects" :key="idx" class="cv2-entry">
-                <div class="cv2-entry-head">
-                  <span class="cv2-entry-role">{{ proj.name }}</span>
-                  <span v-if="proj.period" class="cv2-entry-period">{{ proj.period }}</span>
+            <!-- ── PROJECTS ── -->
+            <div v-if="skey === 'projects'" class="cv2-section"
+              :class="{ 'cv2-section-drag-over': dragOverIdx === si }"
+              draggable="true"
+              @dragstart="onSectionDragStart(si, $event)"
+              @dragover.prevent="onSectionDragOver(si, $event)"
+              @dragleave="onSectionDragLeave"
+              @drop.prevent="onSectionDrop(si)"
+              @dragend="onSectionDragEnd">
+              <div class="cv2-section-head">
+                <div class="cv2-section-head-left">
+                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan">
+                    <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><circle cx="7" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="7" cy="10" r="1.5"/><circle cx="13" cy="10" r="1.5"/><circle cx="7" cy="15" r="1.5"/><circle cx="13" cy="15" r="1.5"/></svg>
+                  </span>
+                  <p class="cv2-section-title">Projects</p>
                 </div>
-                <p v-if="proj.desc" class="cv2-entry-desc">{{ proj.desc }}</p>
-                <ul v-if="proj.points.length" class="cv2-entry-points">
-                  <li v-for="(pt, i) in proj.points" :key="i">{{ pt }}</li>
-                </ul>
-              </div>
-            </div>
-            <span v-else class="cv2-empty" @click="openAtsEditSection('projects')">+ Klik untuk mengisi projects</span>
-          </div>
-
-          <!-- SKILLS — 2 kolom -->
-          <div class="cv2-section">
-            <div class="cv2-section-head">
-              <p class="cv2-section-title">Skills</p>
-              <div class="cv2-section-actions">
-                <button class="cv2-sec-btn" @click="openAtsEditSection('skills')">
-                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  Edit
-                </button>
-              </div>
-            </div>
-            <div v-if="atsCV.skills" class="cv2-skills-grid">
-              <span v-for="(sk, i) in parsedSkills" :key="i" class="cv2-skill-item">{{ sk }}</span>
-            </div>
-            <span v-else class="cv2-empty" @click="openAtsEditSection('skills')">+ Klik untuk mengisi keahlian</span>
-          </div>
-
-          <!-- EDUCATION -->
-          <div class="cv2-section">
-            <div class="cv2-section-head">
-              <p class="cv2-section-title">Education</p>
-              <div class="cv2-section-actions">
-                <button class="cv2-sec-btn" @click="openAtsEditSection('education')">
-                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  Edit
-                </button>
-              </div>
-            </div>
-            <div v-if="atsCV.education">
-              <div v-for="(edu, idx) in parsedEducation" :key="idx" class="cv2-edu-entry">
-                <div class="cv2-entry-head">
-                  <span class="cv2-entry-role">{{ edu.degree }}</span>
-                  <span v-if="edu.period" class="cv2-entry-period">{{ edu.period }}</span>
+                <div class="cv2-section-actions">
+                  <button class="cv2-sec-btn" @click.stop="openAtsEditSection('projects')">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit
+                  </button>
+                  <button class="cv2-sec-btn danger" @click.stop="deleteBuiltinSection('projects')" title="Hapus section">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    Hapus
+                  </button>
                 </div>
-                <p class="cv2-entry-company">{{ edu.school }}</p>
-                <p v-if="edu.detail" class="cv2-edu-detail">{{ edu.detail }}</p>
               </div>
-            </div>
-            <span v-else class="cv2-empty" @click="openAtsEditSection('education')">+ Klik untuk mengisi pendidikan</span>
-          </div>
-
-          <!-- ADDITIONAL INFORMATION -->
-          <div v-if="atsCV.languages || atsCV.certifications || (!atsCV.languages && !atsCV.certifications)" class="cv2-section">
-            <div class="cv2-section-head">
-              <p class="cv2-section-title">Additional Information</p>
-              <div class="cv2-section-actions">
-                <button class="cv2-sec-btn" @click="openAtsEditSection('languages')">Edit Bahasa</button>
-                <button class="cv2-sec-btn" @click="openAtsEditSection('certifications')">Edit Sertifikasi</button>
-              </div>
-            </div>
-            <div v-if="atsCV.languages">
-              <p style="font-size:12.5px; font-weight:700; color:#1a1a1a; margin:0 0 2px;">Languages:</p>
-              <p style="font-size:12.5px; color:#333; margin:0 0 8px;">{{ parsedLanguages.map(function(l){ return l.name + (l.level ? ' ('+l.level+')' : ''); }).join(', ') }}</p>
-            </div>
-            <div v-if="atsCV.certifications">
-              <p style="font-size:12.5px; font-weight:700; color:#1a1a1a; margin:0 0 2px;">Certifications:</p>
-              <p v-for="(cert, i) in parsedCertifications" :key="i" class="cv2-cert-item">{{ cert }}</p>
-            </div>
-            <span v-if="!atsCV.languages && !atsCV.certifications" class="cv2-empty" @click="openAtsEditSection('languages')">+ Klik untuk mengisi informasi tambahan</span>
-          </div>
-
-          <!-- ORGANISASI -->
-          <div v-if="atsCV.organization !== undefined" class="cv2-section">
-            <div class="cv2-section-head">
-              <p class="cv2-section-title">Organization & Activities</p>
-              <div class="cv2-section-actions">
-                <button class="cv2-sec-btn" @click="openAtsEditSection('organization')">
-                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  Edit
-                </button>
-              </div>
-            </div>
-            <div v-if="atsCV.organization">
-              <div v-for="(org, idx) in parsedOrganization" :key="idx" class="cv2-entry">
-                <div class="cv2-entry-head">
-                  <span class="cv2-entry-role">{{ org.role }}<span v-if="org.org"> · {{ org.org }}</span></span>
-                  <span v-if="org.period" class="cv2-entry-period">{{ org.period }}</span>
+              <div v-if="atsCV.projects">
+                <div v-for="(proj, idx) in parsedProjects" :key="idx" class="cv2-entry">
+                  <div class="cv2-entry-head">
+                    <span class="cv2-entry-role">{{ proj.name }}</span>
+                    <span v-if="proj.period" class="cv2-entry-period">{{ proj.period }}</span>
+                  </div>
+                  <p v-if="proj.desc" class="cv2-entry-desc">{{ proj.desc }}</p>
+                  <ul v-if="proj.points.length" class="cv2-entry-points">
+                    <li v-for="(pt, i) in proj.points" :key="i">{{ pt }}</li>
+                  </ul>
                 </div>
-                <ul v-if="org.points.length" class="cv2-entry-points">
-                  <li v-for="(pt, i) in org.points" :key="i">{{ pt }}</li>
-                </ul>
               </div>
+              <span v-else class="cv2-empty" @click="openAtsEditSection('projects')">+ Klik untuk mengisi projects</span>
             </div>
-            <span v-else class="cv2-empty" @click="openAtsEditSection('organization')">+ Klik untuk mengisi organisasi & aktivitas</span>
-          </div>
 
-          <!-- CUSTOM SECTIONS -->
-          <div v-for="(sec, idx) in (atsCV.customSections || [])" :key="sec.id" class="cv2-section">
-            <div class="cv2-section-head">
-              <p class="cv2-section-title">{{ sec.title }}</p>
-              <div class="cv2-section-actions">
-                <button class="cv2-sec-btn" @click="cv2EditCustomSection(idx)">
-                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  Edit
-                </button>
-                <button class="cv2-sec-btn danger" @click="cv2DeleteCustomSection(idx)">
-                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-                  Hapus
-                </button>
+            <!-- ── SKILLS ── -->
+            <div v-if="skey === 'skills'" class="cv2-section"
+              :class="{ 'cv2-section-drag-over': dragOverIdx === si }"
+              draggable="true"
+              @dragstart="onSectionDragStart(si, $event)"
+              @dragover.prevent="onSectionDragOver(si, $event)"
+              @dragleave="onSectionDragLeave"
+              @drop.prevent="onSectionDrop(si)"
+              @dragend="onSectionDragEnd">
+              <div class="cv2-section-head">
+                <div class="cv2-section-head-left">
+                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan">
+                    <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><circle cx="7" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="7" cy="10" r="1.5"/><circle cx="13" cy="10" r="1.5"/><circle cx="7" cy="15" r="1.5"/><circle cx="13" cy="15" r="1.5"/></svg>
+                  </span>
+                  <p class="cv2-section-title">Skills</p>
+                </div>
+                <div class="cv2-section-actions">
+                  <button class="cv2-sec-btn" @click.stop="openAtsEditSection('skills')">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit
+                  </button>
+                  <button class="cv2-sec-btn danger" @click.stop="deleteBuiltinSection('skills')" title="Hapus section">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    Hapus
+                  </button>
+                </div>
               </div>
+              <div v-if="atsCV.skills" class="cv2-skills-grid">
+                <span v-for="(sk, i) in parsedSkills" :key="i" class="cv2-skill-item">{{ sk }}</span>
+              </div>
+              <span v-else class="cv2-empty" @click="openAtsEditSection('skills')">+ Klik untuk mengisi keahlian</span>
             </div>
-            <div v-if="sec.content" style="white-space:pre-wrap; font-size:12.5px; color:#333; line-height:1.7;">{{ sec.content }}</div>
-            <span v-else class="cv2-empty" @click="cv2EditCustomSection(idx)">+ Klik untuk mengisi section ini</span>
-          </div>
+
+            <!-- ── EDUCATION ── -->
+            <div v-if="skey === 'education'" class="cv2-section"
+              :class="{ 'cv2-section-drag-over': dragOverIdx === si }"
+              draggable="true"
+              @dragstart="onSectionDragStart(si, $event)"
+              @dragover.prevent="onSectionDragOver(si, $event)"
+              @dragleave="onSectionDragLeave"
+              @drop.prevent="onSectionDrop(si)"
+              @dragend="onSectionDragEnd">
+              <div class="cv2-section-head">
+                <div class="cv2-section-head-left">
+                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan">
+                    <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><circle cx="7" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="7" cy="10" r="1.5"/><circle cx="13" cy="10" r="1.5"/><circle cx="7" cy="15" r="1.5"/><circle cx="13" cy="15" r="1.5"/></svg>
+                  </span>
+                  <p class="cv2-section-title">Education</p>
+                </div>
+                <div class="cv2-section-actions">
+                  <button class="cv2-sec-btn" @click.stop="openAtsEditSection('education')">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit
+                  </button>
+                  <button class="cv2-sec-btn danger" @click.stop="deleteBuiltinSection('education')" title="Hapus section">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    Hapus
+                  </button>
+                </div>
+              </div>
+              <div v-if="atsCV.education">
+                <div v-for="(edu, idx) in parsedEducation" :key="idx" class="cv2-edu-entry">
+                  <div class="cv2-entry-head">
+                    <span class="cv2-entry-role">{{ edu.degree }}</span>
+                    <span v-if="edu.period" class="cv2-entry-period">{{ edu.period }}</span>
+                  </div>
+                  <p class="cv2-entry-company">{{ edu.school }}</p>
+                  <p v-if="edu.detail" class="cv2-edu-detail">{{ edu.detail }}</p>
+                </div>
+              </div>
+              <span v-else class="cv2-empty" @click="openAtsEditSection('education')">+ Klik untuk mengisi pendidikan</span>
+            </div>
+
+            <!-- ── ADDITIONAL INFORMATION ── -->
+            <div v-if="skey === 'additional'" class="cv2-section"
+              :class="{ 'cv2-section-drag-over': dragOverIdx === si }"
+              draggable="true"
+              @dragstart="onSectionDragStart(si, $event)"
+              @dragover.prevent="onSectionDragOver(si, $event)"
+              @dragleave="onSectionDragLeave"
+              @drop.prevent="onSectionDrop(si)"
+              @dragend="onSectionDragEnd">
+              <div class="cv2-section-head">
+                <div class="cv2-section-head-left">
+                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan">
+                    <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><circle cx="7" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="7" cy="10" r="1.5"/><circle cx="13" cy="10" r="1.5"/><circle cx="7" cy="15" r="1.5"/><circle cx="13" cy="15" r="1.5"/></svg>
+                  </span>
+                  <p class="cv2-section-title">Additional Information</p>
+                </div>
+                <div class="cv2-section-actions">
+                  <button class="cv2-sec-btn" @click.stop="openAtsEditSection('languages')">Edit Bahasa</button>
+                  <button class="cv2-sec-btn" @click.stop="openAtsEditSection('certifications')">Edit Sertifikasi</button>
+                  <button class="cv2-sec-btn danger" @click.stop="deleteBuiltinSection('additional')" title="Hapus section">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    Hapus
+                  </button>
+                </div>
+              </div>
+              <div v-if="atsCV.languages">
+                <p style="font-size:12.5px; font-weight:700; color:#1a1a1a; margin:0 0 2px;">Languages:</p>
+                <p style="font-size:12.5px; color:#333; margin:0 0 8px;">{{ parsedLanguages.map(function(l){ return l.name + (l.level ? ' ('+l.level+')' : ''); }).join(', ') }}</p>
+              </div>
+              <div v-if="atsCV.certifications">
+                <p style="font-size:12.5px; font-weight:700; color:#1a1a1a; margin:0 0 2px;">Certifications:</p>
+                <p v-for="(cert, i) in parsedCertifications" :key="i" class="cv2-cert-item">{{ cert }}</p>
+              </div>
+              <span v-if="!atsCV.languages && !atsCV.certifications" class="cv2-empty" @click="openAtsEditSection('languages')">+ Klik untuk mengisi informasi tambahan</span>
+            </div>
+
+            <!-- ── ORGANIZATION ── -->
+            <div v-if="skey === 'organization'" class="cv2-section"
+              :class="{ 'cv2-section-drag-over': dragOverIdx === si }"
+              draggable="true"
+              @dragstart="onSectionDragStart(si, $event)"
+              @dragover.prevent="onSectionDragOver(si, $event)"
+              @dragleave="onSectionDragLeave"
+              @drop.prevent="onSectionDrop(si)"
+              @dragend="onSectionDragEnd">
+              <div class="cv2-section-head">
+                <div class="cv2-section-head-left">
+                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan">
+                    <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><circle cx="7" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="7" cy="10" r="1.5"/><circle cx="13" cy="10" r="1.5"/><circle cx="7" cy="15" r="1.5"/><circle cx="13" cy="15" r="1.5"/></svg>
+                  </span>
+                  <p class="cv2-section-title">Organization & Activities</p>
+                </div>
+                <div class="cv2-section-actions">
+                  <button class="cv2-sec-btn" @click.stop="openAtsEditSection('organization')">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit
+                  </button>
+                  <button class="cv2-sec-btn danger" @click.stop="deleteBuiltinSection('organization')" title="Hapus section">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    Hapus
+                  </button>
+                </div>
+              </div>
+              <div v-if="atsCV.organization">
+                <div v-for="(org, idx) in parsedOrganization" :key="idx" class="cv2-entry">
+                  <div class="cv2-entry-head">
+                    <span class="cv2-entry-role">{{ org.role }}<span v-if="org.org"> · {{ org.org }}</span></span>
+                    <span v-if="org.period" class="cv2-entry-period">{{ org.period }}</span>
+                  </div>
+                  <ul v-if="org.points.length" class="cv2-entry-points">
+                    <li v-for="(pt, i) in org.points" :key="i">{{ pt }}</li>
+                  </ul>
+                </div>
+              </div>
+              <span v-else class="cv2-empty" @click="openAtsEditSection('organization')">+ Klik untuk mengisi organisasi & aktivitas</span>
+            </div>
+
+            <!-- ── CUSTOM SECTIONS ── -->
+            <div v-if="skey.startsWith('custom:') && getCustomSection(skey)"
+              class="cv2-section"
+              :class="{ 'cv2-section-drag-over': dragOverIdx === si }"
+              draggable="true"
+              @dragstart="onSectionDragStart(si, $event)"
+              @dragover.prevent="onSectionDragOver(si, $event)"
+              @dragleave="onSectionDragLeave"
+              @drop.prevent="onSectionDrop(si)"
+              @dragend="onSectionDragEnd">
+              <div class="cv2-section-head">
+                <div class="cv2-section-head-left">
+                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan">
+                    <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><circle cx="7" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="7" cy="10" r="1.5"/><circle cx="13" cy="10" r="1.5"/><circle cx="7" cy="15" r="1.5"/><circle cx="13" cy="15" r="1.5"/></svg>
+                  </span>
+                  <p class="cv2-section-title">{{ getCustomSection(skey).sec.title }}</p>
+                </div>
+                <div class="cv2-section-actions">
+                  <button class="cv2-sec-btn" @click.stop="cv2EditCustomSection(getCustomSection(skey).idx)">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit
+                  </button>
+                  <button class="cv2-sec-btn danger" @click.stop="cv2DeleteCustomSection(getCustomSection(skey).idx)">
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    Hapus
+                  </button>
+                </div>
+              </div>
+              <div v-if="getCustomSection(skey).sec.content" style="white-space:pre-wrap; font-size:12.5px; color:#333; line-height:1.7;">{{ getCustomSection(skey).sec.content }}</div>
+              <span v-else class="cv2-empty" @click="cv2EditCustomSection(getCustomSection(skey).idx)">+ Klik untuk mengisi section ini</span>
+            </div>
+
+          </template>
 
           <!-- Tombol tambah section -->
           <button class="cv2-add-section-btn" @click="cv2AddSection">
@@ -12585,7 +12715,7 @@ const CareerFoundation = {
             </div>
             <div style="margin-top:10px">
               <label class="cf-field-label">Poin Pencapaian</label>
-              <p style="font-size:11px; color:#AAA; margin:2px 0 6px;">Satu poin per baris. Gunakan tanda <code style="background:rgba(255,255,255,0.08);padding:1px 4px;border-radius:3px;">-</code> di awal tiap poin (opsional).</p>
+              <p style="font-size:11px; color:#AAA; margin:2px 0 6px;">Satu poin per baris. Gunakan tanda <code style="background:rgba(0,0,0,0.06);padding:1px 4px;border-radius:3px;">-</code> di awal tiap poin (opsional).</p>
               <textarea class="cf-textarea" v-model="atsExpEntryForm.pointsText" rows="5" placeholder="- Mengelola konten Instagram dengan rata-rata reach 50K/bulan&#10;- Meningkatkan engagement rate dari 2% ke 5,8%&#10;- Berkolaborasi dengan tim desainer untuk kampanye brand"></textarea>
             </div>
           </div>
@@ -12730,6 +12860,11 @@ const CareerFoundation = {
       cv2ShowCustomModal: false,
       cv2EditingCustomIdx: null,
       cv2CustomForm: { title: '', content: '' },
+
+      // Section order & drag state
+      sectionOrder: ['summary','experience','projects','skills','education','additional','organization'],
+      dragSrcIdx: null,
+      dragOverIdx: null,
     };
   },
 
@@ -13017,6 +13152,66 @@ const CareerFoundation = {
       this.showExpEntryModal = false;
     },
 
+    // ── Custom section lookup by skey ──
+    getCustomSection(skey) {
+      if (!skey || !skey.startsWith('custom:')) return null;
+      const id = skey.slice(7);
+      const idx = (this.atsCV.customSections || []).findIndex(s => s.id === id);
+      if (idx === -1) return null;
+      return { idx, sec: this.atsCV.customSections[idx] };
+    },
+
+    // ── Section drag & drop ──
+    onSectionDragStart(idx, e) {
+      this.dragSrcIdx = idx;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', String(idx));
+    },
+    onSectionDragOver(idx) {
+      if (idx !== this.dragSrcIdx) this.dragOverIdx = idx;
+    },
+    onSectionDragLeave() {
+      this.dragOverIdx = null;
+    },
+    onSectionDrop(toIdx) {
+      const fromIdx = this.dragSrcIdx;
+      if (fromIdx === null || fromIdx === toIdx) { this.dragOverIdx = null; return; }
+      const order = [...this.sectionOrder];
+      const [moved] = order.splice(fromIdx, 1);
+      order.splice(toIdx, 0, moved);
+      this.sectionOrder = order;
+      this.dragSrcIdx = null;
+      this.dragOverIdx = null;
+      this.saveSectionOrder();
+    },
+    onSectionDragEnd() {
+      this.dragSrcIdx = null;
+      this.dragOverIdx = null;
+    },
+    saveSectionOrder() {
+      WorkspaceStorage.setItem('career_section_order', JSON.stringify(this.sectionOrder));
+    },
+
+    // ── Delete built-in section ──
+    deleteBuiltinSection(key) {
+      const names = {
+        summary: 'Summary', experience: 'Professional Experience', projects: 'Projects',
+        skills: 'Skills', education: 'Education', additional: 'Additional Information',
+        organization: 'Organization & Activities',
+      };
+      if (!confirm('Hapus section "' + (names[key] || key) + '"?\nKonten akan dihapus dan section disembunyikan.')) return;
+      if (key === 'additional') {
+        this.atsCV.languages = '';
+        this.atsCV.certifications = '';
+      } else if (this.atsCV[key] !== undefined) {
+        this.atsCV[key] = '';
+      }
+      this.sectionOrder = this.sectionOrder.filter(k => k !== key);
+      this.atsCV.lastUpdated = new Date().toISOString();
+      this.saveAll();
+      this.saveSectionOrder();
+    },
+
     // ── CV v2 Custom Sections ──
     cv2AddSection() {
       this.cv2EditingCustomIdx = null;
@@ -13031,8 +13226,11 @@ const CareerFoundation = {
     },
     cv2DeleteCustomSection(idx) {
       if (!confirm('Hapus section ini?')) return;
+      const sec = this.atsCV.customSections[idx];
+      if (sec) this.sectionOrder = this.sectionOrder.filter(k => k !== 'custom:' + sec.id);
       this.atsCV.customSections.splice(idx, 1);
       this.saveAll();
+      this.saveSectionOrder();
     },
     cv2SaveCustomSection() {
       if (!this.cv2CustomForm.title.trim()) return alert('Nama section wajib diisi!');
@@ -13044,11 +13242,14 @@ const CareerFoundation = {
           content: this.cv2CustomForm.content,
         };
       } else {
+        const newId = 'csec-' + Date.now();
         this.atsCV.customSections.push({
-          id: 'csec-' + Date.now(),
+          id: newId,
           title: this.cv2CustomForm.title.trim(),
           content: this.cv2CustomForm.content,
         });
+        this.sectionOrder.push('custom:' + newId);
+        this.saveSectionOrder();
       }
       this.saveAll();
       this.cv2ShowCustomModal = false;
@@ -13097,6 +13298,22 @@ const CareerFoundation = {
         if (!parsed.customSections) parsed.customSections = [];
         if (parsed.projects === undefined) parsed.projects = '';
         this.atsCV = { ...this.atsCV, ...parsed };
+        // Append any custom sections not yet in default sectionOrder
+        (parsed.customSections || []).forEach(sec => {
+          const key = 'custom:' + sec.id;
+          if (!this.sectionOrder.includes(key)) this.sectionOrder.push(key);
+        });
+      }
+    } catch(_e) {}
+    try {
+      const so = WorkspaceStorage.getItem('career_section_order');
+      if (so) {
+        const saved = JSON.parse(so);
+        // Merge: keep saved order, add any new built-in keys missing
+        const defaults = ['summary','experience','projects','skills','education','additional','organization'];
+        const merged = saved.filter(k => typeof k === 'string');
+        defaults.forEach(k => { if (!merged.includes(k)) merged.push(k); });
+        this.sectionOrder = merged;
       }
     } catch(_e) {}
   },
