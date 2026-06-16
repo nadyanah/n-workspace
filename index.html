@@ -296,16 +296,6 @@
     .reminder-popup-body-scroll::-webkit-scrollbar-track { background: transparent; }
     .reminder-popup-body-scroll::-webkit-scrollbar-thumb { background: var(--color-sand, #D9D0C3); border-radius: 4px; }
 
-    /* ── Habit item in popup: clickable hover effect ── */
-    .reminder-popup-item-habit-clickable {
-      transition: background 0.15s, transform 0.12s;
-      border-radius: 8px;
-    }
-    .reminder-popup-item-habit-clickable:hover {
-      background: rgba(95, 133, 117, 0.08);
-      transform: translateX(2px);
-    }
-
     /* ── Habit row flash dari notif trigger ── */
     @keyframes habit-row-flash {
       0%   { background: transparent; }
@@ -942,7 +932,6 @@
       <!-- Reminder Popup — muncul otomatis saat web dibuka / jam task tiba -->
       <reminder-popup
         @open-notif="showNotifPanel = true"
-        @trigger-habit="onTriggerHabit"
         @dismiss="">
       </reminder-popup>
 

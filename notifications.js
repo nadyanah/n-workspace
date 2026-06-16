@@ -196,18 +196,12 @@ const ReminderPopup = {
                 </div>
 
                 <!-- Pengingat item -->
-                <div v-else
-                     class="reminder-popup-item"
-                     :class="{ 'reminder-popup-item-habit-clickable': entry.item.isHabit }"
-                     @click="entry.item.isHabit ? triggerHabitFromPopup(entry.item) : null"
-                     :style="entry.item.isHabit ? 'cursor:pointer;' : ''">
+                <div v-else class="reminder-popup-item">
                   <div class="reminder-popup-item-time">{{ entry.item.time }}</div>
                   <div class="reminder-popup-item-info" style="flex:1; min-width:0;">
                     <div class="reminder-popup-item-title">{{ entry.item.title }}</div>
                     <div class="reminder-popup-item-sub">{{ entry.item.subtitle }}</div>
                   </div>
-                  <!-- Arrow indicator for habit items -->
-                  <svg v-if="entry.item.isHabit" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-sage,#7FA882); flex-shrink:0; margin-left:6px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </div>
               </template>
 
@@ -331,7 +325,7 @@ const ReminderPopup = {
     </transition>
   `,
 
-  emits: ['open-notif', 'dismiss', 'trigger-habit'],
+  emits: ['open-notif', 'dismiss'],
 
   data() {
     return {
@@ -657,14 +651,6 @@ const ReminderPopup = {
     jumpTo(i) {
       this.slideDir   = i > this.currentIdx ? 'next' : 'prev';
       this.currentIdx = i;
-    },
-
-    // ── Handle klik habit di popup mode open → navigate + auto-trigger ────
-    triggerHabitFromPopup(notif) {
-      // Emit event ke parent (App) dengan habitId untuk auto-trigger di HabitTracker
-      const habitId = notif.id.replace(/^habit_/, '');
-      this.$emit('trigger-habit', habitId);
-      this.dismiss();
     },
 
     // ── Actions ──────────────────────────────────────────────────────────
