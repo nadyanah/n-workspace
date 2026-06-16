@@ -7334,11 +7334,11 @@ input:checked + .switch-slider:before {
   border: 1.5px solid var(--color-sand, #E8DFD8);
   border-radius: 12px;
   max-width: 720px;
-  font-family: 'Calibri', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 13px;
   color: #1a1a1a;
   box-shadow: 0 4px 24px rgba(44,38,33,0.08);
-  overflow: clip;
+  overflow: hidden;
 }
 .cv2-header {
   padding: 26px 30px 16px;

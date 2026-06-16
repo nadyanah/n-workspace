@@ -8860,14 +8860,6 @@ const GoogleCalendar = {
           </template>
         </div>
 
-        <!-- LEGEND -->
-        <div v-if="localView==='agenda'" class="gcal-notif-legend" style="margin-top:8px;">
-          <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" :style="{ background: agendaFilterColors.task }"></span>Task Plan</span>
-          <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" :style="{ background: agendaFilterColors.habit }"></span>Habit</span>
-          <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" :style="{ background: agendaFilterColors.manual }"></span>Pengingat</span>
-          <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" :style="{ background: agendaFilterColors.content }"></span>Content Plan</span>
-          <span class="gcal-notif-legend-item"><span class="gcal-notif-legend-dot" style="background:#4285F4;"></span>Acara</span>
-        </div>
 
         <!-- ========== AGENDA DETAIL POPUP (mirip Google Calendar) ========== -->
         <transition name="agenda-detail-pop">
@@ -9087,6 +9079,7 @@ const GoogleCalendar = {
                       <option value="pomodoroTimer">Pomodoro Timer</option>
                       <option value="googleCalendar">Daily n (Kalender)</option>
                       <option value="financialTracker">Financial Tracker</option>
+                      <option value="CareerFoundation">Career Foundation</option>
                     </select>
                   </div>
 
