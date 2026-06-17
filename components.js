@@ -12178,6 +12178,334 @@ const InspirationBoard = {
 };
 
 
+
+// ============================================================================
+// DZIKIR COUNTER Component — Mini popup untuk dzikir harian dengan counter & target
+// ============================================================================
+const DzikirCounter = {
+  props: ['show'],
+  emits: ['close'],
+  template: `
+    <teleport to="body">
+      <transition name="insight-modal-fade">
+        <div v-if="show"
+          style="position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; background: rgba(30,22,16,0.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 16px;"
+          @click.self="$emit('close')">
+
+          <div style="background: var(--color-paper, #FAF7F2); width: min(420px, 96vw); border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.12); display: flex; flex-direction: column; overflow: hidden; animation: insightPopIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-height: 90vh;">
+
+            <!-- Header -->
+            <div style="display: flex; align-items: center; gap: 12px; padding: 16px 22px 14px; background: var(--color-terracotta, #D67B52); color: #fff; flex-shrink: 0;">
+              <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 17px;">📿</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 15px; font-weight: 800; letter-spacing: 0.2px;">Dzikir Harian</div>
+                <div style="font-size: 11px; opacity: 0.82; margin-top: 1px;">tasbih digital ✦</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <!-- Manage list button -->
+                <button @click="showManage = true" title="Kelola daftar dzikir"
+                  style="background: rgba(255,255,255,0.18); border: none; border-radius: 9px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; transition: background 0.15s;"
+                  onmouseover="this.style.background='rgba(255,255,255,0.32)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                </button>
+                <!-- Close button -->
+                <button @click="$emit('close')"
+                  style="background: rgba(255,255,255,0.18); border: none; border-radius: 9px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 16px; transition: background 0.15s;"
+                  onmouseover="this.style.background='rgba(255,255,255,0.32)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">✕</button>
+              </div>
+            </div>
+
+            <!-- Body -->
+            <div style="padding: 22px 24px 26px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; align-items: center;">
+
+              <!-- Empty state: belum ada dzikir sama sekali -->
+              <div v-if="list.length === 0" style="text-align: center; padding: 40px 10px; color: var(--text-muted);">
+                <div style="font-size: 36px; margin-bottom: 12px;">📿</div>
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--text-dark);">Belum ada dzikir</div>
+                <div style="font-size: 12.5px; margin-bottom: 16px;">Tambahkan dzikir pertamamu untuk mulai menghitung.</div>
+                <button @click="showManage = true"
+                  style="height: 38px; padding: 0 18px; background: var(--color-terracotta, #D67B52); color: #fff; border: none; border-radius: 9px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit;">
+                  + Tambah Dzikir
+                </button>
+              </div>
+
+              <!-- Active dzikir display -->
+              <template v-else>
+                <!-- Selector dot kalau lebih dari 1 dzikir -->
+                <div v-if="list.length > 1" style="display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; justify-content: center;">
+                  <button v-for="(d, i) in list" :key="d.id"
+                    @click="activeIndex = i"
+                    :title="d.text"
+                    :style="{
+                      fontSize: '11px', fontWeight: 700, padding: '5px 12px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit',
+                      border: (i === activeIndex) ? '1.5px solid var(--color-terracotta)' : '1.5px solid var(--color-sand)',
+                      background: (i === activeIndex) ? 'rgba(214,123,82,0.12)' : '#fff',
+                      color: (i === activeIndex) ? 'var(--color-terracotta)' : 'var(--text-muted)'
+                    }">
+                    {{ d.text.length > 14 ? d.text.slice(0, 14) + '…' : d.text }}
+                  </button>
+                </div>
+
+                <!-- Nama dzikir aktif -->
+                <div style="font-size: 17px; font-weight: 800; color: var(--text-dark); text-align: center; margin-bottom: 4px; padding: 0 8px;">
+                  {{ activeDzikir.text }}
+                </div>
+                <div v-if="activeDzikir.arabic" style="font-size: 20px; color: var(--color-terracotta); text-align: center; margin-bottom: 14px; line-height: 1.6;" dir="rtl">
+                  {{ activeDzikir.arabic }}
+                </div>
+                <div v-else style="margin-bottom: 14px;"></div>
+
+                <!-- Target -->
+                <div style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 18px;">
+                  target {{ activeDzikir.target }}x
+                </div>
+
+                <!-- Tombol hitung utama (lingkaran besar) -->
+                <button @click="increment"
+                  style="width: 168px; height: 168px; border-radius: 50%; background: var(--color-terracotta, #D67B52); border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; box-shadow: 0 8px 24px rgba(214,123,82,0.35); transition: transform 0.08s, background 0.15s; user-select: none;"
+                  onmousedown="this.style.transform='scale(0.94)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'"
+                  ontouchstart="this.style.transform='scale(0.94)'" ontouchend="this.style.transform='scale(1)'">
+                  <span style="font-size: 44px; font-weight: 800; line-height: 1; font-family: 'Space Mono', monospace;">{{ activeDzikir.count }}</span>
+                  <span style="font-size: 11px; opacity: 0.85; margin-top: 6px; letter-spacing: 0.04em;">/ {{ activeDzikir.target }}</span>
+                </button>
+
+                <!-- Progress bar -->
+                <div style="width: 100%; max-width: 220px; height: 6px; background: var(--color-sand); border-radius: 6px; margin-top: 20px; overflow: hidden;">
+                  <div :style="{ width: Math.min(100, (activeDzikir.count / activeDzikir.target) * 100) + '%', height: '100%', background: 'var(--color-terracotta)', borderRadius: '6px', transition: 'width 0.2s' }"></div>
+                </div>
+
+                <!-- Pesan saat tercapai -->
+                <transition name="insight-modal-fade">
+                  <div v-if="justCompleted" style="margin-top: 14px; font-size: 12px; font-weight: 700; color: var(--color-terracotta); text-align: center;">
+                    ✦ Alhamdulillah, target tercapai! Lanjut ke dzikir berikutnya...
+                  </div>
+                </transition>
+
+                <!-- Reset manual -->
+                <button @click="resetActive"
+                  style="margin-top: 18px; font-size: 11.5px; color: var(--text-muted); background: none; border: none; cursor: pointer; font-family: inherit; text-decoration: underline;">
+                  Reset hitungan ini
+                </button>
+              </template>
+            </div>
+
+          </div>
+        </div>
+      </transition>
+
+      <!-- MANAGE POPUP — kelola daftar dzikir (tambah/edit/hapus) -->
+      <transition name="insight-modal-fade">
+        <div v-if="showManage"
+          style="position: fixed; inset: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background: rgba(30,22,16,0.55); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); padding: 16px;"
+          @click.self="closeManage">
+
+          <div style="background: var(--color-paper, #FAF7F2); width: min(520px, 96vw); max-height: 88vh; border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,0.32); display: flex; flex-direction: column; overflow: hidden; animation: insightPopIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+
+            <!-- Manage Header -->
+            <div style="display: flex; align-items: center; gap: 12px; padding: 16px 22px 14px; background: var(--color-terracotta, #D67B52); color: #fff; flex-shrink: 0;">
+              <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 17px;">📿</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 15px; font-weight: 800;">Kelola Dzikir</div>
+                <div style="font-size: 11px; opacity: 0.82; margin-top: 1px;">{{ list.length }} dzikir tersimpan</div>
+              </div>
+              <button @click="closeManage"
+                style="background: rgba(255,255,255,0.18); border: none; border-radius: 9px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 16px; transition: background 0.15s;"
+                onmouseover="this.style.background='rgba(255,255,255,0.32)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">✕</button>
+            </div>
+
+            <!-- Manage Body -->
+            <div style="overflow-y: auto; padding: 20px 24px; flex: 1;">
+
+              <!-- Form tambah/edit -->
+              <div style="background: #fff; border: 1.5px solid var(--color-sand); border-radius: 14px; padding: 16px 18px; margin-bottom: 18px;">
+                <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">
+                  {{ editingId ? 'Edit Dzikir' : 'Tambah Dzikir Baru' }}
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                  <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 5px;">Nama Dzikir <span style="color:#EF4444;">*</span></label>
+                  <input type="text" v-model="form.text" placeholder="cth., Subhanallah, Istighfar..."
+                    style="width: 100%; height: 38px; padding: 0 12px; border: 1.5px solid var(--color-sand); border-radius: 9px; font-size: 13px; font-family: inherit; color: var(--text-dark); background: #fff; box-sizing: border-box; outline: none;"
+                    @focus="$event.target.style.borderColor='var(--color-terracotta)'" @blur="$event.target.style.borderColor='var(--color-sand)'" />
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                  <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 5px;">Teks Arab <span style="font-weight:400; font-style:italic;">(opsional)</span></label>
+                  <input type="text" v-model="form.arabic" placeholder="cth., سُبْحَانَ اللَّهِ" dir="rtl"
+                    style="width: 100%; height: 38px; padding: 0 12px; border: 1.5px solid var(--color-sand); border-radius: 9px; font-size: 15px; font-family: inherit; color: var(--text-dark); background: #fff; box-sizing: border-box; outline: none;"
+                    @focus="$event.target.style.borderColor='var(--color-terracotta)'" @blur="$event.target.style.borderColor='var(--color-sand)'" />
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                  <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 5px;">Target Hitungan</label>
+                  <input type="number" min="1" v-model.number="form.target" placeholder="33"
+                    style="width: 100%; height: 38px; padding: 0 12px; border: 1.5px solid var(--color-sand); border-radius: 9px; font-size: 13px; font-family: inherit; color: var(--text-dark); background: #fff; box-sizing: border-box; outline: none;"
+                    @focus="$event.target.style.borderColor='var(--color-terracotta)'" @blur="$event.target.style.borderColor='var(--color-sand)'" />
+                </div>
+
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                  <button v-if="editingId" @click="cancelEdit"
+                    style="height: 36px; padding: 0 14px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); border-radius: 9px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;">
+                    Batal
+                  </button>
+                  <button @click="saveDzikir"
+                    style="height: 36px; padding: 0 18px; background: var(--color-terracotta, #D67B52); color: #fff; border: none; border-radius: 9px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;"
+                    onmouseover="this.style.background='var(--color-terracotta-dark, #B8663F)'" onmouseout="this.style.background='var(--color-terracotta, #D67B52)'">
+                    {{ editingId ? 'Simpan Perubahan' : '+ Tambah' }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Empty state list -->
+              <div v-if="list.length === 0" style="text-align: center; padding: 30px 10px; color: var(--text-muted);">
+                <div style="font-size: 12.5px;">Belum ada dzikir. Tambahkan dari form di atas.</div>
+              </div>
+
+              <!-- List dzikir -->
+              <div v-for="(d, i) in list" :key="d.id"
+                style="background: #fff; border: 1.5px solid var(--color-sand); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; border-left: 4px solid var(--color-terracotta, #D67B52);">
+
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-size: 13.5px; font-weight: 700; color: var(--text-dark);">{{ d.text }}</div>
+                  <div v-if="d.arabic" style="font-size: 13px; color: var(--color-terracotta); margin-top: 2px;" dir="rtl">{{ d.arabic }}</div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">target {{ d.target }}x · progres {{ d.count }}/{{ d.target }}</div>
+                </div>
+
+                <div style="display: flex; gap: 6px; flex-shrink: 0;">
+                  <button @click="startEdit(d)" title="Edit"
+                    style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 7px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--text-dark)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+                  </button>
+                  <button @click="deleteDzikir(i)" title="Hapus"
+                    style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 7px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </transition>
+    </teleport>
+  `,
+  data() {
+    return {
+      list: [],
+      activeIndex: 0,
+      showManage: false,
+      justCompleted: false,
+      editingId: null,
+      form: { text: '', arabic: '', target: 33 },
+      _completeTimer: null,
+    };
+  },
+  computed: {
+    activeDzikir() {
+      return this.list[this.activeIndex] || { text: '', arabic: '', count: 0, target: 33 };
+    },
+  },
+  methods: {
+    increment() {
+      if (!this.list.length) return;
+      const d = this.list[this.activeIndex];
+      if (d.count < d.target) {
+        d.count++;
+      }
+      if (d.count >= d.target) {
+        this.onTargetReached();
+      }
+      this.saveToStorage();
+    },
+    onTargetReached() {
+      this.justCompleted = true;
+      if (this._completeTimer) clearTimeout(this._completeTimer);
+      this._completeTimer = setTimeout(() => {
+        this.justCompleted = false;
+        // Auto lanjut ke dzikir berikutnya dalam list (jika ada lebih dari satu)
+        if (this.list.length > 1) {
+          this.activeIndex = (this.activeIndex + 1) % this.list.length;
+        }
+      }, 1400);
+    },
+    resetActive() {
+      if (!this.list.length) return;
+      this.list[this.activeIndex].count = 0;
+      this.justCompleted = false;
+      this.saveToStorage();
+    },
+    startEdit(d) {
+      this.editingId = d.id;
+      this.form = { text: d.text, arabic: d.arabic || '', target: d.target };
+    },
+    cancelEdit() {
+      this.editingId = null;
+      this.form = { text: '', arabic: '', target: 33 };
+    },
+    saveDzikir() {
+      const text = this.form.text.trim();
+      if (!text) return alert('Nama dzikir wajib diisi!');
+      const target = (this.form.target && this.form.target > 0) ? Math.floor(this.form.target) : 33;
+
+      if (this.editingId) {
+        const idx = this.list.findIndex(d => d.id === this.editingId);
+        if (idx !== -1) {
+          this.list[idx].text = text;
+          this.list[idx].arabic = this.form.arabic.trim();
+          this.list[idx].target = target;
+          if (this.list[idx].count > target) this.list[idx].count = target;
+        }
+      } else {
+        this.list.push({
+          id: 'dzikir-' + Date.now(),
+          text: text,
+          arabic: this.form.arabic.trim(),
+          target: target,
+          count: 0,
+        });
+      }
+      this.saveToStorage();
+      this.cancelEdit();
+    },
+    deleteDzikir(idx) {
+      if (!confirm('Hapus dzikir ini?')) return;
+      this.list.splice(idx, 1);
+      if (this.activeIndex >= this.list.length) this.activeIndex = Math.max(0, this.list.length - 1);
+      this.saveToStorage();
+    },
+    closeManage() {
+      this.showManage = false;
+      this.cancelEdit();
+    },
+    saveToStorage() {
+      WorkspaceStorage.setItem('dzikir_list', JSON.stringify(this.list));
+    },
+    seedDefaults() {
+      this.list = [
+        { id: 'dzikir-default-1', text: 'Subhanallah', arabic: 'سُبْحَانَ اللَّهِ', target: 33, count: 0 },
+        { id: 'dzikir-default-2', text: 'Alhamdulillah', arabic: 'الْحَمْدُ لِلَّهِ', target: 33, count: 0 },
+        { id: 'dzikir-default-3', text: 'Allahu Akbar', arabic: 'اللَّهُ أَكْبَرُ', target: 33, count: 0 },
+        { id: 'dzikir-default-4', text: 'Astaghfirullah', arabic: 'أَسْتَغْفِرُ اللَّهَ', target: 100, count: 0 },
+      ];
+      this.saveToStorage();
+    },
+  },
+  async mounted() {
+    await globalThis._workspaceStorageReady;
+    try {
+      const saved = WorkspaceStorage.getItem('dzikir_list');
+      if (saved) {
+        this.list = JSON.parse(saved);
+      } else {
+        this.seedDefaults();
+      }
+    } catch (_e) {
+      this.seedDefaults();
+    }
+  },
+};
+
+
 // ============================================================================
 // 11. CAREER FOUNDATION Component
 // ============================================================================

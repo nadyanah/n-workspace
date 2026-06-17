@@ -653,6 +653,11 @@
             ✨
           </button>
 
+          <!-- 0b. Dzikir Harian Button -->
+          <button class="desk-config-floating-btn" @click="showDzikirModal = true" title="Dzikir Harian">
+            📿
+          </button>
+
           <!-- 1. Desk Icons Configuration Floating Button -->
           <button class="desk-config-floating-btn" @click="showSettings = !showSettings" title="Pengaturan Ikon & Meja Kerja">
             ⚙️
@@ -937,6 +942,11 @@
         :show="showInspirationModal"
         @close="showInspirationModal = false">
       </inspiration-board>
+
+      <dzikir-counter
+        :show="showDzikirModal"
+        @close="showDzikirModal = false">
+      </dzikir-counter>
 
       <icon-manager v-if="showSettings" 
                     :assigned-icons="assignedIcons" 

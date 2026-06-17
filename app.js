@@ -17,6 +17,7 @@ const App = {
     const showNavDrawer = ref(false);
     const showNotifPanel = ref(false);
     const showInspirationModal = ref(false);
+    const showDzikirModal = ref(false);
 
     // Desk quote ticker state
     const deskQuotes = ref([]);
@@ -453,6 +454,7 @@ const App = {
       showNavDrawer,
       showNotifPanel,
       showInspirationModal,
+      showDzikirModal,
       deskQuotes,
       deskQuoteIndex,
       deskQuoteVisible,
@@ -725,6 +727,7 @@ app.component('notification-panel', NotificationPanel);
 app.component('reminder-popup', ReminderPopup);
 app.component('missed-tasks-page', MissedTasksPage);
 app.component('inspiration-board', InspirationBoard);
+app.component('dzikir-counter', DzikirCounter);
 app.component('push-notif-toggle', PushNotifToggle);
 
 app.mount('#app');
