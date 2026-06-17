@@ -1501,8 +1501,10 @@ const JobLogbook = {
       const q = this.searchQuery.toLowerCase().trim();
       return [...this.plans]
         .filter(p => {
-          // Plan yang sudah Completed tidak tampil di task plan list, kecuali yang sedang menunggu konfirmasi popup
-          if (p.phase === 'Completed' && !(this.pendingDonePlan && this.pendingDonePlan.id === p.id)) return false;
+          // Plan yang sudah Completed DAN sudah benar-benar tercatat ke Riwayat Kerja baru disembunyikan.
+          // Kalau baru "Completed" tapi user batal/nanti saat ditanya mau dicatat atau tidak,
+          // plan tetap harus tampil di list supaya bisa dicatat kapan saja.
+          if (p.phase === 'Completed' && p.loggedToHistory && !(this.pendingDonePlan && this.pendingDonePlan.id === p.id)) return false;
           // ── local plan filters ──
           if (this.planFilterPriority && p.priority !== this.planFilterPriority) return false;
           if (this.planFilterSchedule === 'overdue' && p.date >= today) return false;
@@ -1935,9 +1937,10 @@ const JobLogbook = {
       this.logs.unshift(newLog);
       // Baru hapus task plan saat log benar-benar disimpan
       if (this.pendingConvertPlanId) {
-        // Jangan hapus plan — cukup tandai Completed supaya tetap tampil (coret) di agenda view
+        // Jangan hapus plan — cukup tandai Completed + loggedToHistory supaya tetap tampil
+        // (coret) di agenda view, tapi hilang dari list Task Plan aktif
         const donePlan = this.plans.find(p => p.id === this.pendingConvertPlanId);
-        if (donePlan) donePlan.phase = 'Completed';
+        if (donePlan) { donePlan.phase = 'Completed'; donePlan.loggedToHistory = true; }
         this.pendingConvertPlanId = null;
         this.savePlansToStorage();
       }
