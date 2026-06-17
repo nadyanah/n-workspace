@@ -1708,11 +1708,19 @@ const NotificationPanel = {
       this.loadData();
     };
     window.addEventListener('ws-notif-status-updated', this._onNotifStatusUpdated);
+
+    // Refresh panel kalau task plan dihapus dari Agenda View (tombol "Hapus" di detail popup)
+    // atau pengingat manual diubah, supaya item langsung hilang dari panel tanpa perlu reload.
+    this._onJobPlansUpdated = () => { this.loadData(); };
+    window.addEventListener('ws-job-plans-updated', this._onJobPlansUpdated);
+    window.addEventListener('ws-manual-notif-updated', this._onJobPlansUpdated);
   },
 
   beforeUnmount() {
     clearInterval(this._interval);
     window.removeEventListener('ws-notif-status-updated', this._onNotifStatusUpdated);
+    window.removeEventListener('ws-job-plans-updated', this._onJobPlansUpdated);
+    window.removeEventListener('ws-manual-notif-updated', this._onJobPlansUpdated);
   },
 
   methods: {

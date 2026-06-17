@@ -9089,6 +9089,13 @@ const GoogleCalendar = {
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                   Buka Job Logbook
                 </button>
+                <button v-if="agendaDetailItem.type === 'task'"
+                  @click="localDeleteTaskPlanFromDetail(agendaDetailItem)"
+                  class="agenda-detail-btn-delete"
+                  title="Hapus task plan ini dari Agenda View dan Panel Notifikasi">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  Hapus
+                </button>
               </div>
             </div>
           </div>
@@ -10342,6 +10349,25 @@ const GoogleCalendar = {
         this.localStorageTick++;
         // Dispatch event ke panel notif supaya badge update
         globalThis.dispatchEvent(new CustomEvent('ws-manual-notif-updated'));
+        this.agendaDetailItem = null;
+      } catch(_e) { /* ignore */ }
+    },
+
+    // Hapus task plan ini dari sumber data (personal_workspace_job_plans) supaya
+    // hilang sepenuhnya dari Agenda View dan Panel Notifikasi sekaligus.
+    localDeleteTaskPlanFromDetail(block) {
+      if (!block || !block.raw) return;
+      const rawId = block.raw.id;
+      if (rawId == null) return;
+      if (!confirm('Hapus task plan ini dari Agenda View dan Panel Notifikasi?')) return;
+      try {
+        const raw = WorkspaceStorage.getItem('personal_workspace_job_plans');
+        let plans = raw ? JSON.parse(raw) : [];
+        plans = plans.filter(p => p.id !== rawId);
+        WorkspaceStorage.setItem('personal_workspace_job_plans', JSON.stringify(plans));
+        this.localStorageTick++;
+        // Dispatch event supaya Panel Notifikasi yang sedang terbuka langsung refresh
+        globalThis.dispatchEvent(new CustomEvent('ws-job-plans-updated'));
         this.agendaDetailItem = null;
       } catch(_e) { /* ignore */ }
     },
