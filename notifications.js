@@ -442,6 +442,18 @@ const ReminderPopup = {
         if (raw) {
           const manuals = JSON.parse(raw);
           manuals.filter(m => reminderOccursOnDate(m, this.todayStr)).forEach(m => {
+            if (!base.find(b => b.id === m.id)) {
+              base.push({
+                id: m.id,
+                title: m.title,
+                subtitle: m.subtitle || 'Pengingat manual',
+                time: m.time,
+                timeVal: m.timeVal,
+                page: m.page || null,
+                isHabit: false,
+                isManual: true
+              });
+            }
           });
         }
       } catch(e) {}
