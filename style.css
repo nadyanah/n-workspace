@@ -7635,3 +7635,15 @@ input:checked + .switch-slider:before {
 }
 .cv2-textarea:focus { border-color: var(--color-terracotta, #D67B52); }
 .cv2-hint { font-size: 11px; color: #bbb; margin: 4px 0 0; line-height: 1.5; font-style: italic; }
+
+/* ── Interview Manage Modal Popup Animation ── */
+@keyframes interviewModalIn {
+  from { opacity: 0; transform: scale(0.90) translateY(24px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.interview-modal-fade-enter-active > div > div {
+  animation: interviewModalIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.interview-modal-fade-leave-active > div > div {
+  animation: interviewModalIn 0.18s ease-in reverse;
+}

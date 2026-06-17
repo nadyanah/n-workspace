@@ -4719,19 +4719,13 @@ const InterviewPractice = {
               Interview with AI
             </button>
           </div>
-          <!-- Kelola button — disabled in AI mode -->
+          <!-- Kelola button — disabled in AI mode, opens popup modal -->
           <button class="btn btn-secondary" @click="toggleManagePanel"
                   :disabled="activeMode === 'ai'"
                   :style="activeMode==='ai' ? {opacity:'0.4',cursor:'not-allowed'} : {}"
                   style="font-family:'Outfit',sans-serif; font-weight:700; font-size:12.5px; display:inline-flex; align-items:center; gap:6px; border:1.5px solid #EAE5DD; background-color:#FFFFFF; height:36px; padding:0 14px; border-radius:8px; cursor:pointer;">
-            <template v-if="showManagePanel && activeMode==='manual'">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              Sembunyikan
-            </template>
-            <template v-else>
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-              Kelola Pertanyaan
-            </template>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            Kelola Pertanyaan
           </button>
         </div>
       </div>
@@ -4749,75 +4743,155 @@ const InterviewPractice = {
         </div>
       </div>
 
-      <!-- ═══ MANUAL MODE: Question Manager Panel ═══ -->
-      <div v-if="activeMode==='manual'" v-show="showManagePanel" class="questions-manage-drawer animate-fade-in" style="margin-bottom: 28px;">
-        <h3 style="font-size:16px; font-weight:800; color:#1C3B34; margin:0 0 12px 0; display:flex; align-items:center; gap:6px;">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:#1C3B34;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
-          Kelola & Update Daftar Pertanyaan
-        </h3>
-        <div style="background:#FFFFFF; border:1.5px solid #EAE5DD; border-radius:12px; padding:16px; display:grid; gap:12px; margin-bottom:16px;">
-          <div style="display:grid; grid-template-columns:1fr 2fr; gap:12px;">
-            <div>
-              <label style="font-size:12px; font-weight:700; color:#7A6F66; display:block; margin-bottom:4px;">Kategori</label>
-              <select class="form-input" v-model="formCategory" style="padding:10px; font-size:13px; border:1.5px solid #EAE5DD; height:42px;">
-                <option value="General HR">General HR</option>
-                <option value="Technical Speciality">Technical Speciality</option>
-                <option value="General Technical">General Technical</option>
-                <option value="Performance Tuning">Performance Tuning</option>
-                <option value="Behavioral & Teamwork">Behavioral & Teamwork</option>
-              </select>
+      <!-- ═══ MANUAL MODE: Question Manager Modal Popup ═══ -->
+      <transition name="interview-modal-fade">
+        <div v-if="activeMode==='manual' && showManagePanel"
+             style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(28,21,16,0.55); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; z-index:99999; padding:16px; box-sizing:border-box;"
+             @click.self="showManagePanel = false; cancelEdit()">
+          <div class="animate-fade-in" style="background:var(--color-paper, #FAF7F2); border-radius:20px; box-shadow:0 16px 56px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.10); width:min(820px, 95vw); max-height:88vh; display:flex; flex-direction:column; overflow:hidden;">
+
+            <!-- Modal Header -->
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:18px 24px 16px; border-bottom:1.5px solid #EAE5DD; background:#1C3B34; border-radius:20px 20px 0 0; flex-shrink:0;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:36px; height:36px; background:rgba(255,255,255,0.15); border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                </div>
+                <div>
+                  <div style="font-size:15px; font-weight:800; color:#fff; letter-spacing:0.2px;">Kelola & Update Daftar Pertanyaan</div>
+                  <div style="font-size:11.5px; color:rgba(255,255,255,0.65); margin-top:1px;">{{ questions.length }} pertanyaan tersimpan · Framework terpilih akan otomatis terbuka saat spin</div>
+                </div>
+              </div>
+              <button @click="showManagePanel = false; cancelEdit()"
+                      style="background:rgba(255,255,255,0.12); border:none; border-radius:8px; width:32px; height:32px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#fff; transition:background 0.15s; flex-shrink:0;"
+                      onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
             </div>
-            <div>
-              <label style="font-size:12px; font-weight:700; color:#7A6F66; display:block; margin-bottom:4px;">Teks Pertanyaan</label>
-              <input type="text" class="form-input" v-model="formText" placeholder="Contoh: Mengapa kami harus menerima Anda?" style="padding:10px; font-size:13.5px; border:1.5px solid #EAE5DD; height:42px;" />
-            </div>
-          </div>
-          <div>
-            <label style="font-size:12px; font-weight:700; color:#7A6F66; display:block; margin-bottom:4px;">Tips / Hints Jawaban</label>
-            <textarea class="form-input" v-model="formHints" rows="2" placeholder="Saran kerangka jawaban..." style="padding:10px; font-size:13px; border:1.5px solid #EAE5DD;"></textarea>
-          </div>
-          <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:4px;">
-            <button v-show="editingId !== null" class="btn btn-secondary" @click="cancelEdit" style="font-size:12.5px; padding:8px 16px;">Batal</button>
-            <button class="spin-btn-teal" @click="saveCustomQuestion" style="font-size:13px; padding:8px 24px; box-shadow:none;">
-              {{ editingId !== null ? 'Update Pertanyaan' : 'Tambah Pertanyaan' }}
-            </button>
-          </div>
-        </div>
-        <div style="overflow-x:auto; background:#FFFFFF; border:1.5px solid #EAE5DD; border-radius:12px;">
-          <table class="questions-manage-table">
-            <thead>
-              <tr>
-                <th style="width:20%;">Kategori</th>
-                <th style="width:45%;">Pertanyaan</th>
-                <th style="width:20%;">Hints</th>
-                <th style="width:15%; text-align:center;">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="q in questions" :key="q.id">
-                <td><span class="framework-step-pill" style="margin:0;">{{ q.category }}</span></td>
-                <td style="font-weight:600; color:#1C3B34;">{{ q.text }}</td>
-                <td style="font-size:11.5px; color:#7A6F66;">{{ q.hints }}</td>
-                <td style="text-align:center;">
-                  <div style="display:flex; gap:6px; justify-content:center;">
-                    <button class="card-nav-btn" @click="startEdit(q)" style="background:#FAF4EB; border:1px solid #EAE5DD; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center;">
-                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-                    </button>
-                    <button class="card-nav-btn" @click="deleteCustomQuestion(q.id)" style="background:#FAF4EB; border:1px solid #EAE5DD; color:#D67B52; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center;">
-                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                    </button>
+
+            <!-- Modal Body — scrollable -->
+            <div style="overflow-y:auto; padding:20px 24px; display:flex; flex-direction:column; gap:16px; flex:1;">
+
+              <!-- Form tambah / edit -->
+              <div style="background:#FFFFFF; border:1.5px solid #EAE5DD; border-radius:14px; padding:18px; display:grid; gap:14px;">
+                <div style="font-size:12px; font-weight:800; color:#7A6F66; text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  {{ editingId !== null ? '✏️ Edit Pertanyaan' : '➕ Tambah Pertanyaan Baru' }}
+                </div>
+
+                <!-- Row 1: Kategori + Teks Pertanyaan -->
+                <div style="display:grid; grid-template-columns:180px 1fr; gap:12px;">
+                  <div>
+                    <label style="font-size:12px; font-weight:700; color:#7A6F66; display:block; margin-bottom:5px;">Kategori</label>
+                    <select class="form-input" v-model="formCategory" style="padding:10px; font-size:13px; border:1.5px solid #EAE5DD; height:42px;">
+                      <option value="General HR">General HR</option>
+                      <option value="Technical Speciality">Technical Speciality</option>
+                      <option value="General Technical">General Technical</option>
+                      <option value="Performance Tuning">Performance Tuning</option>
+                      <option value="Behavioral &amp; Teamwork">Behavioral &amp; Teamwork</option>
+                    </select>
                   </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <div style="padding:12px; background:#FCFAF7; text-align:right;">
-            <button class="btn btn-secondary" @click="resetDefaultQuestions" style="font-size:12px; padding:6px 12px; border:1.5px dashed #CCC; background:#FFF; display:inline-flex; align-items:center; gap:4px;">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg> Reset ke Default
-            </button>
+                  <div>
+                    <label style="font-size:12px; font-weight:700; color:#7A6F66; display:block; margin-bottom:5px;">Teks Pertanyaan</label>
+                    <input type="text" class="form-input" v-model="formText" placeholder="Contoh: Mengapa kami harus menerima Anda?" style="padding:10px; font-size:13.5px; border:1.5px solid #EAE5DD; height:42px;" />
+                  </div>
+                </div>
+
+                <!-- Row 2: Hints + Framework -->
+                <div style="display:grid; grid-template-columns:1fr 200px; gap:12px; align-items:start;">
+                  <div>
+                    <label style="font-size:12px; font-weight:700; color:#7A6F66; display:block; margin-bottom:5px;">Tips / Hints Jawaban</label>
+                    <textarea class="form-input" v-model="formHints" rows="2" placeholder="Saran kerangka jawaban untuk pertanyaan ini..." style="padding:10px; font-size:13px; border:1.5px solid #EAE5DD; resize:vertical;"></textarea>
+                  </div>
+                  <div>
+                    <label style="font-size:12px; font-weight:700; color:#7A6F66; display:block; margin-bottom:5px; display:flex; align-items:center; gap:5px;">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .5 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path></svg>
+                      Framework Guide
+                    </label>
+                    <!-- Pill selector -->
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                      <label v-for="fw in ['STAR','PREP','PPF','none']" :key="fw"
+                             :style="formFramework===fw ? {background: fw==='none' ? '#F3EDE5' : '#1C3B34', borderColor: fw==='none' ? '#C8BDB5' : '#1C3B34', color: fw==='none' ? '#7A6F66' : '#fff'} : {background:'#FDFBF8', borderColor:'#EAE5DD', color:'#5D4F43'}"
+                             style="display:flex; align-items:center; gap:8px; padding:7px 12px; border:1.5px solid; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; transition:all 0.15s; user-select:none;">
+                        <input type="radio" v-model="formFramework" :value="fw" style="display:none;" />
+                        <span v-if="fw==='STAR'" style="font-size:10px;">⭐</span>
+                        <span v-else-if="fw==='PREP'" style="font-size:10px;">💡</span>
+                        <span v-else-if="fw==='PPF'" style="font-size:10px;">🔄</span>
+                        <span v-else style="font-size:10px;">—</span>
+                        {{ fw === 'none' ? 'Tanpa Framework' : fw + ' Formula' }}
+                      </label>
+                    </div>
+                    <p style="font-size:10.5px; color:#A09690; margin:6px 0 0 0; line-height:1.45;">Framework ini akan otomatis terbuka di Frameworks Guide saat pertanyaan terpilih.</p>
+                  </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div style="display:flex; justify-content:flex-end; gap:8px; padding-top:4px; border-top:1px solid #F3EDE5;">
+                  <button v-show="editingId !== null" class="btn btn-secondary" @click="cancelEdit" style="font-size:12.5px; padding:8px 16px;">Batal</button>
+                  <button class="spin-btn-teal" @click="saveCustomQuestion" style="font-size:13px; padding:8px 24px; box-shadow:none; display:inline-flex; align-items:center; gap:6px;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    {{ editingId !== null ? 'Update Pertanyaan' : 'Tambah Pertanyaan' }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tabel daftar pertanyaan -->
+              <div style="overflow-x:auto; background:#FFFFFF; border:1.5px solid #EAE5DD; border-radius:14px;">
+                <table class="questions-manage-table">
+                  <thead>
+                    <tr>
+                      <th style="width:16%;">Kategori</th>
+                      <th style="width:38%;">Pertanyaan</th>
+                      <th style="width:22%;">Hints</th>
+                      <th style="width:10%; text-align:center;">Framework</th>
+                      <th style="width:14%; text-align:center;">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="q in questions" :key="q.id">
+                      <td><span class="framework-step-pill" style="margin:0; font-size:10.5px;">{{ q.category }}</span></td>
+                      <td style="font-weight:600; color:#1C3B34;">{{ q.text }}</td>
+                      <td style="font-size:11.5px; color:#7A6F66;">{{ q.hints }}</td>
+                      <td style="text-align:center;">
+                        <span v-if="q.framework && q.framework !== 'none'"
+                              :style="q.framework==='STAR' ? {background:'#FAF0EC',color:'#9B3A1A',borderColor:'#F3C9B5'} : q.framework==='PREP' ? {background:'#EBF5F0',color:'#1C3B34',borderColor:'#A8D5C0'} : {background:'#EEF0FA',color:'#3730A3',borderColor:'#C7D2FE'}"
+                              style="display:inline-block; padding:2px 9px; border-radius:20px; font-size:10px; font-weight:800; border:1px solid;">
+                          {{ q.framework }}
+                        </span>
+                        <span v-else style="font-size:10px; color:#C8BDB5;">—</span>
+                      </td>
+                      <td style="text-align:center;">
+                        <div style="display:flex; gap:6px; justify-content:center;">
+                          <button class="card-nav-btn" @click="startEdit(q)" style="background:#FAF4EB; border:1px solid #EAE5DD; width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center;" title="Edit">
+                            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                          </button>
+                          <button class="card-nav-btn" @click="deleteCustomQuestion(q.id)" style="background:#FAF4EB; border:1px solid #EAE5DD; color:#D67B52; width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center;" title="Hapus">
+                            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div style="padding:12px 16px; background:#FCFAF7; text-align:right; border-radius:0 0 14px 14px;">
+                  <button class="btn btn-secondary" @click="resetDefaultQuestions" style="font-size:12px; padding:6px 12px; border:1.5px dashed #CCC; background:#FFF; display:inline-flex; align-items:center; gap:4px;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg> Reset ke Default
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div style="padding:14px 24px; border-top:1.5px solid #EAE5DD; display:flex; justify-content:flex-end; background:#FCFAF7; border-radius:0 0 20px 20px; flex-shrink:0;">
+              <button @click="showManagePanel = false; cancelEdit()"
+                      style="padding:9px 22px; background:#1C3B34; color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:opacity 0.15s;"
+                      onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Selesai
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </transition>
 
       <!-- ═══ AI MODE: Setup Panel ═══ -->
       <div v-if="activeMode==='ai'" class="animate-fade-in" style="background:#FCFAF7; border:1.5px solid #EAE5DD; border-radius:16px; padding:20px; margin-bottom:24px;">
@@ -5202,6 +5276,7 @@ const InterviewPractice = {
       formCategory: 'General HR',
       formText: '',
       formHints: '',
+      formFramework: 'STAR',
       editingId: null,
       quickCustomQuestionText: '',
 
@@ -5343,18 +5418,19 @@ const InterviewPractice = {
     saveQuestionsToLocalStorage() { WorkspaceStorage.setItem('personal_workspace_interview_questions', JSON.stringify(this.questions)); },
     saveCustomQuestion() {
       if (!this.formText.trim()) { alert('Teks pertanyaan tidak boleh kosong!'); return; }
+      const fw = this.formFramework === 'none' ? null : (this.formFramework || 'STAR');
       if (this.editingId !== null) {
         const idx = this.questions.findIndex(q => q.id === this.editingId);
-        if (idx !== -1) { this.questions[idx].category = this.formCategory; this.questions[idx].text = this.formText.trim(); this.questions[idx].hints = this.formHints.trim() || 'Fokuskan penyampaian dengan kerangka berpikir rasional.'; }
+        if (idx !== -1) { this.questions[idx].category = this.formCategory; this.questions[idx].text = this.formText.trim(); this.questions[idx].hints = this.formHints.trim() || 'Fokuskan penyampaian dengan kerangka berpikir rasional.'; this.questions[idx].framework = fw; }
         this.editingId = null;
       } else {
-        this.questions.push({ id: Date.now(), category: this.formCategory, text: this.formText.trim(), hints: this.formHints.trim() || 'Fokuskan penyampaian dengan kerangka berpikir rasional.', framework: 'STAR' });
+        this.questions.push({ id: Date.now(), category: this.formCategory, text: this.formText.trim(), hints: this.formHints.trim() || 'Fokuskan penyampaian dengan kerangka berpikir rasional.', framework: fw });
       }
-      this.saveQuestionsToLocalStorage(); this.formText = ''; this.formHints = '';
+      this.saveQuestionsToLocalStorage(); this.formText = ''; this.formHints = ''; this.formFramework = 'STAR';
       alert('Pertanyaan berhasil disimpan!');
     },
-    startEdit(q) { this.editingId = q.id; this.formCategory = q.category; this.formText = q.text; this.formHints = q.hints; globalThis.scrollTo({ top: 300, behavior: 'smooth' }); },
-    cancelEdit() { this.editingId = null; this.formText = ''; this.formHints = ''; },
+    startEdit(q) { this.editingId = q.id; this.formCategory = q.category; this.formText = q.text; this.formHints = q.hints; this.formFramework = q.framework || 'STAR'; },
+    cancelEdit() { this.editingId = null; this.formText = ''; this.formHints = ''; this.formFramework = 'STAR'; },
     deleteCustomQuestion(id) {
       if (confirm('Hapus pertanyaan ini?')) { this.questions = this.questions.filter(q => q.id !== id); this.saveQuestionsToLocalStorage(); this.resetToReSpin(); }
     },
