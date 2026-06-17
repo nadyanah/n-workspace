@@ -12202,6 +12202,13 @@ const DzikirCounter = {
                 <div style="font-size: 11px; opacity: 0.82; margin-top: 1px;">tasbih digital ✦</div>
               </div>
               <div style="display: flex; align-items: center; gap: 6px;">
+                <!-- Sound toggle button -->
+                <button @click="toggleSound" :title="soundOn ? 'Matikan suara ketukan' : 'Nyalakan suara ketukan'"
+                  style="background: rgba(255,255,255,0.18); border: none; border-radius: 9px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; transition: background 0.15s;"
+                  onmouseover="this.style.background='rgba(255,255,255,0.32)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">
+                  <svg v-if="soundOn" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                  <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                </button>
                 <!-- Manage list button -->
                 <button @click="showManage = true" title="Kelola daftar dzikir"
                   style="background: rgba(255,255,255,0.18); border: none; border-radius: 9px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; transition: background 0.15s;"
@@ -12398,6 +12405,7 @@ const DzikirCounter = {
       editingId: null,
       form: { text: '', arabic: '', target: 33 },
       _completeTimer: null,
+      soundOn: true,
     };
   },
   computed: {
@@ -12406,14 +12414,59 @@ const DzikirCounter = {
     },
   },
   methods: {
+    vibrate(pattern) {
+      // Getaran haptic — aman dipanggil meski device/browser tidak support
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        try { navigator.vibrate(pattern); } catch (e) { /* ignore */ }
+      }
+    },
+    toggleSound() {
+      this.soundOn = !this.soundOn;
+      WorkspaceStorage.setItem('dzikir_sound_on', this.soundOn ? '1' : '0');
+    },
+    playTapSound() {
+      // Suara ketukan lembut: nada sine hangat yang disaring lowpass, tanpa klik tajam
+      if (!this.soundOn) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+
+        const osc = ctx.createOscillator();
+        const filter = ctx.createBiquadFilter();
+        const gainNode = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(380, now);
+        osc.frequency.exponentialRampToValueAtTime(165, now + 0.09);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(900, now);
+        filter.Q.value = 0.5;
+
+        gainNode.gain.setValueAtTime(0.0001, now);
+        gainNode.gain.linearRampToValueAtTime(0.2, now + 0.012);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+
+        osc.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.17);
+      } catch (_e) { /* ignore */ }
+    },
     increment() {
       if (!this.list.length) return;
       const d = this.list[this.activeIndex];
       if (d.count < d.target) {
         d.count++;
       }
+      this.playTapSound();
       if (d.count >= d.target) {
+        this.vibrate([30, 40, 30, 40, 60]); // pola getaran khusus saat target tercapai
         this.onTargetReached();
+      } else {
+        this.vibrate(15); // getaran singkat tiap tap normal
       }
       this.saveToStorage();
     },
@@ -12493,6 +12546,8 @@ const DzikirCounter = {
   async mounted() {
     await globalThis._workspaceStorageReady;
     try {
+      const savedSound = WorkspaceStorage.getItem('dzikir_sound_on');
+      if (savedSound !== null) this.soundOn = savedSound !== '0';
       const saved = WorkspaceStorage.getItem('dzikir_list');
       if (saved) {
         this.list = JSON.parse(saved);
