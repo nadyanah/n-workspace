@@ -8940,7 +8940,7 @@ const GoogleCalendar = {
                   <div class="agenda-detail-title" :style="agendaDetailItem.done ? 'text-decoration:line-through; opacity:0.5;' : ''">{{ agendaDetailItem.title }}</div>
                   <div class="agenda-detail-badge-row">
                     <span v-if="agendaDetailItem.done" class="agenda-detail-badge agenda-detail-badge-done">✓ Selesai</span>
-                    <span v-else-if="agendaDetailItem.type === 'manual'" class="agenda-detail-badge agenda-detail-badge-manual">Pengingat</span>
+                    <span v-else-if="agendaDetailItem.type === 'manual'" class="agenda-detail-badge agenda-detail-badge-manual">Pengingat<template v-if="agendaDetailItem.raw && agendaDetailItem.raw.category && agendaDetailItem.raw.category !== 'manual'"> - {{ localCategoryLabel(agendaDetailItem.raw.category) }}</template></span>
                     <span v-else-if="agendaDetailItem.type === 'habit'" class="agenda-detail-badge agenda-detail-badge-habit">Habit</span>
                     <span v-else-if="agendaDetailItem.type === 'task'" class="agenda-detail-badge agenda-detail-badge-task">Task Plan</span>
                     <span v-else-if="agendaDetailItem.type === 'content'" class="agenda-detail-badge agenda-detail-badge-content">Content Plan</span>
@@ -12384,7 +12384,19 @@ const DzikirCounter = {
 
               <!-- List dzikir -->
               <div v-for="(d, i) in list" :key="d.id"
-                style="background: #fff; border: 1.5px solid var(--color-sand); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; border-left: 4px solid var(--color-terracotta, #D67B52);">
+                style="background: #fff; border: 1.5px solid var(--color-sand); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; border-left: 4px solid var(--color-terracotta, #D67B52);">
+
+                <!-- Tombol pindah urutan -->
+                <div style="display: flex; flex-direction: column; gap: 3px; flex-shrink: 0;">
+                  <button @click="moveDzikirUp(i)" :disabled="i === 0" title="Pindah ke atas"
+                    :style="{ background: 'var(--bg-cream)', border: '1.5px solid var(--color-sand)', borderRadius: '6px', width: '24px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: i === 0 ? 'not-allowed' : 'pointer', opacity: i === 0 ? 0.35 : 1, padding: 0 }">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--text-dark)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                  </button>
+                  <button @click="moveDzikirDown(i)" :disabled="i === list.length - 1" title="Pindah ke bawah"
+                    :style="{ background: 'var(--bg-cream)', border: '1.5px solid var(--color-sand)', borderRadius: '6px', width: '24px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: i === list.length - 1 ? 'not-allowed' : 'pointer', opacity: i === list.length - 1 ? 0.35 : 1, padding: 0 }">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--text-dark)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </button>
+                </div>
 
                 <div style="flex: 1; min-width: 0;">
                   <div style="font-size: 13.5px; font-weight: 700; color: var(--text-dark);">{{ d.text }}</div>
@@ -12577,6 +12589,24 @@ const DzikirCounter = {
       if (!confirm('Hapus dzikir ini?')) return;
       this.list.splice(idx, 1);
       if (this.activeIndex >= this.list.length) this.activeIndex = Math.max(0, this.list.length - 1);
+      this.saveToStorage();
+    },
+    moveDzikirUp(idx) {
+      if (idx <= 0 || idx >= this.list.length) return;
+      const wasActive = this.list[this.activeIndex] && this.list[this.activeIndex].id;
+      const tmp = this.list[idx - 1];
+      this.list[idx - 1] = this.list[idx];
+      this.list[idx] = tmp;
+      if (wasActive) this.activeIndex = this.list.findIndex(d => d.id === wasActive);
+      this.saveToStorage();
+    },
+    moveDzikirDown(idx) {
+      if (idx < 0 || idx >= this.list.length - 1) return;
+      const wasActive = this.list[this.activeIndex] && this.list[this.activeIndex].id;
+      const tmp = this.list[idx + 1];
+      this.list[idx + 1] = this.list[idx];
+      this.list[idx] = tmp;
+      if (wasActive) this.activeIndex = this.list.findIndex(d => d.id === wasActive);
       this.saveToStorage();
     },
     closeManage() {
