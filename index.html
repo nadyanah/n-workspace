@@ -528,6 +528,9 @@
       padding: 12px 20px 18px;
       display: flex;
       justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
     }
     .agenda-detail-btn-done {
       display: inline-flex; align-items: center; gap: 7px;
@@ -553,6 +556,18 @@
       transition: background 0.15s;
     }
     .agenda-detail-btn-undone:hover { background: var(--color-sand-light, #EDE8E1); }
+    .agenda-detail-btn-nav {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px;
+      background: transparent;
+      color: var(--color-terracotta, #D67B52);
+      border: 1.5px solid var(--color-terracotta, #D67B52);
+      border-radius: 20px;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .agenda-detail-btn-nav:hover { background: rgba(214,123,82,0.10); }
     /* Animasi popup */
     @keyframes agenda-detail-in {
       from { opacity: 0; transform: scale(0.90) translateY(16px); }

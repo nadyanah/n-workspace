@@ -8801,19 +8801,14 @@ const GoogleCalendar = {
                 class="gcal-agenda-allday-item"
                 :class="{ 'gcal-agenda-item-done': item.done }"
                 :style="{ background: localTintColor(item.color, 0.16), borderColor: localTintColor(item.color, 0.45), color: item.color, cursor: 'pointer' }"
-                @click.stop="item.isTaskPlan ? localGoToLogbook() : (item.type === 'habit' ? localGoToHabitTracker() : ((item.type === 'manual' || item.type === 'content') ? localShowAgendaDetail(item) : (item.actionable ? localHandleAgendaAction(item) : null)))"
-                :title="item.isTaskPlan ? 'Buka Job Logbook' : (item.type === 'habit' ? 'Klik untuk buka Habit Tracker · klik bulet untuk tandai selesai' : ((item.type === 'manual' || item.type === 'content') ? 'Lihat detail' : (item.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai')))"
-                <span class="gcal-agenda-check-icon"
-                  @click.stop="item.actionable ? localHandleAgendaAction(item) : null"
-                  style="cursor:pointer;"
-                  :title="item.actionable ? (item.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai') : ''">
+                @click.stop="localShowAgendaDetail(item)"
+                title="Lihat detail">
+                <span class="gcal-agenda-check-icon" style="pointer-events:none; flex-shrink:0;">
                   <svg v-if="item.done" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>
-                  <svg v-else-if="item.actionable" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
-                  <span v-else-if="item.type==='task'">📋</span>
-                  <span v-else-if="item.type==='habit'">✅</span>
-                  <span v-else-if="item.type==='manual'">⏰</span>
-                  <span v-else-if="item.type==='content'">🎬</span>
-                  <span v-else>🎉</span>
+                  <svg v-else-if="item.type==='task'" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                  <svg v-else-if="item.type==='habit'" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                  <svg v-else-if="item.type==='content'" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                  <svg v-else viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 </span>
                 <span class="gcal-agenda-allday-item-title" :style="item.done ? 'text-decoration:line-through; opacity:0.55;' : ''">{{ item.title }}</span>
               </div>
@@ -8842,16 +8837,9 @@ const GoogleCalendar = {
                     width: 'calc(' + (100/block.totalCols) + '% - 4px)',
                     cursor: 'pointer'
                   }"
-                  :title="block.isTaskPlan ? 'Buka Job Logbook' : (block.type === 'habit' ? 'Klik untuk buka Habit Tracker · klik bulet untuk tandai selesai' : ((block.type === 'manual' || block.type === 'content') ? 'Lihat detail' : (block.actionable ? (block.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai') : block.title + ' (' + block.startLabel + ' - ' + block.endLabel + ')')))"
-                  @click.stop="block.isTaskPlan ? localGoToLogbook() : (block.type === 'habit' ? localGoToHabitTracker() : ((block.type === 'manual' || block.type === 'content') ? localShowAgendaDetail(block) : (block.actionable ? localHandleAgendaAction(block) : (block.type==='event' && localDeleteEvent(block.raw)))))"
+                  title="Lihat detail"
+                  @click.stop="localShowAgendaDetail(block)"
                 >
-                  <span v-if="block.actionable" class="gcal-agenda-check-icon"
-                    @click.stop="localHandleAgendaAction(block)"
-                    style="cursor:pointer;"
-                    :title="block.done ? 'Batalkan selesai' : 'Tandai selesai'">
-                    <svg v-if="block.done" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>
-                    <svg v-else viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
-                  </span>
                   <span class="gcal-agenda-block-title" :style="block.done ? 'text-decoration:line-through; opacity:0.55;' : ''">{{ block.title }}</span>
                   <span class="gcal-agenda-block-time">{{ block.startLabel }}</span>
                 </div>
@@ -8986,21 +8974,63 @@ const GoogleCalendar = {
                   <span class="agenda-detail-row-text">Hanya saya</span>
                 </div>
 
+                <!-- Habit: info jadwal & link ke Habit Tracker -->
+                <div v-if="agendaDetailItem.type === 'habit'" class="agenda-detail-row">
+                  <span class="agenda-detail-row-icon">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                  </span>
+                  <span class="agenda-detail-row-text" style="color: var(--color-terracotta, #D67B52); font-weight:600; cursor:pointer; line-height:1.6;" @click="localNavigateFromDetail('habitTracker')">
+                    Habit Tracker
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:4px; vertical-align:middle;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  </span>
+                </div>
+
+                <!-- Task Plan: deskripsi & link ke Job Logbook -->
+                <div v-if="agendaDetailItem.type === 'task' && agendaDetailItem.raw" class="agenda-detail-row">
+                  <span class="agenda-detail-row-icon">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  </span>
+                  <span class="agenda-detail-row-text" style="color: var(--color-terracotta, #D67B52); font-weight:600; cursor:pointer; line-height:1.6;" @click="localNavigateFromDetail('jobLogbook')">
+                    Job Logbook
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:4px; vertical-align:middle;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  </span>
+                </div>
+                <div v-if="agendaDetailItem.type === 'task' && agendaDetailItem.raw && agendaDetailItem.raw.category" class="agenda-detail-row">
+                  <span class="agenda-detail-row-icon">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                  </span>
+                  <span class="agenda-detail-row-text">{{ agendaDetailItem.raw.category }}</span>
+                </div>
+
               </div>
 
-              <!-- Footer: Tandai Selesai -->
-              <div v-if="agendaDetailItem.actionable" class="agenda-detail-footer">
-                <button v-if="!agendaDetailItem.done"
-                  @click="localMarkDoneFromDetail(agendaDetailItem)"
-                  class="agenda-detail-btn-done">
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  Tandai selesai
+              <!-- Footer: Tandai Selesai (untuk semua tipe yang actionable) + Buka halaman untuk non-actionable -->
+              <div class="agenda-detail-footer">
+                <template v-if="agendaDetailItem.actionable">
+                  <button v-if="!agendaDetailItem.done"
+                    @click="localMarkDoneFromDetail(agendaDetailItem)"
+                    class="agenda-detail-btn-done">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Tandai selesai
+                  </button>
+                  <button v-else
+                    @click="localMarkDoneFromDetail(agendaDetailItem)"
+                    class="agenda-detail-btn-undone">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+                    Batalkan selesai
+                  </button>
+                </template>
+                <button v-if="agendaDetailItem.type === 'habit'"
+                  @click="localNavigateFromDetail('habitTracker')"
+                  class="agenda-detail-btn-nav">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                  Buka Habit Tracker
                 </button>
-                <button v-else
-                  @click="localMarkDoneFromDetail(agendaDetailItem)"
-                  class="agenda-detail-btn-undone">
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
-                  Batalkan selesai
+                <button v-if="agendaDetailItem.type === 'task'"
+                  @click="localNavigateFromDetail('jobLogbook')"
+                  class="agenda-detail-btn-nav">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  Buka Job Logbook
                 </button>
               </div>
             </div>
