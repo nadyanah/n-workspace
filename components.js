@@ -9366,7 +9366,11 @@ const GoogleCalendar = {
       localView: 'agenda',
       localCurDate: new Date(),
       localSelectedDate: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(),
-      localEvents: JSON.parse(localStorage.getItem('gcal_local_events') || '[]'),
+      localEvents: (() => {
+        try {
+          return JSON.parse(localStorage.getItem('gcal_local_events') || '[]');
+        } catch(_e) { return []; }
+      })(),
       localShowForm: false,
       localNewEv: { title:'', startDate:'', startTime:'', endDate:'', endTime:'', location:'', desc:'', color:'#4285F4', allDay: false },
       localNewReminder: { title:'', subtitle:'', date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(), endDate: '', time:'', endTime:'', page:'', section:'', targetItem:'', category: 'manual', recurrence: 'none' },
