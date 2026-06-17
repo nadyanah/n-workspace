@@ -5770,15 +5770,12 @@ input:checked + .switch-slider:before {
   color: var(--text-dark);
   background: var(--bg-card);
   font-family: 'Outfit', sans-serif;
-  transition: background 0.12s, color 0.12s;
+  transition: background 0.12s;
 }
-.gcal-recurrence-opt:hover { background: #FDF5EB; color: var(--color-terracotta); }
+.gcal-recurrence-opt:hover { background: var(--color-sand); }
 .gcal-recurrence-opt-active {
-  background: rgba(214,123,82,0.1);
-  color: var(--color-terracotta);
+  background: var(--color-sand);
   font-weight: 700;
-  border-left: 3px solid var(--color-terracotta);
-  padding-left: 11px;
 }
 .gcal-btn-ghost {
   padding: 8px 18px;
@@ -7337,44 +7334,44 @@ input:checked + .switch-slider:before {
   border: 1.5px solid var(--color-sand, #E8DFD8);
   border-radius: 12px;
   max-width: 720px;
-  font-family: 'Outfit', sans-serif;
+  margin: 0 auto;
+  font-family: 'Calibri', 'Carlito', 'Liberation Sans', Arial, sans-serif;
   font-size: 13px;
   color: #1a1a1a;
   box-shadow: 0 4px 24px rgba(44,38,33,0.08);
   overflow: hidden;
 }
 .cv2-header {
-  padding: 26px 30px 16px;
-  border-bottom: 2px solid #1a1a1a;
+  padding: 28px 30px 14px;
+  border-bottom: none;
+  text-align: center;
 }
 .cv2-header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .cv2-name {
-  font-family: 'Hack', monospace, sans-serif;
-  font-size: 24px;
-  font-weight: 800;
-  color: #1a1a1a;
-  letter-spacing: -0.3px;
-  line-height: 1.1;
-  margin: 0 0 3px;
-  text-transform: uppercase;
-}
-.cv2-jobtitle {
-  font-size: 12.5px;
+  font-family: 'Calibri', 'Carlito', 'Liberation Sans', Arial, sans-serif;
+  font-size: 22px;
   font-weight: 700;
   color: #1a1a1a;
+  letter-spacing: 0.5px;
+  line-height: 1.15;
+  margin: 0 0 2px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin: 0 0 9px;
+  text-align: center;
+}
+.cv2-jobtitle {
+  display: none;
 }
 .cv2-contacts {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
   gap: 0;
-  font-size: 11.5px;
-  color: #444;
-  line-height: 1.5;
+  font-size: 12px;
+  color: #1a1a1a;
+  line-height: 1.7;
 }
-.cv2-contact-sep { margin: 0 5px; color: #bbb; }
+.cv2-contacts-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 0; }
+.cv2-contact-sep { margin: 0 6px; color: #555; }
 .cv2-edit-btn {
   background: rgba(26,26,26,0.05);
   border: 1px solid rgba(26,26,26,0.14);
@@ -7405,11 +7402,11 @@ input:checked + .switch-slider:before {
   gap: 8px;
 }
 .cv2-section-title {
-  font-family: 'Hack', monospace, sans-serif;
-  font-size: 11px;
-  font-weight: 800;
+  font-family: 'Calibri', 'Carlito', 'Liberation Sans', Arial, sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   color: #1a1a1a;
   margin: 0;
 }
@@ -7477,10 +7474,10 @@ input:checked + .switch-slider:before {
 }
 .cv2-entry-role { font-weight: 700; font-size: 13px; color: #1a1a1a; flex: 1; min-width: 0; }
 .cv2-entry-period {
-  font-size: 11px;
+  font-size: 11.5px;
   color: #666;
   white-space: nowrap;
-  font-family: 'Hack', monospace, sans-serif;
+  font-family: 'Calibri', 'Carlito', 'Liberation Sans', Arial, sans-serif;
 }
 /* Per-entry edit button (experience) */
 .cv2-entry-head-right {
@@ -7577,6 +7574,9 @@ input:checked + .switch-slider:before {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 14px;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
   flex-wrap: wrap;
   gap: 8px;
 }

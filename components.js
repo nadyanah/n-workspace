@@ -9225,7 +9225,7 @@ const GoogleCalendar = {
                       <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: localShowRecurrenceDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
                     <div v-if="localShowRecurrenceDropdown" @click.stop
-                      style="position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:999; background:#fff; border:1.5px solid var(--color-sand,#E8DFD8); border-radius:12px; box-shadow:0 6px 20px rgba(44,38,33,0.14); overflow-y:auto; max-height:260px;">
+                      style="position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:999; background:#fff; border:1px solid #dadce0; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.15); overflow-y:auto; max-height:260px;">
                       <div v-for="opt in ['none','daily','weekly','monthly','yearly','weekday']" :key="opt"
                         @click="localNewReminder.recurrence = opt; localShowRecurrenceDropdown = false"
                         :class="{ 'gcal-recurrence-opt-active': localNewReminder.recurrence === opt && !localIsCustomRecurrence }"
@@ -9236,7 +9236,7 @@ const GoogleCalendar = {
                       <div @click="localOpenCustomRecurrence"
                         :class="{ 'gcal-recurrence-opt-active': localIsCustomRecurrence }"
                         class="gcal-recurrence-opt"
-                        style="display:flex; align-items:center; gap:6px; color:var(--color-terracotta,#D67B52); font-weight:600;">
+                        style="display:flex; align-items:center; gap:6px; color:#1a73e8; font-weight:600;">
                         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
                         Sesuaikan...
                       </div>
@@ -9270,38 +9270,30 @@ const GoogleCalendar = {
         <!-- ═══ Modal Pengulangan Kustom ═══ -->
         <transition name="insight-modal-fade">
           <div v-if="showCustomRecurrenceModal"
-               style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(44,38,33,0.45); display:flex; align-items:center; justify-content:center; z-index:99999; padding:16px; box-sizing:border-box; backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);"
+               style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:99999; padding:16px; box-sizing:border-box;"
                @click.self="showCustomRecurrenceModal = false">
-            <div style="background:var(--bg-cream,#FDFBF7); border-radius:20px; box-shadow:0 16px 48px rgba(44,38,33,0.2), 0 2px 8px rgba(44,38,33,0.08); width:min(400px, 95vw); overflow:hidden; font-family:inherit;">
+            <div style="background:#f8f9ff; border-radius:20px; box-shadow:0 16px 48px rgba(0,0,0,0.18); width:min(400px, 95vw); overflow:hidden; font-family:inherit;">
               <!-- Header -->
-              <div style="padding:18px 22px 14px; background:var(--color-terracotta,#D67B52); border-bottom:1px solid rgba(255,255,255,0.12);">
-                <div style="display:flex; align-items:center; gap:10px;">
-                  <div style="width:32px; height:32px; background:rgba(255,255,255,0.2); border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-                  </div>
-                  <h3 style="margin:0; font-size:15px; font-weight:700; color:#fff; font-family:'Hack',monospace; letter-spacing:0.2px;">Pengulangan Kustom</h3>
-                </div>
+              <div style="padding:22px 24px 16px; background:#fff; border-bottom:1px solid #e8eaed;">
+                <h3 style="margin:0; font-size:17px; font-weight:700; color:#202124;">Pengulangan kustom</h3>
               </div>
               <!-- Body -->
-              <div style="padding:20px 22px; display:flex; flex-direction:column; gap:16px; background:var(--bg-cream,#FDFBF7);">
+              <div style="padding:20px 24px; display:flex; flex-direction:column; gap:18px; background:#f8f9ff;">
 
                 <!-- Ulangi setiap N [satuan] -->
                 <div>
-                  <label style="font-size:11.5px; font-weight:700; color:var(--text-muted,#6E6359); display:block; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.6px;">Ulangi setiap</label>
+                  <label style="font-size:12.5px; font-weight:600; color:#5f6368; display:block; margin-bottom:8px;">Ulangi setiap</label>
                   <div style="display:flex; gap:10px; align-items:center;">
-                    <div style="display:flex; flex-direction:column; border:1.5px solid var(--color-sand,#E8DFD8); border-radius:10px; overflow:hidden; background:#fff; box-shadow:0 1px 4px rgba(44,38,33,0.05);">
+                    <div style="display:flex; flex-direction:column; border:1px solid #dadce0; border-radius:8px; overflow:hidden; background:#fff;">
                       <button @click="customRecurrenceForm.interval = Math.min(99, customRecurrenceForm.interval + 1)"
-                              style="border:none; background:none; padding:4px 12px; cursor:pointer; font-size:10px; color:var(--color-terracotta,#D67B52); line-height:1; transition:background 0.15s;"
-                              onmouseover="this.style.background='#FDF5EB'" onmouseout="this.style.background='none'">▲</button>
+                              style="border:none; background:none; padding:3px 10px; cursor:pointer; font-size:11px; color:#5f6368; line-height:1;">▲</button>
                       <input type="number" v-model.number="customRecurrenceForm.interval" min="1" max="99"
-                             style="width:52px; text-align:center; border:none; border-top:1.5px solid var(--color-sand,#E8DFD8); border-bottom:1.5px solid var(--color-sand,#E8DFD8); padding:6px 0; font-size:14px; font-weight:700; color:var(--text-dark,#2C2621); outline:none; background:#fff; font-family:'Hack',monospace;" />
+                             style="width:52px; text-align:center; border:none; border-top:1px solid #dadce0; border-bottom:1px solid #dadce0; padding:6px 0; font-size:14px; font-weight:700; color:#202124; outline:none; background:#fff;" />
                       <button @click="customRecurrenceForm.interval = Math.max(1, customRecurrenceForm.interval - 1)"
-                              style="border:none; background:none; padding:4px 12px; cursor:pointer; font-size:10px; color:var(--color-terracotta,#D67B52); line-height:1; transition:background 0.15s;"
-                              onmouseover="this.style.background='#FDF5EB'" onmouseout="this.style.background='none'">▼</button>
+                              style="border:none; background:none; padding:3px 10px; cursor:pointer; font-size:11px; color:#5f6368; line-height:1;">▼</button>
                     </div>
                     <select v-model="customRecurrenceForm.unit" @change="onCustomRecurrenceUnitChange"
-                            style="flex:1; height:42px; border:1.5px solid var(--color-sand,#E8DFD8); border-radius:10px; padding:0 12px; font-size:14px; font-weight:600; color:var(--text-dark,#2C2621); background:#fff; cursor:pointer; outline:none; transition:border-color 0.2s; box-shadow:0 1px 4px rgba(44,38,33,0.05);"
-                            onfocus="this.style.borderColor='var(--color-terracotta,#D67B52)'" onblur="this.style.borderColor='var(--color-sand,#E8DFD8)'">
+                            style="flex:1; height:42px; border:1px solid #dadce0; border-radius:8px; padding:0 12px; font-size:14px; font-weight:600; color:#202124; background:#fff; cursor:pointer; outline:none;">
                       <option value="day">hari</option>
                       <option value="week">minggu</option>
                       <option value="month">bulan</option>
@@ -9312,57 +9304,52 @@ const GoogleCalendar = {
 
                 <!-- Ulangi setiap [hari dalam minggu] — hanya tampil kalau unit = week -->
                 <div v-if="customRecurrenceForm.unit === 'week'">
-                  <label style="font-size:11.5px; font-weight:700; color:var(--text-muted,#6E6359); display:block; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.6px;">Hari dalam minggu</label>
+                  <label style="font-size:12.5px; font-weight:600; color:#5f6368; display:block; margin-bottom:8px;">Ulangi setiap</label>
                   <div style="display:flex; gap:6px; flex-wrap:wrap;">
                     <button v-for="(dayLabel, idx) in ['S','S','R','K','J','S','M']" :key="idx"
                             @click="localToggleCustomDay(idx)"
-                            :style="customRecurrenceForm.days.includes(idx) ? { background:'var(--color-terracotta,#D67B52)', color:'#fff', borderColor:'var(--color-terracotta,#D67B52)', boxShadow:'0 2px 8px rgba(214,123,82,0.35)' } : { background:'#fff', color:'var(--text-muted,#6E6359)', borderColor:'var(--color-sand,#E8DFD8)' }"
-                            style="width:36px; height:36px; border-radius:50%; border:1.5px solid; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-family:'Hack',monospace;">
+                            :style="customRecurrenceForm.days.includes(idx) ? { background:'#1a73e8', color:'#fff', borderColor:'#1a73e8' } : { background:'#fff', color:'#5f6368', borderColor:'#dadce0' }"
+                            style="width:36px; height:36px; border-radius:50%; border:1.5px solid; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                       {{ dayLabel }}
                     </button>
                   </div>
                 </div>
 
                 <!-- Berakhir -->
-                <div style="background:#fff; border:1.5px solid var(--color-sand,#E8DFD8); border-radius:12px; padding:14px 16px;">
-                  <label style="font-size:11.5px; font-weight:700; color:var(--text-muted,#6E6359); display:block; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.6px;">Berakhir</label>
+                <div>
+                  <label style="font-size:12.5px; font-weight:600; color:#5f6368; display:block; margin-bottom:8px;">Berakhir</label>
                   <div style="display:flex; flex-direction:column; gap:10px;">
 
                     <!-- Tidak pernah -->
-                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:6px 8px; border-radius:8px; transition:background 0.15s;"
-                           onmouseover="this.style.background='#FDF5EB'" onmouseout="this.style.background='transparent'">
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
                       <input type="radio" v-model="customRecurrenceForm.endType" value="never"
-                             style="width:16px; height:16px; accent-color:var(--color-terracotta,#D67B52); cursor:pointer; flex-shrink:0;" />
-                      <span style="font-size:13.5px; color:var(--text-dark,#2C2621);">Tidak pernah</span>
+                             style="width:18px; height:18px; accent-color:#1a73e8; cursor:pointer; flex-shrink:0;" />
+                      <span style="font-size:13.5px; color:#202124;">Tidak pernah</span>
                     </label>
 
                     <!-- Tanggal -->
-                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:6px 8px; border-radius:8px; transition:background 0.15s;"
-                           onmouseover="this.style.background='#FDF5EB'" onmouseout="this.style.background='transparent'">
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
                       <input type="radio" v-model="customRecurrenceForm.endType" value="date"
-                             style="width:16px; height:16px; accent-color:var(--color-terracotta,#D67B52); cursor:pointer; flex-shrink:0;" />
-                      <span style="font-size:13.5px; color:var(--text-dark,#2C2621); flex-shrink:0;">Sampai tanggal</span>
+                             style="width:18px; height:18px; accent-color:#1a73e8; cursor:pointer; flex-shrink:0;" />
+                      <span style="font-size:13.5px; color:#202124; flex-shrink:0;">Aktif</span>
                       <input type="date" v-model="customRecurrenceForm.endDate"
                              @click="customRecurrenceForm.endType = 'date'"
                              :min="localNewReminder.date"
-                             :style="customRecurrenceForm.endType !== 'date' ? { opacity: 0.35 } : {}"
-                             style="flex:1; height:34px; border:1.5px solid var(--color-sand,#E8DFD8); border-radius:8px; padding:0 10px; font-size:12.5px; color:var(--text-dark,#2C2621); background:#FDFBF7; outline:none; cursor:pointer; transition:border-color 0.2s;"
-                             onfocus="this.style.borderColor='var(--color-terracotta,#D67B52)'" onblur="this.style.borderColor='var(--color-sand,#E8DFD8)'" />
+                             :style="customRecurrenceForm.endType !== 'date' ? { opacity: 0.4 } : {}"
+                             style="flex:1; height:36px; border:1px solid #dadce0; border-radius:8px; padding:0 10px; font-size:13px; color:#202124; background:#fff; outline:none; cursor:pointer;" />
                     </label>
 
                     <!-- Setelah N kali -->
-                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:6px 8px; border-radius:8px; transition:background 0.15s;"
-                           onmouseover="this.style.background='#FDF5EB'" onmouseout="this.style.background='transparent'">
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
                       <input type="radio" v-model="customRecurrenceForm.endType" value="count"
-                             style="width:16px; height:16px; accent-color:var(--color-terracotta,#D67B52); cursor:pointer; flex-shrink:0;" />
-                      <span style="font-size:13.5px; color:var(--text-dark,#2C2621); flex-shrink:0;">Setelah</span>
+                             style="width:18px; height:18px; accent-color:#1a73e8; cursor:pointer; flex-shrink:0;" />
+                      <span style="font-size:13.5px; color:#202124; flex-shrink:0;">Setelah</span>
                       <div style="display:flex; align-items:center; gap:6px; flex:1;">
                         <input type="number" v-model.number="customRecurrenceForm.count" min="1" max="999"
                                @click="customRecurrenceForm.endType = 'count'"
-                               :style="customRecurrenceForm.endType !== 'count' ? { opacity: 0.35 } : {}"
-                               style="width:60px; height:34px; border:1.5px solid var(--color-sand,#E8DFD8); border-radius:8px; text-align:center; font-size:14px; font-weight:700; color:var(--text-dark,#2C2621); outline:none; padding:0; background:#FDFBF7; font-family:'Hack',monospace; transition:border-color 0.2s;"
-                               onfocus="this.style.borderColor='var(--color-terracotta,#D67B52)'" onblur="this.style.borderColor='var(--color-sand,#E8DFD8)'" />
-                        <span style="font-size:13px; color:var(--text-muted,#6E6359);">kali</span>
+                               :style="customRecurrenceForm.endType !== 'count' ? { opacity: 0.4 } : {}"
+                               style="width:64px; height:36px; border:1px solid #dadce0; border-radius:8px; text-align:center; font-size:14px; font-weight:700; color:#202124; outline:none; padding:0;" />
+                        <span style="font-size:13.5px; color:#5f6368;">kali</span>
                       </div>
                     </label>
 
@@ -9371,16 +9358,16 @@ const GoogleCalendar = {
 
               </div>
               <!-- Footer -->
-              <div style="display:flex; justify-content:flex-end; gap:8px; padding:14px 22px 18px; background:var(--bg-cream,#FDFBF7); border-top:1.5px solid var(--color-sand,#E8DFD8);">
+              <div style="display:flex; justify-content:flex-end; gap:8px; padding:14px 24px 20px; background:#f8f9ff; border-top:1px solid #e8eaed;">
                 <button @click="showCustomRecurrenceModal = false"
-                        style="padding:9px 20px; border:1.5px solid var(--color-sand,#E8DFD8); background:#fff; font-size:13px; font-weight:600; color:var(--text-muted,#6E6359); cursor:pointer; border-radius:10px; transition:all 0.15s; font-family:inherit;"
-                        onmouseover="this.style.borderColor='var(--color-terracotta,#D67B52)';this.style.color='var(--color-terracotta,#D67B52)'" onmouseout="this.style.borderColor='var(--color-sand,#E8DFD8)';this.style.color='var(--text-muted,#6E6359)'">
+                        style="padding:9px 20px; border:none; background:none; font-size:13.5px; font-weight:600; color:#1a73e8; cursor:pointer; border-radius:8px; transition:background 0.15s;"
+                        onmouseover="this.style.background='#e8f0fe'" onmouseout="this.style.background='none'">
                   Batal
                 </button>
                 <button @click="localSaveCustomRecurrence"
-                        style="padding:9px 22px; border:none; background:var(--color-terracotta,#D67B52); color:#fff; font-size:13px; font-weight:700; cursor:pointer; border-radius:10px; transition:all 0.15s; font-family:inherit; box-shadow:0 2px 8px rgba(214,123,82,0.3);"
-                        onmouseover="this.style.background='#C06A42';this.style.boxShadow='0 4px 12px rgba(214,123,82,0.4)'" onmouseout="this.style.background='var(--color-terracotta,#D67B52)';this.style.boxShadow='0 2px 8px rgba(214,123,82,0.3)'">
-                  ✓ Selesai
+                        style="padding:9px 22px; border:none; background:#1a73e8; color:#fff; font-size:13.5px; font-weight:600; cursor:pointer; border-radius:8px; transition:opacity 0.15s;"
+                        onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
+                  Selesai
                 </button>
               </div>
             </div>
@@ -12298,19 +12285,23 @@ const CareerFoundation = {
         <!-- HEADER -->
         <div class="cv2-header">
           <div class="cv2-header-top">
-            <div style="flex:1; min-width:0;">
+            <div style="flex:1; min-width:0; text-align:center;">
               <h2 class="cv2-name">{{ atsCV.name || 'NAMA LENGKAP' }}</h2>
-              <p class="cv2-jobtitle">{{ atsCV.title || 'Posisi / Bidang Keahlian' }}</p>
               <div class="cv2-contacts">
-                <span v-if="atsCV.location">{{ atsCV.location }}</span>
-                <span v-if="atsCV.location && (atsCV.email || atsCV.phone || atsCV.linkedin || atsCV.portfolio)" class="cv2-contact-sep">|</span>
-                <span v-if="atsCV.email">{{ atsCV.email }}</span>
-                <span v-if="atsCV.email && (atsCV.phone || atsCV.linkedin || atsCV.portfolio)" class="cv2-contact-sep">|</span>
-                <span v-if="atsCV.phone">{{ atsCV.phone }}</span>
-                <span v-if="atsCV.phone && (atsCV.linkedin || atsCV.portfolio)" class="cv2-contact-sep">|</span>
-                <span v-if="atsCV.linkedin">{{ atsCV.linkedin }}</span>
-                <span v-if="atsCV.linkedin && atsCV.portfolio" class="cv2-contact-sep">|</span>
-                <span v-if="atsCV.portfolio">{{ atsCV.portfolio }}</span>
+                <!-- Baris 1: kota | email -->
+                <div class="cv2-contacts-row">
+                  <span v-if="atsCV.location">{{ atsCV.location }}</span>
+                  <span v-if="atsCV.location && atsCV.email" class="cv2-contact-sep">|</span>
+                  <span v-if="atsCV.email">{{ atsCV.email }}</span>
+                </div>
+                <!-- Baris 2: no tlp | linkedin -->
+                <div class="cv2-contacts-row" v-if="atsCV.phone || atsCV.linkedin || atsCV.portfolio">
+                  <span v-if="atsCV.phone">{{ atsCV.phone }}</span>
+                  <span v-if="atsCV.phone && (atsCV.linkedin || atsCV.portfolio)" class="cv2-contact-sep">|</span>
+                  <span v-if="atsCV.linkedin">{{ atsCV.linkedin }}</span>
+                  <span v-if="atsCV.linkedin && atsCV.portfolio" class="cv2-contact-sep">|</span>
+                  <span v-if="atsCV.portfolio">{{ atsCV.portfolio }}</span>
+                </div>
               </div>
             </div>
             <button class="cv2-edit-btn" @click="openAtsEditSection('header')">
