@@ -12959,7 +12959,34 @@ const CareerFoundation = {
             </button>
           </div>
           <div class="cf-modal-body">
-            <p class="cf-view-content">{{ viewingDoc.content || '(Belum ada isi)' }}</p>
+            <template v-if="viewingDoc.type === 'body_email'">
+              <div class="cf-email-view">
+                <div class="cf-email-toolbar">
+                  <span class="cf-email-toolbar-tag">📧 Body Email</span>
+                  <span v-if="viewingDoc.updatedAt" class="cf-email-toolbar-date">{{ formatLastUpdated(viewingDoc.updatedAt) }}</span>
+                </div>
+                <div class="cf-email-card">
+                  <div class="cf-email-subject-bar">
+                    <h4 class="cf-email-subject">{{ emailParts.subject || '(Tanpa subjek)' }}</h4>
+                  </div>
+                  <div class="cf-email-meta">
+                    <div class="cf-email-avatar">{{ (resume.name || 'K').charAt(0).toUpperCase() }}</div>
+                    <div class="cf-email-meta-text">
+                      <p class="cf-email-from">
+                        <span class="cf-email-from-name">{{ resume.name || 'Nama Kamu' }}</span>
+                        <span class="cf-email-from-addr">&lt;{{ resume.email || 'email@kamu.com' }}&gt;</span>
+                      </p>
+                      <p class="cf-email-to">kepada <span class="cf-email-to-target">{{ viewingDoc.target || 'HRD Perusahaan' }}</span></p>
+                    </div>
+                  </div>
+                  <div class="cf-email-divider"></div>
+                  <p class="cf-email-body-text">{{ emailParts.body || '(Belum ada isi)' }}</p>
+                </div>
+              </div>
+            </template>
+            <template v-else>
+              <p class="cf-view-content">{{ viewingDoc.content || '(Belum ada isi)' }}</p>
+            </template>
           </div>
           <div class="cf-modal-footer">
             <button class="cf-btn-ghost" @click="copyDocContent(viewingDoc)">{{ copySuccess ? 'Tersalin!' : 'Salin teks' }}</button>
@@ -13149,6 +13176,21 @@ const CareerFoundation = {
         body_email:    'Subjek: Lamaran Pekerjaan — [Posisi] | [Nama Kamu]\n\nYth. Bapak/Ibu HRD,\n\nSaya ...',
       };
       return map[this.docForm.type] || 'Tulis isi dokumen di sini...';
+    },
+
+    emailParts() {
+      const doc = this.viewingDoc;
+      if (!doc) return { subject: '', body: '' };
+      const raw = doc.content || '';
+      const lines = raw.split('\n');
+      const firstLine = (lines[0] || '').trim();
+      const m = firstLine.match(/^(subjek|subject)\s*:\s*(.*)$/i);
+      if (m) {
+        const restLines = lines.slice(1);
+        while (restLines.length && restLines[0].trim() === '') restLines.shift();
+        return { subject: m[2].trim() || doc.title, body: restLines.join('\n') };
+      }
+      return { subject: doc.title, body: raw };
     },
 
     atsSectionLabel() {
