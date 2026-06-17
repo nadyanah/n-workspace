@@ -5770,12 +5770,15 @@ input:checked + .switch-slider:before {
   color: var(--text-dark);
   background: var(--bg-card);
   font-family: 'Outfit', sans-serif;
-  transition: background 0.12s;
+  transition: background 0.12s, color 0.12s;
 }
-.gcal-recurrence-opt:hover { background: var(--color-sand); }
+.gcal-recurrence-opt:hover { background: #FDF5EB; color: var(--color-terracotta); }
 .gcal-recurrence-opt-active {
-  background: var(--color-sand);
+  background: rgba(214,123,82,0.1);
+  color: var(--color-terracotta);
   font-weight: 700;
+  border-left: 3px solid var(--color-terracotta);
+  padding-left: 11px;
 }
 .gcal-btn-ghost {
   padding: 8px 18px;

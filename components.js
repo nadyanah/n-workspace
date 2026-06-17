@@ -24,6 +24,58 @@ if (typeof reminderOccursOnDate === 'undefined') {
     const rec = m.recurrence || 'none';
     if (dateStr < m.date) return false; // belum mulai
     if (m.endDate && dateStr > m.endDate) return false; // sudah berakhir
+
+    // ── Custom recurrence ──
+    if (rec === 'custom' && m.customRecurrence) {
+      const c = m.customRecurrence;
+      const start = new Date(m.date + 'T00:00:00');
+      const target = new Date(dateStr + 'T00:00:00');
+      // cek endDate / count
+      if (c.endType === 'date' && c.endDate && dateStr > c.endDate) return false;
+      const msPerDay = 86400000;
+      const diffDays = Math.round((target - start) / msPerDay);
+      const interval = Math.max(1, c.interval || 1);
+      if (c.unit === 'day') {
+        if (diffDays % interval !== 0) return false;
+        if (c.endType === 'count') return Math.floor(diffDays / interval) < c.count;
+        return true;
+      }
+      if (c.unit === 'week') {
+        const days = c.days && c.days.length > 0 ? c.days : [start.getDay()];
+        if (!days.includes(target.getDay())) return false;
+        const weekDiff = Math.floor(diffDays / 7);
+        if (weekDiff % interval !== 0) return false;
+        if (c.endType === 'count') {
+          // Hitung berapa kali sudah occur dari start s/d target
+          let count = 0;
+          const cur = new Date(start);
+          while (cur <= target) {
+            const wd = Math.round((cur - start) / msPerDay);
+            const wk = Math.floor(wd / 7);
+            if (wk % interval === 0 && days.includes(cur.getDay())) count++;
+            cur.setDate(cur.getDate() + 1);
+          }
+          return count <= c.count;
+        }
+        return true;
+      }
+      if (c.unit === 'month') {
+        if (target.getDate() !== start.getDate()) return false;
+        const monthDiff = (target.getFullYear() - start.getFullYear()) * 12 + (target.getMonth() - start.getMonth());
+        if (monthDiff % interval !== 0) return false;
+        if (c.endType === 'count') return Math.floor(monthDiff / interval) < c.count;
+        return true;
+      }
+      if (c.unit === 'year') {
+        if (target.getDate() !== start.getDate() || target.getMonth() !== start.getMonth()) return false;
+        const yearDiff = target.getFullYear() - start.getFullYear();
+        if (yearDiff % interval !== 0) return false;
+        if (c.endType === 'count') return Math.floor(yearDiff / interval) < c.count;
+        return true;
+      }
+      return false;
+    }
+
     if (rec === 'none') return m.date === dateStr;
 
     const start = new Date(m.date + 'T00:00:00');
@@ -4719,13 +4771,19 @@ const InterviewPractice = {
               Interview with AI
             </button>
           </div>
-          <!-- Kelola button — disabled in AI mode, opens popup modal -->
+          <!-- Kelola button — disabled in AI mode -->
           <button class="btn btn-secondary" @click="toggleManagePanel"
                   :disabled="activeMode === 'ai'"
                   :style="activeMode==='ai' ? {opacity:'0.4',cursor:'not-allowed'} : {}"
                   style="font-family:'Outfit',sans-serif; font-weight:700; font-size:12.5px; display:inline-flex; align-items:center; gap:6px; border:1.5px solid #EAE5DD; background-color:#FFFFFF; height:36px; padding:0 14px; border-radius:8px; cursor:pointer;">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-            Kelola Pertanyaan
+            <template v-if="showManagePanel && activeMode==='manual'">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              Sembunyikan
+            </template>
+            <template v-else>
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              Kelola Pertanyaan
+            </template>
           </button>
         </div>
       </div>
@@ -4743,155 +4801,75 @@ const InterviewPractice = {
         </div>
       </div>
 
-      <!-- ═══ MANUAL MODE: Question Manager Modal Popup ═══ -->
-      <transition name="interview-modal-fade">
-        <div v-if="activeMode==='manual' && showManagePanel"
-             style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(28,21,16,0.55); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; z-index:99999; padding:16px; box-sizing:border-box;"
-             @click.self="showManagePanel = false; cancelEdit()">
-          <div class="animate-fade-in" style="background:var(--color-paper, #FAF7F2); border-radius:20px; box-shadow:0 16px 56px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.10); width:min(820px, 95vw); max-height:88vh; display:flex; flex-direction:column; overflow:hidden;">
-
-            <!-- Modal Header -->
-            <div style="display:flex; align-items:center; justify-content:space-between; padding:18px 24px 16px; border-bottom:1.5px solid #EAE5DD; background:#1C3B34; border-radius:20px 20px 0 0; flex-shrink:0;">
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:36px; height:36px; background:rgba(255,255,255,0.15); border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
-                </div>
-                <div>
-                  <div style="font-size:15px; font-weight:800; color:#fff; letter-spacing:0.2px;">Kelola & Update Daftar Pertanyaan</div>
-                  <div style="font-size:11.5px; color:rgba(255,255,255,0.65); margin-top:1px;">{{ questions.length }} pertanyaan tersimpan · Framework terpilih akan otomatis terbuka saat spin</div>
-                </div>
-              </div>
-              <button @click="showManagePanel = false; cancelEdit()"
-                      style="background:rgba(255,255,255,0.12); border:none; border-radius:8px; width:32px; height:32px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#fff; transition:background 0.15s; flex-shrink:0;"
-                      onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              </button>
+      <!-- ═══ MANUAL MODE: Question Manager Panel ═══ -->
+      <div v-if="activeMode==='manual'" v-show="showManagePanel" class="questions-manage-drawer animate-fade-in" style="margin-bottom: 28px;">
+        <h3 style="font-size:16px; font-weight:800; color:#1C3B34; margin:0 0 12px 0; display:flex; align-items:center; gap:6px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:#1C3B34;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+          Kelola & Update Daftar Pertanyaan
+        </h3>
+        <div style="background:#FFFFFF; border:1.5px solid #EAE5DD; border-radius:12px; padding:16px; display:grid; gap:12px; margin-bottom:16px;">
+          <div style="display:grid; grid-template-columns:1fr 2fr; gap:12px;">
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#7A6F66; display:block; margin-bottom:4px;">Kategori</label>
+              <select class="form-input" v-model="formCategory" style="padding:10px; font-size:13px; border:1.5px solid #EAE5DD; height:42px;">
+                <option value="General HR">General HR</option>
+                <option value="Technical Speciality">Technical Speciality</option>
+                <option value="General Technical">General Technical</option>
+                <option value="Performance Tuning">Performance Tuning</option>
+                <option value="Behavioral & Teamwork">Behavioral & Teamwork</option>
+              </select>
             </div>
-
-            <!-- Modal Body — scrollable -->
-            <div style="overflow-y:auto; padding:20px 24px; display:flex; flex-direction:column; gap:16px; flex:1;">
-
-              <!-- Form tambah / edit -->
-              <div style="background:#FFFFFF; border:1.5px solid #EAE5DD; border-radius:14px; padding:18px; display:grid; gap:14px;">
-                <div style="font-size:12px; font-weight:800; color:#7A6F66; text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                  {{ editingId !== null ? '✏️ Edit Pertanyaan' : '➕ Tambah Pertanyaan Baru' }}
-                </div>
-
-                <!-- Row 1: Kategori + Teks Pertanyaan -->
-                <div style="display:grid; grid-template-columns:180px 1fr; gap:12px;">
-                  <div>
-                    <label style="font-size:12px; font-weight:700; color:#7A6F66; display:block; margin-bottom:5px;">Kategori</label>
-                    <select class="form-input" v-model="formCategory" style="padding:10px; font-size:13px; border:1.5px solid #EAE5DD; height:42px;">
-                      <option value="General HR">General HR</option>
-                      <option value="Technical Speciality">Technical Speciality</option>
-                      <option value="General Technical">General Technical</option>
-                      <option value="Performance Tuning">Performance Tuning</option>
-                      <option value="Behavioral &amp; Teamwork">Behavioral &amp; Teamwork</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style="font-size:12px; font-weight:700; color:#7A6F66; display:block; margin-bottom:5px;">Teks Pertanyaan</label>
-                    <input type="text" class="form-input" v-model="formText" placeholder="Contoh: Mengapa kami harus menerima Anda?" style="padding:10px; font-size:13.5px; border:1.5px solid #EAE5DD; height:42px;" />
-                  </div>
-                </div>
-
-                <!-- Row 2: Hints + Framework -->
-                <div style="display:grid; grid-template-columns:1fr 200px; gap:12px; align-items:start;">
-                  <div>
-                    <label style="font-size:12px; font-weight:700; color:#7A6F66; display:block; margin-bottom:5px;">Tips / Hints Jawaban</label>
-                    <textarea class="form-input" v-model="formHints" rows="2" placeholder="Saran kerangka jawaban untuk pertanyaan ini..." style="padding:10px; font-size:13px; border:1.5px solid #EAE5DD; resize:vertical;"></textarea>
-                  </div>
-                  <div>
-                    <label style="font-size:12px; font-weight:700; color:#7A6F66; display:block; margin-bottom:5px; display:flex; align-items:center; gap:5px;">
-                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .5 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path></svg>
-                      Framework Guide
-                    </label>
-                    <!-- Pill selector -->
-                    <div style="display:flex; flex-direction:column; gap:6px;">
-                      <label v-for="fw in ['STAR','PREP','PPF','none']" :key="fw"
-                             :style="formFramework===fw ? {background: fw==='none' ? '#F3EDE5' : '#1C3B34', borderColor: fw==='none' ? '#C8BDB5' : '#1C3B34', color: fw==='none' ? '#7A6F66' : '#fff'} : {background:'#FDFBF8', borderColor:'#EAE5DD', color:'#5D4F43'}"
-                             style="display:flex; align-items:center; gap:8px; padding:7px 12px; border:1.5px solid; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; transition:all 0.15s; user-select:none;">
-                        <input type="radio" v-model="formFramework" :value="fw" style="display:none;" />
-                        <span v-if="fw==='STAR'" style="font-size:10px;">⭐</span>
-                        <span v-else-if="fw==='PREP'" style="font-size:10px;">💡</span>
-                        <span v-else-if="fw==='PPF'" style="font-size:10px;">🔄</span>
-                        <span v-else style="font-size:10px;">—</span>
-                        {{ fw === 'none' ? 'Tanpa Framework' : fw + ' Formula' }}
-                      </label>
-                    </div>
-                    <p style="font-size:10.5px; color:#A09690; margin:6px 0 0 0; line-height:1.45;">Framework ini akan otomatis terbuka di Frameworks Guide saat pertanyaan terpilih.</p>
-                  </div>
-                </div>
-
-                <!-- Action buttons -->
-                <div style="display:flex; justify-content:flex-end; gap:8px; padding-top:4px; border-top:1px solid #F3EDE5;">
-                  <button v-show="editingId !== null" class="btn btn-secondary" @click="cancelEdit" style="font-size:12.5px; padding:8px 16px;">Batal</button>
-                  <button class="spin-btn-teal" @click="saveCustomQuestion" style="font-size:13px; padding:8px 24px; box-shadow:none; display:inline-flex; align-items:center; gap:6px;">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    {{ editingId !== null ? 'Update Pertanyaan' : 'Tambah Pertanyaan' }}
-                  </button>
-                </div>
-              </div>
-
-              <!-- Tabel daftar pertanyaan -->
-              <div style="overflow-x:auto; background:#FFFFFF; border:1.5px solid #EAE5DD; border-radius:14px;">
-                <table class="questions-manage-table">
-                  <thead>
-                    <tr>
-                      <th style="width:16%;">Kategori</th>
-                      <th style="width:38%;">Pertanyaan</th>
-                      <th style="width:22%;">Hints</th>
-                      <th style="width:10%; text-align:center;">Framework</th>
-                      <th style="width:14%; text-align:center;">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="q in questions" :key="q.id">
-                      <td><span class="framework-step-pill" style="margin:0; font-size:10.5px;">{{ q.category }}</span></td>
-                      <td style="font-weight:600; color:#1C3B34;">{{ q.text }}</td>
-                      <td style="font-size:11.5px; color:#7A6F66;">{{ q.hints }}</td>
-                      <td style="text-align:center;">
-                        <span v-if="q.framework && q.framework !== 'none'"
-                              :style="q.framework==='STAR' ? {background:'#FAF0EC',color:'#9B3A1A',borderColor:'#F3C9B5'} : q.framework==='PREP' ? {background:'#EBF5F0',color:'#1C3B34',borderColor:'#A8D5C0'} : {background:'#EEF0FA',color:'#3730A3',borderColor:'#C7D2FE'}"
-                              style="display:inline-block; padding:2px 9px; border-radius:20px; font-size:10px; font-weight:800; border:1px solid;">
-                          {{ q.framework }}
-                        </span>
-                        <span v-else style="font-size:10px; color:#C8BDB5;">—</span>
-                      </td>
-                      <td style="text-align:center;">
-                        <div style="display:flex; gap:6px; justify-content:center;">
-                          <button class="card-nav-btn" @click="startEdit(q)" style="background:#FAF4EB; border:1px solid #EAE5DD; width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center;" title="Edit">
-                            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-                          </button>
-                          <button class="card-nav-btn" @click="deleteCustomQuestion(q.id)" style="background:#FAF4EB; border:1px solid #EAE5DD; color:#D67B52; width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center;" title="Hapus">
-                            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div style="padding:12px 16px; background:#FCFAF7; text-align:right; border-radius:0 0 14px 14px;">
-                  <button class="btn btn-secondary" @click="resetDefaultQuestions" style="font-size:12px; padding:6px 12px; border:1.5px dashed #CCC; background:#FFF; display:inline-flex; align-items:center; gap:4px;">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg> Reset ke Default
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Modal Footer -->
-            <div style="padding:14px 24px; border-top:1.5px solid #EAE5DD; display:flex; justify-content:flex-end; background:#FCFAF7; border-radius:0 0 20px 20px; flex-shrink:0;">
-              <button @click="showManagePanel = false; cancelEdit()"
-                      style="padding:9px 22px; background:#1C3B34; color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:opacity 0.15s;"
-                      onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Selesai
-              </button>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#7A6F66; display:block; margin-bottom:4px;">Teks Pertanyaan</label>
+              <input type="text" class="form-input" v-model="formText" placeholder="Contoh: Mengapa kami harus menerima Anda?" style="padding:10px; font-size:13.5px; border:1.5px solid #EAE5DD; height:42px;" />
             </div>
           </div>
+          <div>
+            <label style="font-size:12px; font-weight:700; color:#7A6F66; display:block; margin-bottom:4px;">Tips / Hints Jawaban</label>
+            <textarea class="form-input" v-model="formHints" rows="2" placeholder="Saran kerangka jawaban..." style="padding:10px; font-size:13px; border:1.5px solid #EAE5DD;"></textarea>
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:4px;">
+            <button v-show="editingId !== null" class="btn btn-secondary" @click="cancelEdit" style="font-size:12.5px; padding:8px 16px;">Batal</button>
+            <button class="spin-btn-teal" @click="saveCustomQuestion" style="font-size:13px; padding:8px 24px; box-shadow:none;">
+              {{ editingId !== null ? 'Update Pertanyaan' : 'Tambah Pertanyaan' }}
+            </button>
+          </div>
         </div>
-      </transition>
+        <div style="overflow-x:auto; background:#FFFFFF; border:1.5px solid #EAE5DD; border-radius:12px;">
+          <table class="questions-manage-table">
+            <thead>
+              <tr>
+                <th style="width:20%;">Kategori</th>
+                <th style="width:45%;">Pertanyaan</th>
+                <th style="width:20%;">Hints</th>
+                <th style="width:15%; text-align:center;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="q in questions" :key="q.id">
+                <td><span class="framework-step-pill" style="margin:0;">{{ q.category }}</span></td>
+                <td style="font-weight:600; color:#1C3B34;">{{ q.text }}</td>
+                <td style="font-size:11.5px; color:#7A6F66;">{{ q.hints }}</td>
+                <td style="text-align:center;">
+                  <div style="display:flex; gap:6px; justify-content:center;">
+                    <button class="card-nav-btn" @click="startEdit(q)" style="background:#FAF4EB; border:1px solid #EAE5DD; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center;">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                    </button>
+                    <button class="card-nav-btn" @click="deleteCustomQuestion(q.id)" style="background:#FAF4EB; border:1px solid #EAE5DD; color:#D67B52; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center;">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="padding:12px; background:#FCFAF7; text-align:right;">
+            <button class="btn btn-secondary" @click="resetDefaultQuestions" style="font-size:12px; padding:6px 12px; border:1.5px dashed #CCC; background:#FFF; display:inline-flex; align-items:center; gap:4px;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg> Reset ke Default
+            </button>
+          </div>
+        </div>
+      </div>
 
       <!-- ═══ AI MODE: Setup Panel ═══ -->
       <div v-if="activeMode==='ai'" class="animate-fade-in" style="background:#FCFAF7; border:1.5px solid #EAE5DD; border-radius:16px; padding:20px; margin-bottom:24px;">
@@ -5276,7 +5254,6 @@ const InterviewPractice = {
       formCategory: 'General HR',
       formText: '',
       formHints: '',
-      formFramework: 'STAR',
       editingId: null,
       quickCustomQuestionText: '',
 
@@ -5418,19 +5395,18 @@ const InterviewPractice = {
     saveQuestionsToLocalStorage() { WorkspaceStorage.setItem('personal_workspace_interview_questions', JSON.stringify(this.questions)); },
     saveCustomQuestion() {
       if (!this.formText.trim()) { alert('Teks pertanyaan tidak boleh kosong!'); return; }
-      const fw = this.formFramework === 'none' ? null : (this.formFramework || 'STAR');
       if (this.editingId !== null) {
         const idx = this.questions.findIndex(q => q.id === this.editingId);
-        if (idx !== -1) { this.questions[idx].category = this.formCategory; this.questions[idx].text = this.formText.trim(); this.questions[idx].hints = this.formHints.trim() || 'Fokuskan penyampaian dengan kerangka berpikir rasional.'; this.questions[idx].framework = fw; }
+        if (idx !== -1) { this.questions[idx].category = this.formCategory; this.questions[idx].text = this.formText.trim(); this.questions[idx].hints = this.formHints.trim() || 'Fokuskan penyampaian dengan kerangka berpikir rasional.'; }
         this.editingId = null;
       } else {
-        this.questions.push({ id: Date.now(), category: this.formCategory, text: this.formText.trim(), hints: this.formHints.trim() || 'Fokuskan penyampaian dengan kerangka berpikir rasional.', framework: fw });
+        this.questions.push({ id: Date.now(), category: this.formCategory, text: this.formText.trim(), hints: this.formHints.trim() || 'Fokuskan penyampaian dengan kerangka berpikir rasional.', framework: 'STAR' });
       }
-      this.saveQuestionsToLocalStorage(); this.formText = ''; this.formHints = ''; this.formFramework = 'STAR';
+      this.saveQuestionsToLocalStorage(); this.formText = ''; this.formHints = '';
       alert('Pertanyaan berhasil disimpan!');
     },
-    startEdit(q) { this.editingId = q.id; this.formCategory = q.category; this.formText = q.text; this.formHints = q.hints; this.formFramework = q.framework || 'STAR'; },
-    cancelEdit() { this.editingId = null; this.formText = ''; this.formHints = ''; this.formFramework = 'STAR'; },
+    startEdit(q) { this.editingId = q.id; this.formCategory = q.category; this.formText = q.text; this.formHints = q.hints; globalThis.scrollTo({ top: 300, behavior: 'smooth' }); },
+    cancelEdit() { this.editingId = null; this.formText = ''; this.formHints = ''; },
     deleteCustomQuestion(id) {
       if (confirm('Hapus pertanyaan ini?')) { this.questions = this.questions.filter(q => q.id !== id); this.saveQuestionsToLocalStorage(); this.resetToReSpin(); }
     },
@@ -8989,7 +8965,12 @@ const GoogleCalendar = {
                     <!-- Recurrence label -->
                     <span v-if="agendaDetailItem.raw && agendaDetailItem.raw.recurrence && agendaDetailItem.raw.recurrence !== 'none'"
                       class="agenda-detail-recur-badge">
-                      {{ localRecurrenceLabel(agendaDetailItem.raw.recurrence, agendaDetailItem.raw.date) }}
+                      <template v-if="agendaDetailItem.raw.recurrence === 'custom' && agendaDetailItem.raw.customRecurrence">
+                        {{ (() => { const c = agendaDetailItem.raw.customRecurrence; const un = {day:'hari',week:'minggu',month:'bulan',year:'tahun'}; const dn=['Min','Sen','Sel','Rab','Kam','Jum','Sab']; let s='Setiap '+(c.interval>1?c.interval+' ':'')+un[c.unit]; if(c.unit==='week'&&c.days&&c.days.length>0) s+=' · '+[...c.days].sort((a,b)=>a-b).map(d=>dn[d]).join(', '); return s; })() }}
+                      </template>
+                      <template v-else>
+                        {{ localRecurrenceLabel(agendaDetailItem.raw.recurrence, agendaDetailItem.raw.date) }}
+                      </template>
                     </span>
                   </span>
                 </div>
@@ -9240,16 +9221,24 @@ const GoogleCalendar = {
                     <label class="gcal-label">Ulangi</label>
                     <button type="button" class="gcal-input" @click="localShowRecurrenceDropdown = !localShowRecurrenceDropdown"
                       style="width:100%; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; background:#fff;">
-                      <span>{{ localRecurrenceLabel(localNewReminder.recurrence, localNewReminder.date) }}</span>
+                      <span>{{ localIsCustomRecurrence ? localCustomRecurrenceLabel : localRecurrenceLabel(localNewReminder.recurrence, localNewReminder.date) }}</span>
                       <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: localShowRecurrenceDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
                     <div v-if="localShowRecurrenceDropdown" @click.stop
-                      style="position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:999; background:#fff; border:1px solid #dadce0; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.15); overflow-y:auto; max-height:220px;">
+                      style="position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:999; background:#fff; border:1.5px solid var(--color-sand,#E8DFD8); border-radius:12px; box-shadow:0 6px 20px rgba(44,38,33,0.14); overflow-y:auto; max-height:260px;">
                       <div v-for="opt in ['none','daily','weekly','monthly','yearly','weekday']" :key="opt"
                         @click="localNewReminder.recurrence = opt; localShowRecurrenceDropdown = false"
-                        :class="{ 'gcal-recurrence-opt-active': localNewReminder.recurrence === opt }"
+                        :class="{ 'gcal-recurrence-opt-active': localNewReminder.recurrence === opt && !localIsCustomRecurrence }"
                         class="gcal-recurrence-opt">
                         {{ localRecurrenceLabel(opt, localNewReminder.date) }}
+                      </div>
+                      <div style="border-top:1px solid #f0f0f0; margin:4px 0;"></div>
+                      <div @click="localOpenCustomRecurrence"
+                        :class="{ 'gcal-recurrence-opt-active': localIsCustomRecurrence }"
+                        class="gcal-recurrence-opt"
+                        style="display:flex; align-items:center; gap:6px; color:var(--color-terracotta,#D67B52); font-weight:600;">
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+                        Sesuaikan...
                       </div>
                     </div>
                   </div>
@@ -9277,6 +9266,126 @@ const GoogleCalendar = {
             </div>
           </div>
         </div>
+
+        <!-- ═══ Modal Pengulangan Kustom ═══ -->
+        <transition name="insight-modal-fade">
+          <div v-if="showCustomRecurrenceModal"
+               style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(44,38,33,0.45); display:flex; align-items:center; justify-content:center; z-index:99999; padding:16px; box-sizing:border-box; backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);"
+               @click.self="showCustomRecurrenceModal = false">
+            <div style="background:var(--bg-cream,#FDFBF7); border-radius:20px; box-shadow:0 16px 48px rgba(44,38,33,0.2), 0 2px 8px rgba(44,38,33,0.08); width:min(400px, 95vw); overflow:hidden; font-family:inherit;">
+              <!-- Header -->
+              <div style="padding:18px 22px 14px; background:var(--color-terracotta,#D67B52); border-bottom:1px solid rgba(255,255,255,0.12);">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div style="width:32px; height:32px; background:rgba(255,255,255,0.2); border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+                  </div>
+                  <h3 style="margin:0; font-size:15px; font-weight:700; color:#fff; font-family:'Hack',monospace; letter-spacing:0.2px;">Pengulangan Kustom</h3>
+                </div>
+              </div>
+              <!-- Body -->
+              <div style="padding:20px 22px; display:flex; flex-direction:column; gap:16px; background:var(--bg-cream,#FDFBF7);">
+
+                <!-- Ulangi setiap N [satuan] -->
+                <div>
+                  <label style="font-size:11.5px; font-weight:700; color:var(--text-muted,#6E6359); display:block; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.6px;">Ulangi setiap</label>
+                  <div style="display:flex; gap:10px; align-items:center;">
+                    <div style="display:flex; flex-direction:column; border:1.5px solid var(--color-sand,#E8DFD8); border-radius:10px; overflow:hidden; background:#fff; box-shadow:0 1px 4px rgba(44,38,33,0.05);">
+                      <button @click="customRecurrenceForm.interval = Math.min(99, customRecurrenceForm.interval + 1)"
+                              style="border:none; background:none; padding:4px 12px; cursor:pointer; font-size:10px; color:var(--color-terracotta,#D67B52); line-height:1; transition:background 0.15s;"
+                              onmouseover="this.style.background='#FDF5EB'" onmouseout="this.style.background='none'">▲</button>
+                      <input type="number" v-model.number="customRecurrenceForm.interval" min="1" max="99"
+                             style="width:52px; text-align:center; border:none; border-top:1.5px solid var(--color-sand,#E8DFD8); border-bottom:1.5px solid var(--color-sand,#E8DFD8); padding:6px 0; font-size:14px; font-weight:700; color:var(--text-dark,#2C2621); outline:none; background:#fff; font-family:'Hack',monospace;" />
+                      <button @click="customRecurrenceForm.interval = Math.max(1, customRecurrenceForm.interval - 1)"
+                              style="border:none; background:none; padding:4px 12px; cursor:pointer; font-size:10px; color:var(--color-terracotta,#D67B52); line-height:1; transition:background 0.15s;"
+                              onmouseover="this.style.background='#FDF5EB'" onmouseout="this.style.background='none'">▼</button>
+                    </div>
+                    <select v-model="customRecurrenceForm.unit" @change="onCustomRecurrenceUnitChange"
+                            style="flex:1; height:42px; border:1.5px solid var(--color-sand,#E8DFD8); border-radius:10px; padding:0 12px; font-size:14px; font-weight:600; color:var(--text-dark,#2C2621); background:#fff; cursor:pointer; outline:none; transition:border-color 0.2s; box-shadow:0 1px 4px rgba(44,38,33,0.05);"
+                            onfocus="this.style.borderColor='var(--color-terracotta,#D67B52)'" onblur="this.style.borderColor='var(--color-sand,#E8DFD8)'">
+                      <option value="day">hari</option>
+                      <option value="week">minggu</option>
+                      <option value="month">bulan</option>
+                      <option value="year">tahun</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Ulangi setiap [hari dalam minggu] — hanya tampil kalau unit = week -->
+                <div v-if="customRecurrenceForm.unit === 'week'">
+                  <label style="font-size:11.5px; font-weight:700; color:var(--text-muted,#6E6359); display:block; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.6px;">Hari dalam minggu</label>
+                  <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button v-for="(dayLabel, idx) in ['S','S','R','K','J','S','M']" :key="idx"
+                            @click="localToggleCustomDay(idx)"
+                            :style="customRecurrenceForm.days.includes(idx) ? { background:'var(--color-terracotta,#D67B52)', color:'#fff', borderColor:'var(--color-terracotta,#D67B52)', boxShadow:'0 2px 8px rgba(214,123,82,0.35)' } : { background:'#fff', color:'var(--text-muted,#6E6359)', borderColor:'var(--color-sand,#E8DFD8)' }"
+                            style="width:36px; height:36px; border-radius:50%; border:1.5px solid; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-family:'Hack',monospace;">
+                      {{ dayLabel }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Berakhir -->
+                <div style="background:#fff; border:1.5px solid var(--color-sand,#E8DFD8); border-radius:12px; padding:14px 16px;">
+                  <label style="font-size:11.5px; font-weight:700; color:var(--text-muted,#6E6359); display:block; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.6px;">Berakhir</label>
+                  <div style="display:flex; flex-direction:column; gap:10px;">
+
+                    <!-- Tidak pernah -->
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:6px 8px; border-radius:8px; transition:background 0.15s;"
+                           onmouseover="this.style.background='#FDF5EB'" onmouseout="this.style.background='transparent'">
+                      <input type="radio" v-model="customRecurrenceForm.endType" value="never"
+                             style="width:16px; height:16px; accent-color:var(--color-terracotta,#D67B52); cursor:pointer; flex-shrink:0;" />
+                      <span style="font-size:13.5px; color:var(--text-dark,#2C2621);">Tidak pernah</span>
+                    </label>
+
+                    <!-- Tanggal -->
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:6px 8px; border-radius:8px; transition:background 0.15s;"
+                           onmouseover="this.style.background='#FDF5EB'" onmouseout="this.style.background='transparent'">
+                      <input type="radio" v-model="customRecurrenceForm.endType" value="date"
+                             style="width:16px; height:16px; accent-color:var(--color-terracotta,#D67B52); cursor:pointer; flex-shrink:0;" />
+                      <span style="font-size:13.5px; color:var(--text-dark,#2C2621); flex-shrink:0;">Sampai tanggal</span>
+                      <input type="date" v-model="customRecurrenceForm.endDate"
+                             @click="customRecurrenceForm.endType = 'date'"
+                             :min="localNewReminder.date"
+                             :style="customRecurrenceForm.endType !== 'date' ? { opacity: 0.35 } : {}"
+                             style="flex:1; height:34px; border:1.5px solid var(--color-sand,#E8DFD8); border-radius:8px; padding:0 10px; font-size:12.5px; color:var(--text-dark,#2C2621); background:#FDFBF7; outline:none; cursor:pointer; transition:border-color 0.2s;"
+                             onfocus="this.style.borderColor='var(--color-terracotta,#D67B52)'" onblur="this.style.borderColor='var(--color-sand,#E8DFD8)'" />
+                    </label>
+
+                    <!-- Setelah N kali -->
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:6px 8px; border-radius:8px; transition:background 0.15s;"
+                           onmouseover="this.style.background='#FDF5EB'" onmouseout="this.style.background='transparent'">
+                      <input type="radio" v-model="customRecurrenceForm.endType" value="count"
+                             style="width:16px; height:16px; accent-color:var(--color-terracotta,#D67B52); cursor:pointer; flex-shrink:0;" />
+                      <span style="font-size:13.5px; color:var(--text-dark,#2C2621); flex-shrink:0;">Setelah</span>
+                      <div style="display:flex; align-items:center; gap:6px; flex:1;">
+                        <input type="number" v-model.number="customRecurrenceForm.count" min="1" max="999"
+                               @click="customRecurrenceForm.endType = 'count'"
+                               :style="customRecurrenceForm.endType !== 'count' ? { opacity: 0.35 } : {}"
+                               style="width:60px; height:34px; border:1.5px solid var(--color-sand,#E8DFD8); border-radius:8px; text-align:center; font-size:14px; font-weight:700; color:var(--text-dark,#2C2621); outline:none; padding:0; background:#FDFBF7; font-family:'Hack',monospace; transition:border-color 0.2s;"
+                               onfocus="this.style.borderColor='var(--color-terracotta,#D67B52)'" onblur="this.style.borderColor='var(--color-sand,#E8DFD8)'" />
+                        <span style="font-size:13px; color:var(--text-muted,#6E6359);">kali</span>
+                      </div>
+                    </label>
+
+                  </div>
+                </div>
+
+              </div>
+              <!-- Footer -->
+              <div style="display:flex; justify-content:flex-end; gap:8px; padding:14px 22px 18px; background:var(--bg-cream,#FDFBF7); border-top:1.5px solid var(--color-sand,#E8DFD8);">
+                <button @click="showCustomRecurrenceModal = false"
+                        style="padding:9px 20px; border:1.5px solid var(--color-sand,#E8DFD8); background:#fff; font-size:13px; font-weight:600; color:var(--text-muted,#6E6359); cursor:pointer; border-radius:10px; transition:all 0.15s; font-family:inherit;"
+                        onmouseover="this.style.borderColor='var(--color-terracotta,#D67B52)';this.style.color='var(--color-terracotta,#D67B52)'" onmouseout="this.style.borderColor='var(--color-sand,#E8DFD8)';this.style.color='var(--text-muted,#6E6359)'">
+                  Batal
+                </button>
+                <button @click="localSaveCustomRecurrence"
+                        style="padding:9px 22px; border:none; background:var(--color-terracotta,#D67B52); color:#fff; font-size:13px; font-weight:700; cursor:pointer; border-radius:10px; transition:all 0.15s; font-family:inherit; box-shadow:0 2px 8px rgba(214,123,82,0.3);"
+                        onmouseover="this.style.background='#C06A42';this.style.boxShadow='0 4px 12px rgba(214,123,82,0.4)'" onmouseout="this.style.background='var(--color-terracotta,#D67B52)';this.style.boxShadow='0 2px 8px rgba(214,123,82,0.3)'">
+                  ✓ Selesai
+                </button>
+              </div>
+            </div>
+          </div>
+        </transition>
 
         <!-- Bottom connect banner (subtle) -->
         <div class="gcal-sync-banner">
@@ -9481,6 +9590,9 @@ const GoogleCalendar = {
       localNewEv: { title:'', startDate:'', startTime:'', endDate:'', endTime:'', location:'', desc:'', color:'#4285F4', allDay: false },
       localNewReminder: { title:'', subtitle:'', date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(), endDate: '', time:'', endTime:'', page:'', section:'', targetItem:'', category: 'manual', recurrence: 'none' },
       localShowRecurrenceDropdown: false,
+      showCustomRecurrenceModal: false,
+      customRecurrenceForm: { interval: 1, unit: 'week', days: [], endType: 'never', endDate: '', count: 13 },
+      customRecurrenceSaved: null, // hasil akhir custom recurrence yang sudah disimpan
       newCustomCategoryInput: '',
       showManageCategoryModal: false,
       customReminderCategories: (() => {
@@ -9515,6 +9627,23 @@ const GoogleCalendar = {
     };
   },
   computed: {
+    localIsCustomRecurrence() {
+      return this.customRecurrenceSaved !== null && this.localNewReminder.recurrence === 'custom';
+    },
+    localCustomRecurrenceLabel() {
+      const c = this.customRecurrenceSaved;
+      if (!c) return 'Sesuaikan...';
+      const unitMap = { day: c.interval === 1 ? 'hari' : 'hari', week: c.interval === 1 ? 'minggu' : 'minggu', month: c.interval === 1 ? 'bulan' : 'bulan', year: c.interval === 1 ? 'tahun' : 'tahun' };
+      const dayNames = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+      let base = `Setiap ${c.interval > 1 ? c.interval + ' ' : ''}${unitMap[c.unit] || c.unit}`;
+      if (c.unit === 'week' && c.days && c.days.length > 0) {
+        const sorted = [...c.days].sort((a,b)=>a-b);
+        base += ' pada ' + sorted.map(d => dayNames[d]).join(', ');
+      }
+      if (c.endType === 'date' && c.endDate) base += ' · s/d ' + c.endDate.replace(/-/g, '/').slice(2);
+      else if (c.endType === 'count' && c.count) base += ' · ' + c.count + 'x';
+      return base;
+    },
     filteredEvents() {
       if (this.filterGroup === 'all') return this.events;
       const todayStr = localDateStr();
@@ -10248,6 +10377,7 @@ const GoogleCalendar = {
         recurrence: m.recurrence || 'none',
         _editId: m.id,  // simpan id lama untuk update di saveLocalReminder
       };
+      this.customRecurrenceSaved = (m.recurrence === 'custom' && m.customRecurrence) ? { ...m.customRecurrence } : null;
       this.agendaDetailItem = null;
       this.localShowForm = true;
     },
@@ -10431,6 +10561,51 @@ const GoogleCalendar = {
       else { d.setMonth(d.getMonth() + 1); }
       this.localCurDate = d;
     },
+    localOpenCustomRecurrence() {
+      this.localShowRecurrenceDropdown = false;
+      // Pre-fill form dari custom yang sudah ada, atau dari unit bawaan startDate
+      if (this.customRecurrenceSaved) {
+        this.customRecurrenceForm = { ...this.customRecurrenceSaved };
+      } else {
+        // Default: 1 minggu, hari sesuai tanggal mulai dipilih
+        const startDate = this.localNewReminder.date;
+        let dayIdx = new Date().getDay();
+        if (startDate) { try { dayIdx = new Date(startDate + 'T00:00:00').getDay(); } catch(_e) {} }
+        this.customRecurrenceForm = { interval: 1, unit: 'week', days: [dayIdx], endType: 'never', endDate: '', count: 13 };
+      }
+      this.showCustomRecurrenceModal = true;
+    },
+    onCustomRecurrenceUnitChange() {
+      // Saat ganti ke minggu, auto-pilih hari sesuai tanggal mulai
+      if (this.customRecurrenceForm.unit === 'week' && this.customRecurrenceForm.days.length === 0) {
+        const startDate = this.localNewReminder.date;
+        let dayIdx = new Date().getDay();
+        if (startDate) { try { dayIdx = new Date(startDate + 'T00:00:00').getDay(); } catch(_e) {} }
+        this.customRecurrenceForm.days = [dayIdx];
+      }
+    },
+    localToggleCustomDay(idx) {
+      const days = [...this.customRecurrenceForm.days];
+      const pos = days.indexOf(idx);
+      if (pos >= 0) {
+        // jangan hapus kalau hanya tinggal 1
+        if (days.length > 1) days.splice(pos, 1);
+      } else {
+        days.push(idx);
+      }
+      this.customRecurrenceForm.days = days;
+    },
+    localSaveCustomRecurrence() {
+      const f = this.customRecurrenceForm;
+      if (f.unit === 'week' && (!f.days || f.days.length === 0)) {
+        alert('Pilih minimal satu hari!'); return;
+      }
+      if (f.interval < 1 || isNaN(f.interval)) { f.interval = 1; }
+      if (f.endType === 'count' && (f.count < 1 || isNaN(f.count))) { f.count = 1; }
+      this.customRecurrenceSaved = { ...f };
+      this.localNewReminder.recurrence = 'custom';
+      this.showCustomRecurrenceModal = false;
+    },
     localAddReminder() {
       if (!this.localNewReminder.title.trim()) { this.localError = 'Judul pengingat tidak boleh kosong!'; return; }
       if (!this.localNewReminder.date) { this.localError = 'Tanggal mulai harus diisi!'; return; }
@@ -10468,6 +10643,7 @@ const GoogleCalendar = {
         targetItem: this.localNewReminder.targetItem || null,
         category: this.localNewReminder.category || 'manual',
         recurrence: this.localNewReminder.recurrence || 'none',
+        customRecurrence: (this.localNewReminder.recurrence === 'custom' && this.customRecurrenceSaved) ? { ...this.customRecurrenceSaved } : null,
         isHabit: false,
         isManual: true
       });
@@ -10477,6 +10653,7 @@ const GoogleCalendar = {
       this.localError = null;
       this.localShowForm = false;
       this.localShowRecurrenceDropdown = false;
+      this.customRecurrenceSaved = null;
       this.localSelectedDate = this.localNewReminder.date;
       this.localView = 'agenda';
       this.localNewReminder = { title:'', subtitle:'', date: this.localFmtDate(new Date()), endDate: '', time:'', endTime:'', page:'', section:'', targetItem:'', category: 'manual', recurrence: 'none' };
@@ -10499,7 +10676,8 @@ const GoogleCalendar = {
         weekly: 'Mingguan pada hari ' + dayName,
         monthly: 'Bulanan pada tanggal ' + dateNum,
         yearly: 'Tiap tahun pada ' + dateNum + ' ' + monthName,
-        weekday: 'Setiap hari kerja (Senin–Jumat)'
+        weekday: 'Setiap hari kerja (Senin–Jumat)',
+        custom: 'Sesuaikan...',
       };
       return map[rec] || map.none;
     },
