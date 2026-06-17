@@ -9061,9 +9061,9 @@ const GoogleCalendar = {
 
               </div>
 
-              <!-- Footer: Tandai Selesai (untuk semua tipe yang actionable) + Buka halaman untuk non-actionable -->
+              <!-- Footer: Tandai Selesai (untuk semua tipe yang actionable, kecuali task/Job Logbook) + Buka halaman untuk non-actionable -->
               <div class="agenda-detail-footer">
-                <template v-if="agendaDetailItem.actionable">
+                <template v-if="agendaDetailItem.actionable && agendaDetailItem.type !== 'task'">
                   <button v-if="!agendaDetailItem.done"
                     @click="localMarkDoneFromDetail(agendaDetailItem)"
                     class="agenda-detail-btn-done">

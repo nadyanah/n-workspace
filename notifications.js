@@ -925,7 +925,7 @@ const NotificationPanel = {
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                     </div>
                     <div class="notif-item-content">
-                      <div class="notif-item-title">{{ entry.item.title }}</div>
+                      <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : ''">{{ entry.item.title }}</div>
                       <div class="notif-item-sub">{{ entry.item.subtitle }}</div>
                     </div>
                     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
@@ -942,7 +942,7 @@ const NotificationPanel = {
                       <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     </div>
                     <div class="notif-item-content">
-                      <div class="notif-item-title">{{ entry.item.title }}</div>
+                      <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : ''">{{ entry.item.title }}</div>
                       <div class="notif-item-sub">{{ entry.item.subtitle }}</div>
                     </div>
                     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
@@ -1029,7 +1029,7 @@ const NotificationPanel = {
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                     </div>
                     <div class="notif-item-content">
-                      <div class="notif-item-title">{{ entry.item.title }}</div>
+                      <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : ''">{{ entry.item.title }}</div>
                       <div class="notif-item-sub">{{ entry.item.subtitle }}</div>
                     </div>
                     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
@@ -1046,7 +1046,7 @@ const NotificationPanel = {
                       <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     </div>
                     <div class="notif-item-content">
-                      <div class="notif-item-title">{{ entry.item.title }}</div>
+                      <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : ''">{{ entry.item.title }}</div>
                       <div class="notif-item-sub">{{ entry.item.subtitle }}</div>
                     </div>
                     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
@@ -1133,7 +1133,7 @@ const NotificationPanel = {
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                     </div>
                     <div class="notif-item-content">
-                      <div class="notif-item-title">{{ entry.item.title }}</div>
+                      <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : ''">{{ entry.item.title }}</div>
                       <div class="notif-item-sub">{{ entry.item.subtitle }}</div>
                     </div>
                     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
@@ -1150,7 +1150,7 @@ const NotificationPanel = {
                       <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     </div>
                     <div class="notif-item-content">
-                      <div class="notif-item-title">{{ entry.item.title }}</div>
+                      <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : ''">{{ entry.item.title }}</div>
                       <div class="notif-item-sub">{{ entry.item.subtitle }}</div>
                     </div>
                     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
@@ -1467,11 +1467,12 @@ const NotificationPanel = {
     infoNotifs() {
       const list = [];
 
-      // Task Plan hari ini — yang sudah Completed tidak ditampilkan
-      const todayPlans = this.plans.filter(p => p.date === this.todayStr && p.phase !== 'Completed');
+      // Task Plan hari ini — yang sudah Completed tetap ditampilkan (dicoret), tidak dibuang
+      const todayPlans = this.plans.filter(p => p.date === this.todayStr);
       todayPlans.forEach(p => {
+        const done = p.phase === 'Completed';
         const priorityMap = { High: { badge: 'High', color: 'red' }, Medium: { badge: 'Med', color: 'amber' }, Low: { badge: 'Low', color: 'sage' } };
-        const pm = priorityMap[p.priority] || { badge: p.priority, color: 'amber' };
+        const pm = done ? { badge: 'Selesai', color: 'sage' } : (priorityMap[p.priority] || { badge: p.priority, color: 'amber' });
         // Konversi time string "HH:MM" ke menit untuk sorting
         let timeVal = 9999; // task tanpa waktu diletakkan di bawah
         if (p.time) {
@@ -1488,7 +1489,8 @@ const NotificationPanel = {
           page: 'jobLogbook',
           time: p.time || null,
           timeVal,
-          hasTime: !!p.time
+          hasTime: !!p.time,
+          done
         });
       });
 
@@ -1601,7 +1603,7 @@ const NotificationPanel = {
 
     // Total badge buat bell icon di navbar — hanya hitung yang belum selesai
     totalUnread() {
-      const infoCount = this.infoNotifs.length;
+      const infoCount = this.infoNotifs.filter(n => !n.done).length;
       const undoneCount = this.actionNotifs.filter(n => !n.done).length;
       return infoCount + undoneCount;
     },
