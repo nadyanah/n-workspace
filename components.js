@@ -6566,7 +6566,7 @@ const HabitTracker = {
                          style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; cursor: pointer; transition: background-color 0.15s;"
                          class="custom-dropdown-item">
                       <span style="font-size: 13px; color: var(--text-dark);">{{ cat }}</span>
-                      <button v-if="!['Kesehatan','Produktivitas','Pikiran','Rutinitas'].includes(cat)"
+                      <button v-if="!['Kesehatan','Produktivitas','Pikiran','Rutinitas','Dzikir Waktu'].includes(cat)"
                               type="button"
                               @click.stop="deleteCategory(cat)"
                               title="Hapus kategori ini"
@@ -7034,7 +7034,7 @@ const HabitTracker = {
       });
     },
     allCategories() {
-      const base = ['Kesehatan', 'Produktivitas', 'Pikiran', 'Rutinitas'];
+      const base = ['Kesehatan', 'Produktivitas', 'Pikiran', 'Rutinitas', 'Dzikir Waktu'];
       return [...base, ...this.customCategories.filter(c => !base.includes(c))];
     },
     totalChecksThisMonth() {
@@ -7283,7 +7283,7 @@ const HabitTracker = {
     confirmCustomCategory() {
       const name = this.newCategoryInput.trim();
       if (!name) return;
-      if (!this.customCategories.includes(name) && !['Kesehatan','Produktivitas','Pikiran','Rutinitas'].includes(name)) {
+      if (!this.customCategories.includes(name) && !['Kesehatan','Produktivitas','Pikiran','Rutinitas','Dzikir Waktu'].includes(name)) {
         this.customCategories.push(name);
         this.saveCategoriesToStorage();
       }
@@ -7338,7 +7338,7 @@ const HabitTracker = {
       return habit.customColor || this.getColorCode(habit.color || 'emerald');
     },
     getCategoryIcon(category) {
-      const icons = { 'Kesehatan': '❤️', 'Produktivitas': '✨', 'Pikiran': '🧠', 'Rutinitas': '⏰' };
+      const icons = { 'Kesehatan': '❤️', 'Produktivitas': '✨', 'Pikiran': '🧠', 'Rutinitas': '⏰', 'Dzikir Waktu': '📿' };
       return icons[category] || '🌱';
     },
     isDayChecked(habit, day) {
@@ -7527,7 +7527,9 @@ const HabitTracker = {
           })(),
           habitId: h.id,
           color: h.customColor || '#10b981',
-          page: 'habitTracker'
+          page: 'habitTracker',
+          category: h.category || '',
+          isDzikirWaktu: h.category === 'Dzikir Waktu',
         }));
       WorkspaceStorage.setItem('ws_habit_notifs', JSON.stringify(habitsWithTime));
     },
@@ -12288,11 +12290,23 @@ const DzikirCounter = {
                   </div>
                 </transition>
 
+                <!-- Indikator seluruh sesi tuntas (dipakai juga untuk buka gerbang reminder Dzikir Waktu) -->
+                <div v-if="isFullyComplete && !justCompleted" style="margin-top: 10px; font-size: 11.5px; font-weight: 700; color: #16a34a; text-align: center; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Semua dzikir tuntas — pengingat siap ditandai selesai
+                </div>
+
                 <!-- Reset manual -->
-                <button @click="resetActive"
-                  style="margin-top: 18px; font-size: 11.5px; color: var(--text-muted); background: none; border: none; cursor: pointer; font-family: inherit; text-decoration: underline;">
-                  Reset hitungan ini
-                </button>
+                <div style="display: flex; gap: 14px; margin-top: 18px;">
+                  <button @click="resetActive"
+                    style="font-size: 11.5px; color: var(--text-muted); background: none; border: none; cursor: pointer; font-family: inherit; text-decoration: underline;">
+                    Reset hitungan ini
+                  </button>
+                  <button @click="resetAll"
+                    style="font-size: 11.5px; color: var(--text-muted); background: none; border: none; cursor: pointer; font-family: inherit; text-decoration: underline;">
+                    Reset semua (sesi baru)
+                  </button>
+                </div>
               </template>
             </div>
 
@@ -12412,6 +12426,9 @@ const DzikirCounter = {
     activeDzikir() {
       return this.list[this.activeIndex] || { text: '', arabic: '', count: 0, target: 33 };
     },
+    isFullyComplete() {
+      return this.list.length > 0 && this.list.every(d => d.count >= d.target);
+    },
   },
   methods: {
     vibrate(pattern) {
@@ -12491,6 +12508,12 @@ const DzikirCounter = {
         this.vibrate(15); // getaran singkat tiap tap normal
       }
       this.saveToStorage();
+      // Kalau seluruh list (semua dzikir) sudah tuntas, simpan jam selesainya hari ini.
+      // Dipakai panel notifikasi untuk gating reminder "Dzikir Waktu".
+      if (this.isFullyComplete) {
+        WorkspaceStorage.setItem('dzikir_last_completed_at', String(Date.now()));
+        window.dispatchEvent(new CustomEvent('ws-dzikir-completed'));
+      }
     },
     onTargetReached() {
       this.justCompleted = true;
@@ -12506,6 +12529,14 @@ const DzikirCounter = {
     resetActive() {
       if (!this.list.length) return;
       this.list[this.activeIndex].count = 0;
+      this.justCompleted = false;
+      this.saveToStorage();
+    },
+    resetAll() {
+      if (!this.list.length) return;
+      if (!confirm('Reset semua hitungan dzikir ke 0? Cocok dipakai sebelum mulai sesi dzikir waktu berikutnya.')) return;
+      this.list.forEach(d => { d.count = 0; });
+      this.activeIndex = 0;
       this.justCompleted = false;
       this.saveToStorage();
     },

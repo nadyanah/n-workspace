@@ -4863,6 +4863,14 @@ input:checked + .switch-slider:before {
 .notif-item-done:hover {
   background: #F8F8F8 !important;
 }
+.notif-item-locked {
+  background: #FEF6F2 !important;
+  border-color: #FCD8C5 !important;
+}
+.notif-item-locked:hover {
+  background: #FDEDE5 !important;
+  border-color: #F8B79A !important;
+}
 
 /* ── Item Icon ── */
 .notif-item-icon {

@@ -754,6 +754,30 @@ if (typeof reminderOccursOnDate === 'undefined') {
   };
 }
 
+// ── Helper: cek apakah dzikir sudah dituntaskan HARI INI pada/sesudah jam tertentu ──
+// Dipakai untuk gating habit berkategori "Dzikir Waktu" di Panel Notifikasi:
+// reminder baru bisa ditandai selesai kalau dzikir sudah dituntaskan setelah jam habit itu tiba.
+if (typeof isDzikirReadyForHabit === 'undefined') {
+  var isDzikirReadyForHabit = function(timeVal) {
+    try {
+      const ts = WorkspaceStorage.getItem('dzikir_last_completed_at');
+      if (!ts) return false;
+      const completedAt = new Date(parseInt(ts, 10));
+      if (isNaN(completedAt.getTime())) return false;
+      const now = new Date();
+      const isToday = completedAt.getFullYear() === now.getFullYear() &&
+        completedAt.getMonth() === now.getMonth() &&
+        completedAt.getDate() === now.getDate();
+      if (!isToday) return false;
+      const completedMinutes = completedAt.getHours() * 60 + completedAt.getMinutes();
+      return completedMinutes >= (timeVal || 0);
+    } catch (e) {
+      return false;
+    }
+  };
+}
+
+
 // ── Helper: ambil notif belum dikerjakan dari hari tertentu ──
 function _snapshotMissedForDate(dateStr) {
   try {
@@ -954,18 +978,23 @@ const NotificationPanel = {
                 <!-- ═ PENGINGAT ITEM ═ -->
                 <div v-else
                      class="notif-item notif-item-action"
-                     :class="{ 'notif-item-done': entry.item.done }"
-                     :title="entry.item.done ? 'Klik untuk batalkan (tandai belum selesai)' : 'Klik untuk tandai selesai'"
+                     :class="{ 'notif-item-done': entry.item.done, 'notif-item-locked': entry.item.isDzikirWaktu && !entry.item.done && entry.item.dzikirLocked }"
+                     :title="entry.item.done ? 'Klik untuk batalkan (tandai belum selesai)' : (entry.item.isDzikirWaktu && entry.item.dzikirLocked ? 'Dzikir untuk waktu ini belum tuntas — klik untuk buka Dzikir Counter' : 'Klik untuk tandai selesai')"
                      @click="handleActionClick(entry.item)">
                   <div class="notif-item-icon" :class="entry.item.done ? 'notif-icon-done' : 'notif-icon-action'" :style="entry.item.isHabit && !entry.item.done ? { backgroundColor: entry.item.color + '22', border: '1.5px solid ' + entry.item.color + '55' } : {}">
                     <svg v-if="entry.item.done" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg v-else-if="entry.item.isDzikirWaktu && entry.item.dzikirLocked" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     <svg v-else-if="entry.item.isHabit" viewBox="0 0 24 24" width="14" height="14" fill="none" :stroke="entry.item.color" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
                     <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   </div>
                   <div class="notif-item-content">
-                    <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : ''">{{ entry.item.title }}</div>
+                    <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : (entry.item.isDzikirWaktu && entry.item.dzikirLocked ? 'opacity: 0.65;' : '')">{{ entry.item.title }}</div>
                     <div class="notif-item-sub" style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
-                      <span v-if="entry.item.isHabit && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #f0fdf4; color: #16a34a; border: 1px solid #86efac;">
+                      <span v-if="entry.item.isDzikirWaktu && !entry.item.done && entry.item.dzikirLocked" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5;">
+                        <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        Tuntaskan dzikir dulu
+                      </span>
+                      <span v-else-if="entry.item.isHabit && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #f0fdf4; color: #16a34a; border: 1px solid #86efac;">
                         <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
                         Habit
                       </span>
@@ -974,12 +1003,13 @@ const NotificationPanel = {
                         {{ manualCategoryLabel(entry.item) }}
                       </span>
                       <span v-if="entry.item.done">Sudah dikerjakan ✓ <span style="opacity:0.6;">· klik untuk batalkan</span></span>
-                      <span v-else>{{ entry.item.subtitle }}</span>
+                      <span v-else-if="!(entry.item.isDzikirWaktu && entry.item.dzikirLocked)">{{ entry.item.subtitle }}</span>
                     </div>
                   </div>
                   <div class="notif-item-right">
                     <span class="notif-time-badge">{{ entry.item.endTime ? entry.item.time + '–' + entry.item.endTime : entry.item.time }}</span>
-                    <svg v-if="!entry.item.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    <svg v-if="entry.item.isDzikirWaktu && !entry.item.done && entry.item.dzikirLocked" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" title="Terkunci — selesaikan dzikir dulu"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <svg v-else-if="!entry.item.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                     <svg v-else viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);" title="Klik untuk batalkan"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></svg>
                   </div>
                 </div>
@@ -1058,18 +1088,23 @@ const NotificationPanel = {
                 <!-- ═ PENGINGAT ITEM ═ -->
                 <div v-else
                      class="notif-item notif-item-action"
-                     :class="{ 'notif-item-done': entry.item.done }"
-                     :title="entry.item.done ? 'Klik untuk batalkan (tandai belum selesai)' : 'Klik untuk tandai selesai'"
+                     :class="{ 'notif-item-done': entry.item.done, 'notif-item-locked': entry.item.isDzikirWaktu && !entry.item.done && entry.item.dzikirLocked }"
+                     :title="entry.item.done ? 'Klik untuk batalkan (tandai belum selesai)' : (entry.item.isDzikirWaktu && entry.item.dzikirLocked ? 'Dzikir untuk waktu ini belum tuntas — klik untuk buka Dzikir Counter' : 'Klik untuk tandai selesai')"
                      @click="handleActionClick(entry.item)">
                   <div class="notif-item-icon" :class="entry.item.done ? 'notif-icon-done' : 'notif-icon-action'" :style="entry.item.isHabit && !entry.item.done ? { backgroundColor: entry.item.color + '22', border: '1.5px solid ' + entry.item.color + '55' } : {}">
                     <svg v-if="entry.item.done" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg v-else-if="entry.item.isDzikirWaktu && entry.item.dzikirLocked" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     <svg v-else-if="entry.item.isHabit" viewBox="0 0 24 24" width="14" height="14" fill="none" :stroke="entry.item.color" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
                     <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   </div>
                   <div class="notif-item-content">
-                    <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : ''">{{ entry.item.title }}</div>
+                    <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : (entry.item.isDzikirWaktu && entry.item.dzikirLocked ? 'opacity: 0.65;' : '')">{{ entry.item.title }}</div>
                     <div class="notif-item-sub" style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
-                      <span v-if="entry.item.isHabit && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #f0fdf4; color: #16a34a; border: 1px solid #86efac;">
+                      <span v-if="entry.item.isDzikirWaktu && !entry.item.done && entry.item.dzikirLocked" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5;">
+                        <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        Tuntaskan dzikir dulu
+                      </span>
+                      <span v-else-if="entry.item.isHabit && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #f0fdf4; color: #16a34a; border: 1px solid #86efac;">
                         <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
                         Habit
                       </span>
@@ -1078,12 +1113,13 @@ const NotificationPanel = {
                         {{ manualCategoryLabel(entry.item) }}
                       </span>
                       <span v-if="entry.item.done">Sudah dikerjakan ✓ <span style="opacity:0.6;">· klik untuk batalkan</span></span>
-                      <span v-else>{{ entry.item.subtitle }}</span>
+                      <span v-else-if="!(entry.item.isDzikirWaktu && entry.item.dzikirLocked)">{{ entry.item.subtitle }}</span>
                     </div>
                   </div>
                   <div class="notif-item-right">
                     <span class="notif-time-badge">{{ entry.item.endTime ? entry.item.time + '–' + entry.item.endTime : entry.item.time }}</span>
-                    <svg v-if="!entry.item.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    <svg v-if="entry.item.isDzikirWaktu && !entry.item.done && entry.item.dzikirLocked" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" title="Terkunci — selesaikan dzikir dulu"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <svg v-else-if="!entry.item.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                     <svg v-else viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);" title="Klik untuk batalkan"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></svg>
                   </div>
                 </div>
@@ -1162,18 +1198,23 @@ const NotificationPanel = {
                 <!-- ═ PENGINGAT ITEM ═ -->
                 <div v-else
                      class="notif-item notif-item-action"
-                     :class="{ 'notif-item-done': entry.item.done }"
-                     :title="entry.item.done ? 'Klik untuk batalkan (tandai belum selesai)' : 'Klik untuk tandai selesai'"
+                     :class="{ 'notif-item-done': entry.item.done, 'notif-item-locked': entry.item.isDzikirWaktu && !entry.item.done && entry.item.dzikirLocked }"
+                     :title="entry.item.done ? 'Klik untuk batalkan (tandai belum selesai)' : (entry.item.isDzikirWaktu && entry.item.dzikirLocked ? 'Dzikir untuk waktu ini belum tuntas — klik untuk buka Dzikir Counter' : 'Klik untuk tandai selesai')"
                      @click="handleActionClick(entry.item)">
                   <div class="notif-item-icon" :class="entry.item.done ? 'notif-icon-done' : 'notif-icon-action'" :style="entry.item.isHabit && !entry.item.done ? { backgroundColor: entry.item.color + '22', border: '1.5px solid ' + entry.item.color + '55' } : {}">
                     <svg v-if="entry.item.done" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg v-else-if="entry.item.isDzikirWaktu && entry.item.dzikirLocked" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     <svg v-else-if="entry.item.isHabit" viewBox="0 0 24 24" width="14" height="14" fill="none" :stroke="entry.item.color" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
                     <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   </div>
                   <div class="notif-item-content">
-                    <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : ''">{{ entry.item.title }}</div>
+                    <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : (entry.item.isDzikirWaktu && entry.item.dzikirLocked ? 'opacity: 0.65;' : '')">{{ entry.item.title }}</div>
                     <div class="notif-item-sub" style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
-                      <span v-if="entry.item.isHabit && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #f0fdf4; color: #16a34a; border: 1px solid #86efac;">
+                      <span v-if="entry.item.isDzikirWaktu && !entry.item.done && entry.item.dzikirLocked" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5;">
+                        <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        Tuntaskan dzikir dulu
+                      </span>
+                      <span v-else-if="entry.item.isHabit && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #f0fdf4; color: #16a34a; border: 1px solid #86efac;">
                         <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
                         Habit
                       </span>
@@ -1182,12 +1223,13 @@ const NotificationPanel = {
                         {{ manualCategoryLabel(entry.item) }}
                       </span>
                       <span v-if="entry.item.done">Sudah dikerjakan ✓ <span style="opacity:0.6;">· klik untuk batalkan</span></span>
-                      <span v-else>{{ entry.item.subtitle }}</span>
+                      <span v-else-if="!(entry.item.isDzikirWaktu && entry.item.dzikirLocked)">{{ entry.item.subtitle }}</span>
                     </div>
                   </div>
                   <div class="notif-item-right">
                     <span class="notif-time-badge">{{ entry.item.endTime ? entry.item.time + '–' + entry.item.endTime : entry.item.time }}</span>
-                    <svg v-if="!entry.item.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    <svg v-if="entry.item.isDzikirWaktu && !entry.item.done && entry.item.dzikirLocked" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" title="Terkunci — selesaikan dzikir dulu"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <svg v-else-if="!entry.item.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                     <svg v-else viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);" title="Klik untuk batalkan"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></svg>
                   </div>
                 </div>
@@ -1428,7 +1470,7 @@ const NotificationPanel = {
   props: {
     show: { type: Boolean, default: false }
   },
-  emits: ['close', 'navigate', 'unread-count-changed', 'trigger-habit'],
+  emits: ['close', 'navigate', 'unread-count-changed', 'trigger-habit', 'open-dzikir'],
 
   data() {
     return {
@@ -1557,6 +1599,7 @@ const NotificationPanel = {
           const habits = JSON.parse(raw);
           habits.forEach(h => {
             if (!base.find(b => b.id === h.id)) {
+              const isDzikirWaktu = !!h.isDzikirWaktu || h.category === 'Dzikir Waktu';
               base.push({
                 id: h.id,
                 title: h.title,
@@ -1566,7 +1609,9 @@ const NotificationPanel = {
                 page: 'habitTracker',
                 done: !!status[h.id],
                 isHabit: true,
-                color: h.color || 'var(--color-terracotta)'
+                color: h.color || 'var(--color-terracotta)',
+                isDzikirWaktu,
+                dzikirLocked: isDzikirWaktu ? !isDzikirReadyForHabit(h.timeVal) : false,
               });
             }
           });
@@ -1714,6 +1759,11 @@ const NotificationPanel = {
     this._onJobPlansUpdated = () => { this.loadData(); };
     window.addEventListener('ws-job-plans-updated', this._onJobPlansUpdated);
     window.addEventListener('ws-manual-notif-updated', this._onJobPlansUpdated);
+
+    // Refresh panel begitu sesi Dzikir Counter dituntaskan, supaya gating
+    // habit "Dzikir Waktu" langsung terbuka tanpa nunggu polling 60 detik.
+    this._onDzikirCompleted = () => { this.loadData(); };
+    window.addEventListener('ws-dzikir-completed', this._onDzikirCompleted);
   },
 
   beforeUnmount() {
@@ -1721,6 +1771,7 @@ const NotificationPanel = {
     window.removeEventListener('ws-notif-status-updated', this._onNotifStatusUpdated);
     window.removeEventListener('ws-job-plans-updated', this._onJobPlansUpdated);
     window.removeEventListener('ws-manual-notif-updated', this._onJobPlansUpdated);
+    window.removeEventListener('ws-dzikir-completed', this._onDzikirCompleted);
   },
 
   methods: {
@@ -1770,6 +1821,12 @@ const NotificationPanel = {
     handleActionClick(notif) {
       if (notif.done) {
         this.undoActionClick(notif);
+        return;
+      }
+      // Gerbang khusus habit "Dzikir Waktu": kalau dzikir sesi ini belum tuntas,
+      // jangan biarkan ditandai selesai — total locked, sesuai instruksi.
+      if (notif.isHabit && notif.isDzikirWaktu && notif.dzikirLocked) {
+        this.openDzikirCounter();
         return;
       }
       // Play suara checklist dulu
@@ -1828,6 +1885,13 @@ const NotificationPanel = {
 
       // Navigasi ke halaman (skip kalau null, misal tahajud)
       if (notif.page) this.$emit('navigate', notif.page);
+      this.$emit('close');
+    },
+
+    // ── Buka Dzikir Counter — dipanggil saat item "Dzikir Waktu" masih terkunci ──
+    // Tidak menandai selesai apa pun, cuma mengarahkan user untuk menuntaskan dzikirnya dulu.
+    openDzikirCounter() {
+      this.$emit('open-dzikir');
       this.$emit('close');
     },
 

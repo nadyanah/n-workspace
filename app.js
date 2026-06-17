@@ -433,6 +433,13 @@ const App = {
       notifUnreadCount.value = count;
     };
 
+    // Handler dipanggil saat item "Dzikir Waktu" yang masih terkunci diklik di notif panel
+    // → buka modal Dzikir Counter supaya user bisa langsung menuntaskan dzikirnya.
+    const onOpenDzikir = () => {
+      showNotifPanel.value = false;
+      showDzikirModal.value = true;
+    };
+
     // Handler dipanggil saat klik habit di notif panel / reminder popup
     const onTriggerHabit = (habitId) => {
       activePage.value = 'habitTracker';
@@ -482,6 +489,7 @@ const App = {
       notifPanelRef,
       notifUnreadCount,
       onUnreadCountChanged,
+      onOpenDzikir,
       pendingHabitTrigger,
       onTriggerHabit,
       onHabitTriggered
