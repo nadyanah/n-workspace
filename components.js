@@ -8764,8 +8764,8 @@ const GoogleCalendar = {
                 :key="item.id"
                 class="gcal-week-list-pill"
                 :style="{
-                  background: localTintColor(item.color, 0.28),
-                  borderColor: localTintColor(item.color, 0.65),
+                  background: localTintColor(item.color, 0.16),
+                  borderColor: localTintColor(item.color, 0.45),
                   color: item.color,
                   opacity: item.done ? 0.5 : 1
                 }"
@@ -8800,7 +8800,7 @@ const GoogleCalendar = {
               <div v-for="item in group.allDayItems" :key="item.id"
                 class="gcal-agenda-allday-item"
                 :class="{ 'gcal-agenda-item-done': item.done }"
-                :style="{ background: localTintColor(item.color, 0.28), borderColor: localTintColor(item.color, 0.65), color: item.color, cursor: 'pointer' }"
+                :style="{ background: localTintColor(item.color, 0.16), borderColor: localTintColor(item.color, 0.45), color: item.color, cursor: 'pointer' }"
                 @click.stop="item.isTaskPlan ? localGoToLogbook() : (item.type === 'habit' ? localGoToHabitTracker() : ((item.type === 'manual' || item.type === 'content') ? localShowAgendaDetail(item) : (item.actionable ? localHandleAgendaAction(item) : null)))"
                 :title="item.isTaskPlan ? 'Buka Job Logbook' : (item.type === 'habit' ? 'Klik untuk buka Habit Tracker · klik bulet untuk tandai selesai' : ((item.type === 'manual' || item.type === 'content') ? 'Lihat detail' : (item.done ? 'Klik untuk batalkan selesai' : 'Klik untuk tandai selesai')))"
                 <span class="gcal-agenda-check-icon"
@@ -8835,8 +8835,8 @@ const GoogleCalendar = {
                   :style="{
                     top: block.top + 'px',
                     height: block.height + 'px',
-                    background: localTintColor(block.color, 0.28),
-                    borderColor: localTintColor(block.color, 0.7),
+                    background: localTintColor(block.color, 0.14),
+                    borderColor: localTintColor(block.color, 0.5),
                     color: block.color,
                     left: 'calc(' + (block.col * (100/block.totalCols)) + '% + 2px)',
                     width: 'calc(' + (100/block.totalCols) + '% - 4px)',
