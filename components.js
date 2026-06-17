@@ -12425,34 +12425,56 @@ const DzikirCounter = {
       WorkspaceStorage.setItem('dzikir_sound_on', this.soundOn ? '1' : '0');
     },
     playTapSound() {
-      // Suara ketukan lembut: nada sine hangat yang disaring lowpass, tanpa klik tajam
+      // Suara "tok" kayu dalam: nada rendah beresonansi + sedikit tekstur kayu
       if (!this.soundOn) return;
       try {
         const ctx = getAudioContext();
         if (!ctx) return;
         const now = ctx.currentTime;
 
+        // Badan suara — nada rendah, dalam, beresonansi pelan
         const osc = ctx.createOscillator();
         const filter = ctx.createBiquadFilter();
         const gainNode = ctx.createGain();
 
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(380, now);
-        osc.frequency.exponentialRampToValueAtTime(165, now + 0.09);
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(68, now + 0.1);
 
         filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(900, now);
-        filter.Q.value = 0.5;
+        filter.frequency.setValueAtTime(500, now);
+        filter.Q.value = 0.4;
 
         gainNode.gain.setValueAtTime(0.0001, now);
-        gainNode.gain.linearRampToValueAtTime(0.2, now + 0.012);
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+        gainNode.gain.linearRampToValueAtTime(0.28, now + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
 
         osc.connect(filter);
         filter.connect(gainNode);
         gainNode.connect(ctx.destination);
         osc.start(now);
-        osc.stop(now + 0.17);
+        osc.stop(now + 0.2);
+
+        // Tekstur kayu — semburan noise sangat pendek biar tidak terdengar "elektronik"
+        const bufferSize = Math.floor(ctx.sampleRate * 0.015);
+        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+        }
+        const noiseSource = ctx.createBufferSource();
+        noiseSource.buffer = noiseBuffer;
+        const noiseFilter = ctx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.frequency.value = 700;
+        noiseFilter.Q.value = 0.8;
+        const noiseGain = ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.06, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.015);
+        noiseSource.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(ctx.destination);
+        noiseSource.start(now);
       } catch (_e) { /* ignore */ }
     },
     increment() {
