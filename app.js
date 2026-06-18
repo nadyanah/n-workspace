@@ -158,6 +158,9 @@ const App = {
       WorkspaceStorage.setItem('aesthetic_workspace_dominant_color', colorHex);
       // Warna utama tema
       document.documentElement.style.setProperty('--color-terracotta', colorHex);
+      // RGB triplet untuk dipakai di rgba() — misal neumorphic tab border
+      const { r: tr, g: tg, b: tb } = hexToRgb(colorHex);
+      document.documentElement.style.setProperty('--color-terracotta-rgb', `${tr}, ${tg}, ${tb}`);
       // --color-amber: versi lebih gelap dari tema, dipakai mode missed popup
       const amberColor = darkenColor(colorHex, 0.18);
       document.documentElement.style.setProperty('--color-amber', amberColor);

@@ -22,6 +22,7 @@
   --text-dark: #2C2621;
   --text-muted: #6E6359;
   --color-terracotta: #D67B52;
+  --color-terracotta-rgb: 214, 123, 82;
   --color-gold: #DDA15E;
   --color-sage: #A3B18A;
   --color-forest: #283618;
@@ -433,77 +434,113 @@ h1, h2, h3, h4 {
 }
 
 /* ══════════════════════════════════════════════════════════════════════ */
-/* BROWSER-STYLE TAB BAR                                                 */
+/* NEUMORPHIC PILL TAB BAR                                               */
 /* ══════════════════════════════════════════════════════════════════════ */
+
+/* Tab bar container — neumorphic tray */
 .ws-tabbar {
   width: 100%;
-  background: #EDE8E0;
-  border-bottom: 1.5px solid var(--color-sand);
+  background: var(--bg-cream, #FDFBF7);
   border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
-  padding: 6px 10px 0;
-  overflow: hidden;
+  padding: 14px 18px 10px;
+  /* Neumorphic tray: inset shadow dari atas */
+  box-shadow:
+    inset 0 4px 10px rgba(44, 38, 33, 0.08),
+    inset 0 1px 3px rgba(44, 38, 33, 0.05),
+    0 1px 0 rgba(255,255,255,0.85);
+  border-bottom: 1.5px solid var(--color-sand);
+  box-sizing: border-box;
 }
 
 .ws-tabbar-inner {
   display: flex;
-  align-items: flex-end;
-  gap: 2px;
+  align-items: center;
+  gap: 8px;
   overflow-x: auto;
   overflow-y: visible;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  padding: 4px 2px;
 }
 
 .ws-tabbar-inner::-webkit-scrollbar {
   display: none;
 }
 
-/* Individual Tab */
+/* ── Individual Tab: pill neumorphic (inactive = inset/sunken) ── */
 .ws-tab {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-width: 110px;
-  max-width: 200px;
-  height: 34px;
-  padding: 0 10px 0 12px;
-  background: #D8D2C8;
-  border-radius: 8px 8px 0 0;
+  gap: 7px;
+  min-width: 120px;
+  max-width: 210px;
+  height: 40px;
+  padding: 0 12px 0 14px;
+  border-radius: 999px;          /* full pill */
   cursor: pointer;
   font-family: 'Outfit', sans-serif;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 500;
   color: var(--text-muted);
   user-select: none;
   position: relative;
   flex-shrink: 0;
-  transition: background 0.15s, color 0.15s;
-  border: 1.5px solid transparent;
-  border-bottom: none;
+  border: none;
+  /* Inactive: pressed / sunken look */
+  background: var(--bg-cream, #FDFBF7);
+  box-shadow:
+    inset 3px 3px 7px rgba(44, 38, 33, 0.12),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.75);
+  transition: box-shadow 0.22s ease, color 0.18s ease, background 0.18s ease;
 }
 
 .ws-tab:hover {
-  background: #E8E2D8;
   color: var(--text-dark);
+  box-shadow:
+    inset 4px 4px 9px rgba(44, 38, 33, 0.15),
+    inset -2px -2px 6px rgba(255, 255, 255, 0.8);
 }
 
-/* Active tab */
+/* ── Active Tab: raised / lifted pill with theme color accent ── */
 .ws-tab.ws-tab-active {
-  background: var(--bg-card, #FFFFFF);
-  color: var(--text-dark);
-  font-weight: 600;
-  border-color: var(--color-sand);
-  border-bottom-color: var(--bg-card, #FFFFFF);
-  z-index: 2;
-  /* Active tab lifts slightly */
-  margin-bottom: -1px;
-  padding-bottom: 1px;
+  color: var(--color-terracotta);
+  font-weight: 700;
+  /* Raised neumorphic: shadow outside, light on top-left */
+  background: var(--bg-cream, #FDFBF7);
+  box-shadow:
+    6px 6px 14px rgba(44, 38, 33, 0.14),
+    -4px -4px 10px rgba(255, 255, 255, 0.92),
+    inset 0 0 0 1.5px rgba(var(--color-terracotta-rgb, 214, 123, 82), 0.25);
+}
+
+/* Thin colored left stripe inside the active pill */
+.ws-tab.ws-tab-active::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 16px;
+  border-radius: 3px;
+  background: var(--color-terracotta);
+  opacity: 0.85;
+}
+
+/* Push label slightly to accommodate the stripe */
+.ws-tab.ws-tab-active .ws-tab-label {
+  padding-left: 4px;
 }
 
 .ws-tab-favicon {
-  font-size: 13px;
+  font-size: 14px;
   flex-shrink: 0;
   line-height: 1;
+  /* Hide favicon on active (stripe takes its place) */
+}
+
+.ws-tab.ws-tab-active .ws-tab-favicon {
+  display: none;
 }
 
 .ws-tab-label {
@@ -511,24 +548,30 @@ h1, h2, h3, h4 {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: 12.5px;
+  letter-spacing: 0.01em;
 }
 
+/* ── Close button ── */
 .ws-tab-close {
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border: none;
-  background: transparent;
-  border-radius: 4px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  padding: 0;
+  /* Small inner pill for close btn */
+  background: var(--bg-cream, #FDFBF7);
+  box-shadow:
+    inset 1px 1px 3px rgba(44, 38, 33, 0.12),
+    inset -1px -1px 3px rgba(255,255,255,0.85);
   color: var(--text-muted);
   opacity: 0;
-  transition: opacity 0.15s, background 0.15s, color 0.15s;
-  padding: 0;
+  transition: opacity 0.15s, box-shadow 0.15s, color 0.15s;
 }
 
 .ws-tab:hover .ws-tab-close,
@@ -537,42 +580,46 @@ h1, h2, h3, h4 {
 }
 
 .ws-tab-close:hover {
-  background: rgba(214, 123, 82, 0.15);
   color: var(--color-terracotta);
+  box-shadow:
+    1px 1px 4px rgba(44, 38, 33, 0.10),
+    -1px -1px 3px rgba(255,255,255,0.9);
 }
 
-/* New Tab (+) button */
+/* ── New Tab (+) button: small neumorphic circle ── */
 .ws-tab-new {
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  border: 1.5px solid var(--color-sand);
-  background: transparent;
-  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: var(--text-muted);
-  margin-left: 4px;
-  margin-bottom: 3px;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  margin-left: 2px;
+  background: var(--bg-cream, #FDFBF7);
+  box-shadow:
+    4px 4px 9px rgba(44, 38, 33, 0.12),
+    -3px -3px 8px rgba(255, 255, 255, 0.88);
+  transition: box-shadow 0.2s, color 0.18s;
 }
 
 .ws-tab-new:hover {
-  background: rgba(214, 123, 82, 0.10);
   color: var(--color-terracotta);
-  border-color: var(--color-terracotta);
+  box-shadow:
+    inset 3px 3px 7px rgba(44, 38, 33, 0.12),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.8);
 }
 
-/* When tab bar is present, page-module loses top border-radius */
-.ws-tabbar + * + * .ws-navbar,
-.page-module .ws-navbar {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
+.ws-tab-new:active {
+  box-shadow:
+    inset 4px 4px 9px rgba(44, 38, 33, 0.16),
+    inset -2px -2px 6px rgba(255, 255, 255, 0.75);
 }
 
-/* Adjust page-module top padding when tab bar exists */
+/* page-module seamlessly connects below the tab tray */
 .page-module {
   border-top-left-radius: 0 !important;
   border-top-right-radius: 0 !important;
