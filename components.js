@@ -14753,7 +14753,7 @@ const MyPortfolio = {
 
   data() {
     return {
-      atsCV: { experience: '' },
+      atsCV: { experience: '', experienceEntries: [] },
       selectedExpKey: '',
       portfolioTasks: {}, // { [expKey]: [{ id, title, status, buktiKerja: [logId, ...], insightSummary }] }
       newTaskTitle: '',
@@ -14769,6 +14769,20 @@ const MyPortfolio = {
   computed: {
     // ── Hanya butuh header (Jabatan | Perusahaan | Periode) per entri CV ATS ──
     experiences() {
+      // New format: experienceEntries array with permanent IDs
+      const entries = this.atsCV.experienceEntries;
+      if (entries && entries.length) {
+        return entries
+          .filter(e => e.role)
+          .map(e => ({
+            id: e.id,
+            role: e.role,
+            company: e.company || '',
+            period: e.period || '',
+            key: `${e.role}|${e.company || ''}|${e.period || ''}`,
+          }));
+      }
+      // Legacy fallback: parse dari string lama
       if (!this.atsCV.experience) return [];
       const blocks = this.atsCV.experience.split(/\n\n+/);
       return blocks.map(block => {
@@ -14778,7 +14792,7 @@ const MyPortfolio = {
         const role = parts[0] || '';
         const company = parts[1] || '';
         const period = parts[2] || '';
-        return { role, company, period, key: `${role}|${company}|${period}` };
+        return { id: null, role, company, period, key: `${role}|${company}|${period}` };
       }).filter(e => e.role);
     },
 
@@ -14992,7 +15006,29 @@ const MyPortfolio = {
     await globalThis._workspaceStorageReady;
     try {
       const ats = WorkspaceStorage.getItem('career_ats_cv');
-      if (ats) this.atsCV = { ...this.atsCV, ...JSON.parse(ats) };
+      if (ats) {
+        const parsed = JSON.parse(ats);
+        // Migrate old string experience → experienceEntries (same logic as CareerFoundation)
+        if (!parsed.experienceEntries || !Array.isArray(parsed.experienceEntries) || parsed.experienceEntries.length === 0) {
+          parsed.experienceEntries = [];
+          if (parsed.experience && typeof parsed.experience === 'string' && parsed.experience.trim()) {
+            parsed.experience.split(/\n\n+/).forEach((block, idx) => {
+              const firstLine = block.trim().split('\n')[0] || '';
+              const parts = firstLine.split('|').map(s => s.trim());
+              const role = parts[0] || '';
+              if (role) {
+                parsed.experienceEntries.push({
+                  id: 'exp_' + Date.now().toString(36) + '_' + idx + '_' + Math.random().toString(36).slice(2, 5),
+                  role,
+                  company: parts[1] || '',
+                  period: parts[2] || '',
+                });
+              }
+            });
+          }
+        }
+        this.atsCV = { ...this.atsCV, ...parsed };
+      }
     } catch(_e) {}
     try {
       const pt = WorkspaceStorage.getItem('portfolio_tasks');
