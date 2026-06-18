@@ -620,7 +620,7 @@ const JobLogbook = {
                   <span v-else-if="planFilterSchedule === 'overdue'">Lewat</span>
                   <span v-else-if="planFilterSchedule === 'today'">Hari Ini</span>
                   <span v-else-if="planFilterSchedule === 'tomorrow'">Besok</span>
-                  <span v-else>Akan Datang</span>
+                  <span v-else-if="planFilterSchedule === 'upcoming'">Akan Datang</span>
                   <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: showJadwalDD ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </button>
                 <div v-if="showJadwalDD" @click.stop
@@ -635,7 +635,7 @@ const JobLogbook = {
                     style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
                     onmouseover="this.style.background='var(--color-cream,#FDF5EB)'" onmouseout="this.style.background='transparent'">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-sand,#C8BDB5)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-secondary,#7A6F66);">Semua Jadwal</span>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-secondary,#7A6F66);">Semua Jadwal ({{ plans.filter(p => !(p.phase === 'Completed' && p.loggedToHistory)).length }})</span>
                     <svg v-if="!planFilterSchedule" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                   </button>
                   <div style="height: 1px; background: var(--color-sand-light,#EDE8E1); margin: 3px 6px;"></div>
@@ -644,7 +644,7 @@ const JobLogbook = {
                     style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
                     onmouseover="this.style.background='rgba(185,28,28,0.05)'" onmouseout="this.style.background='transparent'">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: #B91C1C;">Lewat Jadwal ({{ plans.filter(p => p.date < todayStr).length }})</span>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: #B91C1C;">Lewat Jadwal ({{ plans.filter(p => p.date < todayStr && !(p.phase === 'Completed' && p.loggedToHistory)).length }})</span>
                     <svg v-if="planFilterSchedule === 'overdue'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                   </button>
                   <button @click.stop="planFilterSchedule = 'today'; showJadwalDD = false"
@@ -652,7 +652,7 @@ const JobLogbook = {
                     style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
                     onmouseover="this.style.background='rgba(214,123,82,0.07)'" onmouseout="this.style.background='transparent'">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--color-terracotta,#D67B52);">Hari Ini</span>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--color-terracotta,#D67B52);">Hari Ini ({{ plans.filter(p => p.date === todayStr && !(p.phase === 'Completed' && p.loggedToHistory)).length }})</span>
                     <svg v-if="planFilterSchedule === 'today'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                   </button>
                   <button @click.stop="planFilterSchedule = 'tomorrow'; showJadwalDD = false"
@@ -660,7 +660,7 @@ const JobLogbook = {
                     style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
                     onmouseover="this.style.background='rgba(214,123,82,0.07)'" onmouseout="this.style.background='transparent'">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--color-terracotta,#D67B52);">Besok</span>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--color-terracotta,#D67B52);">Besok ({{ plans.filter(p => p.date === tomorrowStr && !(p.phase === 'Completed' && p.loggedToHistory)).length }})</span>
                     <svg v-if="planFilterSchedule === 'tomorrow'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                   </button>
                   <button @click.stop="planFilterSchedule = 'upcoming'; showJadwalDD = false"
@@ -668,7 +668,7 @@ const JobLogbook = {
                     style="width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: none; border-radius: 9px; cursor: pointer; font-family: inherit; text-align: left; background: transparent; transition: background 0.13s;"
                     onmouseover="this.style.background='rgba(29,78,216,0.05)'" onmouseout="this.style.background='transparent'">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline><path d="M17 12h2"></path></svg>
-                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: #1D4ED8;">Akan Datang</span>
+                    <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: #1D4ED8;">Akan Datang ({{ plans.filter(p => p.date > todayStr && !(p.phase === 'Completed' && p.loggedToHistory)).length }})</span>
                     <svg v-if="planFilterSchedule === 'upcoming'" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta,#D67B52)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                   </button>
                 </div>
@@ -1508,7 +1508,7 @@ const JobLogbook = {
           if (p.phase === 'Completed' && p.loggedToHistory && !(this.pendingDonePlan && this.pendingDonePlan.id === p.id)) return false;
           // ── local plan filters ──
           if (this.planFilterPriority && p.priority !== this.planFilterPriority) return false;
-          if (this.planFilterSchedule === 'overdue' && p.date >= today) return false;
+          if (this.planFilterSchedule === 'overdue' && !(p.date < today)) return false;
           if (this.planFilterSchedule === 'today' && p.date !== today) return false;
           if (this.planFilterSchedule === 'tomorrow' && p.date !== this.tomorrowStr) return false;
           if (this.planFilterSchedule === 'upcoming' && p.date <= today) return false;
