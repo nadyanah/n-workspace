@@ -12259,8 +12259,11 @@ const DzikirCounter = {
                 <div style="font-size: 17px; font-weight: 800; color: var(--text-dark); text-align: center; margin-bottom: 4px; padding: 0 8px;">
                   {{ activeDzikir.text }}
                 </div>
-                <div v-if="activeDzikir.arabic" style="font-size: 20px; color: var(--color-terracotta); text-align: center; margin-bottom: 14px; line-height: 1.6;" dir="rtl">
+                <div v-if="activeDzikir.arabic" style="font-size: 20px; color: var(--color-terracotta); text-align: center; margin-bottom: 6px; line-height: 1.6;" dir="rtl">
                   {{ activeDzikir.arabic }}
+                </div>
+                <div v-if="activeDzikir.meaning" style="font-size: 12px; font-style: italic; color: var(--text-muted); text-align: center; margin-bottom: 14px; padding: 0 12px;">
+                  "{{ activeDzikir.meaning }}"
                 </div>
                 <div v-else style="margin-bottom: 14px;"></div>
 
@@ -12357,6 +12360,13 @@ const DzikirCounter = {
                     @focus="$event.target.style.borderColor='var(--color-terracotta)'" @blur="$event.target.style.borderColor='var(--color-sand)'" />
                 </div>
 
+                <div style="margin-bottom: 10px;">
+                  <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 5px;">Artinya <span style="font-weight:400; font-style:italic;">(opsional)</span></label>
+                  <input type="text" v-model="form.meaning" placeholder="cth., Maha Suci Allah"
+                    style="width: 100%; height: 38px; padding: 0 12px; border: 1.5px solid var(--color-sand); border-radius: 9px; font-size: 13px; font-family: inherit; color: var(--text-dark); background: #fff; box-sizing: border-box; outline: none;"
+                    @focus="$event.target.style.borderColor='var(--color-terracotta)'" @blur="$event.target.style.borderColor='var(--color-sand)'" />
+                </div>
+
                 <div style="margin-bottom: 14px;">
                   <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 5px;">Target Hitungan</label>
                   <input type="number" min="1" v-model.number="form.target" placeholder="33"
@@ -12401,6 +12411,7 @@ const DzikirCounter = {
                 <div style="flex: 1; min-width: 0;">
                   <div style="font-size: 13.5px; font-weight: 700; color: var(--text-dark);">{{ d.text }}</div>
                   <div v-if="d.arabic" style="font-size: 13px; color: var(--color-terracotta); margin-top: 2px;" dir="rtl">{{ d.arabic }}</div>
+                  <div v-if="d.meaning" style="font-size: 11.5px; font-style: italic; color: var(--text-muted); margin-top: 2px;">"{{ d.meaning }}"</div>
                   <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">target {{ d.target }}x · progres {{ d.count }}/{{ d.target }}</div>
                 </div>
 
@@ -12429,14 +12440,14 @@ const DzikirCounter = {
       showManage: false,
       justCompleted: false,
       editingId: null,
-      form: { text: '', arabic: '', target: 33 },
+      form: { text: '', arabic: '', meaning: '', target: 33 },
       _completeTimer: null,
       soundOn: true,
     };
   },
   computed: {
     activeDzikir() {
-      return this.list[this.activeIndex] || { text: '', arabic: '', count: 0, target: 33 };
+      return this.list[this.activeIndex] || { text: '', arabic: '', meaning: '', count: 0, target: 33 };
     },
     isFullyComplete() {
       return this.list.length > 0 && this.list.every(d => d.count >= d.target);
@@ -12554,11 +12565,11 @@ const DzikirCounter = {
     },
     startEdit(d) {
       this.editingId = d.id;
-      this.form = { text: d.text, arabic: d.arabic || '', target: d.target };
+      this.form = { text: d.text, arabic: d.arabic || '', meaning: d.meaning || '', target: d.target };
     },
     cancelEdit() {
       this.editingId = null;
-      this.form = { text: '', arabic: '', target: 33 };
+      this.form = { text: '', arabic: '', meaning: '', target: 33 };
     },
     saveDzikir() {
       const text = this.form.text.trim();
@@ -12570,6 +12581,7 @@ const DzikirCounter = {
         if (idx !== -1) {
           this.list[idx].text = text;
           this.list[idx].arabic = this.form.arabic.trim();
+          this.list[idx].meaning = this.form.meaning.trim();
           this.list[idx].target = target;
           if (this.list[idx].count > target) this.list[idx].count = target;
         }
@@ -12578,6 +12590,7 @@ const DzikirCounter = {
           id: 'dzikir-' + Date.now(),
           text: text,
           arabic: this.form.arabic.trim(),
+          meaning: this.form.meaning.trim(),
           target: target,
           count: 0,
         });
@@ -12618,10 +12631,10 @@ const DzikirCounter = {
     },
     seedDefaults() {
       this.list = [
-        { id: 'dzikir-default-1', text: 'Subhanallah', arabic: 'سُبْحَانَ اللَّهِ', target: 33, count: 0 },
-        { id: 'dzikir-default-2', text: 'Alhamdulillah', arabic: 'الْحَمْدُ لِلَّهِ', target: 33, count: 0 },
-        { id: 'dzikir-default-3', text: 'Allahu Akbar', arabic: 'اللَّهُ أَكْبَرُ', target: 33, count: 0 },
-        { id: 'dzikir-default-4', text: 'Astaghfirullah', arabic: 'أَسْتَغْفِرُ اللَّهَ', target: 100, count: 0 },
+        { id: 'dzikir-default-1', text: 'Subhanallah', arabic: 'سُبْحَانَ اللَّهِ', meaning: 'Maha Suci Allah', target: 33, count: 0 },
+        { id: 'dzikir-default-2', text: 'Alhamdulillah', arabic: 'الْحَمْدُ لِلَّهِ', meaning: 'Segala puji bagi Allah', target: 33, count: 0 },
+        { id: 'dzikir-default-3', text: 'Allahu Akbar', arabic: 'اللَّهُ أَكْبَرُ', meaning: 'Allah Maha Besar', target: 33, count: 0 },
+        { id: 'dzikir-default-4', text: 'Astaghfirullah', arabic: 'أَسْتَغْفِرُ اللَّهَ', meaning: 'Aku memohon ampun kepada Allah', target: 100, count: 0 },
       ];
       this.saveToStorage();
     },
