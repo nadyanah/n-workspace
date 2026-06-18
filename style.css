@@ -6970,6 +6970,126 @@ input:checked + .switch-slider:before {
   color: #fff;
 }
 
+/* ── Portfolio shortcut button (navigates away to a new page, not a tab) ── */
+.cf-filter-pill-portfolio {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--color-terracotta, #D67B52);
+  background: rgba(214,123,82,0.07);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-terracotta, #D67B52);
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.cf-filter-pill-portfolio:hover {
+  background: var(--color-terracotta, #D67B52);
+  color: #fff;
+}
+.cf-filter-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--color-sand, #E8DFD8);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* ── My Portfolio page (placeholder, content to be added later) ── */
+.mp-clean {
+  font-family: 'Outfit', sans-serif;
+  color: var(--text-dark, #2C2621);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.mp-hero {
+  background: linear-gradient(135deg, var(--bg-cream, #FDFBF7) 60%, #F5EDE5 100%);
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 16px;
+  padding: 32px 28px 28px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.mp-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Hack', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-terracotta, #D67B52);
+  background: rgba(214,123,82,0.1);
+  border: 1px solid rgba(214,123,82,0.22);
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin: 0 0 14px;
+}
+.mp-hero-badge-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--color-terracotta, #D67B52);
+  animation: cfPulse 2s ease-in-out infinite;
+}
+.mp-hero-title {
+  font-family: 'Hack', monospace;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-dark, #2C2621);
+  margin: 0 0 10px;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+}
+.mp-hero-sub {
+  font-size: 13.5px;
+  color: var(--text-muted, #6E6359);
+  margin: 0;
+  line-height: 1.6;
+  max-width: 600px;
+}
+.mp-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 64px 24px;
+  border: 1.5px dashed var(--color-sand, #E8DFD8);
+  border-radius: 16px;
+  background: var(--bg-cream, #FDFBF7);
+}
+.mp-empty-icon {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: rgba(214,123,82,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  color: var(--color-terracotta, #D67B52);
+}
+.mp-empty-title {
+  font-family: 'Hack', monospace;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-dark, #2C2621);
+  margin: 0 0 6px;
+}
+.mp-empty-sub {
+  font-size: 12.5px;
+  color: var(--text-muted, #6E6359);
+  max-width: 360px;
+  line-height: 1.6;
+  margin: 0;
+}
+
 /* ── Section bar ── */
 .cf-section-bar {
   display: flex;

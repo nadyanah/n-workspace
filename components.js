@@ -12851,6 +12851,11 @@ const CareerFoundation = {
 
     <!-- ── Filter pills (job board category filter) ── -->
     <div class="cf-filter-row">
+      <button class="cf-filter-pill-portfolio" @click="goToPortfolio" title="Buka halaman My Portfolio">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        My Portfolio
+      </button>
+      <span class="cf-filter-divider"></span>
       <button
         v-for="tab in tabs" :key="tab.key"
         class="cf-filter-pill"
@@ -13959,6 +13964,11 @@ const CareerFoundation = {
   },
 
   methods: {
+    // ── Navigasi ke halaman My Portfolio (page baru, terpisah dari tab di sini) ──
+    goToPortfolio() {
+      globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'myPortfolio' }));
+    },
+
     // ── Resume ──
     editResume() {
       this.resumeForm = { ...this.resume };
@@ -14301,3 +14311,35 @@ const CareerFoundation = {
     } catch(_e) {}
   },
 };
+
+// ============================================================================
+// MY PORTFOLIO — Halaman baru, masih kosong (placeholder), akan diisi menyusul.
+// Diakses dari tombol "My Portfolio" di navbar/filter row halaman Career Foundation.
+// ============================================================================
+const MyPortfolio = {
+  template: `
+  <div class="mp-clean">
+
+    <!-- ── Hero Header ── -->
+    <div class="mp-hero">
+      <div class="mp-hero-badge">
+        <span class="mp-hero-badge-dot"></span>
+        Showcase
+      </div>
+      <h2 class="mp-hero-title">My Portfolio</h2>
+      <p class="mp-hero-sub">Halaman untuk menampilkan portfolio & karya — masih kosong, akan diisi menyusul.</p>
+    </div>
+
+    <!-- ── Empty State ── -->
+    <div class="mp-empty-state">
+      <div class="mp-empty-icon">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      </div>
+      <p class="mp-empty-title">Belum ada konten</p>
+      <p class="mp-empty-sub">Halaman ini baru disiapkan sebagai tempat untuk portfolio kamu. Isinya akan ditambahkan menyusul.</p>
+    </div>
+
+  </div>
+  `,
+};
+
