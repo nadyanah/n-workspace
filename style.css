@@ -513,34 +513,24 @@ h1, h2, h3, h4 {
     inset 0 0 0 1.5px rgba(var(--color-terracotta-rgb, 214, 123, 82), 0.25);
 }
 
-/* Thin colored left stripe inside the active pill */
-.ws-tab.ws-tab-active::before {
-  content: '';
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 16px;
-  border-radius: 3px;
-  background: var(--color-terracotta);
-  opacity: 0.85;
-}
-
-/* Push label slightly to accommodate the stripe */
+/* Active tab: label sedikit bold, warna dari terracotta */
 .ws-tab.ws-tab-active .ws-tab-label {
-  padding-left: 4px;
+  font-weight: 700;
 }
 
 .ws-tab-favicon {
-  font-size: 14px;
   flex-shrink: 0;
-  line-height: 1;
-  /* Hide favicon on active (stripe takes its place) */
+  line-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
 }
 
+/* Active: favicon warna ikut tema — handled via inline :style di Vue */
 .ws-tab.ws-tab-active .ws-tab-favicon {
-  display: none;
+  display: flex; /* Override none dari versi lama — lucide selalu tampil */
 }
 
 .ws-tab-label {

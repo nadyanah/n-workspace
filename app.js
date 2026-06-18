@@ -20,19 +20,59 @@ const App = {
     const showDzikirModal = ref(false);
 
     // --- TAB BAR STATE (mirip Chrome) ---
+    // Lucide SVG path strings — dirender via v-html di tab favicon
+    const _lc = (paths) =>
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
+
     const PAGE_LABELS = {
-      dashboard: { label: 'My Desk', icon: '🏠' },
-      jobLogbook: { label: 'Job Logbook', icon: '📋' },
-      calendarMoment: { label: 'Calendar Moment', icon: '📅' },
-      contentTracker: { label: 'Content Tracker', icon: '📱' },
-      interviewPractice: { label: 'Interview Practice', icon: '🎙️' },
-      dailyNutrition: { label: 'Daily Nutrition', icon: '🍅' },
-      habitTracker: { label: 'Habit Tracker', icon: '✅' },
-      pomodoroTimer: { label: 'Pomodoro', icon: '⌛' },
-      googleCalendar: { label: 'Daily N', icon: '🗓️' },
-      financialTracker: { label: 'Financial', icon: '💳' },
-      careerFoundation: { label: 'Career', icon: '📄' },
-      missedTasksPage: { label: 'Tugas Terlewat', icon: '⚠️' },
+      dashboard: {
+        label: 'My Desk',
+        icon: _lc('<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>')
+      },
+      jobLogbook: {
+        label: 'Job Logbook',
+        icon: _lc('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>')
+      },
+      calendarMoment: {
+        label: 'Calendar Moment',
+        icon: _lc('<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>')
+      },
+      contentTracker: {
+        label: 'Content Tracker',
+        icon: _lc('<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>')
+      },
+      interviewPractice: {
+        label: 'Interview Practice',
+        icon: _lc('<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/>')
+      },
+      dailyNutrition: {
+        label: 'Daily Nutrition',
+        icon: _lc('<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>')
+      },
+      habitTracker: {
+        label: 'Habit Tracker',
+        icon: _lc('<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>')
+      },
+      pomodoroTimer: {
+        label: 'Pomodoro',
+        icon: _lc('<path d="M5 2h14"/><path d="M5 22h14"/><path d="M19 2v4c0 3-2.5 4.5-5 5.5 2.5 1 5 2.5 5 5.5v4"/><path d="M5 2v4c0 3 2.5 4.5 5 5.5-2.5 1-5 2.5-5 5.5v4"/>')
+      },
+      googleCalendar: {
+        label: 'Daily N',
+        icon: _lc('<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/>')
+      },
+      financialTracker: {
+        label: 'Financial',
+        icon: _lc('<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>')
+      },
+      careerFoundation: {
+        label: 'Career',
+        icon: _lc('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>')
+      },
+      missedTasksPage: {
+        label: 'Tugas Terlewat',
+        icon: _lc('<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>')
+      },
     };
 
     // openTabs: array of { id, pageKey } — urutan tab
