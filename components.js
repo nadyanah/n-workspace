@@ -12692,10 +12692,24 @@ const DzikirCounter = {
         this.vibrate(15); // getaran singkat tiap tap normal
       }
       this.saveToStorage();
-      // Kalau seluruh list (semua dzikir) sudah tuntas, simpan jam selesainya hari ini.
-      // Dipakai panel notifikasi untuk gating reminder "Dzikir Waktu".
+      // Kalau seluruh list (semua dzikir) sudah tuntas, increment counter putaran hari ini.
+      // Panel notifikasi pakai counter ini untuk buka habit Dzikir Waktu satu per satu.
       if (this.isFullyComplete) {
-        WorkspaceStorage.setItem('dzikir_last_completed_at', String(Date.now()));
+        try {
+          const now = new Date();
+          const todayStr = now.getFullYear() + '-' +
+            String(now.getMonth() + 1).padStart(2, '0') + '-' +
+            String(now.getDate()).padStart(2, '0');
+          const raw = WorkspaceStorage.getItem('dzikir_completed_today');
+          let data = raw ? JSON.parse(raw) : null;
+          if (!data || data.date !== todayStr) {
+            data = { date: todayStr, count: 0 };
+          }
+          data.count += 1;
+          WorkspaceStorage.setItem('dzikir_completed_today', JSON.stringify(data));
+          // Tetap simpan timestamp lama untuk backward-compat (kalau ada kode lain yg baca)
+          WorkspaceStorage.setItem('dzikir_last_completed_at', String(Date.now()));
+        } catch(_e) {}
         window.dispatchEvent(new CustomEvent('ws-dzikir-completed'));
       }
     },

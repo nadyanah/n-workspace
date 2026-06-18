@@ -754,23 +754,36 @@ if (typeof reminderOccursOnDate === 'undefined') {
   };
 }
 
-// ── Helper: cek apakah dzikir sudah dituntaskan HARI INI pada/sesudah jam tertentu ──
-// Dipakai untuk gating habit berkategori "Dzikir Waktu" di Panel Notifikasi:
-// reminder baru bisa ditandai selesai kalau dzikir sudah dituntaskan setelah jam habit itu tiba.
+// ── Helper: ambil jumlah putaran dzikir yang sudah tuntas hari ini ──
+function _getDzikirCompletedCountToday() {
+  try {
+    const raw = WorkspaceStorage.getItem('dzikir_completed_today');
+    if (!raw) return 0;
+    const data = JSON.parse(raw);
+    const now = new Date();
+    const todayStr = now.getFullYear() + '-' +
+      String(now.getMonth() + 1).padStart(2, '0') + '-' +
+      String(now.getDate()).padStart(2, '0');
+    if (data.date !== todayStr) return 0;
+    return data.count || 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
+// ── Helper: cek apakah habit Dzikir Waktu ke-N sudah terbuka ──
+// Dipakai untuk gating habit berkategori "Dzikir Waktu" di Panel Notifikasi.
+// Habit diurutkan berdasarkan timeVal (jam); putaran dzikir ke-N membuka habit urutan ke-N.
+// "habitIndex" = posisi habit ini di antara semua habit Dzikir Waktu (0-based),
+// diurutkan ascending berdasarkan timeVal.
 if (typeof isDzikirReadyForHabit === 'undefined') {
-  var isDzikirReadyForHabit = function(timeVal) {
+  var isDzikirReadyForHabit = function(timeVal, habitIndex) {
     try {
-      const ts = WorkspaceStorage.getItem('dzikir_last_completed_at');
-      if (!ts) return false;
-      const completedAt = new Date(parseInt(ts, 10));
-      if (isNaN(completedAt.getTime())) return false;
-      const now = new Date();
-      const isToday = completedAt.getFullYear() === now.getFullYear() &&
-        completedAt.getMonth() === now.getMonth() &&
-        completedAt.getDate() === now.getDate();
-      if (!isToday) return false;
-      const completedMinutes = completedAt.getHours() * 60 + completedAt.getMinutes();
-      return completedMinutes >= (timeVal || 0);
+      const completedCount = _getDzikirCompletedCountToday();
+      if (completedCount <= 0) return false;
+      // habitIndex 0-based: putaran ke-1 buka index 0, putaran ke-2 buka index 1, dst.
+      const idx = (typeof habitIndex === 'number' && habitIndex >= 0) ? habitIndex : 0;
+      return completedCount > idx;
     } catch (e) {
       return false;
     }
@@ -1597,9 +1610,17 @@ const NotificationPanel = {
         const raw = WorkspaceStorage.getItem('ws_habit_notifs');
         if (raw) {
           const habits = JSON.parse(raw);
+          // Hitung urutan (0-based) tiap habit Dzikir Waktu berdasarkan timeVal ascending
+          const dzikirHabits = habits
+            .filter(h => !!h.isDzikirWaktu || h.category === 'Dzikir Waktu')
+            .sort((a, b) => (a.timeVal || 0) - (b.timeVal || 0));
+          const dzikirIndexMap = {};
+          dzikirHabits.forEach((h, i) => { dzikirIndexMap[h.id] = i; });
+
           habits.forEach(h => {
             if (!base.find(b => b.id === h.id)) {
               const isDzikirWaktu = !!h.isDzikirWaktu || h.category === 'Dzikir Waktu';
+              const habitIndex = isDzikirWaktu ? (dzikirIndexMap[h.id] ?? 0) : 0;
               base.push({
                 id: h.id,
                 title: h.title,
@@ -1611,7 +1632,8 @@ const NotificationPanel = {
                 isHabit: true,
                 color: h.color || 'var(--color-terracotta)',
                 isDzikirWaktu,
-                dzikirLocked: isDzikirWaktu ? !isDzikirReadyForHabit(h.timeVal) : false,
+                habitIndex,
+                dzikirLocked: isDzikirWaktu ? !isDzikirReadyForHabit(h.timeVal, habitIndex) : false,
               });
             }
           });
