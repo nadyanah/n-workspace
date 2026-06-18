@@ -7354,6 +7354,60 @@ input:checked + .switch-slider:before {
   margin: 0;
 }
 
+/* ── Rangkuman Insight button (My Portfolio) ── */
+.mp-insight-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border: 1.5px dashed var(--color-sand, #C8BDB5);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted, #6E6359);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: all 0.14s;
+}
+.mp-insight-btn:hover {
+  border-color: var(--color-terracotta, #D67B52);
+  color: var(--color-terracotta, #D67B52);
+  background: rgba(214,123,82,0.06);
+}
+.mp-insight-btn.mp-insight-filled {
+  border-style: solid;
+  border-color: #F5C8A8;
+  background: #FFF4ED;
+  color: var(--color-terracotta, #D67B52);
+}
+.mp-insight-btn.mp-insight-filled:hover {
+  background: #FFEAD9;
+  border-color: var(--color-terracotta, #D67B52);
+}
+.mp-insight-view-box {
+  width: 100%;
+  min-height: 320px;
+  max-height: 64vh;
+  overflow-y: auto;
+  padding: 18px 20px;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 10px;
+  background: var(--bg-cream, #FDFBF7);
+  font-size: 14px;
+  color: var(--text-dark, #2C2621);
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.mp-insight-textarea-lg {
+  min-height: 320px;
+  max-height: 64vh;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
 /* ── Section bar ── */
 .cf-section-bar {
   display: flex;
@@ -7796,6 +7850,7 @@ input:checked + .switch-slider:before {
   border: 1.5px solid var(--color-sand, #E8DFD8);
 }
 .cf-modal-wide { width: min(640px, 100%); }
+.cf-modal-xl { width: min(880px, 96vw); max-height: 92vh; }
 .cf-modal-header {
   padding: 18px 22px 14px;
   border-bottom: 1.5px solid var(--color-sand, #E8DFD8);

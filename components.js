@@ -14394,6 +14394,7 @@ const MyPortfolio = {
               <tr>
                 <th>Judul Task Pengalaman</th>
                 <th style="width: 240px;">Bukti Kerja</th>
+                <th style="width: 160px;">Rangkuman Insight</th>
                 <th style="width: 150px;">Status</th>
                 <th style="width: 44px;"></th>
               </tr>
@@ -14417,6 +14418,14 @@ const MyPortfolio = {
                       Pilih Bukti
                     </button>
                   </div>
+                </td>
+                <td>
+                  <button class="mp-insight-btn" :class="{ 'mp-insight-filled': hasInsightSummary(task) }"
+                    @click="openInsightModal(task.id)"
+                    :title="hasInsightSummary(task) ? truncate(task.insightSummary, 90) : 'Belum ada rangkuman insight'">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>
+                    {{ hasInsightSummary(task) ? 'Lihat Insight' : 'Tulis Insight' }}
+                  </button>
                 </td>
                 <td>
                   <select class="form-input mp-status-select"
@@ -14484,6 +14493,50 @@ const MyPortfolio = {
       </div>
     </transition>
 
+    <!-- ══ MODAL: Rangkuman Insight per Task ══ -->
+    <transition name="cf-fade">
+      <div v-if="insightModalTaskId" class="cf-modal-overlay" @click.self="closeInsightModal">
+        <div class="cf-modal cf-modal-xl">
+          <div class="cf-modal-header">
+            <div>
+              <h3 class="cf-modal-title">Rangkuman Insight</h3>
+              <p v-if="insightModalTask" style="font-size: 11.5px; color: var(--text-muted); margin: 3px 0 0;">{{ insightModalTask.title }}</p>
+            </div>
+            <button class="cf-modal-close" @click="closeInsightModal">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+
+          <!-- ── Mode VIEW: tampilkan insight yang sudah tersimpan, read-only ── -->
+          <template v-if="insightModalMode === 'view'">
+            <div class="cf-modal-body">
+              <div class="mp-insight-view-box">{{ insightModalDraft }}</div>
+            </div>
+            <div class="cf-modal-footer">
+              <button class="cf-btn-danger" style="margin-right:auto" @click="deleteInsightModal">Hapus</button>
+              <button class="cf-btn-ghost" @click="closeInsightModal">Tutup</button>
+              <button class="cf-btn-primary" @click="startEditInsightModal">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                Edit
+              </button>
+            </div>
+          </template>
+
+          <!-- ── Mode EDIT: textarea untuk menulis / mengubah insight ── -->
+          <template v-else>
+            <div class="cf-modal-body">
+              <p style="font-size:11.5px; color:var(--text-muted); margin:0; line-height:1.6;">Tulis rangkuman insight / pembelajaran dari task ini — bisa jadi catatan refleksi, hasil belajar, atau poin penting untuk portofolio kamu.</p>
+              <textarea class="cf-textarea mp-insight-textarea-lg" v-model="insightModalDraft" rows="18" placeholder="cth., Dari task ini aku belajar..."></textarea>
+            </div>
+            <div class="cf-modal-footer">
+              <button class="cf-btn-ghost" @click="cancelEditInsightModal">Batal</button>
+              <button class="cf-btn-primary" @click="saveInsightModal">Simpan</button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </transition>
+
   </div>
   `,
 
@@ -14491,11 +14544,14 @@ const MyPortfolio = {
     return {
       atsCV: { experience: '' },
       selectedExpKey: '',
-      portfolioTasks: {}, // { [expKey]: [{ id, title, status, buktiKerja: [logId, ...] }] }
+      portfolioTasks: {}, // { [expKey]: [{ id, title, status, buktiKerja: [logId, ...], insightSummary }] }
       newTaskTitle: '',
       jobLogs: [], // dari Riwayat Kegiatan Kerja (Job Logbook)
       buktiModalTaskId: null,
       buktiModalSearch: '',
+      insightModalTaskId: null,
+      insightModalDraft: '',
+      insightModalMode: 'view', // 'view' (read-only) | 'edit' (textarea)
     };
   },
 
@@ -14540,6 +14596,10 @@ const MyPortfolio = {
       const task = this.getTaskById(this.buktiModalTaskId);
       return task && task.buktiKerja ? task.buktiKerja.length : 0;
     },
+
+    insightModalTask() {
+      return this.getTaskById(this.insightModalTaskId);
+    },
   },
 
   methods: {
@@ -14548,7 +14608,7 @@ const MyPortfolio = {
       if (!title || !this.selectedExperience) return;
       const key = this.selectedExperience.key;
       const list = this.portfolioTasks[key] ? [...this.portfolioTasks[key]] : [];
-      list.push({ id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title, status: 'draft', buktiKerja: [] });
+      list.push({ id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title, status: 'draft', buktiKerja: [], insightSummary: '' });
       this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
       this.newTaskTitle = '';
       this.saveTasks();
@@ -14625,6 +14685,64 @@ const MyPortfolio = {
       });
       this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
       this.saveTasks();
+    },
+
+    // ── Rangkuman Insight per task (popup) ──
+    hasInsightSummary(task) {
+      return !!(task.insightSummary && task.insightSummary.trim());
+    },
+
+    openInsightModal(taskId) {
+      const task = this.getTaskById(taskId);
+      this.insightModalTaskId = taskId;
+      this.insightModalDraft = (task && task.insightSummary) || '';
+      // Kalau sudah ada isinya, buka dalam mode tampilan (read-only) dulu.
+      // Kalau masih kosong, langsung ke mode edit supaya bisa langsung nulis.
+      this.insightModalMode = (task && this.hasInsightSummary(task)) ? 'view' : 'edit';
+    },
+
+    closeInsightModal() {
+      this.insightModalTaskId = null;
+      this.insightModalDraft = '';
+      this.insightModalMode = 'view';
+    },
+
+    startEditInsightModal() {
+      this.insightModalMode = 'edit';
+    },
+
+    cancelEditInsightModal() {
+      const task = this.insightModalTask;
+      if (task && this.hasInsightSummary(task)) {
+        // Batalkan perubahan, balik ke tampilan isi yang tersimpan sebelumnya.
+        this.insightModalDraft = task.insightSummary;
+        this.insightModalMode = 'view';
+      } else {
+        this.closeInsightModal();
+      }
+    },
+
+    saveInsightModal() {
+      if (!this.selectedExperience || !this.insightModalTaskId) return;
+      const key = this.selectedExperience.key;
+      const list = (this.portfolioTasks[key] || []).map(t => t.id === this.insightModalTaskId ? { ...t, insightSummary: this.insightModalDraft } : t);
+      this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
+      this.saveTasks();
+      if (this.insightModalDraft.trim()) {
+        this.insightModalMode = 'view';
+      } else {
+        this.closeInsightModal();
+      }
+    },
+
+    deleteInsightModal() {
+      if (!confirm('Hapus rangkuman insight ini?')) return;
+      if (!this.selectedExperience || !this.insightModalTaskId) return;
+      const key = this.selectedExperience.key;
+      const list = (this.portfolioTasks[key] || []).map(t => t.id === this.insightModalTaskId ? { ...t, insightSummary: '' } : t);
+      this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
+      this.saveTasks();
+      this.closeInsightModal();
     },
 
     loadJobLogs() {
