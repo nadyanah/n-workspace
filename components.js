@@ -12681,6 +12681,8 @@ const DzikirCounter = {
     increment() {
       if (!this.list.length) return;
       const d = this.list[this.activeIndex];
+      // Catat status sebelum tap: apakah SEMUA dzikir sudah tuntas sebelumnya?
+      const wasFullyComplete = this.isFullyComplete;
       if (d.count < d.target) {
         d.count++;
       }
@@ -12692,9 +12694,11 @@ const DzikirCounter = {
         this.vibrate(15); // getaran singkat tiap tap normal
       }
       this.saveToStorage();
-      // Kalau seluruh list (semua dzikir) sudah tuntas, increment counter putaran hari ini.
-      // Panel notifikasi pakai counter ini untuk buka habit Dzikir Waktu satu per satu.
-      if (this.isFullyComplete) {
+      // Increment counter putaran HANYA jika sesi baru saja tuntas (transisi dari belum → selesai).
+      // Kalau sebelumnya sudah tuntas (wasFullyComplete), tidak dihitung lagi —
+      // supaya user harus Reset dulu sebelum sesi berikutnya, dan panel habit
+      // Dzikir Waktu terbuka satu per satu sesuai jumlah putaran yang benar-benar diselesaikan.
+      if (!wasFullyComplete && this.isFullyComplete) {
         try {
           const now = new Date();
           const todayStr = now.getFullYear() + '-' +
