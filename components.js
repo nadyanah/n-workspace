@@ -14313,8 +14313,10 @@ const CareerFoundation = {
 };
 
 // ============================================================================
-// MY PORTFOLIO — Halaman baru, masih kosong (placeholder), akan diisi menyusul.
-// Diakses dari tombol "My Portfolio" di navbar/filter row halaman Career Foundation.
+// MY PORTFOLIO — Filter pengalaman kerja (dari CV ATS) + tabel task portfolio
+// dengan status Draft/Fix. Diakses dari tombol "My Portfolio" di navbar/filter
+// row halaman Career Foundation. Data CV ATS dibaca langsung dari storage
+// (key 'career_ats_cv') sehingga selalu sinkron tiap kali halaman ini dibuka.
 // ============================================================================
 const MyPortfolio = {
   template: `
@@ -14327,19 +14329,134 @@ const MyPortfolio = {
         Showcase
       </div>
       <h2 class="mp-hero-title">My Portfolio</h2>
-      <p class="mp-hero-sub">Halaman untuk menampilkan portfolio & karya — masih kosong, akan diisi menyusul.</p>
+      <p class="mp-hero-sub">Pilih pengalaman kerja dari CV ATS, lalu lacak progres penulisan tiap task portfolio-nya.</p>
     </div>
 
-    <!-- ── Empty State ── -->
-    <div class="mp-empty-state">
+    <!-- ── Empty: belum ada pengalaman kerja sama sekali di CV ATS ── -->
+    <div v-if="!experiences.length" class="mp-empty-state">
       <div class="mp-empty-icon">
         <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
       </div>
-      <p class="mp-empty-title">Belum ada konten</p>
-      <p class="mp-empty-sub">Halaman ini baru disiapkan sebagai tempat untuk portfolio kamu. Isinya akan ditambahkan menyusul.</p>
+      <p class="mp-empty-title">Belum ada pengalaman kerja</p>
+      <p class="mp-empty-sub">Isi dulu bagian "Professional Experience" di tab CV ATS pada halaman Career Foundation — task portfolio akan otomatis muncul di sini.</p>
+      <button class="cf-btn-ghost" style="margin-top: 16px;" @click="goToCareer">
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Buka Career Foundation
+      </button>
     </div>
+
+    <!-- ── Filter + Tabel ── -->
+    <template v-else>
+      <div class="mp-filter-row">
+        <span class="mp-filter-label">Pengalaman Kerja</span>
+        <select class="form-input mp-filter-select" v-model="selectedExpKey">
+          <option v-for="exp in experiences" :key="exp.key" :value="exp.key">
+            {{ exp.role }}<template v-if="exp.company"> — {{ exp.company }}</template><template v-if="exp.period"> ({{ exp.period }})</template>
+          </option>
+        </select>
+      </div>
+
+      <div v-if="!tableTasks.length" class="mp-empty-state" style="padding: 40px 24px;">
+        <p class="mp-empty-title">Belum ada task</p>
+        <p class="mp-empty-sub">Pengalaman ini belum punya poin pencapaian di CV ATS. Tambahkan poin di tab CV ATS dulu, ya.</p>
+      </div>
+
+      <div v-else class="mp-table-container">
+        <table class="mp-table">
+          <thead>
+            <tr>
+              <th>Judul Task Pengalaman</th>
+              <th style="width: 150px;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="task in tableTasks" :key="task.key">
+              <td>{{ task.title }}</td>
+              <td>
+                <select class="form-input mp-status-select"
+                  :class="task.status === 'fix' ? 'mp-status-fix' : 'mp-status-draft'"
+                  :value="task.status"
+                  @change="setTaskStatus(task.key, $event.target.value)">
+                  <option value="draft">Draft</option>
+                  <option value="fix">Fix</option>
+                </select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </template>
 
   </div>
   `,
+
+  data() {
+    return {
+      atsCV: { experience: '' },
+      selectedExpKey: '',
+      taskStatusMap: {},
+    };
+  },
+
+  computed: {
+    // ── Parsing format sama persis dengan parsedExperience di CareerFoundation ──
+    // Format per blok (dipisah baris kosong): "Role | Company | Period" lalu baris poin "- ..."
+    experiences() {
+      if (!this.atsCV.experience) return [];
+      const blocks = this.atsCV.experience.split(/\n\n+/);
+      return blocks.map(block => {
+        const lines = block.trim().split('\n');
+        const header = lines[0] || '';
+        const parts = header.split('|').map(s => s.trim());
+        const points = lines.slice(1).filter(l => l.trim()).map(l => l.replace(/^[-•]\s*/, '').trim());
+        const role = parts[0] || '';
+        const company = parts[1] || '';
+        const period = parts[2] || '';
+        return { role, company, period, points, key: `${role}|${company}|${period}` };
+      }).filter(e => e.role);
+    },
+
+    selectedExperience() {
+      return this.experiences.find(e => e.key === this.selectedExpKey) || this.experiences[0] || null;
+    },
+
+    // ── Tiap poin pencapaian pada pengalaman terpilih jadi satu baris task ──
+    tableTasks() {
+      if (!this.selectedExperience) return [];
+      return this.selectedExperience.points.map(pt => {
+        const key = this.selectedExperience.key + '::' + pt;
+        return { key, title: pt, status: this.taskStatusMap[key] || 'draft' };
+      });
+    },
+  },
+
+  methods: {
+    setTaskStatus(key, value) {
+      this.taskStatusMap = { ...this.taskStatusMap, [key]: value };
+      try {
+        WorkspaceStorage.setItem('portfolio_task_status', JSON.stringify(this.taskStatusMap));
+      } catch(_e) {}
+    },
+
+    goToCareer() {
+      globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'careerFoundation' }));
+    },
+  },
+
+  async mounted() {
+    await globalThis._workspaceStorageReady;
+    try {
+      const ats = WorkspaceStorage.getItem('career_ats_cv');
+      if (ats) this.atsCV = { ...this.atsCV, ...JSON.parse(ats) };
+    } catch(_e) {}
+    try {
+      const st = WorkspaceStorage.getItem('portfolio_task_status');
+      if (st) this.taskStatusMap = JSON.parse(st);
+    } catch(_e) {}
+    if (this.experiences.length) {
+      this.selectedExpKey = this.experiences[0].key;
+    }
+  },
 };
+
 
