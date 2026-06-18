@@ -14393,6 +14393,7 @@ const MyPortfolio = {
             <thead>
               <tr>
                 <th>Judul Task Pengalaman</th>
+                <th style="width: 240px;">Bukti Kerja</th>
                 <th style="width: 150px;">Status</th>
                 <th style="width: 44px;"></th>
               </tr>
@@ -14400,6 +14401,23 @@ const MyPortfolio = {
             <tbody>
               <tr v-for="task in tableTasks" :key="task.id">
                 <td>{{ task.title }}</td>
+                <td>
+                  <div class="mp-bukti-cell">
+                    <div v-if="getSelectedBuktiLogs(task).length" class="mp-bukti-chips">
+                      <span v-for="log in getSelectedBuktiLogs(task)" :key="log.id" class="mp-bukti-chip" :title="log.tasks">
+                        <span class="mp-bukti-chip-date">{{ formatDate(log.date) }}</span>
+                        <span class="mp-bukti-chip-text">{{ truncate(log.tasks, 26) }}</span>
+                        <button class="mp-bukti-chip-remove" title="Hapus bukti ini" @click="removeBukti(task, log.id)">
+                          <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                      </span>
+                    </div>
+                    <button class="mp-bukti-add-btn" @click="openBuktiModal(task.id)">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Pilih Bukti
+                    </button>
+                  </div>
+                </td>
                 <td>
                   <select class="form-input mp-status-select"
                     :class="task.status === 'fix' ? 'mp-status-fix' : 'mp-status-draft'"
@@ -14426,6 +14444,46 @@ const MyPortfolio = {
       </template>
     </template>
 
+    <!-- ══ MODAL: Pilih Bukti Kerja (multiselect dari Riwayat Kegiatan Kerja / Job Logbook) ══ -->
+    <transition name="cf-fade">
+      <div v-if="buktiModalTaskId" class="cf-modal-overlay" @click.self="closeBuktiModal">
+        <div class="cf-modal cf-modal-wide">
+          <div class="cf-modal-header">
+            <h3 class="cf-modal-title">Pilih Bukti Kerja</h3>
+            <button class="cf-modal-close" @click="closeBuktiModal">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="cf-modal-body">
+            <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 2px; line-height:1.6;">Pilih satu atau lebih catatan dari <strong>Riwayat Kegiatan Kerja</strong> (Job Logbook) sebagai bukti pendukung task ini.</p>
+            <input type="text" class="cf-input" v-model="buktiModalSearch" placeholder="Cari berdasarkan tugas / kategori..." />
+            <div v-if="!jobLogs.length" style="font-size:12.5px; color: var(--text-muted); text-align:center; padding: 28px 0;">
+              Belum ada Riwayat Kegiatan Kerja. Catat dulu di halaman <strong>Job Logbook</strong>.
+            </div>
+            <div v-else-if="!filteredJobLogsForModal.length" style="font-size:12.5px; color: var(--text-muted); text-align:center; padding: 28px 0;">
+              Tidak ada catatan yang cocok dengan pencarian.
+            </div>
+            <div v-else class="mp-bukti-modal-list">
+              <label v-for="log in filteredJobLogsForModal" :key="log.id" class="mp-bukti-modal-item">
+                <input type="checkbox" :checked="isBuktiChecked(log.id)" @change="toggleBuktiCheck(log.id)" />
+                <div class="mp-bukti-modal-item-text">
+                  <div class="mp-bukti-modal-item-top">
+                    <span class="mp-bukti-modal-item-date">{{ formatDate(log.date) }}</span>
+                    <span class="pill" :style="{ backgroundColor: getCategoryColor(log.category) + '12', color: getCategoryColor(log.category), borderColor: getCategoryColor(log.category) + '30' }" style="border: 1px solid;">{{ log.category }}</span>
+                  </div>
+                  <p class="mp-bukti-modal-item-task">{{ log.tasks }}</p>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div class="cf-modal-footer">
+            <span style="font-size:12px; color: var(--text-muted); margin-right:auto;">{{ buktiModalSelectedCount }} bukti dipilih</span>
+            <button class="cf-btn-primary" @click="closeBuktiModal">Selesai</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
   </div>
   `,
 
@@ -14433,8 +14491,11 @@ const MyPortfolio = {
     return {
       atsCV: { experience: '' },
       selectedExpKey: '',
-      portfolioTasks: {}, // { [expKey]: [{ id, title, status }] }
+      portfolioTasks: {}, // { [expKey]: [{ id, title, status, buktiKerja: [logId, ...] }] }
       newTaskTitle: '',
+      jobLogs: [], // dari Riwayat Kegiatan Kerja (Job Logbook)
+      buktiModalTaskId: null,
+      buktiModalSearch: '',
     };
   },
 
@@ -14462,6 +14523,23 @@ const MyPortfolio = {
       if (!this.selectedExperience) return [];
       return this.portfolioTasks[this.selectedExperience.key] || [];
     },
+
+    // ── Bukti Kerja: list Riwayat Kegiatan Kerja, terbaru dulu, difilter pencarian modal ──
+    filteredJobLogsForModal() {
+      const sorted = [...this.jobLogs].sort((a, b) => new Date(b.date) - new Date(a.date));
+      const q = this.buktiModalSearch.trim().toLowerCase();
+      if (!q) return sorted;
+      return sorted.filter(l =>
+        (l.tasks || '').toLowerCase().includes(q) ||
+        (l.category || '').toLowerCase().includes(q) ||
+        (l.achievements || '').toLowerCase().includes(q)
+      );
+    },
+
+    buktiModalSelectedCount() {
+      const task = this.getTaskById(this.buktiModalTaskId);
+      return task && task.buktiKerja ? task.buktiKerja.length : 0;
+    },
   },
 
   methods: {
@@ -14470,7 +14548,7 @@ const MyPortfolio = {
       if (!title || !this.selectedExperience) return;
       const key = this.selectedExperience.key;
       const list = this.portfolioTasks[key] ? [...this.portfolioTasks[key]] : [];
-      list.push({ id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title, status: 'draft' });
+      list.push({ id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title, status: 'draft', buktiKerja: [] });
       this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
       this.newTaskTitle = '';
       this.saveTasks();
@@ -14499,6 +14577,83 @@ const MyPortfolio = {
       } catch(_e) {}
     },
 
+    // ── Bukti Kerja (multiselect dari Riwayat Kegiatan Kerja / Job Logbook) ──
+    getTaskById(taskId) {
+      if (!this.selectedExperience || !taskId) return null;
+      const list = this.portfolioTasks[this.selectedExperience.key] || [];
+      return list.find(t => t.id === taskId) || null;
+    },
+
+    getSelectedBuktiLogs(task) {
+      const ids = task.buktiKerja || [];
+      return ids.map(id => this.jobLogs.find(l => l.id === id)).filter(Boolean);
+    },
+
+    openBuktiModal(taskId) {
+      this.buktiModalTaskId = taskId;
+      this.buktiModalSearch = '';
+    },
+
+    closeBuktiModal() {
+      this.buktiModalTaskId = null;
+    },
+
+    isBuktiChecked(logId) {
+      const task = this.getTaskById(this.buktiModalTaskId);
+      return !!(task && (task.buktiKerja || []).includes(logId));
+    },
+
+    toggleBuktiCheck(logId) {
+      if (!this.selectedExperience || !this.buktiModalTaskId) return;
+      const key = this.selectedExperience.key;
+      const list = (this.portfolioTasks[key] || []).map(t => {
+        if (t.id !== this.buktiModalTaskId) return t;
+        const current = t.buktiKerja || [];
+        const next = current.includes(logId) ? current.filter(id => id !== logId) : [...current, logId];
+        return { ...t, buktiKerja: next };
+      });
+      this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
+      this.saveTasks();
+    },
+
+    removeBukti(task, logId) {
+      if (!this.selectedExperience) return;
+      const key = this.selectedExperience.key;
+      const list = (this.portfolioTasks[key] || []).map(t => {
+        if (t.id !== task.id) return t;
+        return { ...t, buktiKerja: (t.buktiKerja || []).filter(id => id !== logId) };
+      });
+      this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
+      this.saveTasks();
+    },
+
+    loadJobLogs() {
+      try {
+        const saved = WorkspaceStorage.getItem('personal_workspace_job_logs');
+        const parsed = saved ? JSON.parse(saved) : [];
+        parsed.forEach((l, i) => { if (!l.id) l.id = 'log-fallback-' + i; });
+        this.jobLogs = parsed;
+      } catch(_e) { this.jobLogs = []; }
+    },
+
+    formatDate(d) {
+      try { return new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }); }
+      catch (_e) { return d; }
+    },
+
+    truncate(text, n) {
+      if (!text) return '';
+      return text.length > n ? text.slice(0, n).trim() + '…' : text;
+    },
+
+    getCategoryColor(cat) {
+      const colors = { 'Administrasi': '#4F46E5', 'HR Operational': '#10B981', 'Coding': '#06B6D4', 'Design': '#EC4899', 'Lainnya': '#6B7280' };
+      if (colors[cat]) return colors[cat];
+      let hash = 0;
+      for (let i = 0; i < (cat || '').length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash);
+      return `hsl(${Math.abs(hash) % 360}, 65%, 45%)`;
+    },
+
     goToCareer() {
       globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'careerFoundation' }));
     },
@@ -14514,6 +14669,7 @@ const MyPortfolio = {
       const pt = WorkspaceStorage.getItem('portfolio_tasks');
       if (pt) this.portfolioTasks = JSON.parse(pt);
     } catch(_e) {}
+    this.loadJobLogs();
     if (this.experiences.length) {
       this.selectedExpKey = this.experiences[0].key;
     }

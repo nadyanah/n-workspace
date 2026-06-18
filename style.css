@@ -7225,6 +7225,135 @@ input:checked + .switch-slider:before {
   color: var(--color-terracotta, #D67B52);
 }
 
+/* ── Bukti Kerja: chips + multiselect modal (My Portfolio) ── */
+.mp-bukti-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 200px;
+}
+.mp-bukti-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.mp-bukti-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 230px;
+  padding: 3px 5px 3px 8px;
+  background: #FFF4ED;
+  border: 1px solid #F5C8A8;
+  border-radius: 7px;
+  font-size: 11px;
+  color: var(--text-dark, #2C2621);
+}
+.mp-bukti-chip-date {
+  font-family: 'Hack', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-terracotta, #D67B52);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.mp-bukti-chip-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mp-bukti-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--color-terracotta, #D67B52);
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background 0.12s;
+}
+.mp-bukti-chip-remove:hover { background: rgba(214,123,82,0.18); }
+.mp-bukti-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  padding: 4px 9px;
+  border: 1.5px dashed var(--color-sand, #C8BDB5);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-muted, #6E6359);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.14s;
+}
+.mp-bukti-add-btn:hover {
+  border-color: var(--color-terracotta, #D67B52);
+  color: var(--color-terracotta, #D67B52);
+  background: rgba(214,123,82,0.06);
+}
+.mp-bukti-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.mp-bukti-modal-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.14s;
+  background: var(--bg-cream, #FDFBF7);
+}
+.mp-bukti-modal-item:hover {
+  border-color: var(--color-terracotta, #D67B52);
+  background: #FFF8F4;
+}
+.mp-bukti-modal-item input[type="checkbox"] {
+  margin-top: 3px;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--color-terracotta, #D67B52);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.mp-bukti-modal-item-text {
+  flex: 1;
+  min-width: 0;
+}
+.mp-bukti-modal-item-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+.mp-bukti-modal-item-date {
+  font-family: 'Hack', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dark, #2C2621);
+}
+.mp-bukti-modal-item-task {
+  font-size: 12.5px;
+  color: var(--text-dark, #2C2621);
+  line-height: 1.5;
+  margin: 0;
+}
+
 /* ── Section bar ── */
 .cf-section-bar {
   display: flex;
