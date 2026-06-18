@@ -13724,8 +13724,92 @@ const CareerFoundation = {
               <textarea class="cf-textarea" v-model="atsCVForm.summary" rows="6" placeholder="2-4 kalimat yang merangkum profil karir kamu..."></textarea>
             </template>
             <template v-if="atsEditingSection === 'experience'">
-              <textarea class="cf-textarea" v-model="atsCVForm.experience" rows="8" placeholder="Jabatan | Perusahaan | Periode&#10;&#10;Jabatan lain | Perusahaan | Periode"></textarea>
-              <p style="font-size:11px; color:#AAA; margin:8px 0 0; line-height:1.6;">Satu baris per entri pengalaman, pisahkan tiap entri dengan baris kosong. Poin pencapaian dikelola terpisah di halaman <strong>My Portfolio</strong>.</p>
+              <!-- List entri yang sudah ada -->
+              <div v-if="atsCV.experienceEntries && atsCV.experienceEntries.length" style="display:flex; flex-direction:column; gap:8px; margin-bottom:10px;">
+                <div v-for="entry in atsCV.experienceEntries" :key="entry.id"
+                     style="border:1.5px solid var(--color-sand,#EAE5DD); border-radius:10px; padding:12px 14px; background:#FDFCFA; position:relative;">
+                  <!-- Mode tampil -->
+                  <template v-if="expCardEditingId !== entry.id">
+                    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px;">
+                      <div style="flex:1; min-width:0;">
+                        <div style="font-weight:600; font-size:13px; color:#2C2C2C; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ entry.role }}</div>
+                        <div style="font-size:12px; color:#777; margin-top:2px;">
+                          <span v-if="entry.company">{{ entry.company }}</span>
+                          <span v-if="entry.company && entry.period" style="margin:0 5px; color:#CCC;">·</span>
+                          <span v-if="entry.period" style="font-style:italic;">{{ entry.period }}</span>
+                        </div>
+                        <div style="font-size:10.5px; color:#B0A898; margin-top:4px; font-family:monospace; letter-spacing:0.01em;">ID: {{ entry.id }}</div>
+                      </div>
+                      <div style="display:flex; gap:4px; flex-shrink:0;">
+                        <button @click="expCardStartEdit(entry.id)"
+                                style="padding:4px 10px; font-size:11.5px; border:1px solid #DDD; border-radius:6px; background:#FFF; color:#555; cursor:pointer;">Edit</button>
+                        <button @click="expCardDelete(entry.id)"
+                                style="padding:4px 8px; font-size:11.5px; border:1px solid #F5C6C6; border-radius:6px; background:#FFF8F8; color:#D9534F; cursor:pointer;">✕</button>
+                      </div>
+                    </div>
+                  </template>
+                  <!-- Mode edit inline -->
+                  <template v-else>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                      <div>
+                        <label style="font-size:11px; color:#999; display:block; margin-bottom:3px;">Jabatan *</label>
+                        <input class="cf-input" v-model="expCardForm.role" placeholder="Content Creator" style="font-size:13px;"/>
+                      </div>
+                      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <div>
+                          <label style="font-size:11px; color:#999; display:block; margin-bottom:3px;">Perusahaan</label>
+                          <input class="cf-input" v-model="expCardForm.company" placeholder="Brand X" style="font-size:13px;"/>
+                        </div>
+                        <div>
+                          <label style="font-size:11px; color:#999; display:block; margin-bottom:3px;">Periode</label>
+                          <input class="cf-input" v-model="expCardForm.period" placeholder="2023 – kini" style="font-size:13px;"/>
+                        </div>
+                      </div>
+                      <div style="display:flex; gap:6px; justify-content:flex-end; margin-top:2px;">
+                        <button @click="expCardCancelEdit"
+                                style="padding:5px 12px; font-size:12px; border:1px solid #DDD; border-radius:7px; background:#FFF; color:#777; cursor:pointer;">Batal</button>
+                        <button @click="expCardSaveEdit"
+                                style="padding:5px 14px; font-size:12px; border:none; border-radius:7px; background:var(--color-terracotta,#D4785A); color:#FFF; cursor:pointer; font-weight:600;">Simpan</button>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              <div v-else style="text-align:center; padding:18px 0; color:#BBB; font-size:13px;">Belum ada pengalaman kerja. Tambahkan di bawah.</div>
+
+              <!-- Form tambah entri baru -->
+              <template v-if="expCardShowAdd">
+                <div style="border:1.5px dashed var(--color-terracotta,#D4785A); border-radius:10px; padding:14px; background:#FFF9F7; display:flex; flex-direction:column; gap:8px;">
+                  <div style="font-size:12px; font-weight:600; color:var(--color-terracotta,#D4785A); margin-bottom:2px;">Tambah Pengalaman Baru</div>
+                  <div>
+                    <label style="font-size:11px; color:#999; display:block; margin-bottom:3px;">Jabatan *</label>
+                    <input class="cf-input" v-model="expCardForm.role" placeholder="Social Media Specialist" style="font-size:13px;" @keyup.enter="expCardSaveAdd"/>
+                  </div>
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <div>
+                      <label style="font-size:11px; color:#999; display:block; margin-bottom:3px;">Perusahaan</label>
+                      <input class="cf-input" v-model="expCardForm.company" placeholder="Startup Y" style="font-size:13px;"/>
+                    </div>
+                    <div>
+                      <label style="font-size:11px; color:#999; display:block; margin-bottom:3px;">Periode</label>
+                      <input class="cf-input" v-model="expCardForm.period" placeholder="Jan 2022 – Des 2023" style="font-size:13px;"/>
+                    </div>
+                  </div>
+                  <div style="display:flex; gap:6px; justify-content:flex-end; margin-top:4px;">
+                    <button @click="expCardCancelAdd"
+                            style="padding:5px 12px; font-size:12px; border:1px solid #DDD; border-radius:7px; background:#FFF; color:#777; cursor:pointer;">Batal</button>
+                    <button @click="expCardSaveAdd"
+                            style="padding:5px 14px; font-size:12px; border:none; border-radius:7px; background:var(--color-terracotta,#D4785A); color:#FFF; cursor:pointer; font-weight:600;">+ Tambah</button>
+                  </div>
+                </div>
+              </template>
+              <template v-else>
+                <button @click="expCardStartAdd"
+                        style="width:100%; padding:9px; border:1.5px dashed #CBCBCB; border-radius:9px; background:#FAFAFA; color:#888; font-size:12.5px; cursor:pointer; margin-top:2px;">
+                  + Tambah Pengalaman Kerja
+                </button>
+              </template>
+              <p style="font-size:11px; color:#AAA; margin:10px 0 0; line-height:1.6;">Tiap entri mendapat ID unik permanen. Poin pencapaian dikelola terpisah di halaman <strong>My Portfolio</strong>.</p>
             </template>
             <template v-if="atsEditingSection === 'education'">
               <textarea class="cf-textarea" v-model="atsCVForm.education" rows="6" placeholder="S1 Ilmu Komunikasi | Universitas Padjadjaran | 2020 - 2024 | IPK: 3.78&#10;&#10;SMA | SMAN 5 Bandung | 2017 - 2020"></textarea>
@@ -13748,7 +13832,8 @@ const CareerFoundation = {
           </div>
           <div class="cf-modal-footer">
             <button class="cf-btn-ghost" @click="showAtsCVModal=false">Batal</button>
-            <button class="cf-btn-primary" @click="saveAtsCVSection">Simpan</button>
+            <button v-if="atsEditingSection !== 'experience'" class="cf-btn-primary" @click="saveAtsCVSection">Simpan</button>
+            <button v-else class="cf-btn-primary" @click="saveAtsCVSection">Selesai</button>
           </div>
         </div>
       </div>
@@ -13808,6 +13893,7 @@ const CareerFoundation = {
         summary: '', experience: '', education: '', skills: '',
         organization: '', languages: '', certifications: '',
         projects: '',
+        experienceEntries: [],   // Array of { id, role, company, period }
         customSections: [],
         lastUpdated: null,
       },
@@ -13821,10 +13907,15 @@ const CareerFoundation = {
       atsEditingSection: null,
       atsCopySuccess: false,
 
-      // Experience per-entry editing
+      // Experience per-entry editing (legacy modal)
       showExpEntryModal: false,
       atsEditingExpIdx: null,
       atsExpEntryForm: { role: '', company: '', period: '' },
+
+      // New inline experience card editor state (inside showAtsCVModal for experience)
+      expCardEditingId: null,      // id of card being edited inline, or null
+      expCardForm: { role: '', company: '', period: '' },
+      expCardShowAdd: false,       // show the "tambah entri baru" form
 
       // Task portfolio (My Portfolio) — { [expKey]: [{ id, title, status }] }
       // Dipakai untuk mengisi Poin Pencapaian di CV: hanya task berstatus 'fix' yang tampil.
@@ -13913,9 +14004,20 @@ const CareerFoundation = {
     },
 
     parsedExperience() {
+      // New format: array of { id, role, company, period }
+      const entries = this.atsCV.experienceEntries;
+      if (entries && entries.length) {
+        return entries.map(entry => {
+          const key = `${entry.role}|${entry.company}|${entry.period}`;
+          const tasks = this.portfolioTasks[key] || [];
+          const points = tasks.filter(t => t.status === 'fix').map(t => t.title);
+          return { id: entry.id, role: entry.role, company: entry.company, period: entry.period, points, key };
+        }).filter(e => e.role);
+      }
+      // Legacy fallback: parse from old plain-text string
       if (!this.atsCV.experience) return [];
       const blocks = this.atsCV.experience.split(/\n\n+/);
-      return blocks.map(block => {
+      return blocks.map((block, idx) => {
         const lines = block.trim().split('\n');
         const header = lines[0] || '';
         const parts = header.split('|').map(s => s.trim());
@@ -13923,10 +14025,9 @@ const CareerFoundation = {
         const company = parts[1] || '';
         const period = parts[2] || '';
         const key = `${role}|${company}|${period}`;
-        // Poin pencapaian = task di My Portfolio untuk pengalaman ini yang berstatus 'fix'
         const tasks = this.portfolioTasks[key] || [];
         const points = tasks.filter(t => t.status === 'fix').map(t => t.title);
-        return { role, company, period, points, key };
+        return { id: `legacy-${idx}`, role, company, period, points, key };
       }).filter(e => e.role);
     },
 
@@ -14073,6 +14174,12 @@ const CareerFoundation = {
       this.atsEditingSection = section;
       // Copy current values into form
       this.atsCVForm = { ...this.atsCV };
+      // Reset card editor state for experience section
+      if (section === 'experience') {
+        this.expCardEditingId = null;
+        this.expCardForm = { role: '', company: '', period: '' };
+        this.expCardShowAdd = false;
+      }
       this.showAtsCVModal = true;
     },
 
@@ -14081,6 +14188,8 @@ const CareerFoundation = {
       if (this.atsEditingSection === 'header') {
         const { name, title, email, phone, location, linkedin, portfolio } = this.atsCVForm;
         Object.assign(this.atsCV, { name, title, email, phone, location, linkedin, portfolio });
+      } else if (this.atsEditingSection === 'experience') {
+        // experience is managed live via card methods — no extra copy needed here
       } else if (this.atsEditingSection) {
         this.atsCV[this.atsEditingSection] = this.atsCVForm[this.atsEditingSection];
       }
@@ -14125,7 +14234,72 @@ const CareerFoundation = {
       });
     },
 
-    // ── Experience per-entry edit ──
+    // ── Experience card editor (new, inside ATS CV modal) ──
+    _genExpId() {
+      return 'exp_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+    },
+    expCardStartAdd() {
+      this.expCardEditingId = null;
+      this.expCardForm = { role: '', company: '', period: '' };
+      this.expCardShowAdd = true;
+    },
+    expCardCancelAdd() {
+      this.expCardShowAdd = false;
+      this.expCardForm = { role: '', company: '', period: '' };
+    },
+    expCardSaveAdd() {
+      const { role, company, period } = this.expCardForm;
+      if (!role.trim()) return;
+      if (!this.atsCV.experienceEntries) this.atsCV.experienceEntries = [];
+      this.atsCV.experienceEntries.push({
+        id: this._genExpId(),
+        role: role.trim(),
+        company: company.trim(),
+        period: period.trim(),
+      });
+      this.atsCV.lastUpdated = new Date().toISOString();
+      this.saveAll();
+      this.expCardForm = { role: '', company: '', period: '' };
+      this.expCardShowAdd = false;
+    },
+    expCardStartEdit(id) {
+      const entry = (this.atsCV.experienceEntries || []).find(e => e.id === id);
+      if (!entry) return;
+      this.expCardShowAdd = false;
+      this.expCardEditingId = id;
+      this.expCardForm = { role: entry.role, company: entry.company, period: entry.period };
+    },
+    expCardCancelEdit() {
+      this.expCardEditingId = null;
+      this.expCardForm = { role: '', company: '', period: '' };
+    },
+    expCardSaveEdit() {
+      const { role, company, period } = this.expCardForm;
+      if (!role.trim()) return;
+      const idx = (this.atsCV.experienceEntries || []).findIndex(e => e.id === this.expCardEditingId);
+      if (idx === -1) return;
+      this.atsCV.experienceEntries[idx] = {
+        ...this.atsCV.experienceEntries[idx],
+        role: role.trim(),
+        company: company.trim(),
+        period: period.trim(),
+      };
+      this.atsCV.lastUpdated = new Date().toISOString();
+      this.saveAll();
+      this.expCardEditingId = null;
+      this.expCardForm = { role: '', company: '', period: '' };
+    },
+    expCardDelete(id) {
+      if (!confirm('Hapus entri pengalaman kerja ini?')) return;
+      const idx = (this.atsCV.experienceEntries || []).findIndex(e => e.id === id);
+      if (idx === -1) return;
+      this.atsCV.experienceEntries.splice(idx, 1);
+      this.atsCV.lastUpdated = new Date().toISOString();
+      this.saveAll();
+      if (this.expCardEditingId === id) this.expCardEditingId = null;
+    },
+
+    // ── Experience per-entry edit (legacy modal, dipakai dari tombol edit di CV preview) ──
     openAtsEditExperienceEntry(idx) {
       const exp = this.parsedExperience[idx];
       this.atsEditingExpIdx = idx;
@@ -14138,19 +14312,36 @@ const CareerFoundation = {
     },
     saveAtsExperienceEntry() {
       const { role, company, period } = this.atsExpEntryForm;
-      const header = [role, company, period].filter(Boolean).join(' | ');
-      const blocks = this.atsCV.experience ? this.atsCV.experience.split(/\n\n+/) : [];
-      blocks[this.atsEditingExpIdx] = header;
-      this.atsCV.experience = blocks.join('\n\n');
+      const entries = this.atsCV.experienceEntries || [];
+      if (entries.length && this.atsEditingExpIdx < entries.length) {
+        entries[this.atsEditingExpIdx] = {
+          ...entries[this.atsEditingExpIdx],
+          role: role.trim(),
+          company: company.trim(),
+          period: period.trim(),
+        };
+        this.atsCV.experienceEntries = [...entries];
+      } else {
+        const header = [role, company, period].filter(Boolean).join(' | ');
+        const blocks = this.atsCV.experience ? this.atsCV.experience.split(/\n\n+/) : [];
+        blocks[this.atsEditingExpIdx] = header;
+        this.atsCV.experience = blocks.join('\n\n');
+      }
       this.atsCV.lastUpdated = new Date().toISOString();
       this.saveAll();
       this.showExpEntryModal = false;
     },
     deleteAtsExperienceEntry(idx) {
       if (!confirm('Hapus entri pengalaman kerja ini?')) return;
-      const blocks = this.atsCV.experience ? this.atsCV.experience.split(/\n\n+/) : [];
-      blocks.splice(idx, 1);
-      this.atsCV.experience = blocks.join('\n\n');
+      const entries = this.atsCV.experienceEntries || [];
+      if (entries.length && idx < entries.length) {
+        entries.splice(idx, 1);
+        this.atsCV.experienceEntries = [...entries];
+      } else {
+        const blocks = this.atsCV.experience ? this.atsCV.experience.split(/\n\n+/) : [];
+        blocks.splice(idx, 1);
+        this.atsCV.experience = blocks.join('\n\n');
+      }
       this.atsCV.lastUpdated = new Date().toISOString();
       this.saveAll();
       this.showExpEntryModal = false;
@@ -14301,6 +14492,26 @@ const CareerFoundation = {
         const parsed = JSON.parse(ats);
         if (!parsed.customSections) parsed.customSections = [];
         if (parsed.projects === undefined) parsed.projects = '';
+        // Migrate old string experience → experienceEntries array (one-time)
+        if (!parsed.experienceEntries || !Array.isArray(parsed.experienceEntries) || parsed.experienceEntries.length === 0) {
+          parsed.experienceEntries = [];
+          if (parsed.experience && typeof parsed.experience === 'string' && parsed.experience.trim()) {
+            const blocks = parsed.experience.split(/\n\n+/);
+            blocks.forEach((block, idx) => {
+              const firstLine = block.trim().split('\n')[0] || '';
+              const parts = firstLine.split('|').map(s => s.trim());
+              const role = parts[0] || '';
+              if (role) {
+                parsed.experienceEntries.push({
+                  id: 'exp_' + Date.now().toString(36) + '_' + idx + '_' + Math.random().toString(36).slice(2, 5),
+                  role,
+                  company: parts[1] || '',
+                  period: parts[2] || '',
+                });
+              }
+            });
+          }
+        }
         this.atsCV = { ...this.atsCV, ...parsed };
         // Append any custom sections not yet in default sectionOrder
         (parsed.customSections || []).forEach(sec => {
