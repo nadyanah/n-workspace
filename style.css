@@ -432,6 +432,152 @@ h1, h2, h3, h4 {
   background-color: var(--color-forest);
 }
 
+/* ══════════════════════════════════════════════════════════════════════ */
+/* BROWSER-STYLE TAB BAR                                                 */
+/* ══════════════════════════════════════════════════════════════════════ */
+.ws-tabbar {
+  width: 100%;
+  background: #EDE8E0;
+  border-bottom: 1.5px solid var(--color-sand);
+  border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+  padding: 6px 10px 0;
+  overflow: hidden;
+}
+
+.ws-tabbar-inner {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.ws-tabbar-inner::-webkit-scrollbar {
+  display: none;
+}
+
+/* Individual Tab */
+.ws-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 110px;
+  max-width: 200px;
+  height: 34px;
+  padding: 0 10px 0 12px;
+  background: #D8D2C8;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  user-select: none;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+  border: 1.5px solid transparent;
+  border-bottom: none;
+}
+
+.ws-tab:hover {
+  background: #E8E2D8;
+  color: var(--text-dark);
+}
+
+/* Active tab */
+.ws-tab.ws-tab-active {
+  background: var(--bg-card, #FFFFFF);
+  color: var(--text-dark);
+  font-weight: 600;
+  border-color: var(--color-sand);
+  border-bottom-color: var(--bg-card, #FFFFFF);
+  z-index: 2;
+  /* Active tab lifts slightly */
+  margin-bottom: -1px;
+  padding-bottom: 1px;
+}
+
+.ws-tab-favicon {
+  font-size: 13px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.ws-tab-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.ws-tab-close {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+  padding: 0;
+}
+
+.ws-tab:hover .ws-tab-close,
+.ws-tab.ws-tab-active .ws-tab-close {
+  opacity: 1;
+}
+
+.ws-tab-close:hover {
+  background: rgba(214, 123, 82, 0.15);
+  color: var(--color-terracotta);
+}
+
+/* New Tab (+) button */
+.ws-tab-new {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid var(--color-sand);
+  background: transparent;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  margin-left: 4px;
+  margin-bottom: 3px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.ws-tab-new:hover {
+  background: rgba(214, 123, 82, 0.10);
+  color: var(--color-terracotta);
+  border-color: var(--color-terracotta);
+}
+
+/* When tab bar is present, page-module loses top border-radius */
+.ws-tabbar + * + * .ws-navbar,
+.page-module .ws-navbar {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* Adjust page-module top padding when tab bar exists */
+.page-module {
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+
 /* Page Module Containers */
 .page-module {
   background-color: var(--bg-card);

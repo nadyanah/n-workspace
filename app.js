@@ -19,6 +19,66 @@ const App = {
     const showInspirationModal = ref(false);
     const showDzikirModal = ref(false);
 
+    // --- TAB BAR STATE (mirip Chrome) ---
+    const PAGE_LABELS = {
+      dashboard: { label: 'My Desk', icon: '🏠' },
+      jobLogbook: { label: 'Job Logbook', icon: '📋' },
+      calendarMoment: { label: 'Calendar Moment', icon: '📅' },
+      contentTracker: { label: 'Content Tracker', icon: '📱' },
+      interviewPractice: { label: 'Interview Practice', icon: '🎙️' },
+      dailyNutrition: { label: 'Daily Nutrition', icon: '🍅' },
+      habitTracker: { label: 'Habit Tracker', icon: '✅' },
+      pomodoroTimer: { label: 'Pomodoro', icon: '⌛' },
+      googleCalendar: { label: 'Daily N', icon: '🗓️' },
+      financialTracker: { label: 'Financial', icon: '💳' },
+      careerFoundation: { label: 'Career', icon: '📄' },
+      missedTasksPage: { label: 'Tugas Terlewat', icon: '⚠️' },
+    };
+
+    // openTabs: array of { id, pageKey } — urutan tab
+    const openTabs = ref([
+      { id: 'tab-dashboard', pageKey: 'dashboard' }
+    ]);
+    const activeTabId = ref('tab-dashboard');
+    let _tabCounter = 1;
+
+    // Buka tab baru atau fokus ke tab yang sudah ada
+    const openOrFocusTab = (pageKey) => {
+      // Cek apakah tab dengan pageKey ini sudah ada
+      const existing = openTabs.value.find(t => t.pageKey === pageKey);
+      if (existing) {
+        activeTabId.value = existing.id;
+        activePage.value = pageKey;
+        return;
+      }
+      // Buat tab baru
+      const newId = `tab-${++_tabCounter}`;
+      openTabs.value.push({ id: newId, pageKey });
+      activeTabId.value = newId;
+      activePage.value = pageKey;
+    };
+
+    // Tutup tab
+    const closeTab = (tabId) => {
+      const idx = openTabs.value.findIndex(t => t.id === tabId);
+      if (idx === -1) return;
+      // Jangan tutup kalau cuma 1 tab tersisa
+      if (openTabs.value.length <= 1) return;
+      openTabs.value.splice(idx, 1);
+      // Kalau tab yang ditutup adalah tab aktif, pindah ke tab sebelah kiri (atau kanan)
+      if (activeTabId.value === tabId) {
+        const newIdx = Math.max(0, idx - 1);
+        activeTabId.value = openTabs.value[newIdx].id;
+        activePage.value = openTabs.value[newIdx].pageKey;
+      }
+    };
+
+    // Pindah ke tab
+    const switchTab = (tab) => {
+      activeTabId.value = tab.id;
+      activePage.value = tab.pageKey;
+    };
+
     // Desk quote ticker state
     const deskQuotes = ref([]);
     const deskQuoteIndex = ref(0);
@@ -291,16 +351,16 @@ const App = {
       saveConfig();
     };
 
-    // Navigation helper
+    // Navigation helper — buka di tab baru jika belum terbuka, atau fokus tab existing
     const navigateTo = (pageKey) => {
-      activePage.value = pageKey;
+      openOrFocusTab(pageKey);
       showNavDrawer.value = false;
     };
 
     // Click handler for desk icons — skip navigation if it was a drag
     const handleIconClick = (pageKey) => {
       if (hasDragged) return;
-      navigateTo(pageKey);
+      openOrFocusTab(pageKey);
     };
 
     // Drag-and-drop mechanics
@@ -442,7 +502,7 @@ const App = {
 
     // Handler dipanggil saat klik habit di notif panel / reminder popup
     const onTriggerHabit = (habitId) => {
-      activePage.value = 'habitTracker';
+      openOrFocusTab('habitTracker');
       showNotifPanel.value = false;
       // Beri jeda kecil agar HabitTracker sempat mount sebelum trigger dikirim
       setTimeout(() => {
@@ -462,6 +522,13 @@ const App = {
       showNotifPanel,
       showInspirationModal,
       showDzikirModal,
+      // Tab bar
+      openTabs,
+      activeTabId,
+      PAGE_LABELS,
+      closeTab,
+      switchTab,
+      openOrFocusTab,
       deskQuotes,
       deskQuoteIndex,
       deskQuoteVisible,

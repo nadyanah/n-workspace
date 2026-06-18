@@ -758,6 +758,43 @@
       <div v-else class="page-module">
 
         <!-- ══════════════════════════════════════════════════════════ -->
+        <!-- TAB BAR: Browser-style tab bar (Chrome-like)              -->
+        <!-- ══════════════════════════════════════════════════════════ -->
+        <div class="ws-tabbar">
+          <div class="ws-tabbar-inner">
+            <div
+              v-for="tab in openTabs"
+              :key="tab.id"
+              class="ws-tab"
+              :class="{ 'ws-tab-active': tab.id === activeTabId }"
+              @click="switchTab(tab)"
+              :title="PAGE_LABELS[tab.pageKey]?.label || tab.pageKey"
+            >
+              <span class="ws-tab-favicon">{{ PAGE_LABELS[tab.pageKey]?.icon || '📄' }}</span>
+              <span class="ws-tab-label">{{ PAGE_LABELS[tab.pageKey]?.label || tab.pageKey }}</span>
+              <button
+                v-if="openTabs.length > 1"
+                class="ws-tab-close"
+                @click.stop="closeTab(tab.id)"
+                :title="'Tutup ' + (PAGE_LABELS[tab.pageKey]?.label || tab.pageKey)"
+              >
+                <svg viewBox="0 0 10 10" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                  <line x1="2" y1="2" x2="8" y2="8"/>
+                  <line x1="8" y1="2" x2="2" y2="8"/>
+                </svg>
+              </button>
+            </div>
+            <!-- New Tab button -->
+            <button class="ws-tab-new" @click="showNavDrawer = !showNavDrawer" title="Buka halaman baru">
+              <svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <line x1="6" y1="1" x2="6" y2="11"/>
+                <line x1="1" y1="6" x2="11" y2="6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════ -->
         <!-- NAVBAR: Hamburger | my self | Live Clock                  -->
         <!-- ══════════════════════════════════════════════════════════ -->
         <nav class="ws-navbar">
