@@ -13686,11 +13686,7 @@ const CareerFoundation = {
               <div><label class="cf-field-label">Perusahaan / Instansi</label><input class="cf-input" v-model="atsExpEntryForm.company" placeholder="Brand X"/></div>
               <div><label class="cf-field-label">Periode</label><input class="cf-input" v-model="atsExpEntryForm.period" placeholder="Jan 2023 – kini"/></div>
             </div>
-            <div style="margin-top:10px">
-              <label class="cf-field-label">Poin Pencapaian</label>
-              <p style="font-size:11px; color:#AAA; margin:2px 0 6px;">Satu poin per baris. Gunakan tanda <code style="background:rgba(0,0,0,0.06);padding:1px 4px;border-radius:3px;">-</code> di awal tiap poin (opsional).</p>
-              <textarea class="cf-textarea" v-model="atsExpEntryForm.pointsText" rows="5" placeholder="- Mengelola konten Instagram dengan rata-rata reach 50K/bulan&#10;- Meningkatkan engagement rate dari 2% ke 5,8%&#10;- Berkolaborasi dengan tim desainer untuk kampanye brand"></textarea>
-            </div>
+            <p style="font-size:11px; color:#AAA; margin:12px 0 0; line-height:1.6;">Poin pencapaian untuk pengalaman ini dikelola di halaman <strong>My Portfolio</strong> — task yang berstatus <strong>Fix</strong> akan otomatis tampil sebagai poin pencapaian di CV ini.</p>
           </div>
           <div class="cf-modal-footer">
             <button class="cf-btn-danger" @click="deleteAtsExperienceEntry(atsEditingExpIdx)" style="margin-right:auto">Hapus</button>
@@ -13728,7 +13724,8 @@ const CareerFoundation = {
               <textarea class="cf-textarea" v-model="atsCVForm.summary" rows="6" placeholder="2-4 kalimat yang merangkum profil karir kamu..."></textarea>
             </template>
             <template v-if="atsEditingSection === 'experience'">
-              <textarea class="cf-textarea" v-model="atsCVForm.experience" rows="10" placeholder="Jabatan | Perusahaan | Periode&#10;- Poin pencapaian 1&#10;- Poin pencapaian 2&#10;&#10;Jabatan lain | Perusahaan | Periode&#10;- Poin pencapaian"></textarea>
+              <textarea class="cf-textarea" v-model="atsCVForm.experience" rows="8" placeholder="Jabatan | Perusahaan | Periode&#10;&#10;Jabatan lain | Perusahaan | Periode"></textarea>
+              <p style="font-size:11px; color:#AAA; margin:8px 0 0; line-height:1.6;">Satu baris per entri pengalaman, pisahkan tiap entri dengan baris kosong. Poin pencapaian dikelola terpisah di halaman <strong>My Portfolio</strong>.</p>
             </template>
             <template v-if="atsEditingSection === 'education'">
               <textarea class="cf-textarea" v-model="atsCVForm.education" rows="6" placeholder="S1 Ilmu Komunikasi | Universitas Padjadjaran | 2020 - 2024 | IPK: 3.78&#10;&#10;SMA | SMAN 5 Bandung | 2017 - 2020"></textarea>
@@ -13827,7 +13824,11 @@ const CareerFoundation = {
       // Experience per-entry editing
       showExpEntryModal: false,
       atsEditingExpIdx: null,
-      atsExpEntryForm: { role: '', company: '', period: '', pointsText: '' },
+      atsExpEntryForm: { role: '', company: '', period: '' },
+
+      // Task portfolio (My Portfolio) — { [expKey]: [{ id, title, status }] }
+      // Dipakai untuk mengisi Poin Pencapaian di CV: hanya task berstatus 'fix' yang tampil.
+      portfolioTasks: {},
 
       // CV v2 Custom Sections
       cv2ShowCustomModal: false,
@@ -13886,7 +13887,7 @@ const CareerFoundation = {
       const hints = {
         header: 'Isi data diri yang akan tampil di bagian atas CV',
         summary: '2-4 kalimat yang merangkum profil karir kamu',
-        experience: 'Format: Jabatan | Perusahaan | Periode, lalu poin pencapaian dengan tanda -',
+        experience: 'Format: Jabatan | Perusahaan | Periode. Poin pencapaian dikelola di halaman My Portfolio.',
         projects: 'Format: Nama Project | Periode, lalu deskripsi atau poin dengan tanda -',
         education: 'Format: Gelar | Institusi | Periode | Detail (IPK, dll)',
         skills: 'Pisahkan setiap keahlian dengan tanda koma',
@@ -13918,8 +13919,14 @@ const CareerFoundation = {
         const lines = block.trim().split('\n');
         const header = lines[0] || '';
         const parts = header.split('|').map(s => s.trim());
-        const points = lines.slice(1).filter(l => l.trim()).map(l => l.replace(/^[-•]\s*/, '').trim());
-        return { role: parts[0] || '', company: parts[1] || '', period: parts[2] || '', points };
+        const role = parts[0] || '';
+        const company = parts[1] || '';
+        const period = parts[2] || '';
+        const key = `${role}|${company}|${period}`;
+        // Poin pencapaian = task di My Portfolio untuk pengalaman ini yang berstatus 'fix'
+        const tasks = this.portfolioTasks[key] || [];
+        const points = tasks.filter(t => t.status === 'fix').map(t => t.title);
+        return { role, company, period, points, key };
       }).filter(e => e.role);
     },
 
@@ -14093,7 +14100,14 @@ const CareerFoundation = {
       if (contacts.length) text += contacts.join(' | ') + '\n';
       text += '\n';
       if (cv.summary) text += 'SUMMARY\n' + cv.summary + '\n\n';
-      if (cv.experience) text += 'PROFESSIONAL EXPERIENCE\n' + cv.experience + '\n\n';
+      if (this.parsedExperience.length) {
+        text += 'PROFESSIONAL EXPERIENCE\n';
+        this.parsedExperience.forEach(exp => {
+          text += [exp.role, exp.company, exp.period].filter(Boolean).join(' | ') + '\n';
+          exp.points.forEach(pt => { text += '- ' + pt + '\n'; });
+        });
+        text += '\n';
+      }
       if (cv.projects) text += 'PROJECTS\n' + cv.projects + '\n\n';
       if (cv.skills) text += 'SKILLS\n' + cv.skills + '\n\n';
       if (cv.education) text += 'EDUCATION\n' + cv.education + '\n\n';
@@ -14119,17 +14133,14 @@ const CareerFoundation = {
         role: exp.role,
         company: exp.company,
         period: exp.period,
-        pointsText: exp.points.map(p => '- ' + p).join('\n'),
       };
       this.showExpEntryModal = true;
     },
     saveAtsExperienceEntry() {
-      const { role, company, period, pointsText } = this.atsExpEntryForm;
+      const { role, company, period } = this.atsExpEntryForm;
       const header = [role, company, period].filter(Boolean).join(' | ');
-      const pointLines = pointsText.split('\n').map(l => l.trim()).filter(Boolean).map(l => /^[-\u2022]/.test(l) ? l : '- ' + l);
-      const newBlock = [header, ...pointLines].join('\n');
       const blocks = this.atsCV.experience ? this.atsCV.experience.split(/\n\n+/) : [];
-      blocks[this.atsEditingExpIdx] = newBlock;
+      blocks[this.atsEditingExpIdx] = header;
       this.atsCV.experience = blocks.join('\n\n');
       this.atsCV.lastUpdated = new Date().toISOString();
       this.saveAll();
@@ -14309,14 +14320,20 @@ const CareerFoundation = {
         this.sectionOrder = merged;
       }
     } catch(_e) {}
+    try {
+      const pt = WorkspaceStorage.getItem('portfolio_tasks');
+      if (pt) this.portfolioTasks = JSON.parse(pt);
+    } catch(_e) {}
   },
 };
 
 // ============================================================================
 // MY PORTFOLIO — Filter pengalaman kerja (dari CV ATS) + tabel task portfolio
-// dengan status Draft/Fix. Diakses dari tombol "My Portfolio" di navbar/filter
-// row halaman Career Foundation. Data CV ATS dibaca langsung dari storage
-// (key 'career_ats_cv') sehingga selalu sinkron tiap kali halaman ini dibuka.
+// dengan status Draft/Fix. Task di sini DIINPUT MANUAL (judul bebas, tidak lagi
+// diturunkan dari poin CV). Sebaliknya: task berstatus 'fix' yang akan otomatis
+// tampil sebagai Poin Pencapaian pada entri terkait di CV ATS (lihat parsedExperience
+// & saveAtsExperienceEntry di CareerFoundation, key storage 'portfolio_tasks').
+// Diakses dari tombol "My Portfolio" di navbar/filter row halaman Career Foundation.
 // ============================================================================
 const MyPortfolio = {
   template: `
@@ -14329,7 +14346,7 @@ const MyPortfolio = {
         Showcase
       </div>
       <h2 class="mp-hero-title">My Portfolio</h2>
-      <p class="mp-hero-sub">Pilih pengalaman kerja dari CV ATS, lalu lacak progres penulisan tiap task portfolio-nya.</p>
+      <p class="mp-hero-sub">Catat task portfolio untuk tiap pengalaman kerja. Task berstatus <strong>Fix</strong> otomatis tampil sebagai Poin Pencapaian di CV ATS.</p>
     </div>
 
     <!-- ── Empty: belum ada pengalaman kerja sama sekali di CV ATS ── -->
@@ -14338,14 +14355,14 @@ const MyPortfolio = {
         <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
       </div>
       <p class="mp-empty-title">Belum ada pengalaman kerja</p>
-      <p class="mp-empty-sub">Isi dulu bagian "Professional Experience" di tab CV ATS pada halaman Career Foundation — task portfolio akan otomatis muncul di sini.</p>
+      <p class="mp-empty-sub">Isi dulu Jabatan, Perusahaan & Periode di tab CV ATS pada halaman Career Foundation, baru task portfolio bisa dicatat di sini.</p>
       <button class="cf-btn-ghost" style="margin-top: 16px;" @click="goToCareer">
         <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         Buka Career Foundation
       </button>
     </div>
 
-    <!-- ── Filter + Tabel ── -->
+    <!-- ── Filter + Tambah Task + Tabel ── -->
     <template v-else>
       <div class="mp-filter-row">
         <span class="mp-filter-label">Pengalaman Kerja</span>
@@ -14356,35 +14373,57 @@ const MyPortfolio = {
         </select>
       </div>
 
-      <div v-if="!tableTasks.length" class="mp-empty-state" style="padding: 40px 24px;">
-        <p class="mp-empty-title">Belum ada task</p>
-        <p class="mp-empty-sub">Pengalaman ini belum punya poin pencapaian di CV ATS. Tambahkan poin di tab CV ATS dulu, ya.</p>
+      <div class="mp-add-row">
+        <input type="text" class="form-input mp-add-input" v-model="newTaskTitle"
+          placeholder="Judul task baru, misal: Redesign halaman checkout" @keyup.enter="addTask" />
+        <button class="cf-btn-primary mp-add-btn" :disabled="!newTaskTitle.trim()" @click="addTask">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah Task
+        </button>
       </div>
 
-      <div v-else class="mp-table-container">
-        <table class="mp-table">
-          <thead>
-            <tr>
-              <th>Judul Task Pengalaman</th>
-              <th style="width: 150px;">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="task in tableTasks" :key="task.key">
-              <td>{{ task.title }}</td>
-              <td>
-                <select class="form-input mp-status-select"
-                  :class="task.status === 'fix' ? 'mp-status-fix' : 'mp-status-draft'"
-                  :value="task.status"
-                  @change="setTaskStatus(task.key, $event.target.value)">
-                  <option value="draft">Draft</option>
-                  <option value="fix">Fix</option>
-                </select>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div v-if="!tableTasks.length" class="mp-empty-state" style="padding: 40px 24px;">
+        <p class="mp-empty-title">Belum ada task</p>
+        <p class="mp-empty-sub">Tambahkan task portfolio pertama untuk pengalaman ini lewat kolom di atas.</p>
       </div>
+
+      <template v-else>
+        <div class="mp-table-container">
+          <table class="mp-table">
+            <thead>
+              <tr>
+                <th>Judul Task Pengalaman</th>
+                <th style="width: 150px;">Status</th>
+                <th style="width: 44px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="task in tableTasks" :key="task.id">
+                <td>{{ task.title }}</td>
+                <td>
+                  <select class="form-input mp-status-select"
+                    :class="task.status === 'fix' ? 'mp-status-fix' : 'mp-status-draft'"
+                    :value="task.status"
+                    @change="setTaskStatus(task.id, $event.target.value)">
+                    <option value="draft">Draft</option>
+                    <option value="fix">Fix</option>
+                  </select>
+                </td>
+                <td>
+                  <button class="mp-task-delete-btn" title="Hapus task" @click="deleteTask(task.id)">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="mp-fix-note">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Task berstatus <strong>Fix</strong> akan otomatis tampil sebagai Poin Pencapaian pada entri ini di CV ATS.
+        </p>
+      </template>
     </template>
 
   </div>
@@ -14394,13 +14433,13 @@ const MyPortfolio = {
     return {
       atsCV: { experience: '' },
       selectedExpKey: '',
-      taskStatusMap: {},
+      portfolioTasks: {}, // { [expKey]: [{ id, title, status }] }
+      newTaskTitle: '',
     };
   },
 
   computed: {
-    // ── Parsing format sama persis dengan parsedExperience di CareerFoundation ──
-    // Format per blok (dipisah baris kosong): "Role | Company | Period" lalu baris poin "- ..."
+    // ── Hanya butuh header (Jabatan | Perusahaan | Periode) per entri CV ATS ──
     experiences() {
       if (!this.atsCV.experience) return [];
       const blocks = this.atsCV.experience.split(/\n\n+/);
@@ -14408,11 +14447,10 @@ const MyPortfolio = {
         const lines = block.trim().split('\n');
         const header = lines[0] || '';
         const parts = header.split('|').map(s => s.trim());
-        const points = lines.slice(1).filter(l => l.trim()).map(l => l.replace(/^[-•]\s*/, '').trim());
         const role = parts[0] || '';
         const company = parts[1] || '';
         const period = parts[2] || '';
-        return { role, company, period, points, key: `${role}|${company}|${period}` };
+        return { role, company, period, key: `${role}|${company}|${period}` };
       }).filter(e => e.role);
     },
 
@@ -14420,21 +14458,44 @@ const MyPortfolio = {
       return this.experiences.find(e => e.key === this.selectedExpKey) || this.experiences[0] || null;
     },
 
-    // ── Tiap poin pencapaian pada pengalaman terpilih jadi satu baris task ──
     tableTasks() {
       if (!this.selectedExperience) return [];
-      return this.selectedExperience.points.map(pt => {
-        const key = this.selectedExperience.key + '::' + pt;
-        return { key, title: pt, status: this.taskStatusMap[key] || 'draft' };
-      });
+      return this.portfolioTasks[this.selectedExperience.key] || [];
     },
   },
 
   methods: {
-    setTaskStatus(key, value) {
-      this.taskStatusMap = { ...this.taskStatusMap, [key]: value };
+    addTask() {
+      const title = this.newTaskTitle.trim();
+      if (!title || !this.selectedExperience) return;
+      const key = this.selectedExperience.key;
+      const list = this.portfolioTasks[key] ? [...this.portfolioTasks[key]] : [];
+      list.push({ id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title, status: 'draft' });
+      this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
+      this.newTaskTitle = '';
+      this.saveTasks();
+    },
+
+    setTaskStatus(taskId, status) {
+      if (!this.selectedExperience) return;
+      const key = this.selectedExperience.key;
+      const list = (this.portfolioTasks[key] || []).map(t => t.id === taskId ? { ...t, status } : t);
+      this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
+      this.saveTasks();
+    },
+
+    deleteTask(taskId) {
+      if (!this.selectedExperience) return;
+      if (!confirm('Hapus task ini?')) return;
+      const key = this.selectedExperience.key;
+      const list = (this.portfolioTasks[key] || []).filter(t => t.id !== taskId);
+      this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
+      this.saveTasks();
+    },
+
+    saveTasks() {
       try {
-        WorkspaceStorage.setItem('portfolio_task_status', JSON.stringify(this.taskStatusMap));
+        WorkspaceStorage.setItem('portfolio_tasks', JSON.stringify(this.portfolioTasks));
       } catch(_e) {}
     },
 
@@ -14450,8 +14511,8 @@ const MyPortfolio = {
       if (ats) this.atsCV = { ...this.atsCV, ...JSON.parse(ats) };
     } catch(_e) {}
     try {
-      const st = WorkspaceStorage.getItem('portfolio_task_status');
-      if (st) this.taskStatusMap = JSON.parse(st);
+      const pt = WorkspaceStorage.getItem('portfolio_tasks');
+      if (pt) this.portfolioTasks = JSON.parse(pt);
     } catch(_e) {}
     if (this.experiences.length) {
       this.selectedExpKey = this.experiences[0].key;

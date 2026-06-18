@@ -7169,6 +7169,61 @@ input:checked + .switch-slider:before {
   background-color: #EAFBF0;
   border-color: #B7E4C7;
 }
+.mp-add-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.mp-add-input {
+  flex: 1;
+  min-width: 220px;
+  height: 38px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+.mp-add-btn {
+  height: 38px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.mp-add-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none !important;
+}
+.mp-task-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  color: var(--text-muted, #6E6359);
+  cursor: pointer;
+  transition: all 0.14s;
+}
+.mp-task-delete-btn:hover {
+  background: #FDECEA;
+  border-color: #F3C6C1;
+  color: #C0392B;
+}
+.mp-fix-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 14px 2px 0;
+  font-size: 12px;
+  color: var(--text-muted, #6E6359);
+  line-height: 1.5;
+}
+.mp-fix-note svg {
+  flex-shrink: 0;
+  color: var(--color-terracotta, #D67B52);
+}
 
 /* ── Section bar ── */
 .cf-section-bar {
