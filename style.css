@@ -5261,6 +5261,11 @@ input:checked + .switch-slider:before {
   padding: 10px 0 16px 0;
   border-bottom: 1.5px solid var(--color-sand);
   margin-bottom: 0;
+  /* ── Sticky: tetap kelihatan saat scroll lihat jam-jam berikutnya di Agenda view ── */
+  position: sticky;
+  top: 74px; /* nempel pas di bawah .ws-navbar (sticky top:10px, tinggi konten ±64px) */
+  z-index: 150;
+  background: var(--bg-card);
 }
 .gcal-today-btn {
   padding: 6px 16px;
