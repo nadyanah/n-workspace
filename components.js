@@ -24,6 +24,7 @@ if (typeof reminderOccursOnDate === 'undefined') {
     const rec = m.recurrence || 'none';
     if (dateStr < m.date) return false; // belum mulai
     if (m.endDate && dateStr > m.endDate) return false; // sudah berakhir
+    if (m.excludedDates && m.excludedDates.includes(dateStr)) return false; // tanggal yang di-skip (mode "acara ini saja")
 
     // ── Custom recurrence ──
     if (rec === 'custom' && m.customRecurrence) {
@@ -8736,7 +8737,7 @@ const GoogleCalendar = {
               <button :class="['gcal-view-btn', localView==='week' && 'active']" @click="localView='week'">Minggu</button>
               <button :class="['gcal-view-btn', localView==='agenda' && 'active']" @click="localView='agenda'">Agenda</button>
             </div>
-            <button class="gcal-create-btn" @click="localShowForm=true">
+            <button class="gcal-create-btn" @click="localResetReminderFormAndOpen">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"/></svg>
               Set Pengingat
             </button>
@@ -9106,12 +9107,39 @@ const GoogleCalendar = {
           </div>
         </transition>
 
+        <!-- ========== POPUP: PILIH LINGKUP HAPUS/EDIT ACARA RUTIN (mirip Google Calendar) ========== -->
+        <transition name="agenda-detail-pop">
+          <div v-if="recurActionPopup" class="agenda-detail-overlay" @click.self="recurActionPopup = null">
+            <div class="recur-action-card">
+              <div class="recur-action-title">{{ recurActionPopup.mode === 'delete' ? 'Hapus acara rutin' : 'Edit acara rutin' }}</div>
+
+              <label class="recur-action-opt">
+                <input type="radio" v-model="recurActionChoice" value="this" class="recur-action-radio" />
+                <span>Acara ini</span>
+              </label>
+              <label class="recur-action-opt">
+                <input type="radio" v-model="recurActionChoice" value="following" class="recur-action-radio" />
+                <span>Acara ini dan acara berikutnya</span>
+              </label>
+              <label class="recur-action-opt">
+                <input type="radio" v-model="recurActionChoice" value="all" class="recur-action-radio" />
+                <span>Semua acara</span>
+              </label>
+
+              <div class="recur-action-footer">
+                <button class="recur-action-btn-cancel" @click="recurActionPopup = null">Batal</button>
+                <button class="recur-action-btn-ok" @click="localConfirmRecurAction">Oke</button>
+              </div>
+            </div>
+          </div>
+        </transition>
+
         <!-- ========== MODAL: FORM SET PENGINGAT MANUAL ========== -->
-        <div v-if="localShowForm" class="gcal-modal-overlay" @click.self="localShowForm=false">
+        <div v-if="localShowForm" class="gcal-modal-overlay" @click.self="localCancelReminderForm">
           <div class="gcal-modal gcal-modal-wide">
             <div class="gcal-modal-header">
-              <span style="font-size:16px;font-weight:700;color:#3c4043;">Set Pengingat Manual</span>
-              <button @click="localShowForm=false" class="gcal-modal-close">&#215;</button>
+              <span style="font-size:16px;font-weight:700;color:#3c4043;">{{ localNewReminder._editId || localNewReminder._excludeFromSeriesId || localNewReminder._splitFromSeriesId ? 'Edit Pengingat Manual' : 'Set Pengingat Manual' }}</span>
+              <button @click="localCancelReminderForm" class="gcal-modal-close">&#215;</button>
             </div>
             <div class="gcal-modal-body" style="padding:20px;">
 
@@ -9271,7 +9299,7 @@ const GoogleCalendar = {
 
               <!-- ── Footer tombol, full width di bawah kedua kolom ── -->
               <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1.5px solid var(--color-sand,#D6CEC5);">
-                <button class="gcal-btn-ghost" @click="localShowForm=false">Batal</button>
+                <button class="gcal-btn-ghost" @click="localCancelReminderForm">Batal</button>
                 <button class="gcal-btn-save" :disabled="!localNewReminder.title.trim() || !localNewReminder.date || !localNewReminder.time" @click="localAddReminder()">Simpan Pengingat</button>
               </div>
 
@@ -9602,6 +9630,9 @@ const GoogleCalendar = {
       })(),
       localStorageTick: 0,
       agendaDetailItem: null,
+      // ── Popup pilihan "acara ini / dan seterusnya / semua" untuk hapus & edit pengingat manual berulang ──
+      recurActionPopup: null, // { mode: 'delete'|'edit', block }
+      recurActionChoice: 'this', // pilihan radio aktif di popup tersebut
       agendaFilterOpen: false,
       agendaFilters: { task: true, habit: true, manual: true, content: true },
       // agendaFilterOptions moved to computed (includes custom categories)
@@ -10099,6 +10130,12 @@ const GoogleCalendar = {
       const day = String(d.getDate()).padStart(2, '0');
       return `${y}-${m}-${day}`;
     },
+    // ── Helper: tanggal sehari sebelum dateStr (dipakai saat split seri "acara ini dan seterusnya") ──
+    localDayBefore(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      d.setDate(d.getDate() - 1);
+      return this.localFmtDate(d);
+    },
     // ── Helper: ubah warna hex jadi rgba transparan, untuk background pill yang lembut ──
     localTintColor(hex, alpha) {
       if (!hex) return `rgba(0,0,0,${alpha})`;
@@ -10342,19 +10379,79 @@ const GoogleCalendar = {
       } catch(_e) { /* ignore */ }
     },
 
+    // ── Batal isi form pengingat — tutup modal & reset semua flag (termasuk split/exclude) ──
+    localCancelReminderForm() {
+      this.localShowForm = false;
+      this.localShowRecurrenceDropdown = false;
+      this.customRecurrenceSaved = null;
+      this.localNewReminder = { title:'', subtitle:'', date: this.localFmtDate(new Date()), endDate: '', time:'', endTime:'', page:'', section:'', targetItem:'', category: 'manual', recurrence: 'none' };
+    },
+    // ── Reset form pengingat sepenuhnya (hapus sisa flag split/exclude dari sesi edit sebelumnya) lalu buka modal ──
+    localResetReminderFormAndOpen() {
+      this.localNewReminder = { title:'', subtitle:'', date: this.localFmtDate(new Date()), endDate: '', time:'', endTime:'', page:'', section:'', targetItem:'', category: 'manual', recurrence: 'none' };
+      this.customRecurrenceSaved = null;
+      this.localShowForm = true;
+    },
+    // ── Eksekusi pilihan dari popup "Hapus/Edit acara rutin" sesuai radio yang dipilih ──
+    localConfirmRecurAction() {
+      if (!this.recurActionPopup) return;
+      const { mode, block } = this.recurActionPopup;
+      const scope = this.recurActionChoice; // 'this' | 'following' | 'all'
+      if (mode === 'delete') {
+        this.localDeleteManualReminder(block, scope);
+      } else {
+        this.localOpenEditForm(block, scope);
+      }
+    },
     localDeleteFromDetail(block) {
       if (!block || !block.raw) return;
       const rawId = block.raw.id;
       if (!rawId) return;
+      // Jika pengingat ini berulang, tanya dulu lingkup hapus (ala Google Calendar)
+      const rec = block.raw.recurrence || 'none';
+      if (rec !== 'none') {
+        this.recurActionChoice = 'this';
+        this.recurActionPopup = { mode: 'delete', block };
+        return;
+      }
+      this.localDeleteManualReminder(block, 'all');
+    },
+
+    // ── Eksekusi hapus pengingat manual sesuai lingkup yang dipilih ──
+    // scope: 'this' (hanya tanggal ini), 'following' (ini dan seterusnya), 'all' (seluruh seri)
+    localDeleteManualReminder(block, scope) {
+      if (!block || !block.raw) return;
+      const rawId = block.raw.id;
+      if (!rawId) return;
+      const occurDate = block.dateStr || this.localSelectedDate || this.localFmtDate(new Date());
       try {
         const raw = WorkspaceStorage.getItem('ws_manual_notifs');
         let manuals = raw ? JSON.parse(raw) : [];
-        manuals = manuals.filter(m => m.id !== rawId);
+        const idx = manuals.findIndex(m => m.id === rawId);
+        if (idx === -1) { this.agendaDetailItem = null; this.recurActionPopup = null; return; }
+
+        if (scope === 'all') {
+          manuals = manuals.filter(m => m.id !== rawId);
+        } else if (scope === 'following') {
+          if (occurDate <= manuals[idx].date) {
+            // Hapus dari kejadian pertama — sama saja dengan hapus seluruh seri
+            manuals = manuals.filter(m => m.id !== rawId);
+          } else {
+            // Seri berhenti sehari sebelum tanggal ini — acara sebelumnya tetap ada
+            manuals[idx] = { ...manuals[idx], endDate: this.localDayBefore(occurDate) };
+          }
+        } else {
+          // 'this' — skip tanggal ini saja, sisanya tetap berulang seperti biasa
+          const excluded = Array.isArray(manuals[idx].excludedDates) ? [...manuals[idx].excludedDates] : [];
+          if (!excluded.includes(occurDate)) excluded.push(occurDate);
+          manuals[idx] = { ...manuals[idx], excludedDates: excluded };
+        }
+
         WorkspaceStorage.setItem('ws_manual_notifs', JSON.stringify(manuals));
         this.localStorageTick++;
-        // Dispatch event ke panel notif supaya badge update
         globalThis.dispatchEvent(new CustomEvent('ws-manual-notif-updated'));
         this.agendaDetailItem = null;
+        this.recurActionPopup = null;
       } catch(_e) { /* ignore */ }
     },
 
@@ -10379,24 +10476,63 @@ const GoogleCalendar = {
 
     localEditFromDetail(block) {
       if (!block || !block.raw) return;
-      // Prefill form edit dengan data existing
+      // Jika pengingat ini berulang, tanya dulu lingkup edit (ala Google Calendar)
+      const rec = block.raw.recurrence || 'none';
+      if (rec !== 'none') {
+        this.recurActionChoice = 'this';
+        this.recurActionPopup = { mode: 'edit', block };
+        return;
+      }
+      this.localOpenEditForm(block, 'all');
+    },
+
+    // ── Buka form edit, sesuaikan prefill berdasarkan lingkup yang dipilih ──
+    // scope: 'this' (buat exception khusus tanggal ini), 'following' (split seri dari tanggal ini), 'all' (edit seri penuh)
+    localOpenEditForm(block, scope) {
+      if (!block || !block.raw) return;
       const m = block.raw;
-      this.localNewReminder = {
-        title: m.title || '',
-        subtitle: m.subtitle || '',
-        date: m.date || this.localFmtDate(new Date()),
-        endDate: m.endDate || '',
-        time: m.time || '',
-        endTime: m.endTime || '',
-        page: m.page || '',
-        section: m.section || '',
-        targetItem: m.targetItem || '',
-        category: m.category || 'manual',
-        recurrence: m.recurrence || 'none',
-        _editId: m.id,  // simpan id lama untuk update di saveLocalReminder
-      };
-      this.customRecurrenceSaved = (m.recurrence === 'custom' && m.customRecurrence) ? { ...m.customRecurrence } : null;
+      const occurDate = block.dateStr || this.localSelectedDate || this.localFmtDate(new Date());
+
+      if (scope === 'this') {
+        // Buat entri baru non-berulang khusus tanggal ini, tanggal asal di-exclude dari seri lama
+        this.localNewReminder = {
+          title: m.title || '', subtitle: m.subtitle || '',
+          date: occurDate, endDate: '',
+          time: m.time || '', endTime: m.endTime || '',
+          page: m.page || '', section: m.section || '', targetItem: m.targetItem || '',
+          category: m.category || 'manual', recurrence: 'none',
+          _editId: null, // entri baru, bukan update id lama
+          _excludeFromSeriesId: m.id, _excludeDate: occurDate,
+        };
+        this.customRecurrenceSaved = null;
+      } else if (scope === 'following') {
+        // Seri lama akan dipotong (endDate = sehari sebelum tanggal ini) saat disimpan;
+        // form ini jadi seri BARU mulai dari tanggal occurrence dengan recurrence yang sama
+        this.localNewReminder = {
+          title: m.title || '', subtitle: m.subtitle || '',
+          date: occurDate, endDate: m.endDate || '',
+          time: m.time || '', endTime: m.endTime || '',
+          page: m.page || '', section: m.section || '', targetItem: m.targetItem || '',
+          category: m.category || 'manual', recurrence: m.recurrence || 'none',
+          _editId: null, // entri baru (seri kedua)
+          _splitFromSeriesId: m.id, _splitBeforeDate: occurDate,
+        };
+        this.customRecurrenceSaved = (m.recurrence === 'custom' && m.customRecurrence) ? { ...m.customRecurrence } : null;
+      } else {
+        // 'all' — edit seri penuh seperti biasa
+        this.localNewReminder = {
+          title: m.title || '', subtitle: m.subtitle || '',
+          date: m.date || this.localFmtDate(new Date()), endDate: m.endDate || '',
+          time: m.time || '', endTime: m.endTime || '',
+          page: m.page || '', section: m.section || '', targetItem: m.targetItem || '',
+          category: m.category || 'manual', recurrence: m.recurrence || 'none',
+          _editId: m.id,
+        };
+        this.customRecurrenceSaved = (m.recurrence === 'custom' && m.customRecurrence) ? { ...m.customRecurrence } : null;
+      }
+
       this.agendaDetailItem = null;
+      this.recurActionPopup = null;
       this.localShowForm = true;
     },
 
@@ -10646,6 +10782,30 @@ const GoogleCalendar = {
       } catch(_e) { manuals = []; }
       // Hapus entri lama (jika edit mode)
       if (editId) manuals = manuals.filter(m => m.id !== editId);
+
+      // ── Mode "acara ini saja" (edit): tanggal asal di-exclude dari seri lama, entri ini jadi exception berdiri sendiri ──
+      if (this.localNewReminder._excludeFromSeriesId && this.localNewReminder._excludeDate) {
+        const seriesIdx = manuals.findIndex(m => m.id === this.localNewReminder._excludeFromSeriesId);
+        if (seriesIdx !== -1) {
+          const excluded = Array.isArray(manuals[seriesIdx].excludedDates) ? [...manuals[seriesIdx].excludedDates] : [];
+          if (!excluded.includes(this.localNewReminder._excludeDate)) excluded.push(this.localNewReminder._excludeDate);
+          manuals[seriesIdx] = { ...manuals[seriesIdx], excludedDates: excluded };
+        }
+      }
+      // ── Mode "acara ini dan seterusnya" (edit): seri lama dipotong, entri ini jadi seri baru mulai tanggal occurrence ──
+      if (this.localNewReminder._splitFromSeriesId && this.localNewReminder._splitBeforeDate) {
+        const seriesIdx = manuals.findIndex(m => m.id === this.localNewReminder._splitFromSeriesId);
+        if (seriesIdx !== -1) {
+          const oldSeries = manuals[seriesIdx];
+          if (this.localNewReminder._splitBeforeDate <= oldSeries.date) {
+            // Diedit dari kejadian pertama — seri lama jadi kosong, hapus saja daripada disisakan dengan endDate < date
+            manuals.splice(seriesIdx, 1);
+          } else {
+            manuals[seriesIdx] = { ...oldSeries, endDate: this.localDayBefore(this.localNewReminder._splitBeforeDate) };
+          }
+        }
+      }
+
       manuals.push({
         id,
         date: this.localNewReminder.date,
@@ -10662,6 +10822,7 @@ const GoogleCalendar = {
         category: this.localNewReminder.category || 'manual',
         recurrence: this.localNewReminder.recurrence || 'none',
         customRecurrence: (this.localNewReminder.recurrence === 'custom' && this.customRecurrenceSaved) ? { ...this.customRecurrenceSaved } : null,
+        excludedDates: [],
         isHabit: false,
         isManual: true
       });

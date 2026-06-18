@@ -587,6 +587,67 @@
     }
     .agenda-detail-pop-enter-active { animation: agenda-detail-in 0.26s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     .agenda-detail-pop-leave-active { animation: agenda-detail-in 0.16s ease-in reverse; }
+
+    /* ── POPUP: pilih lingkup hapus/edit acara rutin (mirip Google Calendar) ── */
+    .recur-action-card {
+      background: var(--color-paper, #FAF7F2);
+      border-radius: 22px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.20), 0 2px 8px rgba(0,0,0,0.10);
+      width: min(360px, 90vw);
+      padding: 26px 28px 22px;
+      font-family: inherit;
+    }
+    .recur-action-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-dark, #3D2E22);
+      margin-bottom: 20px;
+    }
+    .recur-action-opt {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 9px 0;
+      cursor: pointer;
+      font-size: 14.5px;
+      color: var(--text-dark, #3D2E22);
+    }
+    .recur-action-radio {
+      width: 18px; height: 18px;
+      flex-shrink: 0;
+      accent-color: var(--color-terracotta, #D67B52);
+      cursor: pointer;
+    }
+    .recur-action-footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 18px;
+      margin-top: 22px;
+    }
+    .recur-action-btn-cancel {
+      background: none;
+      border: none;
+      color: var(--color-terracotta, #D67B52);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 8px 6px;
+      letter-spacing: 0.02em;
+    }
+    .recur-action-btn-cancel:hover { text-decoration: underline; }
+    .recur-action-btn-ok {
+      background: var(--color-terracotta, #D67B52);
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 9px 22px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .recur-action-btn-ok:hover { background: var(--color-terracotta-dark, #B8663F); }
   </style>
 </head>
 <body>
