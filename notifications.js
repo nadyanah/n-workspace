@@ -517,10 +517,11 @@ const ReminderPopup = {
       const pendingItems  = all.filter(a => !this._isDone(a.id));
       if (pendingItems.length === 0) return; // semua sudah selesai hari ini, skip
 
+      // Item tanpa waktu (timeVal -1 / allDay) tidak pernah "missed" — selalu upcoming
       // Gunakan > (bukan >=) agar item yang waktunya TEPAT saat ini masuk upcoming,
       // beri grace 1 menit sebelum dianggap missed.
-      const missedItems   = pendingItems.filter(a => nowMin > a.timeVal);
-      const upcomingItems = pendingItems.filter(a => nowMin <= a.timeVal);
+      const missedItems   = pendingItems.filter(a => a.timeVal >= 0 && nowMin > a.timeVal);
+      const upcomingItems = pendingItems.filter(a => a.timeVal < 0 || nowMin <= a.timeVal);
 
       // PRIORITAS 1 — ada yang kelewat → muncul mode missed dulu
       if (missedItems.length > 0) {
@@ -599,8 +600,9 @@ const ReminderPopup = {
       const nowMin   = this._nowMinutes();
       const shownLog = this._getShownLog()[this.todayStr] || {};
 
-      // Cek habit/manual reminders
+      // Cek habit/manual reminders — skip item tanpa waktu (timeVal -1) dari live trigger
       let due = this._allActions().find(a => {
+        if (a.timeVal < 0) return false; // allDay/tanpa waktu → tidak perlu live trigger jam
         const diff = nowMin - a.timeVal;
         return diff >= 0 && diff < 2 && !this._isDone(a.id) && !shownLog[a.id];
       });
@@ -718,7 +720,7 @@ const ReminderPopup = {
 
 
 // ── Helper: cek apakah pengingat manual berlaku pada tanggal tertentu ──
-// Mendukung recurrence ala Google Calendar: none, daily, weekly, monthly, yearly, weekday
+// Mendukung recurrence ala Google Calendar: none, daily, weekly, monthly, yearly, weekday, custom
 // startDate (m.date) = tanggal mulai berlaku; recurrence menentukan pengulangan setelahnya
 if (typeof reminderOccursOnDate === 'undefined') {
   var reminderOccursOnDate = function(m, dateStr) {
@@ -726,6 +728,60 @@ if (typeof reminderOccursOnDate === 'undefined') {
     const rec = m.recurrence || 'none';
     if (dateStr < m.date) return false; // belum mulai
     if (m.endDate && dateStr > m.endDate) return false; // sudah berakhir
+    // Tanggal yang di-exclude (mode "acara ini saja" saat edit seri)
+    if (m.excludedDates && m.excludedDates.includes(dateStr)) return false;
+
+    // ── Custom recurrence (interval bebas, bisa harian/mingguan/bulanan/tahunan) ──
+    if (rec === 'custom' && m.customRecurrence) {
+      const c = m.customRecurrence;
+      const start = new Date(m.date + 'T00:00:00');
+      const target = new Date(dateStr + 'T00:00:00');
+      if (isNaN(start) || isNaN(target)) return m.date === dateStr;
+      // cek endDate / count
+      if (c.endType === 'date' && c.endDate && dateStr > c.endDate) return false;
+      const msPerDay = 86400000;
+      const diffDays = Math.round((target - start) / msPerDay);
+      const interval = Math.max(1, c.interval || 1);
+      if (c.unit === 'day') {
+        if (diffDays % interval !== 0) return false;
+        if (c.endType === 'count') return Math.floor(diffDays / interval) < c.count;
+        return true;
+      }
+      if (c.unit === 'week') {
+        const days = c.days && c.days.length > 0 ? c.days : [start.getDay()];
+        if (!days.includes(target.getDay())) return false;
+        const weekDiff = Math.floor(diffDays / 7);
+        if (weekDiff % interval !== 0) return false;
+        if (c.endType === 'count') {
+          let count = 0;
+          const cur = new Date(start);
+          while (cur <= target) {
+            const wd = Math.round((cur - start) / msPerDay);
+            const wk = Math.floor(wd / 7);
+            if (wk % interval === 0 && days.includes(cur.getDay())) count++;
+            cur.setDate(cur.getDate() + 1);
+          }
+          return count <= c.count;
+        }
+        return true;
+      }
+      if (c.unit === 'month') {
+        if (target.getDate() !== start.getDate()) return false;
+        const monthDiff = (target.getFullYear() - start.getFullYear()) * 12 + (target.getMonth() - start.getMonth());
+        if (monthDiff % interval !== 0) return false;
+        if (c.endType === 'count') return Math.floor(monthDiff / interval) < c.count;
+        return true;
+      }
+      if (c.unit === 'year') {
+        if (target.getDate() !== start.getDate() || target.getMonth() !== start.getMonth()) return false;
+        const yearDiff = target.getFullYear() - start.getFullYear();
+        if (yearDiff % interval !== 0) return false;
+        if (c.endType === 'count') return Math.floor(yearDiff / interval) < c.count;
+        return true;
+      }
+      return false;
+    }
+
     if (rec === 'none') return m.date === dateStr;
 
     const start = new Date(m.date + 'T00:00:00');
@@ -1542,7 +1598,7 @@ const NotificationPanel = {
           badge: pm.badge,
           badgeColor: pm.color,
           page: 'jobLogbook',
-          time: p.time || null,
+          time: p.time ? (p.timeEnd ? p.time + ' – ' + p.timeEnd : p.time) : null,
           timeVal,
           hasTime: !!p.time,
           done
@@ -1987,12 +2043,13 @@ const NotificationPanel = {
         monthName = monthNames[d.getMonth()];
       } catch(_e) {}
       const map = {
-        none: 'Tidak berulang',
-        daily: 'Harian',
-        weekly: 'Mingguan pada hari ' + dayName,
-        monthly: 'Bulanan pada tanggal ' + dateNum,
-        yearly: 'Tiap tahun pada ' + dateNum + ' ' + monthName,
-        weekday: 'Setiap hari kerja (Senin–Jumat)'
+        none:    'Tidak berulang',
+        daily:   'Setiap hari',
+        weekly:  'Setiap ' + dayName,
+        monthly: 'Setiap tanggal ' + dateNum,
+        yearly:  'Setiap tahun, ' + dateNum + ' ' + monthName,
+        weekday: 'Setiap hari kerja (Senin–Jumat)',
+        custom:  'Sesuaikan...',
       };
       return map[rec] || map.none;
     },
@@ -2464,15 +2521,26 @@ const MissedTasksPage = {
         const raw = WorkspaceStorage.getItem('ws_manual_notifs');
         let manuals = raw ? JSON.parse(raw) : [];
         // Hapus entri lama dengan id yang sama (jika ada)
+        const oldEntry = manuals.find(m => m.id === this.rescheduleTask.id);
         manuals = manuals.filter(m => m.id !== this.rescheduleTask.id);
-        // Tambah jadwal baru
+        // Hitung timeVal baru
+        const [hh, mm] = this.rescheduleTime.split(':').map(Number);
+        const timeVal = hh * 60 + (mm || 0);
+        // Tambah jadwal baru — pertahankan semua field asli (recurrence, category, endTime, page, dll)
         const newId = 'manual_' + Date.now();
         manuals.push({
+          ...(oldEntry || {}),           // salin semua field asli jika ada
           id: newId,
           title: this.rescheduleTask.title,
-          subtitle: this.rescheduleTask.subtitle || '',
+          subtitle: this.rescheduleTask.subtitle || 'Pengingat manual',
           time: this.rescheduleTime,
-          date: this.rescheduleDate
+          timeVal,
+          date: this.rescheduleDate,
+          endDate: null,                 // jadwal ulang: reset endDate agar berlaku mulai hari itu
+          recurrence: 'none',            // jadwal ulang: jangan ulang otomatis, biarkan user set manual
+          excludedDates: [],
+          isManual: true,
+          isHabit: false,
         });
         WorkspaceStorage.setItem('ws_manual_notifs', JSON.stringify(manuals));
         // Dispatch event agar NotificationPanel reload

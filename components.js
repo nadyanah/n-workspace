@@ -8899,7 +8899,7 @@ const GoogleCalendar = {
                   @click.stop="localShowAgendaDetail(block)"
                 >
                   <span class="gcal-agenda-block-title" :style="block.done ? 'text-decoration:line-through; opacity:0.55;' : ''">{{ block.title }}</span>
-                  <span class="gcal-agenda-block-time">{{ block.startLabel }}</span>
+                  <span class="gcal-agenda-block-time">{{ block.endLabel ? block.startLabel + ' – ' + block.endLabel : block.startLabel }}</span>
                 </div>
               </div>
             </div>
@@ -9158,13 +9158,31 @@ const GoogleCalendar = {
                   </div>
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                     <div>
-                      <label class="gcal-label">Jam Mulai *</label>
-                      <input type="time" class="gcal-input" v-model="localNewReminder.time" />
+                      <label class="gcal-label" style="display:flex;align-items:center;gap:6px;">
+                        Jam Mulai
+                        <span style="font-size:9.5px;color:var(--text-muted);font-weight:400;font-style:italic;">(opsional)</span>
+                      </label>
+                      <input type="time" class="gcal-input" v-model="localNewReminder.time" :disabled="localNewReminder.allDay" :style="localNewReminder.allDay ? 'opacity:0.4;cursor:not-allowed;' : ''" />
                     </div>
                     <div>
-                      <label class="gcal-label">Jam Selesai</label>
-                      <input type="time" class="gcal-input" v-model="localNewReminder.endTime" />
+                      <label class="gcal-label" style="display:flex;align-items:center;gap:6px;">
+                        Jam Selesai
+                        <span style="font-size:9.5px;color:var(--text-muted);font-weight:400;font-style:italic;">(opsional)</span>
+                      </label>
+                      <input type="time" class="gcal-input" v-model="localNewReminder.endTime" :disabled="localNewReminder.allDay" :style="localNewReminder.allDay ? 'opacity:0.4;cursor:not-allowed;' : ''" />
                     </div>
+                  </div>
+                  <!-- Toggle: Tanpa waktu / sepanjang hari -->
+                  <div style="display:flex;align-items:center;gap:8px;margin-top:-4px;">
+                    <label style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
+                      <div @click="localNewReminder.allDay = !localNewReminder.allDay; if(localNewReminder.allDay){ localNewReminder.time=''; localNewReminder.endTime=''; }"
+                           style="width:32px;height:17px;border-radius:9px;transition:background 0.2s;display:flex;align-items:center;padding:0 2px;cursor:pointer;flex-shrink:0;"
+                           :style="localNewReminder.allDay ? 'background:var(--color-terracotta,#D67B52);' : 'background:#ccc;'">
+                        <div style="width:13px;height:13px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.22);transition:transform 0.2s;"
+                             :style="localNewReminder.allDay ? 'transform:translateX(15px);' : 'transform:translateX(0);'"></div>
+                      </div>
+                      <span style="font-size:11.5px;color:var(--text-secondary,#7A6F66);">Tanpa waktu (sepanjang hari)</span>
+                    </label>
                   </div>
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                     <div>
@@ -9300,7 +9318,7 @@ const GoogleCalendar = {
               <!-- ── Footer tombol, full width di bawah kedua kolom ── -->
               <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1.5px solid var(--color-sand,#D6CEC5);">
                 <button class="gcal-btn-ghost" @click="localCancelReminderForm">Batal</button>
-                <button class="gcal-btn-save" :disabled="!localNewReminder.title.trim() || !localNewReminder.date || !localNewReminder.time" @click="localAddReminder()">Simpan Pengingat</button>
+                <button class="gcal-btn-save" :disabled="!localNewReminder.title.trim() || !localNewReminder.date" @click="localAddReminder()">Simpan Pengingat</button>
               </div>
 
             </div>
@@ -10323,8 +10341,21 @@ const GoogleCalendar = {
       if (!rec || rec === 'none') return 'Tidak berulang';
       if (rec === 'daily') return 'Setiap hari';
       if (rec === 'weekday') return 'Setiap hari kerja (Sen–Jum)';
-      if (rec === 'monthly') return 'Bulanan';
-      if (rec === 'yearly') return 'Tahunan';
+      if (rec === 'monthly') {
+        if (startDate) {
+          const d = new Date(startDate + 'T12:00:00');
+          return `Setiap tanggal ${d.getDate()}`;
+        }
+        return 'Bulanan';
+      }
+      if (rec === 'yearly') {
+        if (startDate) {
+          const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+          const d = new Date(startDate + 'T12:00:00');
+          return `Setiap tahun, ${d.getDate()} ${months[d.getMonth()]}`;
+        }
+        return 'Tahunan';
+      }
       if (rec === 'weekly') {
         if (startDate) {
           const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
@@ -10384,11 +10415,11 @@ const GoogleCalendar = {
       this.localShowForm = false;
       this.localShowRecurrenceDropdown = false;
       this.customRecurrenceSaved = null;
-      this.localNewReminder = { title:'', subtitle:'', date: this.localFmtDate(new Date()), endDate: '', time:'', endTime:'', page:'', section:'', targetItem:'', category: 'manual', recurrence: 'none' };
+      this.localNewReminder = { title:'', subtitle:'', date: this.localFmtDate(new Date()), endDate: '', time:'', endTime:'', allDay: false, page:'', section:'', targetItem:'', category: 'manual', recurrence: 'none' };
     },
     // ── Reset form pengingat sepenuhnya (hapus sisa flag split/exclude dari sesi edit sebelumnya) lalu buka modal ──
     localResetReminderFormAndOpen() {
-      this.localNewReminder = { title:'', subtitle:'', date: this.localFmtDate(new Date()), endDate: '', time:'', endTime:'', page:'', section:'', targetItem:'', category: 'manual', recurrence: 'none' };
+      this.localNewReminder = { title:'', subtitle:'', date: this.localFmtDate(new Date()), endDate: '', time:'', endTime:'', allDay: false, page:'', section:'', targetItem:'', category: 'manual', recurrence: 'none' };
       this.customRecurrenceSaved = null;
       this.localShowForm = true;
     },
@@ -10763,12 +10794,16 @@ const GoogleCalendar = {
     localAddReminder() {
       if (!this.localNewReminder.title.trim()) { this.localError = 'Judul pengingat tidak boleh kosong!'; return; }
       if (!this.localNewReminder.date) { this.localError = 'Tanggal mulai harus diisi!'; return; }
-      if (!this.localNewReminder.time) { this.localError = 'Jam mulai harus diisi!'; return; }
       if (this.localNewReminder.endDate && this.localNewReminder.endDate < this.localNewReminder.date) { this.localError = 'Tanggal selesai tidak boleh sebelum tanggal mulai!'; return; }
-      if (this.localNewReminder.endTime && this.localNewReminder.endTime <= this.localNewReminder.time) { this.localError = 'Jam selesai harus setelah jam mulai!'; return; }
-      const [hh, mm] = this.localNewReminder.time.split(':').map(Number);
+      if (this.localNewReminder.time && this.localNewReminder.endTime && this.localNewReminder.endTime <= this.localNewReminder.time) { this.localError = 'Jam selesai harus setelah jam mulai!'; return; }
+      // timeVal: -1 kalau tanpa waktu (all-day), supaya muncul di bagian atas panel notif
+      let timeVal = -1;
+      if (!this.localNewReminder.allDay && this.localNewReminder.time) {
+        const [hh, mm] = this.localNewReminder.time.split(':').map(Number);
+        timeVal = hh * 60 + (mm || 0);
+      }
       let endTimeVal = null;
-      if (this.localNewReminder.endTime) {
+      if (this.localNewReminder.endTime && !this.localNewReminder.allDay) {
         const [eh, em] = this.localNewReminder.endTime.split(':').map(Number);
         endTimeVal = eh * 60 + (em || 0);
       }
@@ -10812,10 +10847,11 @@ const GoogleCalendar = {
         endDate: this.localNewReminder.endDate || null,
         title: this.localNewReminder.title.trim(),
         subtitle: this.localNewReminder.subtitle.trim() || 'Pengingat manual',
-        time: this.localNewReminder.time,
-        timeVal: hh * 60 + (mm || 0),
-        endTime: this.localNewReminder.endTime || null,
+        time: (this.localNewReminder.allDay || !this.localNewReminder.time) ? null : this.localNewReminder.time,
+        timeVal,
+        endTime: (!this.localNewReminder.allDay && this.localNewReminder.endTime) ? this.localNewReminder.endTime : null,
         endTimeVal,
+        allDay: !!(this.localNewReminder.allDay || !this.localNewReminder.time),
         page: this.localNewReminder.page || null,
         section: this.localNewReminder.section || null,
         targetItem: this.localNewReminder.targetItem || null,
@@ -10835,7 +10871,7 @@ const GoogleCalendar = {
       this.customRecurrenceSaved = null;
       this.localSelectedDate = this.localNewReminder.date;
       this.localView = 'agenda';
-      this.localNewReminder = { title:'', subtitle:'', date: this.localFmtDate(new Date()), endDate: '', time:'', endTime:'', page:'', section:'', targetItem:'', category: 'manual', recurrence: 'none' };
+      this.localNewReminder = { title:'', subtitle:'', date: this.localFmtDate(new Date()), endDate: '', time:'', endTime:'', allDay: false, page:'', section:'', targetItem:'', category: 'manual', recurrence: 'none' };
       setTimeout(() => { this.localSuccess = null; }, 3000);
     },
     // ── Recurrence helper: label & opsi sesuai tanggal mulai (ala Google Calendar) ──
@@ -10850,13 +10886,13 @@ const GoogleCalendar = {
         monthName = monthNames[d.getMonth()];
       } catch(_e) {}
       const map = {
-        none: 'Tidak berulang',
-        daily: 'Harian',
-        weekly: 'Mingguan pada hari ' + dayName,
-        monthly: 'Bulanan pada tanggal ' + dateNum,
-        yearly: 'Tiap tahun pada ' + dateNum + ' ' + monthName,
+        none:    'Tidak berulang',
+        daily:   'Setiap hari',
+        weekly:  'Setiap ' + dayName,
+        monthly: 'Setiap tanggal ' + dateNum,
+        yearly:  'Setiap tahun, ' + dateNum + ' ' + monthName,
         weekday: 'Setiap hari kerja (Senin–Jumat)',
-        custom: 'Sesuaikan...',
+        custom:  'Sesuaikan...',
       };
       return map[rec] || map.none;
     },
