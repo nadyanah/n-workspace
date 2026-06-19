@@ -10084,7 +10084,7 @@ const GoogleCalendar = {
         raw: item.raw,
         isTaskPlan: !!item.isTaskPlan,
         top: item.startMin,
-        height: Math.max(item.endMin - item.startMin, 30),
+        height: Math.max(item.endMin - item.startMin, 15),
         col: item.col,
         totalCols,
         startLabel: fmt(item.startMin),
@@ -10415,11 +10415,13 @@ const GoogleCalendar = {
       this.localShowForm = false;
       this.localShowRecurrenceDropdown = false;
       this.customRecurrenceSaved = null;
-      this.localNewReminder = { title:'', subtitle:'', date: this.localFmtDate(new Date()), endDate: '', time:'', endTime:'', allDay: false, page:'', section:'', targetItem:'', category: 'manual', recurrence: 'none' };
+      const defaultDate = (this.localView === 'agenda' && this.localSelectedDate) ? this.localSelectedDate : this.localFmtDate(new Date());
+      this.localNewReminder = { title:'', subtitle:'', date: defaultDate, endDate: '', time:'', endTime:'', allDay: false, page:'', section:'', targetItem:'', category: 'manual', recurrence: 'none' };
     },
     // ── Reset form pengingat sepenuhnya (hapus sisa flag split/exclude dari sesi edit sebelumnya) lalu buka modal ──
     localResetReminderFormAndOpen() {
-      this.localNewReminder = { title:'', subtitle:'', date: this.localFmtDate(new Date()), endDate: '', time:'', endTime:'', allDay: false, page:'', section:'', targetItem:'', category: 'manual', recurrence: 'none' };
+      const defaultDate = (this.localView === 'agenda' && this.localSelectedDate) ? this.localSelectedDate : this.localFmtDate(new Date());
+      this.localNewReminder = { title:'', subtitle:'', date: defaultDate, endDate: '', time:'', endTime:'', allDay: false, page:'', section:'', targetItem:'', category: 'manual', recurrence: 'none' };
       this.customRecurrenceSaved = null;
       this.localShowForm = true;
     },
