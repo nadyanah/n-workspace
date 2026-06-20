@@ -14662,7 +14662,42 @@ const MyPortfolio = {
             {{ exp.role }}<template v-if="exp.company"> — {{ exp.company }}</template><template v-if="exp.period"> ({{ exp.period }})</template>
           </option>
         </select>
+        <div class="mp-search-wrap">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mp-search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="form-input mp-search-input" v-model="portfolioGlobalSearch"
+            placeholder="Cari semua data di My Portfolio..." />
+          <button v-if="portfolioGlobalSearch" class="mp-search-clear" title="Hapus pencarian" @click="portfolioGlobalSearch = ''">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
       </div>
+
+      <template v-if="isGlobalSearching">
+        <div v-if="!globalSearchResults.length" class="mp-empty-state" style="padding: 40px 24px;">
+          <p class="mp-empty-title">Tidak ada hasil</p>
+          <p class="mp-empty-sub">Tidak ada task yang cocok dengan "{{ portfolioGlobalSearch }}".</p>
+        </div>
+        <div v-else class="mp-search-results">
+          <p class="mp-search-results-count">{{ globalSearchResults.length }} task ditemukan</p>
+          <div v-for="r in globalSearchResults" :key="r.task.id" class="mp-search-result-row">
+            <div class="mp-search-result-main">
+              <span class="mp-search-result-exp">{{ r.expLabel }}</span>
+              <p class="mp-search-result-title">{{ r.task.title }}</p>
+              <div v-if="(r.task.keywords || []).length" class="mp-bukti-chips" style="margin-top:4px;">
+                <span v-for="kw in r.task.keywords" :key="kw" class="mp-bukti-chip">
+                  <span class="mp-bukti-chip-text">{{ kw }}</span>
+                </span>
+              </div>
+            </div>
+            <span class="mp-status-select" :class="r.task.status === 'fix' ? 'mp-status-fix' : 'mp-status-draft'" style="cursor:default;">
+              {{ r.task.status === 'fix' ? 'Fix' : 'Draft' }}
+            </span>
+            <button class="cf-btn-ghost" @click="openSearchResult(r.expKey)">Buka</button>
+          </div>
+        </div>
+      </template>
+
+      <template v-else>
 
       <!-- ── Catatan Pengalaman: ikut menyesuaikan filter Pengalaman Kerja di atas ── -->
       <div class="mp-note-card">
@@ -14804,6 +14839,7 @@ const MyPortfolio = {
           Task berstatus <strong>Fix</strong> akan otomatis tampil sebagai Poin Pencapaian pada entri ini di CV ATS.
         </p>
       </template>
+      </template>
     </template>
 
     <!-- ══ MODAL: Pilih Bukti Kerja (multiselect dari Riwayat Kegiatan Kerja / Job Logbook) ══ -->
@@ -14858,11 +14894,15 @@ const MyPortfolio = {
           </div>
           <div class="cf-modal-body">
             <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 2px; line-height:1.6;">Pilih satu atau lebih kata kunci untuk task ini. Kelola daftar kata kunci di sidebar halaman <strong>Career Foundation</strong>.</p>
+            <input type="text" class="cf-input" v-model="keywordModalSearch" placeholder="Cari kata kunci..." />
             <div v-if="!keywordBank.length" style="font-size:12.5px; color: var(--text-muted); text-align:center; padding: 28px 0;">
               Belum ada kata kunci di bank. Tambahkan dulu di sidebar halaman <strong>Career Foundation</strong>.
             </div>
+            <div v-else-if="!filteredKeywordBank.length" style="font-size:12.5px; color: var(--text-muted); text-align:center; padding: 28px 0;">
+              Tidak ada kata kunci yang cocok dengan pencarian.
+            </div>
             <div v-else class="mp-bukti-modal-list">
-              <label v-for="kw in keywordBank" :key="kw" class="mp-bukti-modal-item">
+              <label v-for="kw in filteredKeywordBank" :key="kw" class="mp-bukti-modal-item">
                 <input type="checkbox" :checked="isTaskKeywordChecked(kw)" @change="toggleTaskKeyword(kw)" />
                 <div class="mp-bukti-modal-item-text">
                   <p class="mp-bukti-modal-item-task">{{ kw }}</p>
@@ -14974,6 +15014,7 @@ const MyPortfolio = {
     return {
       atsCV: { experience: '', experienceEntries: [] },
       selectedExpKey: '',
+      portfolioGlobalSearch: '',
       portfolioTasks: {}, // { [expKey]: [{ id, title, status, buktiKerja: [logId, ...], insightSummary }] }
       experienceNotes: {}, // { [expKey]: noteString } — catatan umum per pengalaman kerja, ikut filter di atas
       newTaskTitle: '',
@@ -14984,6 +15025,7 @@ const MyPortfolio = {
       buktiModalSearch: '',
       keywordBank: [], // master list kata kunci, dikelola di halaman Career Foundation
       keywordModalTaskId: null,
+      keywordModalSearch: '',
       insightModalTaskId: null,
       insightModalDraft: '',
       insightModalMode: 'view', // 'view' (read-only) | 'edit' (textarea)
@@ -15032,6 +15074,33 @@ const MyPortfolio = {
       return this.portfolioTasks[this.selectedExperience.key] || [];
     },
 
+    // ── Search bar global: cari semua data task (judul, kata kunci, insight, status, pengalaman) di SEMUA pengalaman kerja ──
+    isGlobalSearching() {
+      return this.portfolioGlobalSearch.trim().length > 0;
+    },
+    globalSearchResults() {
+      const q = this.portfolioGlobalSearch.trim().toLowerCase();
+      if (!q) return [];
+      const results = [];
+      this.experiences.forEach(exp => {
+        const expLabel = exp.role + (exp.company ? ' — ' + exp.company : '') + (exp.period ? ' (' + exp.period + ')' : '');
+        const list = this.portfolioTasks[exp.key] || [];
+        list.forEach(task => {
+          const haystacks = [
+            task.title || '',
+            (task.keywords || []).join(' '),
+            task.insightSummary || '',
+            task.status === 'fix' ? 'fix' : 'draft',
+            expLabel,
+          ];
+          if (haystacks.some(h => h.toLowerCase().includes(q))) {
+            results.push({ task, expKey: exp.key, expLabel });
+          }
+        });
+      });
+      return results;
+    },
+
     // ── Bukti Kerja: list Riwayat Kegiatan Kerja, terbaru dulu, difilter pencarian modal ──
     filteredJobLogsForModal() {
       const sorted = [...this.jobLogs].sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -15042,6 +15111,13 @@ const MyPortfolio = {
         (l.category || '').toLowerCase().includes(q) ||
         (l.achievements || '').toLowerCase().includes(q)
       );
+    },
+
+    // ── Kata Kunci: bank kata kunci, difilter pencarian modal ──
+    filteredKeywordBank() {
+      const q = this.keywordModalSearch.trim().toLowerCase();
+      if (!q) return this.keywordBank;
+      return this.keywordBank.filter(kw => kw.toLowerCase().includes(q));
     },
 
     buktiModalSelectedCount() {
@@ -15065,6 +15141,11 @@ const MyPortfolio = {
   },
 
   methods: {
+    openSearchResult(expKey) {
+      this.selectedExpKey = expKey;
+      this.portfolioGlobalSearch = '';
+    },
+
     addTask() {
       const title = this.newTaskTitle.trim();
       if (!title || !this.selectedExperience) return;
@@ -15103,9 +15184,11 @@ const MyPortfolio = {
     openKeywordModal(taskId) {
       this.loadKeywordBank();
       this.keywordModalTaskId = taskId;
+      this.keywordModalSearch = '';
     },
     closeKeywordModal() {
       this.keywordModalTaskId = null;
+      this.keywordModalSearch = '';
     },
     isTaskKeywordChecked(kw) {
       const task = this.getTaskById(this.keywordModalTaskId);

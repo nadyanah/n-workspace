@@ -7220,6 +7220,96 @@ input:checked + .switch-slider:before {
   font-size: 13px;
   cursor: pointer;
 }
+.mp-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  max-width: 360px;
+  display: flex;
+  align-items: center;
+}
+.mp-search-icon {
+  position: absolute;
+  left: 11px;
+  color: var(--text-muted, #6E6359);
+  pointer-events: none;
+}
+.mp-search-input {
+  width: 100%;
+  height: 38px;
+  padding: 0 32px 0 32px;
+  font-size: 13px;
+}
+.mp-search-clear {
+  position: absolute;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-sand-light, #EDE8E1);
+  border: none;
+  border-radius: 50%;
+  color: var(--text-muted, #6E6359);
+  cursor: pointer;
+}
+.mp-search-clear:hover {
+  background: var(--color-sand, #E8DFD8);
+}
+.mp-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mp-search-results-count {
+  font-size: 12px;
+  color: var(--text-muted, #6E6359);
+  margin: 0 0 4px;
+  font-family: 'Hack', monospace;
+}
+.mp-search-result-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 12px;
+}
+.mp-search-result-row:hover {
+  border-color: var(--color-terracotta, #D67B52);
+}
+.mp-search-result-main {
+  flex: 1;
+  min-width: 0;
+}
+.mp-search-result-exp {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-terracotta, #D67B52);
+  background: rgba(214,123,82,0.08);
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+.mp-search-result-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-dark, #2C2621);
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .mp-search-wrap {
+    max-width: 100%;
+  }
+  .mp-search-result-row {
+    flex-wrap: wrap;
+  }
+}
 .mp-table-container {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
