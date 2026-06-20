@@ -14610,12 +14610,33 @@ const MyPortfolio = {
                 <th style="width: 240px;">Bukti Kerja</th>
                 <th style="width: 160px;">Rangkuman Insight</th>
                 <th style="width: 150px;">Status</th>
-                <th style="width: 44px;"></th>
+                <th style="width: 74px;"></th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="task in tableTasks" :key="task.id">
-                <td>{{ task.title }}</td>
+                <td>
+                  <template v-if="editingTaskId === task.id">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <input type="text" class="form-input" v-model="editingTaskTitle"
+                        style="flex: 1; height: 32px; font-size: 13px; padding: 0 9px; border-radius: 7px;"
+                        @keyup.enter="saveEditTask"
+                        @keyup.esc="cancelEditTask"
+                        ref="editTaskInput" />
+                      <button @click="saveEditTask" title="Simpan"
+                        style="height: 32px; padding: 0 10px; background: var(--color-terracotta); color: #fff; border: none; border-radius: 7px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap;">
+                        Simpan
+                      </button>
+                      <button @click="cancelEditTask" title="Batal"
+                        style="height: 32px; padding: 0 10px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); border-radius: 7px; font-size: 11.5px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap;">
+                        Batal
+                      </button>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <span>{{ task.title }}</span>
+                  </template>
+                </td>
                 <td>
                   <div class="mp-bukti-cell">
                     <div v-if="getSelectedBuktiLogs(task).length" class="mp-bukti-chips">
@@ -14651,9 +14672,16 @@ const MyPortfolio = {
                   </select>
                 </td>
                 <td>
-                  <button class="mp-task-delete-btn" title="Hapus task" @click="deleteTask(task.id)">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-                  </button>
+                  <div style="display: flex; align-items: center; gap: 5px; justify-content: center;">
+                    <button class="mp-task-edit-btn" title="Edit judul task" @click="startEditTask(task)"
+                      style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--color-sand); border-radius: 7px; background: var(--bg-cream); color: var(--text-muted); cursor: pointer; transition: border-color 0.15s, color 0.15s;"
+                      onmouseover="this.style.borderColor='var(--color-terracotta)';this.style.color='var(--color-terracotta)'" onmouseout="this.style.borderColor='var(--color-sand)';this.style.color='var(--text-muted)'">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="mp-task-delete-btn" title="Hapus task" @click="deleteTask(task.id)">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -14807,6 +14835,8 @@ const MyPortfolio = {
       portfolioTasks: {}, // { [expKey]: [{ id, title, status, buktiKerja: [logId, ...], insightSummary }] }
       experienceNotes: {}, // { [expKey]: noteString } — catatan umum per pengalaman kerja, ikut filter di atas
       newTaskTitle: '',
+      editingTaskId: null,    // id task yang sedang diedit judulnya
+      editingTaskTitle: '',   // draft judul yang sedang diedit
       jobLogs: [], // dari Riwayat Kegiatan Kerja (Job Logbook)
       buktiModalTaskId: null,
       buktiModalSearch: '',
@@ -14917,6 +14947,33 @@ const MyPortfolio = {
       const list = (this.portfolioTasks[key] || []).filter(t => t.id !== taskId);
       this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
       this.saveTasks();
+    },
+
+    startEditTask(task) {
+      this.editingTaskId = task.id;
+      this.editingTaskTitle = task.title;
+      this.$nextTick(() => {
+        const el = this.$el.querySelector('[ref="editTaskInput"], input[type="text"][style*="flex: 1"]');
+        if (el) el.focus();
+      });
+    },
+
+    saveEditTask() {
+      const title = this.editingTaskTitle.trim();
+      if (!title || !this.selectedExperience || !this.editingTaskId) { this.cancelEditTask(); return; }
+      const key = this.selectedExperience.key;
+      const list = (this.portfolioTasks[key] || []).map(t =>
+        t.id === this.editingTaskId ? { ...t, title } : t
+      );
+      this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
+      this.saveTasks();
+      this.editingTaskId = null;
+      this.editingTaskTitle = '';
+    },
+
+    cancelEditTask() {
+      this.editingTaskId = null;
+      this.editingTaskTitle = '';
     },
 
     saveTasks() {
