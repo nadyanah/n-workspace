@@ -4749,88 +4749,83 @@ const InterviewPractice = {
   template: `
     <div class="interview-practice">
 
-      <!-- ═══ HEADER ═══ -->
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-        <div>
-          <h2 style="font-size: 24px; font-weight: 800; color: #2C2621; margin: 0; display: flex; align-items: center; gap: 8px;">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
-            Daily Interview Practice
-          </h2>
-          <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 4px;">Practice Room : Tarik tuas, acak pertanyaan, rekam suara dengan framework STAR/PREP/PPF.</p>
+      <!-- ═══ HERO HEADER ═══ -->
+      <div class="ip-hero">
+        <div class="ip-hero-left">
+          <div class="ip-hero-eyebrow">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+            Practice Room
+          </div>
+          <h2 class="ip-hero-title">Daily Interview Practice</h2>
+          <p class="ip-hero-sub">Tarik tuas, acak pertanyaan, rekam suara dengan framework STAR / PREP / PPF.</p>
         </div>
-        <!-- Mode switcher + Kelola button -->
-        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-          <!-- Mode Toggle Pill -->
-          <div style="display: flex; gap: 2px; background: #F3EDE5; border: 1.5px solid #EAE5DD; border-radius: 10px; padding: 3px;">
-            <button type="button" @click="setMode('manual')"
-                    :style="activeMode==='manual' ? {background:'#1C3B34',color:'#fff'} : {background:'transparent',color:'#5D4F43'}"
-                    style="border:none; font-size:12px; padding:0 14px; border-radius:7px; font-weight:700; height:32px; display:inline-flex; align-items:center; gap:5px; cursor:pointer; transition:all 0.18s; white-space:nowrap;">
+        <div class="ip-hero-actions">
+          <!-- Mode Toggle -->
+          <div class="ip-mode-toggle">
+            <button type="button" class="ip-mode-btn" :class="{ 'ip-mode-btn--active-manual': activeMode==='manual' }" @click="setMode('manual')">
               <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
               Self-Interview
             </button>
-            <button type="button" @click="setMode('ai')"
-                    :style="activeMode==='ai' ? {background:'var(--color-terracotta)',color:'#fff'} : {background:'transparent',color:'#5D4F43'}"
-                    style="border:none; font-size:12px; padding:0 14px; border-radius:7px; font-weight:700; height:32px; display:inline-flex; align-items:center; gap:5px; cursor:pointer; transition:all 0.18s; white-space:nowrap;">
+            <button type="button" class="ip-mode-btn" :class="{ 'ip-mode-btn--active-ai': activeMode==='ai' }" @click="setMode('ai')">
               <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.28 1.28L3 12l5.8 1.9a2 2 0 0 1 1.28 1.28L12 21l1.9-5.8a2 2 0 0 1 1.28-1.28L21 12l-5.8-1.9a2 2 0 0 1-1.28-1.28Z"></path></svg>
               Interview with AI
             </button>
           </div>
-          <!-- Kelola button — disabled in AI mode -->
-          <button class="btn btn-secondary" @click="toggleManagePanel"
+          <!-- Kelola Button -->
+          <button class="ip-manage-btn" @click="toggleManagePanel"
                   :disabled="activeMode === 'ai'"
-                  :style="activeMode==='ai' ? {opacity:'0.4',cursor:'not-allowed'} : {}"
-                  style="font-family:'Outfit',sans-serif; font-weight:700; font-size:12.5px; display:inline-flex; align-items:center; gap:6px; border:1.5px solid #EAE5DD; background-color:#FFFFFF; height:36px; padding:0 14px; border-radius:8px; cursor:pointer;">
+                  :style="activeMode==='ai' ? {opacity:'0.38',cursor:'not-allowed'} : {}">
             <template v-if="showManagePanel && activeMode==='manual'">
               <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
               Sembunyikan
             </template>
             <template v-else>
               <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-              Kelola Pertanyaan
+              Kelola Soal
             </template>
           </button>
         </div>
       </div>
 
       <!-- ═══ MODE BADGE ═══ -->
-      <div style="margin-bottom: 18px;">
-        <div v-if="activeMode==='manual'" style="display:inline-flex; align-items:center; gap:6px; background:#EBF5F0; border:1.5px solid #A8D5C0; border-radius:8px; padding:6px 14px; font-size:12px; font-weight:700; color:#1C3B34;">
+      <div style="margin-bottom: 20px;">
+        <div v-if="activeMode==='manual'" class="ip-mode-badge ip-mode-badge--manual">
           <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-          Mode: Self-Interview (Manual) — Bank soal dari daftar pertanyaan Anda
+          Mode: Self-Interview — Bank soal dari daftar pertanyaan kamu
         </div>
-        <div v-else style="display:inline-flex; align-items:center; gap:6px; background:#FAF0EC; border:1.5px solid #F3C9B5; border-radius:8px; padding:6px 14px; font-size:12px; font-weight:700; color:#9B3A1A;">
+        <div v-else class="ip-mode-badge ip-mode-badge--ai">
           <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.28 1.28L3 12l5.8 1.9a2 2 0 0 1 1.28 1.28L12 21l1.9-5.8a2 2 0 0 1 1.28-1.28L21 12l-5.8-1.9a2 2 0 0 1-1.28-1.28Z"></path></svg>
           Mode: Interview with AI — Bank soal diisi dinamis dari Gemini API
-          <span v-if="aiQuestionBank.length > 0" style="background:var(--color-terracotta); color:#fff; border-radius:20px; padding:1px 8px; font-size:10px; margin-left:4px;">{{ aiQuestionBank.length }} soal siap</span>
+          <span v-if="aiQuestionBank.length > 0" class="ip-ai-count-pill">{{ aiQuestionBank.length }} soal siap</span>
         </div>
       </div>
 
       <!-- ═══ MANUAL MODE: Question Manager Panel ═══ -->
       <div v-if="activeMode==='manual'" v-show="showManagePanel" class="questions-manage-drawer animate-fade-in" style="margin-bottom: 28px;">
-        <h3 style="font-size:16px; font-weight:800; color:#1C3B34; margin:0 0 12px 0; display:flex; align-items:center; gap:6px;">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:#1C3B34;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+        <h3 style="font-size:15px; font-weight:800; color:var(--color-forest,#1C3B34); margin:0 0 14px 0; display:flex; align-items:center; gap:6px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-terracotta);"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
           Kelola & Update Daftar Pertanyaan
         </h3>
-        <div style="background:#FFFFFF; border:1.5px solid #EAE5DD; border-radius:12px; padding:16px; display:grid; gap:12px; margin-bottom:16px;">
+        <div style="background:var(--bg-card,#fff); border:1.5px solid var(--color-sand,#E8DFD8); border-radius:12px; padding:16px; display:grid; gap:12px; margin-bottom:16px;">
           <div style="display:grid; grid-template-columns:1fr 2fr; gap:12px;">
             <div>
-              <label style="font-size:12px; font-weight:700; color:#7A6F66; display:block; margin-bottom:4px;">Kategori</label>
-              <select class="form-input" v-model="formCategory" style="padding:10px; font-size:13px; border:1.5px solid #EAE5DD; height:42px;">
+              <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:4px;">Kategori</label>
+              <select class="form-input" v-model="formCategory" style="padding:10px; font-size:13px; border:1.5px solid var(--color-sand); height:42px;">
                 <option value="General HR">General HR</option>
                 <option value="Technical Speciality">Technical Speciality</option>
                 <option value="General Technical">General Technical</option>
                 <option value="Performance Tuning">Performance Tuning</option>
-                <option value="Behavioral & Teamwork">Behavioral & Teamwork</option>
+                <option value="Behavioral &amp; Teamwork">Behavioral &amp; Teamwork</option>
               </select>
             </div>
             <div>
-              <label style="font-size:12px; font-weight:700; color:#7A6F66; display:block; margin-bottom:4px;">Teks Pertanyaan</label>
-              <input type="text" class="form-input" v-model="formText" placeholder="Contoh: Mengapa kami harus menerima Anda?" style="padding:10px; font-size:13.5px; border:1.5px solid #EAE5DD; height:42px;" />
+              <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:4px;">Teks Pertanyaan</label>
+              <input type="text" class="form-input" v-model="formText" placeholder="Contoh: Mengapa kami harus menerima Anda?" style="padding:10px; font-size:13.5px; border:1.5px solid var(--color-sand); height:42px;" />
             </div>
           </div>
           <div>
-            <label style="font-size:12px; font-weight:700; color:#7A6F66; display:block; margin-bottom:4px;">Tips / Hints Jawaban</label>
-            <textarea class="form-input" v-model="formHints" rows="2" placeholder="Saran kerangka jawaban..." style="padding:10px; font-size:13px; border:1.5px solid #EAE5DD;"></textarea>
+            <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:4px;">Tips / Hints Jawaban</label>
+            <textarea class="form-input" v-model="formHints" rows="2" placeholder="Saran kerangka jawaban..." style="padding:10px; font-size:13px; border:1.5px solid var(--color-sand);"></textarea>
           </div>
           <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:4px;">
             <button v-show="editingId !== null" class="btn btn-secondary" @click="cancelEdit" style="font-size:12.5px; padding:8px 16px;">Batal</button>
@@ -4839,7 +4834,7 @@ const InterviewPractice = {
             </button>
           </div>
         </div>
-        <div style="overflow-x:auto; background:#FFFFFF; border:1.5px solid #EAE5DD; border-radius:12px;">
+        <div style="overflow-x:auto; background:var(--bg-card,#fff); border:1.5px solid var(--color-sand); border-radius:12px;">
           <table class="questions-manage-table">
             <thead>
               <tr>
@@ -4852,14 +4847,14 @@ const InterviewPractice = {
             <tbody>
               <tr v-for="q in questions" :key="q.id">
                 <td><span class="framework-step-pill" style="margin:0;">{{ q.category }}</span></td>
-                <td style="font-weight:600; color:#1C3B34;">{{ q.text }}</td>
-                <td style="font-size:11.5px; color:#7A6F66;">{{ q.hints }}</td>
+                <td style="font-weight:600; color:var(--color-forest,#1C3B34);">{{ q.text }}</td>
+                <td style="font-size:11.5px; color:var(--text-muted);">{{ q.hints }}</td>
                 <td style="text-align:center;">
                   <div style="display:flex; gap:6px; justify-content:center;">
-                    <button class="card-nav-btn" @click="startEdit(q)" style="background:#FAF4EB; border:1px solid #EAE5DD; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center;">
+                    <button class="card-nav-btn" @click="startEdit(q)" style="background:var(--bg-cream); border:1px solid var(--color-sand); width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center;">
                       <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
                     </button>
-                    <button class="card-nav-btn" @click="deleteCustomQuestion(q.id)" style="background:#FAF4EB; border:1px solid #EAE5DD; color:#D67B52; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center;">
+                    <button class="card-nav-btn" @click="deleteCustomQuestion(q.id)" style="background:var(--bg-cream); border:1px solid var(--color-sand); color:var(--color-terracotta); width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center;">
                       <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                     </button>
                   </div>
@@ -4867,8 +4862,8 @@ const InterviewPractice = {
               </tr>
             </tbody>
           </table>
-          <div style="padding:12px; background:#FCFAF7; text-align:right;">
-            <button class="btn btn-secondary" @click="resetDefaultQuestions" style="font-size:12px; padding:6px 12px; border:1.5px dashed #CCC; background:#FFF; display:inline-flex; align-items:center; gap:4px;">
+          <div style="padding:12px; background:var(--bg-cream); text-align:right; border-top:1px solid var(--color-sand);">
+            <button class="btn btn-secondary" @click="resetDefaultQuestions" style="font-size:12px; padding:6px 12px; border:1.5px dashed var(--color-sand); background:var(--bg-card); display:inline-flex; align-items:center; gap:4px;">
               <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg> Reset ke Default
             </button>
           </div>
@@ -4876,48 +4871,36 @@ const InterviewPractice = {
       </div>
 
       <!-- ═══ AI MODE: Setup Panel ═══ -->
-      <div v-if="activeMode==='ai'" class="animate-fade-in" style="background:#FCFAF7; border:1.5px solid #EAE5DD; border-radius:16px; padding:20px; margin-bottom:24px;">
+      <div v-if="activeMode==='ai'" class="ip-ai-panel animate-fade-in" style="margin-bottom:24px;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
           <div>
-            <h4 style="font-size:15px; font-weight:800; color:#1C3B34; margin:0; display:flex; align-items:center; gap:6px;">
+            <h4 style="font-size:15px; font-weight:800; color:var(--color-forest,#1C3B34); margin:0; display:flex; align-items:center; gap:6px;">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--color-terracotta);"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.28 1.28L3 12l5.8 1.9a2 2 0 0 1 1.28 1.28L12 21l1.9-5.8a2 2 0 0 1 1.28-1.28L21 12l-5.8-1.9a2 2 0 0 1-1.28-1.28Z"></path></svg>
               Konfigurasi AI — Rancang Pertanyaan Otomatis
             </h4>
-            <p style="font-size:11.5px; color:var(--text-muted); margin:3px 0 0 0;">Isi target posisi & tipe pertanyaan, lalu klik Rancang untuk mengisi bank soal sesi ini.</p>
+            <p style="font-size:11.5px; color:var(--text-muted); margin:3px 0 0 0;">Isi target posisi &amp; tipe pertanyaan, lalu klik Rancang untuk mengisi bank soal sesi ini.</p>
           </div>
-          <span style="font-size:9px; font-weight:800; background:var(--color-terracotta); color:#fff; padding:3px 9px; border-radius:20px;">GEMINI AI</span>
+          <span style="font-size:9px; font-weight:800; background:var(--color-terracotta); color:#fff; padding:3px 10px; border-radius:20px; letter-spacing:0.5px;">GEMINI AI</span>
         </div>
-
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px;">
-          <!-- Target Posisi -->
           <div>
-            <label style="font-size:11.5px; font-weight:700; color:#7A6F66; display:block; margin-bottom:5px;">Target Posisi *</label>
-            <input type="text" v-model="aiTargetPosition"
-                   placeholder="cth: HR Generalist, Data Analyst, Backend Engineer..."
-                   style="width:100%; padding:9px 12px; font-size:12.5px; border:1.5px solid #EAE5DD; border-radius:8px; background:#fff; box-sizing:border-box; height:40px;" />
+            <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Target Posisi *</label>
+            <input type="text" v-model="aiTargetPosition" placeholder="cth: HR Generalist, Data Analyst, Backend Engineer..." style="width:100%; padding:9px 12px; font-size:12.5px; border:1.5px solid var(--color-sand); border-radius:8px; background:var(--bg-card,#fff); box-sizing:border-box; height:40px;" />
           </div>
-          <!-- Tipe Pertanyaan -->
           <div>
-            <label style="font-size:11.5px; font-weight:700; color:#7A6F66; display:block; margin-bottom:5px;">Tipe Pertanyaan *</label>
+            <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:5px;">Tipe Pertanyaan *</label>
             <div style="display:flex; gap:16px; height:40px; align-items:center;">
-              <label style="display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; cursor:pointer; color:#5D4F43;">
-                <input type="radio" v-model="aiQuestionType" value="General HR" style="accent-color:var(--color-terracotta);" />
-                General HR
+              <label style="display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; cursor:pointer; color:var(--text-dark);">
+                <input type="radio" v-model="aiQuestionType" value="General HR" style="accent-color:var(--color-terracotta);" /> General HR
               </label>
-              <label style="display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; cursor:pointer; color:#5D4F43;">
-                <input type="radio" v-model="aiQuestionType" value="Spesifik & Mendalam" style="accent-color:var(--color-terracotta);" />
-                Spesifik & Mendalam
+              <label style="display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; cursor:pointer; color:var(--text-dark);">
+                <input type="radio" v-model="aiQuestionType" value="Spesifik &amp; Mendalam" style="accent-color:var(--color-terracotta);" /> Spesifik &amp; Mendalam
               </label>
             </div>
           </div>
         </div>
-
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-          <!-- Generate button -->
-          <button @click="generateQuestionsFromAI" :disabled="isGeneratingAi || !aiTargetPosition.trim()"
-                  class="spin-btn-teal"
-                  style="font-size:13px; padding:10px 20px; display:inline-flex; align-items:center; gap:6px; box-shadow:none;"
-                  :style="(!aiTargetPosition.trim()) ? {opacity:'0.5',cursor:'not-allowed'} : {}">
+          <button @click="generateQuestionsFromAI" :disabled="isGeneratingAi || !aiTargetPosition.trim()" class="spin-btn-teal" style="font-size:13px; padding:10px 20px; display:inline-flex; align-items:center; gap:6px; box-shadow:none;" :style="(!aiTargetPosition.trim()) ? {opacity:'0.5',cursor:'not-allowed'} : {}">
             <template v-if="isGeneratingAi">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 1s linear infinite;"><circle cx="12" cy="12" r="10"></circle><path d="M12 2v4"></path></svg>
               Menggali Tren Industri...
@@ -4927,66 +4910,46 @@ const InterviewPractice = {
               Rancang Pertanyaan AI ✨
             </template>
           </button>
-
-          <!-- Reset Topic button -->
-          <button v-if="aiTargetPosition || aiQuestionBank.length > 0" @click="resetAiTopic" type="button"
-                  style="height:40px; font-size:12.5px; font-weight:700; border-radius:8px; border:1.5px solid #EAE5DD; padding:0 16px; background:#fff; display:inline-flex; align-items:center; gap:5px; cursor:pointer; color:#5D4F43;">
+          <button v-if="aiTargetPosition || aiQuestionBank.length > 0" @click="resetAiTopic" type="button" style="height:40px; font-size:12.5px; font-weight:700; border-radius:8px; border:1.5px solid var(--color-sand); padding:0 16px; background:var(--bg-card,#fff); display:inline-flex; align-items:center; gap:5px; cursor:pointer; color:var(--text-muted);">
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 10 10 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
             Reset Topik
           </button>
-
-          <!-- Bank soal info -->
-          <span v-if="aiQuestionBank.length > 0" style="font-size:12px; color:#1C3B34; font-weight:700; background:#EBF5F0; border:1px solid #A8D5C0; padding:4px 12px; border-radius:20px;">
+          <span v-if="aiQuestionBank.length > 0" style="font-size:12px; color:var(--color-forest,#1C3B34); font-weight:700; background:#EBF5F0; border:1px solid #A8D5C0; padding:4px 12px; border-radius:20px;">
             ✓ {{ aiQuestionBank.length }} pertanyaan siap di bank soal
           </span>
         </div>
-
-        <!-- Error -->
         <div v-if="aiQuestionsError" style="margin-top:12px; background:#FDF4F5; border:1px solid #F5C6CB; padding:10px 12px; border-radius:8px; color:#721C24; font-size:12px;">
           ⚠️ {{ aiQuestionsError }}
         </div>
-
-        <!-- AI Question Bank Preview -->
-        <div v-if="aiQuestionBank.length > 0" class="animate-fade-in" style="margin-top:16px; background:#fff; border:1.5px solid #EAE5DD; border-radius:12px; padding:14px;">
-          <h5 style="font-size:12px; font-weight:800; color:#1C3B34; margin:0 0 10px 0; border-bottom:1.5px dashed #FAF6F0; padding-bottom:8px;">
+        <div v-if="aiQuestionBank.length > 0" class="animate-fade-in" style="margin-top:16px; background:var(--bg-card,#fff); border:1.5px solid var(--color-sand); border-radius:12px; padding:14px;">
+          <h5 style="font-size:12px; font-weight:800; color:var(--color-forest,#1C3B34); margin:0 0 10px 0; border-bottom:1.5px dashed var(--color-sand); padding-bottom:8px;">
             Bank Soal Sesi Ini — {{ aiTargetPosition }} ({{ aiQuestionType }})
           </h5>
           <div style="display:flex; flex-direction:column; gap:8px;">
-            <div v-for="(aq, idx) in aiQuestionBank" :key="idx"
-                 style="background:#FCFAF7; border:1px solid #FAF0EC; padding:11px 14px; border-radius:8px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+            <div v-for="(aq, idx) in aiQuestionBank" :key="idx" class="ip-ai-q-item">
               <div style="flex:1;">
                 <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
                   <span class="framework-step-pill" style="font-size:9px; margin:0;">{{ aq.framework || 'STAR' }}</span>
                   <span style="font-size:10px; color:var(--text-muted); font-weight:600;">{{ aq.category }}</span>
                 </div>
-                <div style="font-size:13px; font-weight:700; color:#2C2621; line-height:1.45;">{{ aq.text }}</div>
-                <div style="font-size:11.5px; color:#7A6F66; margin-top:3px;"><strong>Hint:</strong> {{ aq.hints }}</div>
+                <div style="font-size:13px; font-weight:700; color:var(--text-dark); line-height:1.45;">{{ aq.text }}</div>
+                <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;"><strong>Hint:</strong> {{ aq.hints }}</div>
               </div>
-              <button @click="practiceThisQuestion(aq)"
-                      style="font-size:11px; font-weight:700; background:var(--color-terracotta); color:#fff; padding:5px 10px; border-radius:6px; border:none; cursor:pointer; flex-shrink:0;">
-                🎯 Latih
-              </button>
+              <button @click="practiceThisQuestion(aq)" class="ip-latih-btn">🎯 Latih</button>
             </div>
           </div>
         </div>
       </div>
 
       <!-- ═══ MAIN GRID ═══ -->
-      <div class="interview-grid" style="grid-template-columns: 280px 1fr; gap: 24px;">
-        <!-- Left Column -->
-        <div class="interview-col-left">
-          <div class="interview-prep-banner" style="display: none;">
-            <span class="star-deco star-1">★</span>
-            <span class="star-deco star-2">✦</span>
-            <span class="star-deco star-3">★</span>
-            <span class="star-deco star-4">✦</span>
-            <h1 class="prep-bubble-title">INTERVIEW</h1>
-            <h1 class="prep-bubble-title" style="color:#D67B52; text-shadow:2px 2px 0px #FDFBF7, 3px 3px 0px #E6DCD1;">PREP</h1>
-            <p class="prep-bubble-subtitle">framework practice room</p>
-          </div>
+      <div class="ip-main-grid">
+
+        <!-- ── LEFT COLUMN: Frameworks ── -->
+        <aside class="ip-sidebar">
           <div class="frameworks-container">
             <span class="framework-acc-title" style="display:flex; align-items:center; gap:6px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .5 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path></svg> Frameworks Guide
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .5 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path></svg>
+              Frameworks Guide
             </span>
             <!-- STAR -->
             <div class="framework-acc-item" :class="{ expanded: expandedFrameworks.star || activeFramework==='STAR' }">
@@ -5001,9 +4964,9 @@ const InterviewPractice = {
                 </span>
               </button>
               <div v-show="expandedFrameworks.star || activeFramework==='STAR'" class="framework-acc-content animate-fade-in">
-                <p style="margin-bottom:8px; font-weight:bold; color:#1C3B34;">Untuk pertanyaan berbasis perilaku (behavioral):</p>
+                <p style="margin-bottom:8px; font-weight:bold; color:var(--color-forest,#1C3B34);">Untuk pertanyaan berbasis perilaku (behavioral):</p>
                 <div><span class="framework-step-pill">S - Situation</span> Latar belakang masalah.</div>
-                <div><span class="framework-step-pill">T - Task</span> Tanggung jawab & tantangan.</div>
+                <div><span class="framework-step-pill">T - Task</span> Tanggung jawab &amp; tantangan.</div>
                 <div><span class="framework-step-pill">A - Action</span> Tindakan yang Anda ambil.</div>
                 <div><span class="framework-step-pill">R - Result</span> Hasil akhir terukur.</div>
               </div>
@@ -5021,7 +4984,7 @@ const InterviewPractice = {
                 </span>
               </button>
               <div v-show="expandedFrameworks.prep || activeFramework==='PREP'" class="framework-acc-content animate-fade-in">
-                <p style="margin-bottom:8px; font-weight:bold; color:#1C3B34;">Untuk pertanyaan opini atau teknis:</p>
+                <p style="margin-bottom:8px; font-weight:bold; color:var(--color-forest,#1C3B34);">Untuk pertanyaan opini atau teknis:</p>
                 <div><span class="framework-step-pill">P - Point</span> Kemukakan gagasan pokok.</div>
                 <div><span class="framework-step-pill">R - Reason</span> Beri alasan logis.</div>
                 <div><span class="framework-step-pill">E - Example</span> Ilustrasi nyata.</div>
@@ -5041,21 +5004,21 @@ const InterviewPractice = {
                 </span>
               </button>
               <div v-show="expandedFrameworks.ppf || activeFramework==='PPF'" class="framework-acc-content animate-fade-in">
-                <p style="margin-bottom:8px; font-weight:bold; color:#1C3B34;">Untuk "Ceritakan tentang diri Anda!":</p>
-                <div><span class="framework-step-pill">P - Present</span> Posisi & keahlian saat ini.</div>
+                <p style="margin-bottom:8px; font-weight:bold; color:var(--color-forest,#1C3B34);">Untuk "Ceritakan tentang diri Anda!":</p>
+                <div><span class="framework-step-pill">P - Present</span> Posisi &amp; keahlian saat ini.</div>
                 <div><span class="framework-step-pill">P - Past</span> Pencapaian masa lalu.</div>
-                <div><span class="framework-step-pill">F - Future</span> Prospek & kecocokan Anda.</div>
+                <div><span class="framework-step-pill">F - Future</span> Prospek &amp; kecocokan Anda.</div>
               </div>
             </div>
           </div>
-        </div>
+        </aside>
 
-        <!-- Right Column -->
-        <div style="display:flex; flex-direction:column; gap:20px;">
+        <!-- ── RIGHT COLUMN: Spin + Workspace ── -->
+        <div class="ip-content-col">
 
-          <!-- Filter Category (manual only) -->
-          <div v-if="activeMode==='manual'" style="display:flex; justify-content:space-between; align-items:center; position:relative;">
-            <div style="font-size:13.5px; font-weight:700; color:#7A6F66; display:flex; align-items:center; gap:6px;">
+          <!-- Filter / AI info bar -->
+          <div v-if="activeMode==='manual'" class="ip-filter-bar">
+            <div style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:700; color:var(--text-muted);">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--color-terracotta);"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
               Filter Kategori:
               <button class="pomo-category-select-btn" @click="toggleCategoryDropdown">
@@ -5068,23 +5031,21 @@ const InterviewPractice = {
               <button class="pomo-category-option" :class="{ active: selectedCategory==='Technical Speciality' }" @click="selectCategory('Technical Speciality')">Technical Speciality</button>
               <button class="pomo-category-option" :class="{ active: selectedCategory==='General Technical' }" @click="selectCategory('General Technical')">General Technical</button>
               <button class="pomo-category-option" :class="{ active: selectedCategory==='Performance Tuning' }" @click="selectCategory('Performance Tuning')">Performance Tuning</button>
-              <button class="pomo-category-option" :class="{ active: selectedCategory==='Behavioral & Teamwork' }" @click="selectCategory('Behavioral & Teamwork')">Behavioral & Teamwork</button>
+              <button class="pomo-category-option" :class="{ active: selectedCategory==='Behavioral &amp; Teamwork' }" @click="selectCategory('Behavioral &amp; Teamwork')">Behavioral &amp; Teamwork</button>
             </div>
           </div>
-
-          <!-- AI mode bank soal info bar -->
-          <div v-if="activeMode==='ai'" style="font-size:13px; font-weight:700; color:#7A6F66; display:flex; align-items:center; gap:8px;">
+          <div v-if="activeMode==='ai'" style="font-size:13px; font-weight:700; color:var(--text-muted); display:flex; align-items:center; gap:8px; margin-bottom:4px;">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--color-terracotta);"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.28 1.28L3 12l5.8 1.9a2 2 0 0 1 1.28 1.28L12 21l1.9-5.8a2 2 0 0 1 1.28-1.28L21 12l-5.8-1.9a2 2 0 0 1-1.28-1.28Z"></path></svg>
             <span v-if="aiQuestionBank.length > 0">Spin dari bank soal AI — <strong>{{ aiTargetPosition }}</strong> ({{ aiQuestionType }})</span>
-            <span v-else style="color:#D67B52;">Belum ada bank soal AI. Isi konfigurasi di atas lalu klik Rancang Pertanyaan AI ✨</span>
+            <span v-else style="color:var(--color-terracotta);">Belum ada bank soal AI. Isi konfigurasi di atas lalu klik Rancang Pertanyaan AI ✨</span>
           </div>
 
-          <!-- Reel Slot -->
+          <!-- Reel Slot Machine -->
           <div class="reel-slot-wrapper">
             <div class="reel-spinner-window">
               <div class="reel-row reel-row-faded">{{ reelAboveText }}</div>
               <div class="reel-row reel-row-center">
-                <span style="font-size:11px; font-weight:800; color:#D67B52; text-transform:uppercase; letter-spacing:1.5px; display:block; margin-bottom:6px;">
+                <span style="font-size:11px; font-weight:800; color:var(--color-terracotta); text-transform:uppercase; letter-spacing:1.5px; display:block; margin-bottom:6px;">
                   {{ isSpinning ? '🎰 SPINNING WHEEL...' : '🎯 PERTANYAAN PILIHAN' }}
                 </span>
                 <span style="font-size:16.5px; display:block;">{{ reelCenterText }}</span>
@@ -5103,46 +5064,32 @@ const InterviewPractice = {
             </div>
           </div>
 
-          <!-- Spin buttons -->
-          <div style="display:flex; gap:12px; justify-content:center; align-items:center; margin-top:4px;">
+          <!-- Spin Buttons -->
+          <div class="ip-spin-btns">
             <button class="spin-btn-teal" @click="spinRollOnce" :disabled="isSpinning" style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="7.5 4.21 12 6.81 16.5 4.21"></polyline><polyline points="7.5 19.79 7.5 14.67 12 12.01 16.5 14.67 16.5 19.79"></polyline><polyline points="7.5 14.67 12 17.24 16.5 14.67"></polyline><line x1="12" y1="22" x2="12" y2="12.01"></line><line x1="12" y1="12.01" x2="12" y2="2.01"></line></svg>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
               Spin!
             </button>
-            <button v-if="chosenAfterLever && selectedQ" class="btn btn-secondary" @click="resetToReSpin" style="font-family:'Outfit',sans-serif; font-weight:700; font-size:13.5px; padding:12px 20px; border:1.5px solid #EAE5DD; background:#FFFFFF; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+            <button v-if="chosenAfterLever && selectedQ" class="ip-reset-btn" @click="resetToReSpin">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
               Reset Pilihan
             </button>
           </div>
 
-          <!-- Quick Custom (Manual only) -->
-          <div v-if="activeMode==='manual'" style="display: none; background:#FCFAF7; border:1.5px solid #EAE5DD; border-radius:14px; padding:16px;">
-            <h4 style="font-size:14px; font-weight:800; color:#1C3B34; margin:0 0 4px 0; display:flex; align-items:center; gap:6px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#6C5CE7;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-              ✍️ Latih Pertanyaan Kustom Langsung
-            </h4>
-            <p style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">Ketik pertanyaan spesifik untuk langsung berlatih merekam jawaban.</p>
-            <div style="display:flex; gap:8px; align-items:center;">
-              <input type="text" v-model="quickCustomQuestionText" placeholder="Ketik pertanyaan kustom Anda..." style="flex:1; padding:8px 12px; font-size:12.5px; border:1.5px solid #EAE5DD; height:38px; border-radius:8px; background:#FFF;" @keyup.enter="practiceQuickCustom" />
-              <button @click="practiceQuickCustom" class="spin-btn-teal" style="height:38px; font-size:12px; padding:0 16px; box-shadow:none; display:inline-flex; align-items:center; gap:4px; background:#6C5CE7;">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                Latih 🎯
-              </button>
-            </div>
-          </div>
-
           <!-- Practice Workspace -->
-          <div v-if="chosenAfterLever && selectedQ" class="interview-workspace animate-fade-in" style="margin-top:4px;">
+          <div v-if="chosenAfterLever && selectedQ" class="interview-workspace animate-fade-in">
+
+            <!-- Question Display -->
             <div class="question-display">
-              <span style="font-size:11px; font-weight:700; color:var(--color-terracotta);">READY PRACTICE BENCH</span>
-              <h3 style="font-size:18px; font-weight:800; margin-top:4px; color:#1C3B34; line-height:1.45;">{{ selectedQ.text }}</h3>
-              <div style="margin-top:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <span style="font-size:12px; font-weight:700; color:#8F847A; display:inline-flex; align-items:center; gap:4px;">
+              <span style="font-size:11px; font-weight:800; color:var(--color-terracotta); text-transform:uppercase; letter-spacing:1px;">Ready Practice Bench</span>
+              <h3 style="font-size:18px; font-weight:800; margin-top:6px; color:var(--color-forest,#1C3B34); line-height:1.45;">{{ selectedQ.text }}</h3>
+              <div style="margin-top:10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span style="font-size:12px; font-weight:700; color:var(--text-muted); display:inline-flex; align-items:center; gap:4px;">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
                   Kategori:
                 </span>
                 <span class="framework-step-pill" style="display:inline-block; margin:0;">{{ selectedQ.category }}</span>
-                <span v-if="selectedQ.framework" style="display:inline-flex; align-items:center; gap:4px; background:#FAF0EC; border:1px solid #F3C9B5; padding:2px 10px; border-radius:20px; font-size:11px; font-weight:800; color:var(--color-terracotta);">
+                <span v-if="selectedQ.framework" style="display:inline-flex; align-items:center; gap:4px; background:#FAF0EC; border:1px solid rgba(214,123,82,0.3); padding:2px 10px; border-radius:20px; font-size:11px; font-weight:800; color:var(--color-terracotta);">
                   <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.28 1.28L3 12l5.8 1.9a2 2 0 0 1 1.28 1.28L12 21l1.9-5.8a2 2 0 0 1 1.28-1.28L21 12l-5.8-1.9a2 2 0 0 1-1.28-1.28Z"></path></svg>
                   Framework: {{ selectedQ.framework }}
                 </span>
@@ -5153,12 +5100,12 @@ const InterviewPractice = {
             <div class="practice-controls">
               <div class="recording-status" v-if="isRecording"><span class="status-dot"></span> Perekaman Aktif...</div>
               <div class="recording-status" style="color:var(--text-muted); font-size:14px; font-family:'Outfit',sans-serif; font-weight:700; display:inline-flex; align-items:center; gap:6px;" v-else>
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#1C3B34;"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--color-forest,#1C3B34);"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
                 Mikrofon Siaga
               </div>
-              <div class="audio-record-timeline text-mono" style="font-size:32px; letter-spacing:-1px; margin:8px 0; color:#1C3B34;">{{ formattedTime }}</div>
+              <div class="audio-record-timeline text-mono" style="font-size:32px; letter-spacing:-1px; margin:8px 0; color:var(--color-forest,#1C3B34);">{{ formattedTime }}</div>
               <div class="record-btn-group">
-                <button v-if="!isRecording" class="btn btn-primary" @click="startRecording" style="font-weight:800; padding:12px 28px; background:#D67B52; border-color:#D67B52; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+                <button v-if="!isRecording" class="btn btn-primary" @click="startRecording" style="font-weight:800; padding:12px 28px; background:var(--color-terracotta); border-color:var(--color-terracotta); display:inline-flex; align-items:center; justify-content:center; gap:6px;">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
                   Mulai Merekam
                 </button>
@@ -5168,11 +5115,11 @@ const InterviewPractice = {
                 </button>
               </div>
               <div v-if="practiceRuns.length > 0" class="audio-list">
-                <h4 style="font-size:13px; color:#7A6F66; margin-bottom:8px; font-weight:700;">Rekaman Jawaban</h4>
-                <div v-for="(run, idx) in practiceRuns" :key="idx" class="audio-item" style="background:#FFF; border:1.5px solid #EAE5DD; border-radius:12px; padding:10px 14px;">
-                  <span class="text-mono" style="font-size:12px; font-weight:bold; color:#1C3B34;">Run #{{ idx + 1 }} ({{ run.duration }}s)</span>
+                <h4 style="font-size:13px; color:var(--text-muted); margin-bottom:8px; font-weight:700;">Rekaman Jawaban</h4>
+                <div v-for="(run, idx) in practiceRuns" :key="idx" class="audio-item" style="background:var(--bg-card,#fff); border:1.5px solid var(--color-sand); border-radius:12px; padding:10px 14px;">
+                  <span class="text-mono" style="font-size:12px; font-weight:bold; color:var(--color-forest,#1C3B34);">Run #{{ idx + 1 }} ({{ run.duration }}s)</span>
                   <audio :src="run.audioUrl" controls style="height:32px;"></audio>
-                  <button class="card-nav-btn" @click="deleteRecording(idx)" style="background:#FAF4EB; border:1px solid #EAE5DD; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center;">
+                  <button class="card-nav-btn" @click="deleteRecording(idx)" style="background:var(--bg-cream); border:1px solid var(--color-sand); width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center;">
                     <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                   </button>
                 </div>
@@ -5180,36 +5127,38 @@ const InterviewPractice = {
             </div>
 
             <!-- Notes + Hint -->
-            <div class="drawer-section" style="margin-bottom:0; background:#FFFFFF; border:1.5px solid #EAE5DD; border-radius:16px; padding:20px;">
-              <h4 style="font-size:15px; margin-bottom:12px; font-weight:800; color:#1C3B34;">Poin Kunci & Kerangka Jawaban</h4>
-              <div style="background:#FCFAF7; padding:14px; border-left:4px solid #D67B52; border-radius:8px; margin-bottom:16px; font-size:13px; line-height:1.5; color:#5A4E42; display:flex; align-items:flex-start; gap:8px;">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#D67B52; flex-shrink:0; margin-top:2px;"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .5 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path></svg>
+            <div class="drawer-section" style="margin-bottom:0; background:var(--bg-card,#fff); border:1.5px solid var(--color-sand); border-radius:16px; padding:20px;">
+              <h4 style="font-size:15px; margin-bottom:12px; font-weight:800; color:var(--color-forest,#1C3B34);">Poin Kunci &amp; Kerangka Jawaban</h4>
+              <div style="background:var(--bg-cream); padding:14px; border-left:4px solid var(--color-terracotta); border-radius:8px; margin-bottom:16px; font-size:13px; line-height:1.55; color:var(--text-muted); display:flex; align-items:flex-start; gap:8px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--color-terracotta); flex-shrink:0; margin-top:2px;"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .5 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path></svg>
                 <span><strong>Petunjuk Jawaban:</strong> {{ selectedQ.hints }}</span>
               </div>
               <textarea class="form-input" v-model="savedNotes[selectedQ.id]" rows="6"
                         placeholder="Rancang draf jawaban terbaikmu (STAR/PREP/PPF). Otomatis tersimpan di browser..."
-                        style="border:1.5px solid #EAE5DD; border-radius:10px; font-size:13.5px;"
+                        style="border:1.5px solid var(--color-sand); border-radius:10px; font-size:13.5px;"
                         @input="saveNotes"></textarea>
             </div>
           </div>
 
           <!-- Empty state -->
           <div v-else class="simulator-locked-placeholder animate-fade-in">
-            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--color-sand); display:block; margin:0 auto 16px auto;"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 9h18"></path><path d="M3 15h18"></path><path d="M9 3v18"></path><path d="M15 3v18"></path></svg>
-            <h3 style="font-weight:800; color:#1C3B34; margin:0 0 8px 0; font-size:18px;">Simulator Belum Aktif</h3>
-            <p style="color:#7A6F66; font-size:13.5px; max-width:460px; margin:0 auto 16px auto; line-height:1.55;">
-              <template v-if="activeMode==='manual'">Sesuaikan kategori pertanyaan lalu klik <strong>"Spin!"</strong> atau tarik Tuas untuk mengacak pertanyaan.</template>
-              <template v-else-if="aiQuestionBank.length === 0">Isi konfigurasi AI di atas, lalu klik <strong>"Rancang Pertanyaan AI ✨"</strong> untuk mengisi bank soal, kemudian klik Spin!</template>
-              <template v-else>Bank soal AI siap! Klik <strong>"Spin!"</strong> atau tarik Tuas untuk mulai latihan.</template>
+            <div class="ip-empty-icon">
+              <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--color-sand);"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+            </div>
+            <h3 style="font-weight:800; color:var(--color-forest,#1C3B34); margin:0 0 8px 0; font-size:18px;">Simulator Belum Aktif</h3>
+            <p style="color:var(--text-muted); font-size:13.5px; max-width:440px; margin:0 auto 20px auto; line-height:1.6;">
+              <template v-if="activeMode==='manual'">Sesuaikan kategori pertanyaan lalu klik <strong style="color:var(--color-terracotta);">"Spin!"</strong> atau tarik Tuas untuk mengacak pertanyaan.</template>
+              <template v-else-if="aiQuestionBank.length === 0">Isi konfigurasi AI di atas, lalu klik <strong style="color:var(--color-terracotta);">"Rancang Pertanyaan AI ✨"</strong> untuk mengisi bank soal, kemudian klik Spin!</template>
+              <template v-else>Bank soal AI siap! Klik <strong style="color:var(--color-terracotta);">"Spin!"</strong> atau tarik Tuas untuk mulai latihan.</template>
             </p>
-            <div style="display:inline-flex; align-items:center; gap:8px; font-size:12px; color:#D67B52; font-weight:700; background:#FAF4EB; padding:8px 16px; border-radius:40px; border:1px solid #E9DEC9;">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#D67B52;"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .5 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path></svg>
-              <span>{{ activeMode==='manual' ? 'Tips: Gunakan Kelola Pertanyaan untuk menambah soal baru!' : 'Tips: Mode AI — bank soal diisi otomatis dari Gemini!' }}</span>
+            <div class="ip-empty-tip">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--color-terracotta);"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .5 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path></svg>
+              <span>{{ activeMode==='manual' ? 'Tips: Gunakan Kelola Soal untuk menambah pertanyaan baru!' : 'Tips: Mode AI — bank soal diisi otomatis dari Gemini!' }}</span>
             </div>
           </div>
 
-        </div>
-      </div>
+        </div><!-- end ip-content-col -->
+      </div><!-- end ip-main-grid -->
     </div>
   `,
   data() {
@@ -5503,6 +5452,7 @@ const InterviewPractice = {
     }
   }
 };
+
 
 // 5. Daily Nutrition & Insights Component
 const DailyNutrition = {
@@ -8790,14 +8740,16 @@ const GoogleCalendar = {
                 @click.stop
               >
                 <div class="gcal-cell-tooltip-date">{{ localTooltipDateLabel(cell.dateStr) }}</div>
-                <div
-                  v-for="item in localAllItemsForDate(cell.dateStr)"
-                  :key="item.id"
-                  class="gcal-cell-tooltip-item"
-                >
-                  <span class="gcal-cell-tooltip-dot" :style="{ background: item.color }"></span>
-                  <span class="gcal-cell-tooltip-title" :style="item.done ? 'text-decoration:line-through;opacity:0.5;' : ''">{{ item.title }}</span>
-                  <span v-if="item.startMin !== null" class="gcal-cell-tooltip-time">{{ localFmtMin(item.startMin) }}</span>
+                <div class="gcal-cell-tooltip-items">
+                  <div
+                    v-for="item in localAllItemsForDate(cell.dateStr)"
+                    :key="item.id"
+                    class="gcal-cell-tooltip-item"
+                  >
+                    <span class="gcal-cell-tooltip-dot" :style="{ background: item.color }"></span>
+                    <span class="gcal-cell-tooltip-title" :style="item.done ? 'text-decoration:line-through;opacity:0.5;' : ''">{{ item.title }}</span>
+                    <span v-if="item.startMin !== null" class="gcal-cell-tooltip-time">{{ localFmtMin(item.startMin) }}</span>
+                  </div>
                 </div>
               </div>
             </div>
