@@ -14612,7 +14612,7 @@ const MyPortfolio = {
         <span class="mp-hero-badge-dot"></span>
         Showcase
       </div>
-      <h2 class="mp-hero-title">My Portfolio</h2>
+      <h2 class="mp-hero-title">My 'hidden gem' Portfolio</h2>
       <p class="mp-hero-sub">Catat task portfolio untuk tiap pengalaman kerja. Task berstatus <strong>Fix</strong> otomatis tampil sebagai Poin Pencapaian di CV ATS.</p>
     </div>
 
