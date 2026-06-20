@@ -12948,6 +12948,34 @@ const CareerFoundation = {
       </button>
     </div>
 
+    <!-- ── Layout: Sidebar Kata Kunci (kiri) + Konten Tab (kanan) ── -->
+    <div class="cf-body-layout">
+
+      <!-- ── Sidebar Kata Kunci ── -->
+      <div class="cf-keyword-sidebar">
+        <p class="cf-keyword-sidebar-title">Kata Kunci</p>
+        <p class="cf-keyword-sidebar-sub">Buat daftar kata kunci di sini, lalu pilih beberapa untuk tiap task di tabel My Portfolio.</p>
+        <div class="cf-keyword-add-row">
+          <input type="text" class="cf-input cf-keyword-input-add" v-model="newKeywordInput"
+            placeholder="cth., Leadership" @keyup.enter="addKeywordToBank" />
+          <button class="cf-btn-primary cf-keyword-add-btn" :disabled="!newKeywordInput.trim()" @click="addKeywordToBank">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+        <div v-if="!keywordBank.length" class="cf-keyword-empty">Belum ada kata kunci.</div>
+        <div v-else class="cf-keyword-bank-list">
+          <span v-for="kw in keywordBank" :key="kw" class="cf-keyword-bank-chip">
+            {{ kw }}
+            <button class="cf-keyword-bank-chip-remove" title="Hapus kata kunci" @click="removeKeywordFromBank(kw)">
+              <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </span>
+        </div>
+      </div>
+
+      <!-- ── Konten Tab ── -->
+      <div class="cf-tabs-content">
+
     <!-- ══ TAB: CV ATS v2 ══ -->
     <transition name="cf-fade">
     <div v-if="activeTab === 'cv'" key="cv">
@@ -13522,6 +13550,11 @@ const CareerFoundation = {
     </div>
     </transition>
 
+      </div>
+      <!-- /cf-tabs-content -->
+    </div>
+    <!-- /cf-body-layout -->
+
     <!-- ══ MODAL: Edit Resume ══ -->
     <transition name="cf-fade">
       <div v-if="showResumeModal" class="cf-modal-overlay" @click.self="showResumeModal=false">
@@ -13934,6 +13967,10 @@ const CareerFoundation = {
       // Dipakai untuk mengisi Poin Pencapaian di CV: hanya task berstatus 'fix' yang tampil.
       portfolioTasks: {},
 
+      // Bank Kata Kunci — master list kata kunci yang bisa dipilih di tabel task My Portfolio.
+      keywordBank: [],
+      newKeywordInput: '',
+
       // CV v2 Custom Sections
       cv2ShowCustomModal: false,
       cv2EditingCustomIdx: null,
@@ -14088,6 +14125,24 @@ const CareerFoundation = {
     // ── My Portfolio button → buka halaman My Portfolio ──
     goToPortfolio() {
       globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'myPortfolio' }));
+    },
+
+    // ── Bank Kata Kunci (master list, dipakai untuk multiselect di tabel My Portfolio) ──
+    addKeywordToBank() {
+      const kw = this.newKeywordInput.trim();
+      if (!kw) return;
+      const exists = this.keywordBank.some(k => k.toLowerCase() === kw.toLowerCase());
+      if (exists) { this.newKeywordInput = ''; return; }
+      this.keywordBank = [...this.keywordBank, kw];
+      this.newKeywordInput = '';
+      this.saveKeywordBank();
+    },
+    removeKeywordFromBank(kw) {
+      this.keywordBank = this.keywordBank.filter(k => k !== kw);
+      this.saveKeywordBank();
+    },
+    saveKeywordBank() {
+      try { WorkspaceStorage.setItem('career_keyword_bank', JSON.stringify(this.keywordBank)); } catch(_e) {}
     },
 
     // ── Resume ──
@@ -14548,6 +14603,10 @@ const CareerFoundation = {
       const pt = WorkspaceStorage.getItem('portfolio_tasks');
       if (pt) this.portfolioTasks = JSON.parse(pt);
     } catch(_e) {}
+    try {
+      const kb = WorkspaceStorage.getItem('career_keyword_bank');
+      if (kb) this.keywordBank = JSON.parse(kb);
+    } catch(_e) {}
   },
 };
 
@@ -14642,6 +14701,7 @@ const MyPortfolio = {
             <thead>
               <tr>
                 <th>Judul Task Pengalaman</th>
+                <th style="width: 200px;">Kata Kunci</th>
                 <th style="width: 240px;">Bukti Kerja</th>
                 <th style="width: 160px;">Rangkuman Insight</th>
                 <th style="width: 150px;">Status</th>
@@ -14671,6 +14731,22 @@ const MyPortfolio = {
                   <template v-else>
                     <span>{{ task.title }}</span>
                   </template>
+                </td>
+                <td>
+                  <div class="mp-bukti-cell">
+                    <div v-if="(task.keywords || []).length" class="mp-bukti-chips">
+                      <span v-for="kw in task.keywords" :key="kw" class="mp-bukti-chip">
+                        <span class="mp-bukti-chip-text">{{ kw }}</span>
+                        <button class="mp-bukti-chip-remove" title="Hapus kata kunci ini" @click="removeTaskKeyword(task, kw)">
+                          <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                      </span>
+                    </div>
+                    <button class="mp-bukti-add-btn" @click="openKeywordModal(task.id)">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Pilih Kata Kunci
+                    </button>
+                  </div>
                 </td>
                 <td>
                   <div class="mp-bukti-cell">
@@ -14765,6 +14841,37 @@ const MyPortfolio = {
           <div class="cf-modal-footer">
             <span style="font-size:12px; color: var(--text-muted); margin-right:auto;">{{ buktiModalSelectedCount }} bukti dipilih</span>
             <button class="cf-btn-primary" @click="closeBuktiModal">Selesai</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- ══ MODAL: Pilih Kata Kunci (multiselect dari Bank Kata Kunci di Career Foundation) ══ -->
+    <transition name="cf-fade">
+      <div v-if="keywordModalTaskId" class="cf-modal-overlay" @click.self="closeKeywordModal">
+        <div class="cf-modal cf-modal-wide">
+          <div class="cf-modal-header">
+            <h3 class="cf-modal-title">Pilih Kata Kunci</h3>
+            <button class="cf-modal-close" @click="closeKeywordModal">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="cf-modal-body">
+            <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 2px; line-height:1.6;">Pilih satu atau lebih kata kunci untuk task ini. Kelola daftar kata kunci di sidebar halaman <strong>Career Foundation</strong>.</p>
+            <div v-if="!keywordBank.length" style="font-size:12.5px; color: var(--text-muted); text-align:center; padding: 28px 0;">
+              Belum ada kata kunci di bank. Tambahkan dulu di sidebar halaman <strong>Career Foundation</strong>.
+            </div>
+            <div v-else class="mp-bukti-modal-list">
+              <label v-for="kw in keywordBank" :key="kw" class="mp-bukti-modal-item">
+                <input type="checkbox" :checked="isTaskKeywordChecked(kw)" @change="toggleTaskKeyword(kw)" />
+                <div class="mp-bukti-modal-item-text">
+                  <p class="mp-bukti-modal-item-task">{{ kw }}</p>
+                </div>
+              </label>
+            </div>
+          </div>
+          <div class="cf-modal-footer">
+            <button class="cf-btn-primary" @click="closeKeywordModal">Selesai</button>
           </div>
         </div>
       </div>
@@ -14875,6 +14982,8 @@ const MyPortfolio = {
       jobLogs: [], // dari Riwayat Kegiatan Kerja (Job Logbook)
       buktiModalTaskId: null,
       buktiModalSearch: '',
+      keywordBank: [], // master list kata kunci, dikelola di halaman Career Foundation
+      keywordModalTaskId: null,
       insightModalTaskId: null,
       insightModalDraft: '',
       insightModalMode: 'view', // 'view' (read-only) | 'edit' (textarea)
@@ -14961,7 +15070,7 @@ const MyPortfolio = {
       if (!title || !this.selectedExperience) return;
       const key = this.selectedExperience.key;
       const list = this.portfolioTasks[key] ? [...this.portfolioTasks[key]] : [];
-      list.push({ id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title, status: 'draft', buktiKerja: [], insightSummary: '' });
+      list.push({ id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title, status: 'draft', buktiKerja: [], insightSummary: '', keywords: [] });
       this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
       this.newTaskTitle = '';
       this.saveTasks();
@@ -14971,6 +15080,56 @@ const MyPortfolio = {
       if (!this.selectedExperience) return;
       const key = this.selectedExperience.key;
       const list = (this.portfolioTasks[key] || []).map(t => t.id === taskId ? { ...t, status } : t);
+      this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
+      this.saveTasks();
+    },
+
+    setTaskKeyword(taskId, keyword) {
+      // (deprecated single-keyword setter, dipertahankan untuk kompatibilitas data lama — tidak dipakai lagi di UI)
+      if (!this.selectedExperience) return;
+      const key = this.selectedExperience.key;
+      const list = (this.portfolioTasks[key] || []).map(t => t.id === taskId ? { ...t, keyword } : t);
+      this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
+      this.saveTasks();
+    },
+
+    // ── Multiselect Kata Kunci per task (dari bank kata kunci di Career Foundation) ──
+    loadKeywordBank() {
+      try {
+        const kb = WorkspaceStorage.getItem('career_keyword_bank');
+        this.keywordBank = kb ? JSON.parse(kb) : [];
+      } catch(_e) { this.keywordBank = []; }
+    },
+    openKeywordModal(taskId) {
+      this.loadKeywordBank();
+      this.keywordModalTaskId = taskId;
+    },
+    closeKeywordModal() {
+      this.keywordModalTaskId = null;
+    },
+    isTaskKeywordChecked(kw) {
+      const task = this.getTaskById(this.keywordModalTaskId);
+      return !!(task && (task.keywords || []).includes(kw));
+    },
+    toggleTaskKeyword(kw) {
+      if (!this.selectedExperience || !this.keywordModalTaskId) return;
+      const key = this.selectedExperience.key;
+      const list = (this.portfolioTasks[key] || []).map(t => {
+        if (t.id !== this.keywordModalTaskId) return t;
+        const current = t.keywords || [];
+        const next = current.includes(kw) ? current.filter(k => k !== kw) : [...current, kw];
+        return { ...t, keywords: next };
+      });
+      this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
+      this.saveTasks();
+    },
+    removeTaskKeyword(task, kw) {
+      if (!this.selectedExperience) return;
+      const key = this.selectedExperience.key;
+      const list = (this.portfolioTasks[key] || []).map(t => {
+        if (t.id !== task.id) return t;
+        return { ...t, keywords: (t.keywords || []).filter(k => k !== kw) };
+      });
       this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
       this.saveTasks();
     },
@@ -15250,6 +15409,7 @@ const MyPortfolio = {
       const en = WorkspaceStorage.getItem('portfolio_experience_notes');
       if (en) this.experienceNotes = JSON.parse(en);
     } catch(_e) {}
+    this.loadKeywordBank();
     this.loadJobLogs();
     if (this.experiences.length) {
       this.selectedExpKey = this.experiences[0].key;

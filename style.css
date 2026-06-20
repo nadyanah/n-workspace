@@ -6971,6 +6971,111 @@ input:checked + .switch-slider:before {
   color: #fff;
 }
 
+/* ── Layout: Sidebar Kata Kunci (kiri) + Konten Tab (kanan) ── */
+.cf-body-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+.cf-tabs-content {
+  flex: 1;
+  min-width: 0;
+}
+.cf-keyword-sidebar {
+  flex: 0 0 220px;
+  width: 220px;
+  background: var(--bg-cream, #FDFBF7);
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 14px;
+  padding: 16px;
+  position: sticky;
+  top: 16px;
+}
+.cf-keyword-sidebar-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dark, #2C2621);
+  margin: 0 0 4px;
+  font-family: 'Outfit', sans-serif;
+}
+.cf-keyword-sidebar-sub {
+  font-size: 11px;
+  color: var(--text-muted, #6E6359);
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+.cf-keyword-add-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.cf-keyword-input-add {
+  flex: 1;
+  height: 32px;
+  padding: 0 9px;
+  font-size: 12.5px;
+  border-radius: 7px;
+}
+.cf-keyword-add-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  flex-shrink: 0;
+}
+.cf-keyword-empty {
+  font-size: 11.5px;
+  color: var(--text-muted, #6E6359);
+  text-align: center;
+  padding: 12px 0;
+}
+.cf-keyword-bank-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.cf-keyword-bank-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 4px 4px 10px;
+  background: rgba(214,123,82,0.10);
+  color: var(--color-terracotta, #D67B52);
+  border: 1px solid rgba(214,123,82,0.25);
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.cf-keyword-bank-chip-remove {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--color-terracotta, #D67B52);
+  cursor: pointer;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.cf-keyword-bank-chip-remove:hover {
+  background: rgba(214,123,82,0.2);
+}
+@media (max-width: 760px) {
+  .cf-body-layout {
+    flex-direction: column;
+  }
+  .cf-keyword-sidebar {
+    width: 100%;
+    flex: 1 1 auto;
+    position: static;
+  }
+}
+
 /* ── Portfolio shortcut button (navigates away to a new page, not a tab) ── */
 .cf-filter-pill-portfolio {
   display: inline-flex;
