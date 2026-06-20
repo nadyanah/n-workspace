@@ -14708,12 +14708,12 @@ const MyPortfolio = {
           </div>
           <button class="mp-insight-btn" :class="{ 'mp-insight-filled': hasExperienceNote }"
             @click="openNotesModal"
-            :title="hasExperienceNote ? truncate(currentExperienceNote, 90) : 'Belum ada catatan'">
+            :title="hasExperienceNote ? truncate(stripHtml(currentExperienceNote), 90) : 'Belum ada catatan'">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             {{ hasExperienceNote ? 'Lihat Catatan' : 'Tulis Catatan' }}
           </button>
         </div>
-        <p v-if="hasExperienceNote" class="mp-note-card-preview">{{ truncate(currentExperienceNote, 220) }}</p>
+        <p v-if="hasExperienceNote" class="mp-note-card-preview">{{ truncate(stripHtml(currentExperienceNote), 220) }}</p>
       </div>
 
       <div class="mp-add-row">
@@ -14803,7 +14803,7 @@ const MyPortfolio = {
                 <td>
                   <button class="mp-insight-btn" :class="{ 'mp-insight-filled': hasInsightSummary(task) }"
                     @click="openInsightModal(task.id)"
-                    :title="hasInsightSummary(task) ? truncate(task.insightSummary, 90) : 'Belum ada rangkuman insight'">
+                    :title="hasInsightSummary(task) ? truncate(stripHtml(task.insightSummary), 90) : 'Belum ada rangkuman insight'">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>
                     {{ hasInsightSummary(task) ? 'Lihat Insight' : 'Tulis Insight' }}
                   </button>
@@ -14919,7 +14919,7 @@ const MyPortfolio = {
 
     <!-- ══ MODAL: Rangkuman Insight per Task ══ -->
     <transition name="cf-fade">
-      <div v-if="insightModalTaskId" class="cf-modal-overlay" @click.self="closeInsightModal">
+      <div v-if="insightModalTaskId" class="cf-modal-overlay" @click.self="insightModalMode === 'edit' ? null : closeInsightModal()">
         <div class="cf-modal cf-modal-xl">
           <div class="cf-modal-header">
             <div>
@@ -14934,7 +14934,7 @@ const MyPortfolio = {
           <!-- ── Mode VIEW: tampilkan insight yang sudah tersimpan, read-only ── -->
           <template v-if="insightModalMode === 'view'">
             <div class="cf-modal-body">
-              <div class="mp-insight-view-box">{{ insightModalDraft }}</div>
+              <div class="mp-insight-view-box insight-rich-content" v-html="insightModalDraft"></div>
             </div>
             <div class="cf-modal-footer">
               <button class="cf-btn-danger" style="margin-right:auto" @click="deleteInsightModal">Hapus</button>
@@ -14946,11 +14946,38 @@ const MyPortfolio = {
             </div>
           </template>
 
-          <!-- ── Mode EDIT: textarea untuk menulis / mengubah insight ── -->
+          <!-- ── Mode EDIT: Rich Text Editor untuk menulis / mengubah insight ── -->
           <template v-else>
             <div class="cf-modal-body">
-              <p style="font-size:11.5px; color:var(--text-muted); margin:0; line-height:1.6;">Tulis rangkuman insight / pembelajaran dari task ini — bisa jadi catatan refleksi, hasil belajar, atau poin penting untuk portofolio kamu.</p>
-              <textarea class="cf-textarea mp-insight-textarea-lg" v-model="insightModalDraft" rows="18" placeholder="cth., Dari task ini aku belajar..."></textarea>
+              <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 10px; line-height:1.6;">Tulis rangkuman insight / pembelajaran dari task ini — bisa jadi catatan refleksi, hasil belajar, atau poin penting untuk portofolio kamu.</p>
+              <!-- Toolbar -->
+              <div class="mp-rte-toolbar">
+                <button type="button" @click="mpRteExec('insightEditor', 'bold')" title="Bold (Ctrl+B)" class="mp-rte-btn"><b>B</b></button>
+                <button type="button" @click="mpRteExec('insightEditor', 'italic')" title="Italic (Ctrl+I)" class="mp-rte-btn"><i>I</i></button>
+                <button type="button" @click="mpRteExec('insightEditor', 'underline')" title="Underline" class="mp-rte-btn"><u>U</u></button>
+                <div class="mp-rte-sep"></div>
+                <button type="button" @click="mpRteExec('insightEditor', 'formatBlock', 'h1')" title="Heading 1" class="mp-rte-btn mp-rte-btn-text">H1</button>
+                <button type="button" @click="mpRteExec('insightEditor', 'formatBlock', 'h2')" title="Heading 2" class="mp-rte-btn mp-rte-btn-text">H2</button>
+                <button type="button" @click="mpRteExec('insightEditor', 'formatBlock', 'p')" title="Paragraf Normal" class="mp-rte-btn mp-rte-btn-text" style="color:var(--text-muted);">¶</button>
+                <div class="mp-rte-sep"></div>
+                <button type="button" @click="mpRteExec('insightEditor', 'insertUnorderedList')" title="Bullet List" class="mp-rte-btn">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
+                </button>
+                <button type="button" @click="mpRteExec('insightEditor', 'insertOrderedList')" title="Numbered List" class="mp-rte-btn">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 10h2" stroke-linecap="round"/><path d="M4 14c0-1 2-1 2-2s-2-1-2 0" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18h2l-2 2h2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <div class="mp-rte-sep"></div>
+                <button type="button" @click="mpRteExec('insightEditor', 'strikeThrough')" title="Strikethrough" class="mp-rte-btn"><s style="font-size:12px;">S</s></button>
+              </div>
+              <!-- Editor Area -->
+              <div
+                ref="insightEditor"
+                contenteditable="true"
+                class="mp-rte-editor"
+                @input="onMpRteInput('insightModalDraft', 'insightEditor')"
+                @paste="onMpRtePaste('insightEditor')"
+                data-placeholder="cth., Dari task ini aku belajar..."
+              ></div>
             </div>
             <div class="cf-modal-footer">
               <button class="cf-btn-ghost" @click="cancelEditInsightModal">Batal</button>
@@ -14963,7 +14990,7 @@ const MyPortfolio = {
 
     <!-- ══ MODAL: Catatan Pengalaman (menyesuaikan filter Pengalaman Kerja yang dipilih) ══ -->
     <transition name="cf-fade">
-      <div v-if="notesModalOpen" class="cf-modal-overlay" @click.self="closeNotesModal">
+      <div v-if="notesModalOpen" class="cf-modal-overlay" @click.self="notesModalMode === 'edit' ? null : closeNotesModal()">
         <div class="cf-modal cf-modal-xl">
           <div class="cf-modal-header">
             <div>
@@ -14980,7 +15007,7 @@ const MyPortfolio = {
           <!-- ── Mode VIEW: tampilkan catatan yang sudah tersimpan, read-only ── -->
           <template v-if="notesModalMode === 'view'">
             <div class="cf-modal-body">
-              <div class="mp-insight-view-box">{{ notesModalDraft }}</div>
+              <div class="mp-insight-view-box insight-rich-content" v-html="notesModalDraft"></div>
             </div>
             <div class="cf-modal-footer">
               <button class="cf-btn-danger" style="margin-right:auto" @click="deleteNotesModal">Hapus</button>
@@ -14992,11 +15019,38 @@ const MyPortfolio = {
             </div>
           </template>
 
-          <!-- ── Mode EDIT: textarea untuk menulis / mengubah catatan pengalaman ── -->
+          <!-- ── Mode EDIT: Rich Text Editor untuk menulis / mengubah catatan pengalaman ── -->
           <template v-else>
             <div class="cf-modal-body">
-              <p style="font-size:11.5px; color:var(--text-muted); margin:0; line-height:1.6;">Tulis catatan atau refleksi umum untuk pengalaman kerja ini. Catatan akan tersimpan terpisah per pengalaman, sesuai pilihan di filter "Pengalaman Kerja".</p>
-              <textarea class="cf-textarea mp-insight-textarea-lg" v-model="notesModalDraft" rows="18" placeholder="cth., Catatan umum tentang peran ini..."></textarea>
+              <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 10px; line-height:1.6;">Tulis catatan atau refleksi umum untuk pengalaman kerja ini. Catatan akan tersimpan terpisah per pengalaman, sesuai pilihan di filter "Pengalaman Kerja".</p>
+              <!-- Toolbar -->
+              <div class="mp-rte-toolbar">
+                <button type="button" @click="mpRteExec('notesEditor', 'bold')" title="Bold (Ctrl+B)" class="mp-rte-btn"><b>B</b></button>
+                <button type="button" @click="mpRteExec('notesEditor', 'italic')" title="Italic (Ctrl+I)" class="mp-rte-btn"><i>I</i></button>
+                <button type="button" @click="mpRteExec('notesEditor', 'underline')" title="Underline" class="mp-rte-btn"><u>U</u></button>
+                <div class="mp-rte-sep"></div>
+                <button type="button" @click="mpRteExec('notesEditor', 'formatBlock', 'h1')" title="Heading 1" class="mp-rte-btn mp-rte-btn-text">H1</button>
+                <button type="button" @click="mpRteExec('notesEditor', 'formatBlock', 'h2')" title="Heading 2" class="mp-rte-btn mp-rte-btn-text">H2</button>
+                <button type="button" @click="mpRteExec('notesEditor', 'formatBlock', 'p')" title="Paragraf Normal" class="mp-rte-btn mp-rte-btn-text" style="color:var(--text-muted);">¶</button>
+                <div class="mp-rte-sep"></div>
+                <button type="button" @click="mpRteExec('notesEditor', 'insertUnorderedList')" title="Bullet List" class="mp-rte-btn">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
+                </button>
+                <button type="button" @click="mpRteExec('notesEditor', 'insertOrderedList')" title="Numbered List" class="mp-rte-btn">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 10h2" stroke-linecap="round"/><path d="M4 14c0-1 2-1 2-2s-2-1-2 0" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18h2l-2 2h2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <div class="mp-rte-sep"></div>
+                <button type="button" @click="mpRteExec('notesEditor', 'strikeThrough')" title="Strikethrough" class="mp-rte-btn"><s style="font-size:12px;">S</s></button>
+              </div>
+              <!-- Editor Area -->
+              <div
+                ref="notesEditor"
+                contenteditable="true"
+                class="mp-rte-editor"
+                @input="onMpRteInput('notesModalDraft', 'notesEditor')"
+                @paste="onMpRtePaste('notesEditor')"
+                data-placeholder="cth., Catatan umum tentang peran ini..."
+              ></div>
             </div>
             <div class="cf-modal-footer">
               <button class="cf-btn-ghost" @click="cancelEditNotesModal">Batal</button>
@@ -15136,7 +15190,8 @@ const MyPortfolio = {
     },
 
     hasExperienceNote() {
-      return !!this.currentExperienceNote.trim();
+      const stripped = this.currentExperienceNote.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+      return stripped.length > 0;
     },
   },
 
@@ -15309,9 +15364,41 @@ const MyPortfolio = {
       this.saveTasks();
     },
 
+    // ── Rich Text Editor helpers (shared untuk insightEditor & notesEditor) ──
+    mpRteExec(refName, cmd, val) {
+      const el = this.$refs[refName];
+      if (el) el.focus();
+      document.execCommand(cmd, false, val || null);
+    },
+    onMpRteInput(draftKey, refName) {
+      const el = this.$refs[refName];
+      if (el) this[draftKey] = el.innerHTML;
+    },
+    onMpRtePaste(refName) {
+      const el = this.$refs[refName];
+      if (!el) return;
+      setTimeout(() => {
+        // Bersihkan paste: hapus span/style berlebih, pertahankan struktur block
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_ELEMENT);
+        const toClean = [];
+        while (walker.nextNode()) toClean.push(walker.currentNode);
+        toClean.forEach(node => {
+          if (['SPAN','FONT'].includes(node.tagName)) {
+            node.removeAttribute('style');
+            node.removeAttribute('color');
+            node.removeAttribute('face');
+            node.removeAttribute('size');
+          }
+        });
+      }, 0);
+    },
+
     // ── Rangkuman Insight per task (popup) ──
     hasInsightSummary(task) {
-      return !!(task.insightSummary && task.insightSummary.trim());
+      if (!task.insightSummary) return false;
+      // Cek apakah ada konten text di dalamnya (bukan cuma tag HTML kosong)
+      const stripped = task.insightSummary.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+      return stripped.length > 0;
     },
 
     openInsightModal(taskId) {
@@ -15321,6 +15408,9 @@ const MyPortfolio = {
       // Kalau sudah ada isinya, buka dalam mode tampilan (read-only) dulu.
       // Kalau masih kosong, langsung ke mode edit supaya bisa langsung nulis.
       this.insightModalMode = (task && this.hasInsightSummary(task)) ? 'view' : 'edit';
+      if (this.insightModalMode === 'edit') {
+        this.$nextTick(() => { if (this.$refs.insightEditor) this.$refs.insightEditor.innerHTML = this.insightModalDraft; });
+      }
     },
 
     closeInsightModal() {
@@ -15331,6 +15421,7 @@ const MyPortfolio = {
 
     startEditInsightModal() {
       this.insightModalMode = 'edit';
+      this.$nextTick(() => { if (this.$refs.insightEditor) this.$refs.insightEditor.innerHTML = this.insightModalDraft; });
     },
 
     cancelEditInsightModal() {
@@ -15346,11 +15437,13 @@ const MyPortfolio = {
 
     saveInsightModal() {
       if (!this.selectedExperience || !this.insightModalTaskId) return;
+      // Ambil HTML dari editor jika ada
+      if (this.$refs.insightEditor) this.insightModalDraft = this.$refs.insightEditor.innerHTML;
       const key = this.selectedExperience.key;
       const list = (this.portfolioTasks[key] || []).map(t => t.id === this.insightModalTaskId ? { ...t, insightSummary: this.insightModalDraft } : t);
       this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
       this.saveTasks();
-      if (this.insightModalDraft.trim()) {
+      if (this.insightModalDraft.replace(/<[^>]*>/g,'').trim()) {
         this.insightModalMode = 'view';
       } else {
         this.closeInsightModal();
@@ -15375,6 +15468,9 @@ const MyPortfolio = {
       // Kalau masih kosong, langsung ke mode edit supaya bisa langsung nulis.
       this.notesModalMode = this.hasExperienceNote ? 'view' : 'edit';
       this.notesModalOpen = true;
+      if (this.notesModalMode === 'edit') {
+        this.$nextTick(() => { if (this.$refs.notesEditor) this.$refs.notesEditor.innerHTML = this.notesModalDraft; });
+      }
     },
 
     closeNotesModal() {
@@ -15385,6 +15481,7 @@ const MyPortfolio = {
 
     startEditNotesModal() {
       this.notesModalMode = 'edit';
+      this.$nextTick(() => { if (this.$refs.notesEditor) this.$refs.notesEditor.innerHTML = this.notesModalDraft; });
     },
 
     cancelEditNotesModal() {
@@ -15399,10 +15496,12 @@ const MyPortfolio = {
 
     saveNotesModal() {
       if (!this.selectedExperience) return;
+      // Ambil HTML dari editor jika ada
+      if (this.$refs.notesEditor) this.notesModalDraft = this.$refs.notesEditor.innerHTML;
       const key = this.selectedExperience.key;
       this.experienceNotes = { ...this.experienceNotes, [key]: this.notesModalDraft };
       this.saveExperienceNotes();
-      if (this.notesModalDraft.trim()) {
+      if (this.notesModalDraft.replace(/<[^>]*>/g,'').trim()) {
         this.notesModalMode = 'view';
       } else {
         this.closeNotesModal();
@@ -15441,6 +15540,17 @@ const MyPortfolio = {
     truncate(text, n) {
       if (!text) return '';
       return text.length > n ? text.slice(0, n).trim() + '…' : text;
+    },
+
+    stripHtml(html) {
+      if (!html) return '';
+      // Pakai DOMParser supaya &nbsp; dan HTML entities lain ikut ter-decode
+      try {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        return doc.body.textContent || '';
+      } catch (_e) {
+        return html.replace(/<[^>]*>/g, '');
+      }
     },
 
     getCategoryColor(cat) {

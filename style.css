@@ -7656,9 +7656,95 @@ input:checked + .switch-slider:before {
   font-size: 14px;
   color: var(--text-dark, #2C2621);
   line-height: 1.8;
-  white-space: pre-wrap;
   word-break: break-word;
 }
+/* Rich content formatting (view mode) */
+.insight-rich-content h1 { font-size: 18px; font-weight: 800; color: var(--text-dark, #2C2621); margin: 10px 0 6px; line-height: 1.3; }
+.insight-rich-content h2 { font-size: 15px; font-weight: 700; color: var(--text-dark, #2C2621); margin: 10px 0 5px; line-height: 1.4; }
+.insight-rich-content ul { padding-left: 20px; margin: 6px 0; }
+.insight-rich-content ol { padding-left: 20px; margin: 6px 0; }
+.insight-rich-content li { margin-bottom: 3px; }
+.insight-rich-content p { margin: 0 0 6px; }
+.insight-rich-content strong, .insight-rich-content b { font-weight: 700; }
+
+/* ── RTE Toolbar ── */
+.mp-rte-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  padding: 6px 10px;
+  background: #F5F0EB;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  align-items: center;
+}
+.mp-rte-btn {
+  width: 30px;
+  height: 28px;
+  border: 1.5px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--text-dark, #2C2621);
+  font-family: Georgia, serif;
+  transition: all 0.12s;
+  padding: 0;
+  line-height: 1;
+}
+.mp-rte-btn:hover {
+  background: #EDE6DE;
+  border-color: var(--color-sand, #E8DFD8);
+}
+.mp-rte-btn-text {
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 800;
+  width: auto;
+  padding: 0 7px;
+}
+.mp-rte-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--color-sand, #E8DFD8);
+  margin: 0 3px;
+  flex-shrink: 0;
+}
+/* ── RTE Editor Area ── */
+.mp-rte-editor {
+  width: 100%;
+  min-height: 280px;
+  max-height: 56vh;
+  overflow-y: auto;
+  padding: 14px 16px;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  background: #fff;
+  font-size: 14px;
+  color: var(--text-dark, #2C2621);
+  line-height: 1.8;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+  word-break: break-word;
+  margin-top: 8px;
+}
+.mp-rte-editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted, #9C9189);
+  font-style: italic;
+  pointer-events: none;
+}
+.mp-rte-editor h1 { font-size: 18px; font-weight: 800; margin: 8px 0 4px; color: var(--text-dark, #2C2621); }
+.mp-rte-editor h2 { font-size: 15px; font-weight: 700; margin: 8px 0 4px; color: var(--text-dark, #2C2621); }
+.mp-rte-editor ul, .mp-rte-editor ol { padding-left: 20px; margin: 4px 0; }
+.mp-rte-editor li { margin-bottom: 3px; }
+.mp-rte-editor p { margin: 0 0 6px; }
 .mp-insight-textarea-lg {
   min-height: 320px;
   max-height: 64vh;
