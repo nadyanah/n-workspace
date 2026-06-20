@@ -7226,6 +7226,54 @@ input:checked + .switch-slider:before {
   color: var(--color-terracotta, #D67B52);
 }
 
+/* ── Catatan Pengalaman: kartu catatan per pengalaman kerja (My Portfolio) ── */
+.mp-note-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 12px;
+  background: var(--bg-cream, #FDFBF7);
+}
+.mp-note-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.mp-note-card-head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.mp-note-card-label {
+  font-family: 'Hack', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-dark, #2C2621);
+}
+.mp-note-card-sub {
+  font-size: 11.5px;
+  color: var(--text-muted, #6E6359);
+  line-height: 1.5;
+}
+.mp-note-card-preview {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-dark, #2C2621);
+  line-height: 1.6;
+  padding-top: 8px;
+  border-top: 1px dashed var(--color-sand, #E8DFD8);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 /* ── Bukti Kerja: chips + multiselect modal (My Portfolio) ── */
 .mp-bukti-cell {
   display: flex;

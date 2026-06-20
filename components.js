@@ -12921,75 +12921,6 @@ const CareerFoundation = {
       </button>
     </div>
 
-    <!-- ══ TAB: PROFIL & RESUME ══ -->
-    <transition name="cf-fade">
-    <div v-if="activeTab === 'resume'" key="resume">
-      <div class="cf-section-bar">
-        <span class="cf-section-label">Profil</span>
-        <button class="cf-btn-ghost" @click="editResume">
-          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          Edit profil
-        </button>
-      </div>
-      <div class="cf-profile-card">
-        <div class="cf-profile-head">
-          <div>
-            <p class="cf-profile-name">{{ resume.name || 'Nama Lengkap' }}</p>
-            <p class="cf-profile-title">{{ resume.title || 'Posisi / Bidang Karir' }}</p>
-            <div class="cf-profile-contacts">
-              <span v-if="resume.email" class="cf-profile-contact">
-                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                {{ resume.email }}
-              </span>
-              <span v-if="resume.phone" class="cf-profile-contact">
-                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.42C1.61 2.22 2.5 1.22 3.7 1H6.7a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.29 6.29l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                {{ resume.phone }}
-              </span>
-              <span v-if="resume.location" class="cf-profile-contact">
-                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                {{ resume.location }}
-              </span>
-              <span v-if="resume.linkedin" class="cf-profile-contact">
-                <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
-                {{ resume.linkedin }}
-              </span>
-            </div>
-          </div>
-          <button class="cf-btn-ghost" @click="editResume" style="flex-shrink:0; align-self:flex-start;">
-            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Edit
-          </button>
-        </div>
-        <div v-if="resume.summary || resume.skills || resume.experience || resume.education || resume.languages" class="cf-profile-body">
-          <div v-if="resume.summary" class="cf-profile-section-full">
-            <span class="cf-profile-section-label">Tentang Saya</span>
-            <p class="cf-profile-section-text">{{ resume.summary }}</p>
-          </div>
-          <div v-if="resume.skills">
-            <span class="cf-profile-section-label">Keahlian</span>
-            <p class="cf-profile-section-text">{{ resume.skills }}</p>
-          </div>
-          <div v-if="resume.experience">
-            <span class="cf-profile-section-label">Pengalaman</span>
-            <p class="cf-profile-section-text">{{ resume.experience }}</p>
-          </div>
-          <div v-if="resume.education">
-            <span class="cf-profile-section-label">Pendidikan</span>
-            <p class="cf-profile-section-text">{{ resume.education }}</p>
-          </div>
-          <div v-if="resume.languages">
-            <span class="cf-profile-section-label">Bahasa</span>
-            <p class="cf-profile-section-text">{{ resume.languages }}</p>
-          </div>
-        </div>
-        <div v-else class="cf-profile-empty">
-          <p class="cf-profile-empty-text">Profil belum diisi</p>
-          <p class="cf-profile-empty-sub">Klik Edit profil untuk mulai mengisi resume kamu.</p>
-        </div>
-      </div>
-    </div>
-    </transition>
-
     <!-- ══ TAB: CV ATS v2 ══ -->
     <transition name="cf-fade">
     <div v-if="activeTab === 'cv'" key="cv">
@@ -13902,7 +13833,6 @@ const CareerFoundation = {
     return {
       activeTab: 'resume',
       tabs: [
-        { key: 'resume',        label: 'Profil & Resume',  emoji: '👤', color: 'var(--color-terracotta)', shadowColor: 'rgba(214,123,82,0.3)' },
         { key: 'cv',            label: 'CV ATS',           emoji: '📄', color: '#6366F1',                 shadowColor: 'rgba(99,102,241,0.3)' },
         { key: 'cover_letter',  label: 'Cover Letter',     emoji: '✉️',  color: '#D67B52',                 shadowColor: 'rgba(214,123,82,0.3)' },
         { key: 'surat_lamaran', label: 'Surat Lamaran',    emoji: '📝', color: '#059669',                 shadowColor: 'rgba(5,150,105,0.3)' },
@@ -14640,6 +14570,23 @@ const MyPortfolio = {
         </select>
       </div>
 
+      <!-- ── Catatan Pengalaman: ikut menyesuaikan filter Pengalaman Kerja di atas ── -->
+      <div class="mp-note-card">
+        <div class="mp-note-card-head">
+          <div class="mp-note-card-head-text">
+            <span class="mp-note-card-label">Catatan Pengalaman</span>
+            <span class="mp-note-card-sub">Catatan / refleksi umum untuk pengalaman kerja yang sedang dipilih di atas.</span>
+          </div>
+          <button class="mp-insight-btn" :class="{ 'mp-insight-filled': hasExperienceNote }"
+            @click="openNotesModal"
+            :title="hasExperienceNote ? truncate(currentExperienceNote, 90) : 'Belum ada catatan'">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            {{ hasExperienceNote ? 'Lihat Catatan' : 'Tulis Catatan' }}
+          </button>
+        </div>
+        <p v-if="hasExperienceNote" class="mp-note-card-preview">{{ truncate(currentExperienceNote, 220) }}</p>
+      </div>
+
       <div class="mp-add-row">
         <input type="text" class="form-input mp-add-input" v-model="newTaskTitle"
           placeholder="Judul task baru, misal: Redesign halaman checkout" @keyup.enter="addTask" />
@@ -14804,6 +14751,52 @@ const MyPortfolio = {
       </div>
     </transition>
 
+    <!-- ══ MODAL: Catatan Pengalaman (menyesuaikan filter Pengalaman Kerja yang dipilih) ══ -->
+    <transition name="cf-fade">
+      <div v-if="notesModalOpen" class="cf-modal-overlay" @click.self="closeNotesModal">
+        <div class="cf-modal cf-modal-xl">
+          <div class="cf-modal-header">
+            <div>
+              <h3 class="cf-modal-title">Catatan Pengalaman</h3>
+              <p v-if="selectedExperience" style="font-size: 11.5px; color: var(--text-muted); margin: 3px 0 0;">
+                {{ selectedExperience.role }}<template v-if="selectedExperience.company"> — {{ selectedExperience.company }}</template><template v-if="selectedExperience.period"> ({{ selectedExperience.period }})</template>
+              </p>
+            </div>
+            <button class="cf-modal-close" @click="closeNotesModal">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+
+          <!-- ── Mode VIEW: tampilkan catatan yang sudah tersimpan, read-only ── -->
+          <template v-if="notesModalMode === 'view'">
+            <div class="cf-modal-body">
+              <div class="mp-insight-view-box">{{ notesModalDraft }}</div>
+            </div>
+            <div class="cf-modal-footer">
+              <button class="cf-btn-danger" style="margin-right:auto" @click="deleteNotesModal">Hapus</button>
+              <button class="cf-btn-ghost" @click="closeNotesModal">Tutup</button>
+              <button class="cf-btn-primary" @click="startEditNotesModal">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                Edit
+              </button>
+            </div>
+          </template>
+
+          <!-- ── Mode EDIT: textarea untuk menulis / mengubah catatan pengalaman ── -->
+          <template v-else>
+            <div class="cf-modal-body">
+              <p style="font-size:11.5px; color:var(--text-muted); margin:0; line-height:1.6;">Tulis catatan atau refleksi umum untuk pengalaman kerja ini. Catatan akan tersimpan terpisah per pengalaman, sesuai pilihan di filter "Pengalaman Kerja".</p>
+              <textarea class="cf-textarea mp-insight-textarea-lg" v-model="notesModalDraft" rows="18" placeholder="cth., Catatan umum tentang peran ini..."></textarea>
+            </div>
+            <div class="cf-modal-footer">
+              <button class="cf-btn-ghost" @click="cancelEditNotesModal">Batal</button>
+              <button class="cf-btn-primary" @click="saveNotesModal">Simpan</button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </transition>
+
   </div>
   `,
 
@@ -14812,6 +14805,7 @@ const MyPortfolio = {
       atsCV: { experience: '', experienceEntries: [] },
       selectedExpKey: '',
       portfolioTasks: {}, // { [expKey]: [{ id, title, status, buktiKerja: [logId, ...], insightSummary }] }
+      experienceNotes: {}, // { [expKey]: noteString } — catatan umum per pengalaman kerja, ikut filter di atas
       newTaskTitle: '',
       jobLogs: [], // dari Riwayat Kegiatan Kerja (Job Logbook)
       buktiModalTaskId: null,
@@ -14819,6 +14813,9 @@ const MyPortfolio = {
       insightModalTaskId: null,
       insightModalDraft: '',
       insightModalMode: 'view', // 'view' (read-only) | 'edit' (textarea)
+      notesModalOpen: false,
+      notesModalDraft: '',
+      notesModalMode: 'view', // 'view' (read-only) | 'edit' (textarea)
     };
   },
 
@@ -14880,6 +14877,16 @@ const MyPortfolio = {
 
     insightModalTask() {
       return this.getTaskById(this.insightModalTaskId);
+    },
+
+    // ── Catatan Pengalaman: otomatis ikut menyesuaikan filter Pengalaman Kerja yang dipilih ──
+    currentExperienceNote() {
+      if (!this.selectedExperience) return '';
+      return this.experienceNotes[this.selectedExperience.key] || '';
+    },
+
+    hasExperienceNote() {
+      return !!this.currentExperienceNote.trim();
     },
   },
 
@@ -15026,6 +15033,63 @@ const MyPortfolio = {
       this.closeInsightModal();
     },
 
+    // ── Catatan Pengalaman (popup terpisah, ikut filter Pengalaman Kerja di atas) ──
+    openNotesModal() {
+      if (!this.selectedExperience) return;
+      this.notesModalDraft = this.currentExperienceNote;
+      // Kalau sudah ada isinya, buka dalam mode tampilan (read-only) dulu.
+      // Kalau masih kosong, langsung ke mode edit supaya bisa langsung nulis.
+      this.notesModalMode = this.hasExperienceNote ? 'view' : 'edit';
+      this.notesModalOpen = true;
+    },
+
+    closeNotesModal() {
+      this.notesModalOpen = false;
+      this.notesModalDraft = '';
+      this.notesModalMode = 'view';
+    },
+
+    startEditNotesModal() {
+      this.notesModalMode = 'edit';
+    },
+
+    cancelEditNotesModal() {
+      if (this.hasExperienceNote) {
+        // Batalkan perubahan, balik ke tampilan isi yang tersimpan sebelumnya.
+        this.notesModalDraft = this.currentExperienceNote;
+        this.notesModalMode = 'view';
+      } else {
+        this.closeNotesModal();
+      }
+    },
+
+    saveNotesModal() {
+      if (!this.selectedExperience) return;
+      const key = this.selectedExperience.key;
+      this.experienceNotes = { ...this.experienceNotes, [key]: this.notesModalDraft };
+      this.saveExperienceNotes();
+      if (this.notesModalDraft.trim()) {
+        this.notesModalMode = 'view';
+      } else {
+        this.closeNotesModal();
+      }
+    },
+
+    deleteNotesModal() {
+      if (!confirm('Hapus catatan pengalaman ini?')) return;
+      if (!this.selectedExperience) return;
+      const key = this.selectedExperience.key;
+      this.experienceNotes = { ...this.experienceNotes, [key]: '' };
+      this.saveExperienceNotes();
+      this.closeNotesModal();
+    },
+
+    saveExperienceNotes() {
+      try {
+        WorkspaceStorage.setItem('portfolio_experience_notes', JSON.stringify(this.experienceNotes));
+      } catch(_e) {}
+    },
+
     loadJobLogs() {
       try {
         const saved = WorkspaceStorage.getItem('personal_workspace_job_logs');
@@ -15089,6 +15153,10 @@ const MyPortfolio = {
     try {
       const pt = WorkspaceStorage.getItem('portfolio_tasks');
       if (pt) this.portfolioTasks = JSON.parse(pt);
+    } catch(_e) {}
+    try {
+      const en = WorkspaceStorage.getItem('portfolio_experience_notes');
+      if (en) this.experienceNotes = JSON.parse(en);
     } catch(_e) {}
     this.loadJobLogs();
     if (this.experiences.length) {
