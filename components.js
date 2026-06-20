@@ -4807,7 +4807,7 @@ const InterviewPractice = {
           Kelola & Update Daftar Pertanyaan
         </h3>
         <div style="background:var(--bg-card,#fff); border:1.5px solid var(--color-sand,#E8DFD8); border-radius:12px; padding:16px; display:grid; gap:12px; margin-bottom:16px;">
-          <div style="display:grid; grid-template-columns:1fr 2fr; gap:12px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
             <div>
               <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:4px;">Kategori</label>
               <select class="form-input" v-model="formCategory" style="padding:10px; font-size:13px; border:1.5px solid var(--color-sand); height:42px;">
@@ -4821,6 +4821,52 @@ const InterviewPractice = {
             <div>
               <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:4px;">Teks Pertanyaan</label>
               <input type="text" class="form-input" v-model="formText" placeholder="Contoh: Mengapa kami harus menerima Anda?" style="padding:10px; font-size:13.5px; border:1.5px solid var(--color-sand); height:42px;" />
+            </div>
+            <div>
+              <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:4px;">
+                Framework Jawaban
+              </label>
+              <div class="ip-framework-select-wrap">
+                <!-- Tanpa Framework -->
+                <button type="button"
+                  class="ip-fw-pill-btn"
+                  :class="{ 'ip-fw-pill-btn--active ip-fw-pill-btn--none': formFramework === '' }"
+                  @click="formFramework = ''">
+                  <span class="ip-fw-pill-icon">
+                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                  </span>
+                  Bebas
+                </button>
+                <!-- STAR / PREP / PPF -->
+                <button type="button"
+                  v-for="fw in ['STAR','PREP','PPF']" :key="fw"
+                  class="ip-fw-pill-btn"
+                  :class="{ 'ip-fw-pill-btn--active': formFramework === fw }"
+                  @click="formFramework = fw">
+                  <span class="ip-fw-pill-icon">
+                    <svg v-if="fw==='STAR'" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <svg v-if="fw==='PREP'" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .5 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path></svg>
+                    <svg v-if="fw==='PPF'" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v8"></path><path d="M8 12h8"></path></svg>
+                  </span>
+                  {{ fw }}
+                </button>
+              </div>
+              <div class="ip-fw-hint-box" v-if="formFramework === ''">
+                <span style="color:var(--text-muted);">—</span>
+                <span>Jawab bebas tanpa kerangka khusus. Framework Guide tidak akan terbuka otomatis.</span>
+              </div>
+              <div class="ip-fw-hint-box" v-if="formFramework === 'STAR'">
+                <span style="color:var(--color-terracotta);">★</span>
+                <span>Situation · Task · Action · Result — untuk pertanyaan behavioral.</span>
+              </div>
+              <div class="ip-fw-hint-box" v-if="formFramework === 'PREP'">
+                <span style="color:var(--color-terracotta);">💡</span>
+                <span>Point · Reason · Example · Point — untuk opini atau teknis.</span>
+              </div>
+              <div class="ip-fw-hint-box" v-if="formFramework === 'PPF'">
+                <span style="color:var(--color-terracotta);">✦</span>
+                <span>Present · Past · Future — untuk "Ceritakan diri Anda!".</span>
+              </div>
             </div>
           </div>
           <div>
@@ -4838,15 +4884,20 @@ const InterviewPractice = {
           <table class="questions-manage-table">
             <thead>
               <tr>
-                <th style="width:20%;">Kategori</th>
-                <th style="width:45%;">Pertanyaan</th>
-                <th style="width:20%;">Hints</th>
-                <th style="width:15%; text-align:center;">Aksi</th>
+                <th style="width:16%;">Kategori</th>
+                <th style="width:10%; text-align:center;">Framework</th>
+                <th style="width:38%;">Pertanyaan</th>
+                <th style="width:24%;">Hints</th>
+                <th style="width:12%; text-align:center;">Aksi</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="q in questions" :key="q.id">
-                <td><span class="framework-step-pill" style="margin:0;">{{ q.category }}</span></td>
+                <td><span class="framework-step-pill" style="margin:0; font-size:10px;">{{ q.category }}</span></td>
+                <td style="text-align:center;">
+                  <span v-if="q.framework" class="ip-fw-badge" :class="'ip-fw-badge--' + q.framework.toLowerCase()">{{ q.framework }}</span>
+                  <span v-else class="ip-fw-badge ip-fw-badge--none">Bebas</span>
+                </td>
                 <td style="font-weight:600; color:var(--color-forest,#1C3B34);">{{ q.text }}</td>
                 <td style="font-size:11.5px; color:var(--text-muted);">{{ q.hints }}</td>
                 <td style="text-align:center;">
@@ -5207,6 +5258,7 @@ const InterviewPractice = {
       formCategory: 'General HR',
       formText: '',
       formHints: '',
+      formFramework: 'STAR',
       editingId: null,
       quickCustomQuestionText: '',
 
@@ -5350,16 +5402,16 @@ const InterviewPractice = {
       if (!this.formText.trim()) { alert('Teks pertanyaan tidak boleh kosong!'); return; }
       if (this.editingId !== null) {
         const idx = this.questions.findIndex(q => q.id === this.editingId);
-        if (idx !== -1) { this.questions[idx].category = this.formCategory; this.questions[idx].text = this.formText.trim(); this.questions[idx].hints = this.formHints.trim() || 'Fokuskan penyampaian dengan kerangka berpikir rasional.'; }
+        if (idx !== -1) { this.questions[idx].category = this.formCategory; this.questions[idx].text = this.formText.trim(); this.questions[idx].hints = this.formHints.trim() || 'Fokuskan penyampaian dengan kerangka berpikir rasional.'; this.questions[idx].framework = this.formFramework || null; }
         this.editingId = null;
       } else {
-        this.questions.push({ id: Date.now(), category: this.formCategory, text: this.formText.trim(), hints: this.formHints.trim() || 'Fokuskan penyampaian dengan kerangka berpikir rasional.', framework: 'STAR' });
+        this.questions.push({ id: Date.now(), category: this.formCategory, text: this.formText.trim(), hints: this.formHints.trim() || 'Fokuskan penyampaian dengan kerangka berpikir rasional.', framework: this.formFramework || null });
       }
-      this.saveQuestionsToLocalStorage(); this.formText = ''; this.formHints = '';
+      this.saveQuestionsToLocalStorage(); this.formText = ''; this.formHints = ''; this.formFramework = 'STAR';
       alert('Pertanyaan berhasil disimpan!');
     },
-    startEdit(q) { this.editingId = q.id; this.formCategory = q.category; this.formText = q.text; this.formHints = q.hints; globalThis.scrollTo({ top: 300, behavior: 'smooth' }); },
-    cancelEdit() { this.editingId = null; this.formText = ''; this.formHints = ''; },
+    startEdit(q) { this.editingId = q.id; this.formCategory = q.category; this.formText = q.text; this.formHints = q.hints; this.formFramework = q.framework || ''; globalThis.scrollTo({ top: 300, behavior: 'smooth' }); },
+    cancelEdit() { this.editingId = null; this.formText = ''; this.formHints = ''; this.formFramework = 'STAR'; },
     deleteCustomQuestion(id) {
       if (confirm('Hapus pertanyaan ini?')) { this.questions = this.questions.filter(q => q.id !== id); this.saveQuestionsToLocalStorage(); this.resetToReSpin(); }
     },
