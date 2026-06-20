@@ -7173,9 +7173,13 @@ input:checked + .switch-slider:before {
 .mp-add-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 16px;
   flex-wrap: wrap;
+  padding: 10px 10px 10px 14px;
+  background: linear-gradient(135deg, rgba(214,123,82,0.07), rgba(214,123,82,0.02));
+  border: 1.5px dashed var(--color-terracotta, #D67B52);
+  border-radius: 12px;
 }
 .mp-add-input {
   flex: 1;
@@ -7183,6 +7187,15 @@ input:checked + .switch-slider:before {
   height: 38px;
   padding: 0 12px;
   font-size: 13px;
+  background-color: var(--bg-card, #FFFFFF);
+  border-color: var(--color-sand);
+}
+.mp-add-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+.mp-add-input:focus {
+  background-color: var(--bg-card, #FFFFFF);
 }
 .mp-add-btn {
   height: 38px;
@@ -7235,7 +7248,8 @@ input:checked + .switch-slider:before {
   margin-bottom: 16px;
   border: 1.5px solid var(--color-sand, #E8DFD8);
   border-radius: 12px;
-  background: var(--bg-cream, #FDFBF7);
+  background: var(--bg-card, #FFFFFF);
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(44, 38, 33, 0.04));
 }
 .mp-note-card-head {
   display: flex;
