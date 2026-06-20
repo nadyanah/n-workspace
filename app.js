@@ -400,6 +400,8 @@ const App = {
 
     // Navigation helper — buka di tab baru jika belum terbuka, atau fokus tab existing
     const navigateTo = (pageKey) => {
+      // Career Foundation langsung arahkan ke My Portfolio
+      if (pageKey === 'careerFoundation') pageKey = 'myPortfolio';
       openOrFocusTab(pageKey);
       showNavDrawer.value = false;
     };
@@ -407,6 +409,8 @@ const App = {
     // Click handler for desk icons — skip navigation if it was a drag
     const handleIconClick = (pageKey) => {
       if (hasDragged) return;
+      // Career Foundation langsung arahkan ke My Portfolio
+      if (pageKey === 'careerFoundation') pageKey = 'myPortfolio';
       openOrFocusTab(pageKey);
     };
 
@@ -504,6 +508,12 @@ const App = {
     // Handle navigation triggered by other components (e.g. sync from Logbook)
       globalThis.addEventListener('navigate-to-page', (e) => {
         navigateTo(e.detail);
+      });
+
+      // Handle navigasi langsung ke careerFoundation (bypass redirect ke myPortfolio)
+      globalThis.addEventListener('navigate-to-career-foundation', () => {
+        openOrFocusTab('careerFoundation');
+        showNavDrawer.value = false;
       });
 
       // Handle navigation from MissedTasksPage (ws-navigate event)

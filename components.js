@@ -12883,9 +12883,17 @@ const CareerFoundation = {
 
     <!-- ── Hero Header (job board style) ── -->
     <div class="cf-hero">
-      <div class="cf-hero-badge">
-        <span class="cf-hero-badge-dot"></span>
-        Dokumen Karir
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div class="cf-hero-badge">
+          <span class="cf-hero-badge-dot"></span>
+          Dokumen Karir
+        </div>
+        <button @click="goToPortfolio" title="My Portfolio"
+          style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;background:transparent;border:1.5px solid var(--color-sand,#C8BDB5);border-radius:8px;cursor:pointer;color:var(--text-secondary,#7A6F66);transition:background 0.15s,border-color 0.15s;"
+          onmouseover="this.style.background='var(--color-sand-light,#EDE8E1)';this.style.borderColor='var(--color-terracotta,#D67B52)'"
+          onmouseout="this.style.background='transparent';this.style.borderColor='var(--color-sand,#C8BDB5)'">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        </button>
       </div>
       <h2 class="cf-hero-title">Career Foundation</h2>
       <p class="cf-hero-sub">Semua dokumen siap kirim — CV, cover letter, surat lamaran, dan template email dalam satu tempat.</p>
@@ -12907,11 +12915,6 @@ const CareerFoundation = {
 
     <!-- ── Filter pills (job board category filter) ── -->
     <div class="cf-filter-row">
-      <button class="cf-filter-pill-portfolio" @click="goToPortfolio" title="Buka halaman My Portfolio">
-        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-        My Portfolio
-      </button>
-      <span class="cf-filter-divider"></span>
       <button
         v-for="tab in tabs" :key="tab.key"
         class="cf-filter-pill"
@@ -13831,7 +13834,7 @@ const CareerFoundation = {
 
   data() {
     return {
-      activeTab: 'resume',
+      activeTab: 'cv',
       tabs: [
         { key: 'cv',            label: 'CV ATS',           emoji: '📄', color: '#6366F1',                 shadowColor: 'rgba(99,102,241,0.3)' },
         { key: 'cover_letter',  label: 'Cover Letter',     emoji: '✉️',  color: '#D67B52',                 shadowColor: 'rgba(214,123,82,0.3)' },
@@ -14058,7 +14061,7 @@ const CareerFoundation = {
   },
 
   methods: {
-    // ── Navigasi ke halaman My Portfolio (page baru, terpisah dari tab di sini) ──
+    // ── My Portfolio button → buka halaman My Portfolio ──
     goToPortfolio() {
       globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'myPortfolio' }));
     },
@@ -14538,9 +14541,17 @@ const MyPortfolio = {
 
     <!-- ── Hero Header ── -->
     <div class="mp-hero">
-      <div class="mp-hero-badge">
-        <span class="mp-hero-badge-dot"></span>
-        Showcase
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <div class="mp-hero-badge">
+          <span class="mp-hero-badge-dot"></span>
+          Showcase
+        </div>
+        <button @click="goToCareer" title="Kembali ke Career Foundation"
+          style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;background:transparent;border:1.5px solid var(--color-sand,#C8BDB5);border-radius:8px;cursor:pointer;color:var(--text-secondary,#7A6F66);transition:background 0.15s,border-color 0.15s;"
+          onmouseover="this.style.background='var(--color-sand-light,#EDE8E1)';this.style.borderColor='var(--color-terracotta,#D67B52)'"
+          onmouseout="this.style.background='transparent';this.style.borderColor='var(--color-sand,#C8BDB5)'">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </button>
       </div>
       <h2 class="mp-hero-title">My 'hidden gem' Portfolio</h2>
       <p class="mp-hero-sub">Catat task portfolio untuk tiap pengalaman kerja. Task berstatus <strong>Fix</strong> otomatis tampil sebagai Poin Pencapaian di CV ATS.</p>
@@ -15175,7 +15186,7 @@ const MyPortfolio = {
     },
 
     goToCareer() {
-      globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'careerFoundation' }));
+      globalThis.dispatchEvent(new CustomEvent('navigate-to-career-foundation'));
     },
   },
 
