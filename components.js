@@ -12964,7 +12964,7 @@ const CareerFoundation = {
         </div>
         <div v-if="!keywordBank.length" class="cf-keyword-empty">Belum ada kata kunci.</div>
         <div v-else class="cf-keyword-bank-list">
-          <span v-for="kw in keywordBank" :key="kw" class="cf-keyword-bank-chip">
+          <span v-for="kw in keywordBank" :key="kw" class="cf-keyword-bank-chip" :title="keywordMeanings[kw] || ''">
             {{ kw }}
             <button class="cf-keyword-bank-chip-edit" title="Edit kata kunci & arti" @click="openEditKeywordModal(kw)">
               <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -15046,10 +15046,11 @@ const MyPortfolio = {
               Tidak ada kata kunci yang cocok dengan pencarian.
             </div>
             <div v-else class="mp-bukti-modal-list">
-              <label v-for="kw in filteredKeywordBank" :key="kw" class="mp-bukti-modal-item">
+              <label v-for="kw in filteredKeywordBank" :key="kw" class="mp-bukti-modal-item" :title="keywordMeanings[kw] || ''">
                 <input type="checkbox" :checked="isTaskKeywordChecked(kw)" @change="toggleTaskKeyword(kw)" />
                 <div class="mp-bukti-modal-item-text">
                   <p class="mp-bukti-modal-item-task">{{ kw }}</p>
+                  <p v-if="keywordMeanings[kw]" class="mp-keyword-modal-item-meaning">{{ keywordMeanings[kw] }}</p>
                 </div>
               </label>
             </div>
@@ -15222,6 +15223,7 @@ const MyPortfolio = {
       buktiModalTaskId: null,
       buktiModalSearch: '',
       keywordBank: [], // master list kata kunci, dikelola di halaman Career Foundation
+      keywordMeanings: {}, // arti tiap kata kunci, dikelola lewat popup Edit Kata Kunci di Career Foundation
       keywordModalTaskId: null,
       keywordModalSearch: '',
       newKeywordModalInput: '', // input "tambah kata kunci baru" langsung dari dalam popup
@@ -15397,6 +15399,10 @@ const MyPortfolio = {
         const kb = WorkspaceStorage.getItem('career_keyword_bank');
         this.keywordBank = kb ? JSON.parse(kb) : [];
       } catch(_e) { this.keywordBank = []; }
+      try {
+        const km = WorkspaceStorage.getItem('career_keyword_meanings');
+        this.keywordMeanings = km ? JSON.parse(km) : {};
+      } catch(_e) { this.keywordMeanings = {}; }
     },
     openKeywordModal(taskId) {
       this.loadKeywordBank();
