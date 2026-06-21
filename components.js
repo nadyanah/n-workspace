@@ -12966,6 +12966,9 @@ const CareerFoundation = {
         <div v-else class="cf-keyword-bank-list">
           <span v-for="kw in keywordBank" :key="kw" class="cf-keyword-bank-chip">
             {{ kw }}
+            <button class="cf-keyword-bank-chip-edit" title="Edit kata kunci & arti" @click="openEditKeywordModal(kw)">
+              <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
             <button class="cf-keyword-bank-chip-remove" title="Hapus kata kunci" @click="removeKeywordFromBank(kw)">
               <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
@@ -13623,6 +13626,37 @@ const CareerFoundation = {
       </div>
     </transition>
 
+    <!-- ══ MODAL: Edit Kata Kunci (ubah teks & isi arti — arti tidak tampil di sidebar) ══ -->
+    <transition name="cf-fade">
+      <div v-if="editingKeywordOriginal" class="cf-modal-overlay" @click.self="closeEditKeywordModal">
+        <div class="cf-modal">
+          <div class="cf-modal-header">
+            <h3 class="cf-modal-title">Edit Kata Kunci</h3>
+            <button class="cf-modal-close" @click="closeEditKeywordModal">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="cf-modal-body">
+            <div>
+              <label class="cf-field-label">Kata Kunci</label>
+              <input class="cf-input" v-model="keywordEditForm.text" placeholder="cth., Leadership" @keyup.enter="saveEditKeywordModal" />
+              <p v-if="keywordEditIsDuplicate" style="font-size: 11px; color: #EF4444; margin-top: 4px;">Kata kunci ini sudah ada di bank.</p>
+            </div>
+            <div>
+              <label class="cf-field-label">Arti / Keterangan</label>
+              <textarea class="cf-textarea" v-model="keywordEditForm.meaning" rows="3" placeholder="Catatan arti / konteks kata kunci ini, mis. apa maksudnya, kapan dipakai..."></textarea>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Hanya terlihat di popup ini — tidak ikut ditampilkan di sidebar.</p>
+            </div>
+          </div>
+          <div class="cf-modal-footer">
+            <button class="cf-btn-danger" style="margin-right:auto" @click="removeKeywordFromBank(editingKeywordOriginal); closeEditKeywordModal();">Hapus</button>
+            <button class="cf-btn-ghost" @click="closeEditKeywordModal">Batal</button>
+            <button class="cf-btn-primary" :disabled="!keywordEditForm.text.trim() || keywordEditIsDuplicate" @click="saveEditKeywordModal">Simpan</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <!-- ══ MODAL: Tambah / Edit Dokumen ══ -->
     <transition name="cf-fade">
       <div v-if="showDocModal" class="cf-modal-overlay" @click.self="showDocModal=false">
@@ -13970,6 +14004,11 @@ const CareerFoundation = {
       // Bank Kata Kunci — master list kata kunci yang bisa dipilih di tabel task My Portfolio.
       keywordBank: [],
       newKeywordInput: '',
+      // Arti / keterangan tiap kata kunci — { [kataKunci]: arti }. Disimpan terpisah,
+      // TIDAK ditampilkan di chip sidebar, hanya terlihat lewat popup Edit Kata Kunci.
+      keywordMeanings: {},
+      editingKeywordOriginal: null, // kata kunci asli yang sedang diedit lewat popup (null = popup tertutup)
+      keywordEditForm: { text: '', meaning: '' },
 
       // CV v2 Custom Sections
       cv2ShowCustomModal: false,
@@ -14119,6 +14158,15 @@ const CareerFoundation = {
       if (!this.atsCV.certifications) return [];
       return this.atsCV.certifications.split('\n').map(s => s.trim()).filter(Boolean);
     },
+
+    // ── Cek duplikat saat rename kata kunci lewat popup edit ──
+    keywordEditIsDuplicate() {
+      const text = this.keywordEditForm.text.trim().toLowerCase();
+      if (!text) return false;
+      return this.keywordBank.some(k =>
+        k.toLowerCase() === text && k !== this.editingKeywordOriginal
+      );
+    },
   },
 
   methods: {
@@ -14139,10 +14187,80 @@ const CareerFoundation = {
     },
     removeKeywordFromBank(kw) {
       this.keywordBank = this.keywordBank.filter(k => k !== kw);
+      if (this.keywordMeanings[kw] !== undefined) {
+        const next = { ...this.keywordMeanings };
+        delete next[kw];
+        this.keywordMeanings = next;
+        this.saveKeywordMeanings();
+      }
       this.saveKeywordBank();
     },
     saveKeywordBank() {
       try { WorkspaceStorage.setItem('career_keyword_bank', JSON.stringify(this.keywordBank)); } catch(_e) {}
+    },
+    saveKeywordMeanings() {
+      try { WorkspaceStorage.setItem('career_keyword_meanings', JSON.stringify(this.keywordMeanings)); } catch(_e) {}
+    },
+
+    // ── Popup Edit Kata Kunci: ubah teks kata kunci & isi artinya (arti tidak tampil di sidebar) ──
+    openEditKeywordModal(kw) {
+      this.editingKeywordOriginal = kw;
+      this.keywordEditForm = { text: kw, meaning: this.keywordMeanings[kw] || '' };
+    },
+    closeEditKeywordModal() {
+      this.editingKeywordOriginal = null;
+      this.keywordEditForm = { text: '', meaning: '' };
+    },
+    saveEditKeywordModal() {
+      const original = this.editingKeywordOriginal;
+      if (!original) return;
+      const newText = this.keywordEditForm.text.trim();
+      const newMeaning = this.keywordEditForm.meaning.trim();
+      if (!newText || this.keywordEditIsDuplicate) return;
+
+      // Rename di Bank Kata Kunci (kalau teksnya berubah)
+      if (newText !== original) {
+        this.keywordBank = this.keywordBank.map(k => k === original ? newText : k);
+      }
+
+      // Pindahkan/perbarui arti ke key yang baru
+      const nextMeanings = { ...this.keywordMeanings };
+      delete nextMeanings[original];
+      if (newMeaning) nextMeanings[newText] = newMeaning;
+      this.keywordMeanings = nextMeanings;
+
+      this.saveKeywordBank();
+      this.saveKeywordMeanings();
+
+      // Kalau nama kata kunci berubah, ikut perbarui task yang sudah memakai kata kunci lama
+      // (ditulis langsung ke storage 'portfolio_tasks' biar tetap sinkron walau My Portfolio belum dibuka ulang)
+      if (newText !== original) {
+        this.renameKeywordInPortfolioTasks(original, newText);
+      }
+
+      this.closeEditKeywordModal();
+    },
+    renameKeywordInPortfolioTasks(oldText, newText) {
+      try {
+        const raw = WorkspaceStorage.getItem('portfolio_tasks');
+        if (!raw) return;
+        const allTasks = JSON.parse(raw);
+        let changed = false;
+        Object.keys(allTasks).forEach(expKey => {
+          allTasks[expKey] = (allTasks[expKey] || []).map(t => {
+            if (!t.keywords || !t.keywords.includes(oldText)) return t;
+            changed = true;
+            const renamed = t.keywords.map(k => k === oldText ? newText : k);
+            // Dedupe kalau task itu kebetulan sudah punya kata kunci tujuan juga
+            const deduped = [...new Set(renamed)];
+            return { ...t, keywords: deduped };
+          });
+        });
+        if (changed) {
+          WorkspaceStorage.setItem('portfolio_tasks', JSON.stringify(allTasks));
+          this.portfolioTasks = allTasks; // ikut perbarui salinan lokal (dipakai parsedExperience)
+        }
+      } catch(_e) {}
     },
 
     // ── Resume ──
@@ -14607,6 +14725,10 @@ const CareerFoundation = {
       const kb = WorkspaceStorage.getItem('career_keyword_bank');
       if (kb) this.keywordBank = JSON.parse(kb);
     } catch(_e) {}
+    try {
+      const km = WorkspaceStorage.getItem('career_keyword_meanings');
+      if (km) this.keywordMeanings = JSON.parse(km);
+    } catch(_e) {}
   },
 };
 
@@ -14908,10 +15030,17 @@ const MyPortfolio = {
             </button>
           </div>
           <div class="cf-modal-body">
-            <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 2px; line-height:1.6;">Pilih satu atau lebih kata kunci untuk task ini. Kelola daftar kata kunci di sidebar halaman <strong>Career Foundation</strong>.</p>
+            <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 2px; line-height:1.6;">Pilih satu atau lebih kata kunci untuk task ini, atau ketik kata kunci baru di bawah — otomatis tersimpan ke bank dan ikut muncul di sidebar halaman <strong>Career Foundation</strong>.</p>
+            <div class="cf-keyword-add-row">
+              <input type="text" class="cf-input cf-keyword-input-add" v-model="newKeywordModalInput"
+                placeholder="Ketik kata kunci baru, lalu Enter..." @keyup.enter="addKeywordFromModalInput" />
+              <button type="button" class="cf-btn-primary cf-keyword-add-btn" :disabled="!newKeywordModalInput.trim()" @click="addKeywordFromModalInput" title="Tambah & pilih untuk task ini">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+            </div>
             <input type="text" class="cf-input" v-model="keywordModalSearch" placeholder="Cari kata kunci..." />
             <div v-if="!keywordBank.length" style="font-size:12.5px; color: var(--text-muted); text-align:center; padding: 28px 0;">
-              Belum ada kata kunci di bank. Tambahkan dulu di sidebar halaman <strong>Career Foundation</strong>.
+              Belum ada kata kunci di bank. Tambahkan lewat kolom di atas, atau dari sidebar halaman <strong>Career Foundation</strong>.
             </div>
             <div v-else-if="!filteredKeywordBank.length" style="font-size:12.5px; color: var(--text-muted); text-align:center; padding: 28px 0;">
               Tidak ada kata kunci yang cocok dengan pencarian.
@@ -15095,6 +15224,7 @@ const MyPortfolio = {
       keywordBank: [], // master list kata kunci, dikelola di halaman Career Foundation
       keywordModalTaskId: null,
       keywordModalSearch: '',
+      newKeywordModalInput: '', // input "tambah kata kunci baru" langsung dari dalam popup
       insightModalTaskId: null,
       insightModalDraft: '',
       insightModalMode: 'view', // 'view' (read-only) | 'edit' (textarea)
@@ -15272,10 +15402,31 @@ const MyPortfolio = {
       this.loadKeywordBank();
       this.keywordModalTaskId = taskId;
       this.keywordModalSearch = '';
+      this.newKeywordModalInput = '';
     },
     closeKeywordModal() {
       this.keywordModalTaskId = null;
       this.keywordModalSearch = '';
+      this.newKeywordModalInput = '';
+    },
+    saveKeywordBank() {
+      try { WorkspaceStorage.setItem('career_keyword_bank', JSON.stringify(this.keywordBank)); } catch(_e) {}
+    },
+    // ── Tambah kata kunci baru langsung dari dalam popup "Pilih Kata Kunci" ──
+    // Sync 2 arah dengan Bank Kata Kunci di sidebar Career Foundation (storage key sama).
+    addKeywordFromModalInput() {
+      const raw = this.newKeywordModalInput.trim();
+      if (!raw) return;
+      const existing = this.keywordBank.find(k => k.toLowerCase() === raw.toLowerCase());
+      const kw = existing || raw;
+      if (!existing) {
+        this.keywordBank = [...this.keywordBank, kw];
+        this.saveKeywordBank();
+      }
+      if (this.keywordModalTaskId && !this.isTaskKeywordChecked(kw)) {
+        this.toggleTaskKeyword(kw);
+      }
+      this.newKeywordModalInput = '';
     },
     isTaskKeywordChecked(kw) {
       const task = this.getTaskById(this.keywordModalTaskId);
