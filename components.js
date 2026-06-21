@@ -14675,25 +14675,40 @@ const MyPortfolio = {
       <template v-if="isGlobalSearching">
         <div v-if="!globalSearchResults.length" class="mp-empty-state" style="padding: 40px 24px;">
           <p class="mp-empty-title">Tidak ada hasil</p>
-          <p class="mp-empty-sub">Tidak ada task yang cocok dengan "{{ portfolioGlobalSearch }}".</p>
+          <p class="mp-empty-sub">Tidak ada task atau catatan yang cocok dengan "{{ portfolioGlobalSearch }}".</p>
         </div>
         <div v-else class="mp-search-results">
-          <p class="mp-search-results-count">{{ globalSearchResults.length }} task ditemukan</p>
-          <div v-for="r in globalSearchResults" :key="r.task.id" class="mp-search-result-row">
-            <div class="mp-search-result-main">
-              <span class="mp-search-result-exp">{{ r.expLabel }}</span>
-              <p class="mp-search-result-title">{{ r.task.title }}</p>
-              <div v-if="(r.task.keywords || []).length" class="mp-bukti-chips" style="margin-top:4px;">
-                <span v-for="kw in r.task.keywords" :key="kw" class="mp-bukti-chip">
-                  <span class="mp-bukti-chip-text">{{ kw }}</span>
-                </span>
+          <p class="mp-search-results-count">{{ globalSearchResults.length }} hasil ditemukan</p>
+          <template v-for="r in globalSearchResults" :key="r.type === 'note' ? ('note-' + r.expKey) : r.task.id">
+            <!-- ── Hasil dari Catatan Pengalaman ── -->
+            <div v-if="r.type === 'note'" class="mp-search-result-row" style="border-left: 3px solid var(--color-terracotta, #D67B52);">
+              <div class="mp-search-result-main">
+                <span class="mp-search-result-exp">{{ r.expLabel }}</span>
+                <p class="mp-search-result-title" style="display:flex; align-items:center; gap:6px;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                  Catatan Pengalaman
+                </p>
+                <p style="font-size:12px; color:var(--text-muted); margin:3px 0 0; line-height:1.5;">{{ truncate(r.noteText, 120) }}</p>
               </div>
+              <button class="cf-btn-ghost" @click="openSearchResultNote(r.expKey)">Buka</button>
             </div>
-            <span class="mp-status-select" :class="r.task.status === 'fix' ? 'mp-status-fix' : 'mp-status-draft'" style="cursor:default;">
-              {{ r.task.status === 'fix' ? 'Fix' : 'Draft' }}
-            </span>
-            <button class="cf-btn-ghost" @click="openSearchResult(r.expKey)">Buka</button>
-          </div>
+            <!-- ── Hasil dari Task ── -->
+            <div v-else class="mp-search-result-row">
+              <div class="mp-search-result-main">
+                <span class="mp-search-result-exp">{{ r.expLabel }}</span>
+                <p class="mp-search-result-title">{{ r.task.title }}</p>
+                <div v-if="(r.task.keywords || []).length" class="mp-bukti-chips" style="margin-top:4px;">
+                  <span v-for="kw in r.task.keywords" :key="kw" class="mp-bukti-chip">
+                    <span class="mp-bukti-chip-text">{{ kw }}</span>
+                  </span>
+                </div>
+              </div>
+              <span class="mp-status-select" :class="r.task.status === 'fix' ? 'mp-status-fix' : 'mp-status-draft'" style="cursor:default;">
+                {{ r.task.status === 'fix' ? 'Fix' : 'Draft' }}
+              </span>
+              <button class="cf-btn-ghost" @click="openSearchResult(r.expKey)">Buka</button>
+            </div>
+          </template>
         </div>
       </template>
 
@@ -15138,17 +15153,27 @@ const MyPortfolio = {
       const results = [];
       this.experiences.forEach(exp => {
         const expLabel = exp.role + (exp.company ? ' — ' + exp.company : '') + (exp.period ? ' (' + exp.period + ')' : '');
+
+        // ── Cek Catatan Pengalaman untuk exp ini ──
+        const noteHtml = this.experienceNotes[exp.key] || '';
+        const noteText = noteHtml.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+        if (noteText.toLowerCase().includes(q)) {
+          results.push({ type: 'note', expKey: exp.key, expLabel, noteText });
+        }
+
+        // ── Cek tiap task ──
         const list = this.portfolioTasks[exp.key] || [];
         list.forEach(task => {
+          const insightText = (task.insightSummary || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
           const haystacks = [
             task.title || '',
             (task.keywords || []).join(' '),
-            task.insightSummary || '',
+            insightText,
             task.status === 'fix' ? 'fix' : 'draft',
             expLabel,
           ];
           if (haystacks.some(h => h.toLowerCase().includes(q))) {
-            results.push({ task, expKey: exp.key, expLabel });
+            results.push({ type: 'task', task, expKey: exp.key, expLabel });
           }
         });
       });
@@ -15199,6 +15224,13 @@ const MyPortfolio = {
     openSearchResult(expKey) {
       this.selectedExpKey = expKey;
       this.portfolioGlobalSearch = '';
+    },
+
+    openSearchResultNote(expKey) {
+      this.selectedExpKey = expKey;
+      this.portfolioGlobalSearch = '';
+      // Tunggu Vue update filter dulu, baru buka modal catatan
+      this.$nextTick(() => this.openNotesModal());
     },
 
     addTask() {
