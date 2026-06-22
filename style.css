@@ -5963,22 +5963,24 @@ input:checked + .switch-slider:before {
   border-width: 1.5px !important;
   scale: 1.01;
 }
-/* Visual feedback saat block siap di-drag setelah double-tap */
-.gcal-agenda-block-doubletap-ready {
-  scale: 1.03;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.18) !important;
-  border-style: dashed !important;
-  border-width: 1.5px !important;
-  transition: scale 0.12s ease, box-shadow 0.12s ease !important;
-}
+/* Drag handle lebih besar & mudah dipencet di touch */
 .gcal-agenda-block-drag-handle {
+  touch-action: none;
+  padding: 4px 5px 4px 2px;
+  margin: -4px 2px -4px -2px;
+  cursor: grab;
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  margin-right: 4px;
   color: currentColor;
+  opacity: 0.45;
+  transition: opacity 0.15s;
 }
-.gcal-agenda-block-draggable:hover .gcal-agenda-block-drag-handle svg { opacity: 0.7 !important; }
+.gcal-agenda-block-drag-handle:active {
+  opacity: 0.9;
+  cursor: grabbing;
+}
+.gcal-agenda-block-draggable:hover .gcal-agenda-block-drag-handle { opacity: 0.7; }
 .gcal-agenda-block-dragging .gcal-agenda-block-time { font-weight: 700 !important; opacity: 1 !important; }
 
 .gcal-agenda-block-task { border-color: var(--color-terracotta); }
