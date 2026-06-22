@@ -2144,11 +2144,20 @@ const JobLogbook = {
       this.showNoteCustomColor = false;
     };
     document.addEventListener('click', this._closeAllCustomDD);
+    // Reload plans kalau diubah dari luar (contoh: drag di Agenda View)
+    this._onExternalPlansUpdated = () => {
+      try {
+        const raw = WorkspaceStorage.getItem('personal_workspace_job_plans');
+        if (raw) this.plans = JSON.parse(raw);
+      } catch(_e) { /* ignore */ }
+    };
+    globalThis.addEventListener('ws-job-plans-updated', this._onExternalPlansUpdated);
   },
   unmounted() {
     document.removeEventListener('click', this._closeRangePicker);
     document.removeEventListener('click', this._closePhaseDropdown);
     document.removeEventListener('click', this._closeAllCustomDD);
+    globalThis.removeEventListener('ws-job-plans-updated', this._onExternalPlansUpdated);
   }
 };
 
@@ -8882,9 +8891,9 @@ const GoogleCalendar = {
                 <div v-for="h in localHours" :key="h" class="gcal-agenda-hour-label">{{ h }}</div>
               </div>
               <div class="gcal-agenda-timeline-col"
-                   @mousemove.passive="localOnDragMouseMove($event)"
+                   @mousemove="localOnDragMouseMove($event)"
                    @mouseup="localEndBlockDrag($event)"
-                   @mouseleave="localEndBlockDrag($event)">
+                   @mouseleave="agendaDrag.blockId ? null : null">
                 <div v-for="h in localHours" :key="h" class="gcal-agenda-hour-cell"></div>
                 <div v-if="group.nowLineTop !== null" class="gcal-agenda-now-line" :style="{top: (group.nowLineTop*1) + 'px'}"></div>
                 <div
@@ -8894,7 +8903,7 @@ const GoogleCalendar = {
                   :class="[
                     'gcal-agenda-block-' + block.type,
                     block.done && 'gcal-agenda-item-done',
-                    block.type === 'manual' && 'gcal-agenda-block-draggable',
+                    (block.type === 'manual' || block.type === 'task') && 'gcal-agenda-block-draggable',
                     agendaDrag.blockId === block.id && 'gcal-agenda-block-dragging'
                   ]"
                   :style="{
@@ -8905,17 +8914,17 @@ const GoogleCalendar = {
                     color: block.color,
                     left: 'calc(' + (block.col * (100/block.totalCols)) + '% + 2px)',
                     width: 'calc(' + (100/block.totalCols) + '% - 4px)',
-                    cursor: block.type === 'manual' ? (agendaDrag.blockId === block.id ? 'grabbing' : 'grab') : 'pointer',
+                    cursor: (block.type === 'manual' || block.type === 'task') ? (agendaDrag.blockId === block.id ? 'grabbing' : 'grab') : 'pointer',
                     userSelect: 'none',
                     zIndex: agendaDrag.blockId === block.id ? 10 : 2,
                     transition: agendaDrag.blockId === block.id ? 'none' : 'top 0.08s ease'
                   }"
-                  :title="block.type === 'manual' ? 'Tahan & seret untuk mengubah jam' : 'Lihat detail'"
-                  @mousedown.stop="block.type === 'manual' ? localStartBlockDrag($event, block) : null"
-                  @touchstart.stop.prevent="block.type === 'manual' ? localStartBlockDragTouch($event, block) : null"
+                  :title="(block.type === 'manual' || block.type === 'task') ? 'Tahan & seret untuk mengubah jam' : 'Lihat detail'"
+                  @mousedown.stop="(block.type === 'manual' || block.type === 'task') ? localStartBlockDrag($event, block) : null"
+                  @touchstart.stop.prevent="(block.type === 'manual' || block.type === 'task') ? localStartBlockDragTouch($event, block) : null"
                   @click.stop="agendaDrag.didDrag ? null : localShowAgendaDetail(block)"
                 >
-                  <span class="gcal-agenda-block-drag-handle" v-if="block.type === 'manual'">
+                  <span class="gcal-agenda-block-drag-handle" v-if="block.type === 'manual' || block.type === 'task'">
                     <svg viewBox="0 0 8 14" width="8" height="14" fill="currentColor" style="opacity:0.4;">
                       <circle cx="2" cy="2" r="1.3"/><circle cx="6" cy="2" r="1.3"/>
                       <circle cx="2" cy="7" r="1.3"/><circle cx="6" cy="7" r="1.3"/>
@@ -11054,7 +11063,7 @@ const GoogleCalendar = {
       return this._dragFmtMin(startMin) + ' – ' + this._dragFmtMin(endMin);
     },
     localStartBlockDrag(e, block) {
-      if (block.type !== 'manual') return;
+      if (block.type !== 'manual' && block.type !== 'task') return;
       this.agendaDrag = {
         blockId: block.id,
         block: block,
@@ -11072,7 +11081,7 @@ const GoogleCalendar = {
       window.addEventListener('mouseup',   this._dragMouseUp);
     },
     localStartBlockDragTouch(e, block) {
-      if (block.type !== 'manual') return;
+      if (block.type !== 'manual' && block.type !== 'task') return;
       const touch = e.touches[0];
       this.agendaDrag = {
         blockId: block.id,
@@ -11126,7 +11135,13 @@ const GoogleCalendar = {
       const rawId = block.raw.id;
       if (!rawId) return;
 
-      // Kalau acara berulang → tampilkan popup scope dulu (mirip Google Calendar)
+      // Kalau task plan → langsung simpan ke personal_workspace_job_plans
+      if (block.type === 'task') {
+        this.localApplyTaskDragReschedule(block, newTime, newEndTime);
+        return;
+      }
+
+      // Kalau acara manual berulang → tampilkan popup scope dulu (mirip Google Calendar)
       const rec = block.raw.recurrence || 'none';
       if (rec !== 'none') {
         this.recurActionChoice = 'this';
@@ -11213,6 +11228,40 @@ const GoogleCalendar = {
       } catch(_e) { /* ignore */ }
 
       this.recurActionPopup = null;
+    },
+
+    // ── Simpan waktu baru hasil drag untuk Task Plan (personal_workspace_job_plans) ──
+    // Update langsung di storage, lalu dispatch event supaya Job Logbook ikut refresh
+    localApplyTaskDragReschedule(block, newTime, newEndTime) {
+      const rawId = block.raw && block.raw.id;
+      if (!rawId) return;
+      const [hh, mm] = newTime.split(':').map(Number);
+      const [eh, em] = newEndTime.split(':').map(Number);
+      // Validasi: timeEnd harus setelah time
+      const endMin = eh * 60 + em;
+      const startMin = hh * 60 + mm;
+      const safeEndTime = endMin > startMin ? newEndTime : this._dragFmtMin(startMin + Math.max(block.height, 30));
+
+      try {
+        const raw = WorkspaceStorage.getItem('personal_workspace_job_plans');
+        const plans = raw ? JSON.parse(raw) : [];
+        const idx = plans.findIndex(p => p.id === rawId);
+        if (idx === -1) return;
+
+        plans[idx] = {
+          ...plans[idx],
+          time:    newTime,
+          timeEnd: safeEndTime,
+        };
+        WorkspaceStorage.setItem('personal_workspace_job_plans', JSON.stringify(plans));
+        this.localStorageTick++;
+        // Broadcast ke Job Logbook supaya list Task Plan-nya langsung update
+        globalThis.dispatchEvent(new CustomEvent('ws-plans-updated'));
+        globalThis.dispatchEvent(new CustomEvent('ws-job-plans-updated'));
+        // Toast
+        this.localSuccess = `Task "${plans[idx].tasks.slice(0, 32)}${plans[idx].tasks.length > 32 ? '…' : ''}" dipindah ke ${newTime} – ${safeEndTime}`;
+        setTimeout(() => { this.localSuccess = null; }, 2800);
+      } catch(_e) { /* ignore */ }
     },
     addHour(timeStr) {
       const [h, m] = timeStr.split(':').map(Number);
