@@ -562,6 +562,13 @@ const App = {
       showDzikirModal.value = true;
     };
 
+    // Handler dipanggil saat tombol "Baca Surah Ini" di popup ayat jam 12 siang diklik
+    // → buka modal Quran Reader (surahNo terkait sudah disimpan ke ws_quran_prefs sebelumnya)
+    const onOpenQuran = () => {
+      showNotifPanel.value = false;
+      showQuranModal.value = true;
+    };
+
     // Handler dipanggil saat klik habit di notif panel / reminder popup
     const onTriggerHabit = (habitId) => {
       openOrFocusTab('habitTracker');
@@ -622,6 +629,7 @@ const App = {
       notifUnreadCount,
       onUnreadCountChanged,
       onOpenDzikir,
+      onOpenQuran,
       pendingHabitTrigger,
       onTriggerHabit,
       onHabitTriggered
@@ -866,6 +874,7 @@ app.component('career-foundation', CareerFoundation);
 app.component('my-portfolio', MyPortfolio);
 app.component('notification-panel', NotificationPanel);
 app.component('reminder-popup', ReminderPopup);
+app.component('quran-noon-popup', QuranNoonPopup);
 app.component('missed-tasks-page', MissedTasksPage);
 app.component('inspiration-board', InspirationBoard);
 app.component('dzikir-counter', DzikirCounter);

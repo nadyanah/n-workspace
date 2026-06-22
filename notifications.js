@@ -2578,3 +2578,217 @@ const MissedTasksPage = {
     }
   }
 };
+
+
+// ============================================================================
+// QuranNoonPopup — Pop up otomatis jam 12 siang, 1 ayat Al-Qur'an acak setiap hari
+// ============================================================================
+//   • Muncul tepat jam 12:00 (atau saat web dibuka setelah jam 12 & belum tampil hari itu)
+//   • Ayat acak (1 dari 6236 ayat), tampil: Arab + terjemahan Inggris + Indonesia
+//   • Tombol "Sudah Saya Ingat" → tutup popup, tidak muncul lagi hari itu
+//   • Tombol "Baca Surah Ini" → buka Quran Reader langsung ke surah terkait
+//   Storage: WorkspaceStorage
+//     ws_quran_noon_shown → { "YYYY-MM-DD": true }
+// ============================================================================
+const QuranNoonPopup = {
+  template: `
+    <transition name="quran-noon-fade">
+      <div v-if="visible" class="quran-noon-overlay" @click.self="dismissSoft">
+        <div class="quran-noon-card">
+
+          <!-- ── Header ── -->
+          <div class="quran-noon-header">
+            <div class="quran-noon-header-icon">☽</div>
+            <div style="flex:1; min-width:0;">
+              <div class="quran-noon-title">Tadabbur Siang</div>
+              <div class="quran-noon-date">{{ todayLabel }}</div>
+            </div>
+          </div>
+
+          <!-- ── Body ── -->
+          <div class="quran-noon-body">
+
+            <div v-if="loading" class="quran-noon-loading">
+              <div class="quran-noon-spinner"></div>
+              <span>Memuat ayat...</span>
+            </div>
+
+            <div v-else-if="error" class="quran-noon-error">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span>Gagal memuat ayat. Periksa koneksi internet.</span>
+              <button class="quran-noon-retry-btn" @click="_fetchRandomAyah">Coba lagi</button>
+            </div>
+
+            <template v-else-if="ayah">
+              <div class="quran-noon-surah-label">
+                QS. {{ ayah.surahNameLatin }} ({{ ayah.surahNameAr }}) : {{ ayah.ayahNoInSurah }}
+              </div>
+              <div class="quran-noon-arabic" dir="rtl">{{ ayah.arabic }}</div>
+
+              <div class="quran-noon-trans-block">
+                <div class="quran-noon-trans-label">🇬🇧 English</div>
+                <div class="quran-noon-trans-text">{{ ayah.english }}</div>
+              </div>
+              <div class="quran-noon-trans-block">
+                <div class="quran-noon-trans-label">🇮🇩 Indonesia</div>
+                <div class="quran-noon-trans-text">{{ ayah.indo }}</div>
+              </div>
+            </template>
+
+          </div>
+
+          <!-- ── Footer ── -->
+          <div class="quran-noon-footer" v-if="!loading">
+            <button v-if="ayah && !error" class="quran-noon-btn-secondary" @click="openInReader">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              Baca Surah Ini
+            </button>
+            <button class="quran-noon-btn-primary" @click="markRemembered">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Sudah Saya Ingat
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </transition>
+  `,
+
+  emits: ['open-quran'],
+
+  data() {
+    return {
+      visible: false,
+      loading: false,
+      error: false,
+      ayah: null,
+      todayStr: '',
+      _interval: null
+    };
+  },
+
+  computed: {
+    todayLabel() {
+      const now = new Date();
+      const days   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+      const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+      return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+    }
+  },
+
+  mounted() {
+    this.todayStr = this._getTodayStr();
+    // Cek saat web dibuka (delay 1.2s biar WorkspaceStorage selesai init) — catch-up kalau sudah lewat jam 12
+    setTimeout(() => this._checkTime(), 1200);
+    // Polling setiap 30 detik untuk menangkap tepat jam 12:00 saat web sedang terbuka
+    this._interval = setInterval(() => this._checkTime(), 30000);
+  },
+
+  beforeUnmount() {
+    clearInterval(this._interval);
+  },
+
+  methods: {
+    _getTodayStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    },
+
+    _getShownLog() {
+      try { return JSON.parse(WorkspaceStorage.getItem('ws_quran_noon_shown') || '{}'); }
+      catch(e) { return {}; }
+    },
+
+    _isShownToday() {
+      return !!this._getShownLog()[this.todayStr];
+    },
+
+    _markShownToday() {
+      const log = this._getShownLog();
+      log[this.todayStr] = true;
+      WorkspaceStorage.setItem('ws_quran_noon_shown', JSON.stringify(log));
+    },
+
+    // ── Cek apakah sudah jam 12 siang & belum tampil hari ini ──
+    _checkTime() {
+      if (this.visible) return;
+      this.todayStr = this._getTodayStr();
+      if (this._isShownToday()) return;
+
+      const now    = new Date();
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+      if (nowMin >= 12 * 60) {  // jam 12:00 siang sudah tercapai (atau terlewat saat web baru dibuka)
+        this._markShownToday();
+        this.visible = true;
+        this._fetchRandomAyah();
+        this._triggerBellShake();
+        NotifSound.playNotifSafe();
+      }
+    },
+
+    _triggerBellShake() {
+      const bells = document.querySelectorAll('.desk-notif-float-btn, .ws-notif-btn');
+      bells.forEach(btn => {
+        btn.classList.remove('bell-has-notif');
+        void btn.offsetWidth;
+        btn.classList.add('bell-has-notif');
+        setTimeout(() => btn.classList.remove('bell-has-notif'), 4000);
+      });
+    },
+
+    // ── Ambil 1 ayat acak (dari total 6236 ayat dalam Al-Qur'an) ──
+    async _fetchRandomAyah() {
+      this.loading = true;
+      this.error   = false;
+      this.ayah    = null;
+      try {
+        const num  = Math.floor(Math.random() * 6236) + 1;
+        const res  = await fetch(`https://api.alquran.cloud/v1/ayah/${num}/editions/quran-uthmani,en.asad,id.indonesian`);
+        const json = await res.json();
+        if (json.code !== 200 || !json.data || json.data.length < 3) throw new Error('bad response');
+
+        const [arab, eng, indo] = json.data;
+        this.ayah = {
+          arabic:         arab.text,
+          english:        eng.text,
+          indo:           indo.text,
+          surahNameAr:    arab.surah.name,
+          surahNameLatin: arab.surah.englishName,
+          surahNo:        arab.surah.number,
+          ayahNoInSurah:  arab.numberInSurah
+        };
+      } catch(e) {
+        this.error = true;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    // ── Tombol "Sudah Saya Ingat" — tutup popup, tidak muncul lagi hari ini ──
+    markRemembered() {
+      NotifSound.flushPendingSound();
+      NotifSound.playCheck();
+      this.visible = false;
+    },
+
+    // ── Tombol "Baca Surah Ini" — set surah aktif lalu buka Quran Reader ──
+    openInReader() {
+      NotifSound.flushPendingSound();
+      if (this.ayah) {
+        try {
+          const prefs = JSON.parse(WorkspaceStorage.getItem('ws_quran_prefs') || '{}');
+          prefs.surahNo = this.ayah.surahNo;
+          WorkspaceStorage.setItem('ws_quran_prefs', JSON.stringify(prefs));
+        } catch(e) {}
+      }
+      this.visible = false;
+      this.$emit('open-quran');
+    },
+
+    // ── Klik di luar card — tutup sementara (sudah ditandai shown saat trigger) ──
+    dismissSoft() {
+      NotifSound.flushPendingSound();
+      this.visible = false;
+    }
+  }
+};

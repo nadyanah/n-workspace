@@ -1118,6 +1118,11 @@
         @dismiss="">
       </reminder-popup>
 
+      <!-- Quran Noon Popup — muncul otomatis jam 12 siang, 1 ayat acak setiap hari -->
+      <quran-noon-popup
+        @open-quran="onOpenQuran">
+      </quran-noon-popup>
+
       <!-- Floating Countdown Timer — Global Persistent (muncul di halaman lain saat timer berjalan) -->
       <floating-countdown-timer :active-page="activePage"></floating-countdown-timer>
     </div>
