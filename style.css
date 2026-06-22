@@ -9443,7 +9443,7 @@ input:checked + .switch-slider:before {
   background: transparent;
   resize: none;
   font-family: 'Fontby-n', sans-serif;
-  font-size: 20px;
+  font-size: 16px;
   line-height: 1.4;
   color: var(--text-dark);
   padding: 2px 2px 0;
@@ -9453,7 +9453,7 @@ input:checked + .switch-slider:before {
 
 .bl100-done-text {
   font-family: 'Fontby-n', sans-serif;
-  font-size: 20px;
+  font-size: 16px;
   line-height: 1.4;
   font-weight: bold;
   color: var(--text-muted);
