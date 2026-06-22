@@ -8904,7 +8904,8 @@ const GoogleCalendar = {
                     'gcal-agenda-block-' + block.type,
                     block.done && 'gcal-agenda-item-done',
                     (block.type === 'manual' || block.type === 'task') && 'gcal-agenda-block-draggable',
-                    agendaDrag.blockId === block.id && 'gcal-agenda-block-dragging'
+                    agendaDrag.blockId === block.id && 'gcal-agenda-block-dragging',
+                    longPressBlockId === block.id && 'gcal-agenda-block-longpress'
                   ]"
                   :style="{
                     top: (agendaDrag.blockId === block.id ? agendaDrag.currentTop : block.top) + 'px',
@@ -8919,9 +8920,11 @@ const GoogleCalendar = {
                     zIndex: agendaDrag.blockId === block.id ? 10 : 2,
                     transition: agendaDrag.blockId === block.id ? 'none' : 'top 0.08s ease'
                   }"
-                  :title="(block.type === 'manual' || block.type === 'task') ? 'Tahan & seret untuk mengubah jam' : 'Lihat detail'"
+                  :title="(block.type === 'manual' || block.type === 'task') ? 'Klik untuk detail · Tahan lama untuk geser jam' : 'Lihat detail'"
                   @mousedown.stop="(block.type === 'manual' || block.type === 'task') ? localStartBlockDrag($event, block) : null"
-                  @touchstart.stop.prevent="(block.type === 'manual' || block.type === 'task') ? localStartBlockDragTouch($event, block) : null"
+                  @touchstart.stop="(block.type === 'manual' || block.type === 'task') ? localStartBlockLongPressTouch($event, block) : localShowAgendaDetail(block)"
+                  @touchend.stop="localCancelBlockLongPress($event, block)"
+                  @touchmove.stop="localCancelBlockLongPress($event, null)"
                   @click.stop="agendaDrag.didDrag ? null : localShowAgendaDetail(block)"
                 >
                   <span class="gcal-agenda-block-drag-handle" v-if="block.type === 'manual' || block.type === 'task'">
@@ -9744,6 +9747,7 @@ const GoogleCalendar = {
         didDrag: false,        // apakah mouse pindah > 5px (bedain dari klik)
         origDuration: 0,       // durasi asli (agar height tidak berubah)
       },
+      longPressBlockId: null,  // id block yang sedang dalam mode long-press (touch)
     };
   },
   computed: {
@@ -11074,12 +11078,61 @@ const GoogleCalendar = {
         didDrag: false,
         origDuration: block.height,
       };
-      // Global listeners supaya drag tetap works walau keluar area
       this._dragMouseMove = (ev) => this.localOnDragMouseMove(ev);
       this._dragMouseUp   = (ev) => this.localEndBlockDrag(ev);
       window.addEventListener('mousemove', this._dragMouseMove);
       window.addEventListener('mouseup',   this._dragMouseUp);
     },
+    // ── Long-press to drag (touch/tablet) ──
+    // Tap pendek (<500ms) → buka detail; tahan 500ms → aktifkan drag
+    localStartBlockLongPressTouch(e, block) {
+      if (block.type !== 'manual' && block.type !== 'task') return;
+      const touch = e.touches[0];
+      this._longPressStartY = touch.clientY;
+      this._longPressStartX = touch.clientX;
+      this._longPressBlock  = block;
+      this.longPressBlockId = block.id;
+      this._longPressTimer = setTimeout(() => {
+        this._longPressTimer = null;
+        this.longPressBlockId = null;
+        if (navigator.vibrate) navigator.vibrate(40);
+        this.agendaDrag = {
+          blockId: block.id,
+          block: block,
+          startY: this._longPressStartY,
+          startTop: block.top,
+          currentTop: block.top,
+          previewLabel: block.endLabel ? block.startLabel + ' – ' + block.endLabel : block.startLabel,
+          didDrag: false,
+          origDuration: block.height,
+        };
+        this._dragTouchMove = (ev) => {
+          const t = ev.touches[0];
+          this.localOnDragMouseMove({ clientY: t.clientY });
+          ev.preventDefault();
+        };
+        this._dragTouchEnd = (ev) => this.localEndBlockDrag({ clientY: ev.changedTouches[0]?.clientY ?? this.agendaDrag.startY });
+        window.addEventListener('touchmove',  this._dragTouchMove, { passive: false });
+        window.addEventListener('touchend',   this._dragTouchEnd);
+      }, 500);
+    },
+    localCancelBlockLongPress(e, block) {
+      if (this._longPressTimer) {
+        clearTimeout(this._longPressTimer);
+        this._longPressTimer = null;
+        this.longPressBlockId = null;
+        // touchend sebelum 500ms dan belum ada drag → ini adalah tap, buka detail
+        if (e.type === 'touchend' && !this.agendaDrag.blockId && block) {
+          this.localShowAgendaDetail(block);
+        }
+      } else {
+        this.longPressBlockId = null;
+      }
+      this._longPressBlock  = null;
+      this._longPressStartY = 0;
+      this._longPressStartX = 0;
+    },
+    // Kept for compatibility
     localStartBlockDragTouch(e, block) {
       if (block.type !== 'manual' && block.type !== 'task') return;
       const touch = e.touches[0];
