@@ -200,7 +200,7 @@ const ReminderPopup = {
                   <div class="reminder-popup-item-time">{{ entry.item.time }}</div>
                   <div class="reminder-popup-item-info" style="flex:1; min-width:0;">
                     <div class="reminder-popup-item-title">{{ entry.item.title }}</div>
-                    <div class="reminder-popup-item-sub">{{ entry.item.subtitle }}</div>
+                    <div class="reminder-popup-item-sub" style="white-space:pre-wrap;">{{ entry.item.subtitle }}</div>
                   </div>
                 </div>
               </template>
@@ -234,7 +234,7 @@ const ReminderPopup = {
                 <div v-else class="reminder-popup-item-time">{{ currentItem.time }}</div>
                 <div class="reminder-popup-item-info">
                   <div class="reminder-popup-item-title">{{ currentItem.title }}</div>
-                  <div class="reminder-popup-item-sub">{{ currentItem.subtitle }}</div>
+                  <div class="reminder-popup-item-sub" style="white-space:pre-wrap;">{{ currentItem.subtitle }}</div>
                 </div>
               </div>
             </div>
@@ -262,7 +262,7 @@ const ReminderPopup = {
                   <div class="reminder-popup-item-time reminder-popup-item-time-missed">{{ queue[0].time }}</div>
                   <div class="reminder-popup-item-info">
                     <div class="reminder-popup-item-title">{{ queue[0].title }}</div>
-                    <div class="reminder-popup-item-sub">{{ queue[0].subtitle }}</div>
+                    <div class="reminder-popup-item-sub" style="white-space:pre-wrap;">{{ queue[0].subtitle }}</div>
                   </div>
                 </div>
               </div>
@@ -286,7 +286,7 @@ const ReminderPopup = {
                     <div class="reminder-popup-item-time reminder-popup-item-time-missed">{{ currentItem.time }}</div>
                     <div class="reminder-popup-item-info">
                       <div class="reminder-popup-item-title">{{ currentItem.title }}</div>
-                      <div class="reminder-popup-item-sub">{{ currentItem.subtitle }}</div>
+                      <div class="reminder-popup-item-sub" style="white-space:pre-wrap;">{{ currentItem.subtitle }}</div>
                     </div>
                   </div>
                 </div>
@@ -1072,7 +1072,7 @@ const NotificationPanel = {
                         {{ manualCategoryLabel(entry.item) }}
                       </span>
                       <span v-if="entry.item.done">Sudah dikerjakan ✓ <span style="opacity:0.6;">· klik untuk batalkan</span></span>
-                      <span v-else-if="!(entry.item.isDzikirWaktu && entry.item.dzikirLocked)">{{ entry.item.subtitle }}</span>
+                      <span v-else-if="!(entry.item.isDzikirWaktu && entry.item.dzikirLocked)" style="white-space:pre-wrap;">{{ entry.item.subtitle }}</span>
                     </div>
                   </div>
                   <div class="notif-item-right">
@@ -1182,7 +1182,7 @@ const NotificationPanel = {
                         {{ manualCategoryLabel(entry.item) }}
                       </span>
                       <span v-if="entry.item.done">Sudah dikerjakan ✓ <span style="opacity:0.6;">· klik untuk batalkan</span></span>
-                      <span v-else-if="!(entry.item.isDzikirWaktu && entry.item.dzikirLocked)">{{ entry.item.subtitle }}</span>
+                      <span v-else-if="!(entry.item.isDzikirWaktu && entry.item.dzikirLocked)" style="white-space:pre-wrap;">{{ entry.item.subtitle }}</span>
                     </div>
                   </div>
                   <div class="notif-item-right">
@@ -1292,7 +1292,7 @@ const NotificationPanel = {
                         {{ manualCategoryLabel(entry.item) }}
                       </span>
                       <span v-if="entry.item.done">Sudah dikerjakan ✓ <span style="opacity:0.6;">· klik untuk batalkan</span></span>
-                      <span v-else-if="!(entry.item.isDzikirWaktu && entry.item.dzikirLocked)">{{ entry.item.subtitle }}</span>
+                      <span v-else-if="!(entry.item.isDzikirWaktu && entry.item.dzikirLocked)" style="white-space:pre-wrap;">{{ entry.item.subtitle }}</span>
                     </div>
                   </div>
                   <div class="notif-item-right">
@@ -1345,11 +1345,11 @@ const NotificationPanel = {
                   </div>
                   <div style="margin-bottom:8px;">
                     <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">Keterangan (opsional)</label>
-                    <input v-model="manualForm.subtitle"
-                           type="text"
+                    <textarea v-model="manualForm.subtitle"
                            placeholder="Catatan singkat..."
-                           maxlength="80"
-                           style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;" />
+                           maxlength="200"
+                           rows="2"
+                           style="width:100%; padding:7px 10px; border:1.5px solid var(--color-sand); border-radius:7px; font-size:12px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box; resize:vertical; font-family:inherit; line-height:1.5;"></textarea>
                   </div>
                   <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
                     <div>
