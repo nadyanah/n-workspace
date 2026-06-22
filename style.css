@@ -9342,7 +9342,7 @@ input:checked + .switch-slider:before {
   border-radius: 14px;
   min-height: 92px;
   padding: 22px 8px 24px;
-  background: transparent;
+  background: #ffffff;
   transition: background 0.22s, border-color 0.22s, transform 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.22s;
   cursor: text;
   overflow: hidden;
@@ -9359,7 +9359,7 @@ input:checked + .switch-slider:before {
 .bl100-cell.bl100-cell-hovered:not(.is-done) {
   transform: translateY(-4px) scale(1.03);
   border-color: rgba(214, 123, 82, 0.6);
-  background: rgba(253, 245, 235, 0.75);
+  background: #fffaf6;
   box-shadow: 0 8px 24px rgba(214, 123, 82, 0.14), 0 2px 8px rgba(0,0,0,0.06);
   z-index: 2;
 }

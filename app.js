@@ -288,7 +288,7 @@ const App = {
         num: '02'
       },
       contentTracker: {
-        iconId: 'phone_charger',
+        iconId: 'aesthetic_laptop',
         x: 52,
         y: 65,
         customUrl: '',
@@ -296,7 +296,7 @@ const App = {
         num: '04'
       },
       interviewPractice: {
-        iconId: 'telephone',
+        iconId: 'interview_mic',
         x: 10,
         y: 50,
         customUrl: '',

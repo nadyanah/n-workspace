@@ -661,5 +661,98 @@ const DESK_ASSETS = {
       <path d="M 38 55 Q 44 58 50 55 Q 56 52 62 55" fill="none" stroke="#8C7864" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
       <path d="M 82 60 Q 96 60 96 70 Q 96 80 82 80" fill="none" stroke="#4A3F35" stroke-width="2.5" stroke-linecap="round"/>
     </svg>`
+  },
+  aesthetic_laptop: {
+    name: 'Aesthetic Laptop',
+    width: 110,
+    svg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <!-- Drop shadow -->
+      <ellipse cx="50" cy="84" rx="40" ry="5" fill="rgba(74,63,53,0.12)"/>
+      <!-- Laptop lid — warm cream with subtle wood-grain edge -->
+      <rect x="8" y="10" width="84" height="56" rx="6" fill="#FAF6F0" stroke="#4A3F35" stroke-width="2"/>
+      <!-- Lid inner bezel — soft sand -->
+      <rect x="13" y="15" width="74" height="46" rx="4" fill="#F0EAE2" stroke="#C8BDB5" stroke-width="1"/>
+      <!-- Screen bg — warm off-white, like parchment -->
+      <rect x="16" y="18" width="68" height="40" rx="3" fill="#FAF7F2"/>
+      <!-- Terracotta top bar (like a cozy app header) -->
+      <rect x="16" y="18" width="68" height="7" rx="3" fill="#D67B52"/>
+      <rect x="16" y="22" width="68" height="3" fill="#D67B52"/>
+      <!-- Traffic light dots -->
+      <circle cx="21" cy="21.5" r="2" fill="#C84B31" opacity="0.85"/>
+      <circle cx="27" cy="21.5" r="2" fill="#DDA15E" opacity="0.85"/>
+      <circle cx="33" cy="21.5" r="2" fill="#606C38" opacity="0.85"/>
+      <!-- Screen content lines — warm pastel tones -->
+      <!-- Left column: sage menu items -->
+      <rect x="18" y="27" width="20" height="27" rx="2" fill="#E8DFD8"/>
+      <rect x="20" y="29" width="14" height="2.5" rx="1" fill="#8C7864" opacity="0.7"/>
+      <rect x="20" y="33" width="12" height="2" rx="1" fill="#C84B31" opacity="0.5"/>
+      <rect x="20" y="37" width="14" height="2" rx="1" fill="#8C7864" opacity="0.4"/>
+      <rect x="20" y="41" width="10" height="2" rx="1" fill="#8C7864" opacity="0.4"/>
+      <rect x="20" y="45" width="13" height="2" rx="1" fill="#8C7864" opacity="0.35"/>
+      <!-- Right panel: content area -->
+      <rect x="41" y="27" width="41" height="8" rx="2" fill="#DDA15E" opacity="0.25"/>
+      <rect x="43" y="29" width="18" height="2.5" rx="1" fill="#4A3F35" opacity="0.55"/>
+      <rect x="43" y="33" width="30" height="1.5" rx="1" fill="#8C7864" opacity="0.4"/>
+      <rect x="43" y="37" width="26" height="1.5" rx="1" fill="#8C7864" opacity="0.35"/>
+      <rect x="43" y="40" width="28" height="1.5" rx="1" fill="#8C7864" opacity="0.3"/>
+      <!-- Small bar chart in corner — terracotta aesthetic -->
+      <rect x="63" y="43" width="4" height="8" rx="1" fill="#D67B52" opacity="0.7"/>
+      <rect x="69" y="46" width="4" height="5" rx="1" fill="#DDA15E" opacity="0.7"/>
+      <rect x="75" y="41" width="4" height="10" rx="1" fill="#606C38" opacity="0.7"/>
+      <!-- Webcam dot -->
+      <circle cx="50" cy="16" r="1.5" fill="#8C7864" opacity="0.5"/>
+      <!-- Hinge line -->
+      <line x1="8" y1="66" x2="92" y2="66" stroke="#C8BDB5" stroke-width="1.5"/>
+      <!-- Bottom base / keyboard body -->
+      <rect x="5" y="66" width="90" height="12" rx="4" fill="#EDE8E1" stroke="#4A3F35" stroke-width="2"/>
+      <!-- Keyboard rows — warm dots -->
+      <rect x="11" y="69" width="78" height="2.5" rx="1" fill="#C8BDB5" opacity="0.5"/>
+      <rect x="11" y="73" width="78" height="2.5" rx="1" fill="#C8BDB5" opacity="0.4"/>
+      <!-- Trackpad -->
+      <rect x="33" y="79" width="34" height="7" rx="3" fill="#E8DFD8" stroke="#C8BDB5" stroke-width="1"/>
+      <!-- Base taper -->
+      <path d="M 5 78 L 0 82 Q 0 84 5 84 L 95 84 Q 100 84 100 82 L 95 78 Z" fill="#DDA15E" stroke="#4A3F35" stroke-width="1.5"/>
+      <!-- Sticker — small terracotta star on lid -->
+      <path d="M 76 30 L 77.2 33.5 L 81 33.5 L 78 35.7 L 79.2 39.2 L 76 37 L 72.8 39.2 L 74 35.7 L 71 33.5 L 74.8 33.5 Z" fill="#D67B52" opacity="0.7"/>
+    </svg>`
+  },
+  interview_mic: {
+    name: 'Interview Microphone',
+    width: 95,
+    svg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <!-- Base shadow -->
+      <ellipse cx="50" cy="92" rx="22" ry="4" fill="rgba(74,63,53,0.12)"/>
+      <!-- Mic stand base — warm wood -->
+      <rect x="30" y="84" width="40" height="8" rx="4" fill="#8C7864" stroke="#4A3F35" stroke-width="1.5"/>
+      <rect x="34" y="86" width="32" height="4" rx="2" fill="#A3906E" opacity="0.5"/>
+      <!-- Stand pole -->
+      <rect x="47" y="58" width="6" height="28" rx="3" fill="#8C7864" stroke="#4A3F35" stroke-width="1.5"/>
+      <!-- Boom arm -->
+      <path d="M 50 58 Q 50 48 62 44" fill="none" stroke="#4A3F35" stroke-width="3" stroke-linecap="round"/>
+      <!-- Mic body — retro rounded capsule -->
+      <rect x="53" y="18" width="18" height="32" rx="9" fill="#E8DFD8" stroke="#4A3F35" stroke-width="2"/>
+      <!-- Mesh grille pattern on mic -->
+      <rect x="55" y="20" width="14" height="20" rx="7" fill="#C8BDB5" opacity="0.6"/>
+      <line x1="58" y1="22" x2="58" y2="38" stroke="#8C7864" stroke-width="1" opacity="0.5"/>
+      <line x1="62" y1="21" x2="62" y2="39" stroke="#8C7864" stroke-width="1" opacity="0.5"/>
+      <line x1="66" y1="22" x2="66" y2="38" stroke="#8C7864" stroke-width="1" opacity="0.5"/>
+      <line x1="55" y1="26" x2="69" y2="26" stroke="#8C7864" stroke-width="1" opacity="0.5"/>
+      <line x1="55" y1="30" x2="69" y2="30" stroke="#8C7864" stroke-width="1" opacity="0.5"/>
+      <line x1="55" y1="34" x2="69" y2="34" stroke="#8C7864" stroke-width="1" opacity="0.5"/>
+      <!-- Mic logo dot — terracotta -->
+      <circle cx="62" cy="44" r="3" fill="#D67B52" stroke="#4A3F35" stroke-width="1"/>
+      <!-- Mic clip bracket -->
+      <rect x="51" y="30" width="4" height="10" rx="2" fill="#DDA15E" stroke="#4A3F35" stroke-width="1.2"/>
+      <!-- Speech bubbles — interviewer -->
+      <rect x="8" y="14" width="30" height="18" rx="6" fill="#FAF6F0" stroke="#4A3F35" stroke-width="1.5"/>
+      <polygon points="22,32 18,38 28,32" fill="#FAF6F0" stroke="#4A3F35" stroke-width="1.5" stroke-linejoin="round"/>
+      <line x1="14" y1="20" x2="32" y2="20" stroke="#8C7864" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="14" y1="24" x2="28" y2="24" stroke="#8C7864" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+      <!-- Second smaller bubble -->
+      <rect x="12" y="44" width="22" height="12" rx="5" fill="#DDA15E" opacity="0.7" stroke="#4A3F35" stroke-width="1.2"/>
+      <polygon points="26,56 22,62 30,56" fill="#DDA15E" opacity="0.7" stroke="#4A3F35" stroke-width="1.2" stroke-linejoin="round"/>
+      <line x1="17" y1="49" x2="29" y2="49" stroke="#4A3F35" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+      <line x1="17" y1="53" x2="25" y2="53" stroke="#4A3F35" stroke-width="1.2" stroke-linecap="round" opacity="0.4"/>
+    </svg>`
   }
 };
