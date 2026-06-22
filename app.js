@@ -160,6 +160,9 @@ const App = {
       }, 7000);
     };
 
+    // Settings group toggle (Pengaturan Ikon + My Mood Colour)
+    const showSettingsGroup = ref(false);
+
     // Color customization variables
     const showColorPicker = ref(false);
     const dominantColor = ref('#D67B52');
@@ -581,6 +584,7 @@ const App = {
       showInspirationModal,
       showDzikirModal,
       showBucketListModal,
+      showSettingsGroup,
       // Tab bar
       openTabs,
       activeTabId,

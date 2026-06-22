@@ -3934,6 +3934,66 @@ input:checked + .switch-slider:before {
   z-index: 100;
 }
 
+/* ── Settings Group: toggle + sub-menu vertikal ── */
+.desk-settings-group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.desk-settings-submenu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.desk-submenu-btn {
+  /* ukuran sama dengan floating btn standar */
+  width: 44px;
+  height: 44px;
+}
+
+/* Toggle button utama — sedikit berbeda saat open */
+.desk-settings-toggle-btn {
+  position: relative;
+  font-size: 18px;
+}
+
+.desk-settings-toggle-icon {
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  font-style: normal;
+  color: var(--color-terracotta);
+}
+.desk-settings-toggle-btn.is-open .desk-settings-toggle-icon {
+  transform: rotate(90deg) scale(1.2);
+}
+.desk-settings-toggle-btn.is-open {
+  border-color: var(--color-terracotta);
+  box-shadow: 0 0 0 3px rgba(214, 123, 82, 0.18), var(--shadow-md);
+}
+
+/* Expand/collapse animation untuk sub-menu */
+.desk-settings-expand-enter-active {
+  animation: settingsMenuIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.desk-settings-expand-leave-active {
+  animation: settingsMenuIn 0.18s ease-in reverse;
+}
+@keyframes settingsMenuIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.88); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* color-picker-popover tetap muncul ke atas, geser ke kiri */
+.desk-settings-group .color-picker-popover {
+  bottom: 56px;
+  right: 0;
+}
+
 .desk-config-floating-btn {
   width: 44px;
   height: 44px;
@@ -9281,15 +9341,36 @@ input:checked + .switch-slider:before {
   border: 1.5px solid rgba(180, 130, 130, 0.55);
   border-radius: 14px;
   min-height: 92px;
-  padding: 8px 8px 24px;
+  padding: 22px 8px 24px;
   background: transparent;
-  transition: background 0.2s, border-color 0.2s;
+  transition: background 0.22s, border-color 0.22s, transform 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.22s;
+  cursor: text;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .bl100-cell.is-done {
   background: rgba(163, 177, 138, 0.10);
   border-color: rgba(163, 177, 138, 0.65);
 }
 
+/* ── Hover state: lift + warm glow ── */
+.bl100-cell.bl100-cell-hovered:not(.is-done) {
+  transform: translateY(-4px) scale(1.03);
+  border-color: rgba(214, 123, 82, 0.6);
+  background: rgba(253, 245, 235, 0.75);
+  box-shadow: 0 8px 24px rgba(214, 123, 82, 0.14), 0 2px 8px rgba(0,0,0,0.06);
+  z-index: 2;
+}
+
+/* Done cell hover: subtle sage lift */
+.bl100-cell.bl100-cell-hovered.is-done {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 16px rgba(163, 177, 138, 0.22);
+}
+
+/* ── Nomor cell normal ── */
 .bl100-num {
   position: absolute;
   top: 6px;
@@ -9300,33 +9381,87 @@ input:checked + .switch-slider:before {
   color: var(--text-muted);
   opacity: 0.65;
   pointer-events: none;
+  transition: opacity 0.2s, color 0.2s, font-size 0.2s, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* ── Nomor cell saat hover (bukan done) ── */
+.bl100-num.bl100-num-hovered {
+  opacity: 1;
+  color: var(--color-terracotta);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 800;
+  transform: scale(1.15);
+}
+
+/* ── Hint text "tulis di sini ✦" saat hover kosong ── */
+.bl100-hover-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Outfit', sans-serif;
+  font-size: 10px;
+  font-style: italic;
+  color: var(--color-terracotta);
+  opacity: 0.55;
+  pointer-events: none;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+  animation: bl100HintFadeIn 0.22s ease;
+  z-index: 1;
+}
+
+@keyframes bl100HintFadeIn {
+  from { opacity: 0; transform: translate(-50%, -44%); }
+  to   { opacity: 0.55; transform: translate(-50%, -50%); }
+}
+
+/* ── Shine sweep saat hover ── */
+.bl100-cell.bl100-cell-hovered:not(.is-done)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 13px;
+  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.38) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: bl100Shine 0.55s ease;
+  pointer-events: none;
+}
+@keyframes bl100Shine {
+  from { background-position: 200% center; opacity: 0; }
+  to   { background-position: -40% center; opacity: 1; }
 }
 
 .bl100-input {
   width: 100%;
   height: 100%;
   min-height: 56px;
+  font-weight: bold;
   border: none;
   outline: none;
   background: transparent;
   resize: none;
-  font-family: 'Outfit', sans-serif;
-  font-size: 12.5px;
+  font-family: 'Fontby-n', sans-serif;
+  font-size: 20px;
   line-height: 1.4;
   color: var(--text-dark);
   padding: 2px 2px 0;
+  text-align: center;
 }
-.bl100-input::placeholder { color: var(--text-muted); opacity: 0.45; }
+.bl100-input::placeholder { color: var(--text-muted); opacity: 0.45; text-align: center; }
 
 .bl100-done-text {
-  font-family: 'Outfit', sans-serif;
-  font-size: 12.5px;
+  font-family: 'Fontby-n', sans-serif;
+  font-size: 20px;
   line-height: 1.4;
+  font-weight: bold;
   color: var(--text-muted);
   text-decoration: line-through;
   padding: 2px 2px 0;
   word-break: break-word;
   cursor: pointer;
+  text-align: center;
 }
 
 .bl100-date {

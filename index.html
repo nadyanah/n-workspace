@@ -723,41 +723,60 @@
 
           <!-- 0c. Bucket List 100 Button -->
           <button class="desk-config-floating-btn" @click="showBucketListModal = true" title="Bucket List 100">
-            🌏
+            📋
           </button>
 
-          <!-- 1. Desk Icons Configuration Floating Button -->
-          <button class="desk-config-floating-btn" @click="showSettings = !showSettings" title="Pengaturan Ikon & Meja Kerja">
-            ⚙️
-          </button>
+          <!-- ✦ Grouped: Pengaturan Ikon + My Mood Colour — 1 toggle button -->
+          <div class="desk-settings-group" @click.stop>
+            <!-- Sub-menu vertikal (muncul ke atas saat toggle aktif) -->
+            <transition name="desk-settings-expand">
+              <div v-if="showSettingsGroup" class="desk-settings-submenu">
 
-          <!-- 2. Color Theme Customizer Widget -->
-          <div class="color-picker-widget-container" style="position: relative;">
-            <button class="color-picker-btn" @click="showColorPicker = !showColorPicker" title="Ubah Warna Tema Dominan">
-              🎨
-            </button>
-            <div v-if="showColorPicker" class="color-picker-popover">
-              <div class="color-picker-title">
-                <span>🎨</span> My mood colour web
-              </div>
-              <div class="theme-preset-grid">
-                <span v-for="color in presetColors" 
-                      :key="color.hex" 
-                      class="theme-preset-dot" 
-                      :class="{ active: dominantColor === color.hex }"
-                      :style="{ backgroundColor: color.hex }" 
-                      :title="color.label"
-                      @click="setDominantColor(color.hex)">
-                </span>
-              </div>
-              <div class="custom-color-input-wrapper">
-                <span style="font-size: 11px;">Warna Kustom:</span>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <span class="text-mono" style="font-size: 11.5px; color: var(--text-dark);">{{ dominantColor }}</span>
-                  <input type="color" class="custom-color-picker-field" v-model="dominantColor" @input="setDominantColor(dominantColor)" />
+                <!-- Sub-btn A: Pengaturan Ikon -->
+                <button class="desk-config-floating-btn desk-submenu-btn" @click="showSettings = !showSettings" title="Pengaturan Ikon & Meja Kerja">
+                  ⚙️
+                </button>
+
+                <!-- Sub-btn B: My Mood Colour -->
+                <div class="color-picker-widget-container" style="position: relative;">
+                  <button class="color-picker-btn desk-submenu-btn" @click="showColorPicker = !showColorPicker" title="Ubah Warna Tema Dominan">
+                    🎨
+                  </button>
+                  <div v-if="showColorPicker" class="color-picker-popover">
+                    <div class="color-picker-title">
+                      <span>🎨</span> My mood colour web
+                    </div>
+                    <div class="theme-preset-grid">
+                      <span v-for="color in presetColors" 
+                            :key="color.hex" 
+                            class="theme-preset-dot" 
+                            :class="{ active: dominantColor === color.hex }"
+                            :style="{ backgroundColor: color.hex }" 
+                            :title="color.label"
+                            @click="setDominantColor(color.hex)">
+                      </span>
+                    </div>
+                    <div class="custom-color-input-wrapper">
+                      <span style="font-size: 11px;">Warna Kustom:</span>
+                      <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="text-mono" style="font-size: 11.5px; color: var(--text-dark);">{{ dominantColor }}</span>
+                        <input type="color" class="custom-color-picker-field" v-model="dominantColor" @input="setDominantColor(dominantColor)" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
               </div>
-            </div>
+            </transition>
+
+            <!-- Main toggle button -->
+            <button 
+              class="desk-config-floating-btn desk-settings-toggle-btn" 
+              :class="{ 'is-open': showSettingsGroup }"
+              @click="showSettingsGroup = !showSettingsGroup; if(!showSettingsGroup){ showColorPicker = false; }" 
+              title="Pengaturan & Tema">
+              <span class="desk-settings-toggle-icon">✦</span>
+            </button>
           </div>
         </div>
       </div>

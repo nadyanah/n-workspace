@@ -13191,8 +13191,17 @@ const BucketList100 = {
             <p class="bl100-subtitle">Random things? Fun things? Other little things! The ones I wanna try in {{ year }}...</p>
 
             <div class="bl100-grid">
-              <div v-for="(it, idx) in items" :key="idx" class="bl100-cell" :class="{ 'is-done': it.done }">
-                <span class="bl100-num">{{ idx + 1 }}</span>
+              <div v-for="(it, idx) in items" :key="idx"
+                class="bl100-cell"
+                :class="{ 'is-done': it.done, 'bl100-cell-hovered': hoveredIdx === idx }"
+                @mouseenter="hoveredIdx = idx"
+                @mouseleave="hoveredIdx = null">
+
+                <!-- Nomor dengan animasi pop saat hover -->
+                <span class="bl100-num" :class="{ 'bl100-num-hovered': hoveredIdx === idx && !it.done }">{{ idx + 1 }}</span>
+
+                <!-- Sparkle decoration saat hover (kosong & belum done) -->
+                <span v-if="hoveredIdx === idx && !it.done && !it.text" class="bl100-hover-hint">tulis di sini ✦</span>
 
                 <textarea v-if="!it.done" v-model="it.text" @change="saveToStorage" class="bl100-input"
                   placeholder=""></textarea>
@@ -13218,9 +13227,18 @@ const BucketList100 = {
 
             <div class="bl100-counter-wrap">
               <div class="bl100-counter">
-                <svg viewBox="0 0 200 200">
-                  <path d="M100,15 C140,15 145,55 140,75 C175,70 185,110 145,125 C150,160 115,185 100,185 C85,185 50,160 55,125 C15,110 25,70 60,75 C55,55 60,15 100,15 Z"
-                    fill="var(--color-paper, #FAF8EF)" stroke="rgba(180,130,130,0.6)" stroke-width="2.5" />
+                <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Kelopak bunga 6 arah, fill transparan, stroke rosy -->
+                  <g transform="translate(100,100)">
+                    <ellipse cx="0" cy="-38" rx="20" ry="34" fill="var(--color-paper, #FAF8EF)" stroke="rgba(180,130,130,0.65)" stroke-width="2.2" transform="rotate(0)"/>
+                    <ellipse cx="0" cy="-38" rx="20" ry="34" fill="var(--color-paper, #FAF8EF)" stroke="rgba(180,130,130,0.65)" stroke-width="2.2" transform="rotate(60)"/>
+                    <ellipse cx="0" cy="-38" rx="20" ry="34" fill="var(--color-paper, #FAF8EF)" stroke="rgba(180,130,130,0.65)" stroke-width="2.2" transform="rotate(120)"/>
+                    <ellipse cx="0" cy="-38" rx="20" ry="34" fill="var(--color-paper, #FAF8EF)" stroke="rgba(180,130,130,0.65)" stroke-width="2.2" transform="rotate(180)"/>
+                    <ellipse cx="0" cy="-38" rx="20" ry="34" fill="var(--color-paper, #FAF8EF)" stroke="rgba(180,130,130,0.65)" stroke-width="2.2" transform="rotate(240)"/>
+                    <ellipse cx="0" cy="-38" rx="20" ry="34" fill="var(--color-paper, #FAF8EF)" stroke="rgba(180,130,130,0.65)" stroke-width="2.2" transform="rotate(300)"/>
+                    <!-- Lingkaran tengah -->
+                    <circle cx="0" cy="0" r="28" fill="var(--color-paper, #FAF8EF)" stroke="rgba(180,130,130,0.65)" stroke-width="2.2"/>
+                  </g>
                 </svg>
                 <div class="bl100-counter-text">{{ doneCount }}/100</div>
               </div>
@@ -13237,6 +13255,7 @@ const BucketList100 = {
       items: [],
       dateInputFor: null,
       tempDate: '',
+      hoveredIdx: null,
     };
   },
   computed: {
