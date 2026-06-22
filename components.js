@@ -8881,29 +8881,51 @@ const GoogleCalendar = {
               <div class="gcal-agenda-timeline-time-col">
                 <div v-for="h in localHours" :key="h" class="gcal-agenda-hour-label">{{ h }}</div>
               </div>
-              <div class="gcal-agenda-timeline-col">
+              <div class="gcal-agenda-timeline-col"
+                   @mousemove.passive="localOnDragMouseMove($event)"
+                   @mouseup="localEndBlockDrag($event)"
+                   @mouseleave="localEndBlockDrag($event)">
                 <div v-for="h in localHours" :key="h" class="gcal-agenda-hour-cell"></div>
                 <div v-if="group.nowLineTop !== null" class="gcal-agenda-now-line" :style="{top: (group.nowLineTop*1) + 'px'}"></div>
                 <div
                   v-for="block in group.timedBlocks"
                   :key="block.id"
                   class="gcal-agenda-block"
-                  :class="['gcal-agenda-block-' + block.type, block.done && 'gcal-agenda-item-done']"
+                  :class="[
+                    'gcal-agenda-block-' + block.type,
+                    block.done && 'gcal-agenda-item-done',
+                    block.type === 'manual' && 'gcal-agenda-block-draggable',
+                    agendaDrag.blockId === block.id && 'gcal-agenda-block-dragging'
+                  ]"
                   :style="{
-                    top: block.top + 'px',
+                    top: (agendaDrag.blockId === block.id ? agendaDrag.currentTop : block.top) + 'px',
                     height: block.height + 'px',
                     background: localTintColor(block.color, 0.14),
-                    borderColor: localTintColor(block.color, 0.5),
+                    borderColor: agendaDrag.blockId === block.id ? block.color : localTintColor(block.color, 0.5),
                     color: block.color,
                     left: 'calc(' + (block.col * (100/block.totalCols)) + '% + 2px)',
                     width: 'calc(' + (100/block.totalCols) + '% - 4px)',
-                    cursor: 'pointer'
+                    cursor: block.type === 'manual' ? (agendaDrag.blockId === block.id ? 'grabbing' : 'grab') : 'pointer',
+                    userSelect: 'none',
+                    zIndex: agendaDrag.blockId === block.id ? 10 : 2,
+                    transition: agendaDrag.blockId === block.id ? 'none' : 'top 0.08s ease'
                   }"
-                  title="Lihat detail"
-                  @click.stop="localShowAgendaDetail(block)"
+                  :title="block.type === 'manual' ? 'Tahan & seret untuk mengubah jam' : 'Lihat detail'"
+                  @mousedown.stop="block.type === 'manual' ? localStartBlockDrag($event, block) : null"
+                  @touchstart.stop.prevent="block.type === 'manual' ? localStartBlockDragTouch($event, block) : null"
+                  @click.stop="agendaDrag.didDrag ? null : localShowAgendaDetail(block)"
                 >
+                  <span class="gcal-agenda-block-drag-handle" v-if="block.type === 'manual'">
+                    <svg viewBox="0 0 8 14" width="8" height="14" fill="currentColor" style="opacity:0.4;">
+                      <circle cx="2" cy="2" r="1.3"/><circle cx="6" cy="2" r="1.3"/>
+                      <circle cx="2" cy="7" r="1.3"/><circle cx="6" cy="7" r="1.3"/>
+                      <circle cx="2" cy="12" r="1.3"/><circle cx="6" cy="12" r="1.3"/>
+                    </svg>
+                  </span>
                   <span class="gcal-agenda-block-title" :style="block.done ? 'text-decoration:line-through; opacity:0.55;' : ''">{{ block.title }}</span>
-                  <span class="gcal-agenda-block-time">{{ block.endLabel ? block.startLabel + ' – ' + block.endLabel : block.startLabel }}</span>
+                  <span class="gcal-agenda-block-time">
+                    {{ agendaDrag.blockId === block.id ? agendaDrag.previewLabel : (block.endLabel ? block.startLabel + ' – ' + block.endLabel : block.startLabel) }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -9115,7 +9137,13 @@ const GoogleCalendar = {
         <transition name="agenda-detail-pop">
           <div v-if="recurActionPopup" class="agenda-detail-overlay" @click.self="recurActionPopup = null">
             <div class="recur-action-card">
-              <div class="recur-action-title">{{ recurActionPopup.mode === 'delete' ? 'Hapus acara rutin' : 'Edit acara rutin' }}</div>
+              <div class="recur-action-title">{{ recurActionPopup.mode === 'delete' ? 'Hapus acara rutin' : recurActionPopup.mode === 'reschedule' ? 'Pindah jam acara rutin' : 'Edit acara rutin' }}</div>
+
+              <!-- Preview jam baru (hanya untuk mode reschedule) -->
+              <div v-if="recurActionPopup.mode === 'reschedule'" style="margin: 0 0 14px; padding: 9px 14px; background: var(--color-cream, #FDF5EB); border-radius: 9px; border-left: 3px solid var(--color-terracotta, #D67B52); font-size: 12.5px;">
+                <span style="color: var(--text-muted); font-size: 11px; display: block; margin-bottom: 2px;">Jam baru</span>
+                <span style="font-weight: 700; color: var(--color-terracotta, #D67B52); font-family: 'Hack', monospace;">{{ recurActionPopup.newTime }} – {{ recurActionPopup.newEndTime }}</span>
+              </div>
 
               <label class="recur-action-opt">
                 <input type="radio" v-model="recurActionChoice" value="this" class="recur-action-radio" />
@@ -9696,6 +9724,17 @@ const GoogleCalendar = {
       ],
       localHours: ['00:00','01:00','02:00','03:00','04:00','05:00','06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00','23:00'],
       monthHoverDate: null,
+      // ── Drag-to-reschedule state (agenda view) ──
+      agendaDrag: {
+        blockId: null,         // id block yang sedang di-drag
+        block: null,           // referensi block data
+        startY: 0,             // posisi Y mouse saat mousedown
+        startTop: 0,           // top awal block (startMin)
+        currentTop: 0,         // top sementara saat drag berlangsung
+        previewLabel: '',      // preview jam "08:30 – 09:00"
+        didDrag: false,        // apakah mouse pindah > 5px (bedain dari klik)
+        origDuration: 0,       // durasi asli (agar height tidak berubah)
+      },
     };
   },
   computed: {
@@ -10456,6 +10495,9 @@ const GoogleCalendar = {
       const scope = this.recurActionChoice; // 'this' | 'following' | 'all'
       if (mode === 'delete') {
         this.localDeleteManualReminder(block, scope);
+      } else if (mode === 'reschedule') {
+        const { newTime, newEndTime } = this.recurActionPopup;
+        this.localApplyDragReschedule(block, scope, newTime, newEndTime);
       } else {
         this.localOpenEditForm(block, scope);
       }
@@ -10994,6 +11036,183 @@ const GoogleCalendar = {
       this.localSaveEvents();
       this.localSuccess = 'Acara berhasil dihapus.';
       setTimeout(() => { this.localSuccess = null; }, 2500);
+    },
+
+    // ─────────────────────────────────────────────
+    // DRAG-TO-RESCHEDULE (Agenda View)
+    // 1px = 1 menit, karena tiap jam = 60px di grid
+    // Hanya block type='manual' yang bisa di-drag
+    // ─────────────────────────────────────────────
+    _dragFmtMin(totalMin) {
+      const h = Math.floor(totalMin / 60) % 24;
+      const m = totalMin % 60;
+      return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+    },
+    _dragBuildPreviewLabel(newTop, duration) {
+      const startMin = Math.max(0, Math.min(1439, Math.round(newTop / 5) * 5));
+      const endMin = Math.min(1439, startMin + duration);
+      return this._dragFmtMin(startMin) + ' – ' + this._dragFmtMin(endMin);
+    },
+    localStartBlockDrag(e, block) {
+      if (block.type !== 'manual') return;
+      this.agendaDrag = {
+        blockId: block.id,
+        block: block,
+        startY: e.clientY,
+        startTop: block.top,
+        currentTop: block.top,
+        previewLabel: block.endLabel ? block.startLabel + ' – ' + block.endLabel : block.startLabel,
+        didDrag: false,
+        origDuration: block.height,
+      };
+      // Global listeners supaya drag tetap works walau keluar area
+      this._dragMouseMove = (ev) => this.localOnDragMouseMove(ev);
+      this._dragMouseUp   = (ev) => this.localEndBlockDrag(ev);
+      window.addEventListener('mousemove', this._dragMouseMove);
+      window.addEventListener('mouseup',   this._dragMouseUp);
+    },
+    localStartBlockDragTouch(e, block) {
+      if (block.type !== 'manual') return;
+      const touch = e.touches[0];
+      this.agendaDrag = {
+        blockId: block.id,
+        block: block,
+        startY: touch.clientY,
+        startTop: block.top,
+        currentTop: block.top,
+        previewLabel: block.endLabel ? block.startLabel + ' – ' + block.endLabel : block.startLabel,
+        didDrag: false,
+        origDuration: block.height,
+      };
+      this._dragTouchMove = (ev) => {
+        const t = ev.touches[0];
+        this.localOnDragMouseMove({ clientY: t.clientY });
+        ev.preventDefault();
+      };
+      this._dragTouchEnd = (ev) => this.localEndBlockDrag({ clientY: ev.changedTouches[0]?.clientY ?? this.agendaDrag.startY });
+      window.addEventListener('touchmove',  this._dragTouchMove, { passive: false });
+      window.addEventListener('touchend',   this._dragTouchEnd);
+    },
+    localOnDragMouseMove(e) {
+      if (!this.agendaDrag.blockId) return;
+      const dy = e.clientY - this.agendaDrag.startY;
+      if (!this.agendaDrag.didDrag && Math.abs(dy) < 5) return;
+      this.agendaDrag.didDrag = true;
+      // Snap ke kelipatan 5 menit (= 5px)
+      const rawTop = this.agendaDrag.startTop + dy;
+      const snapped = Math.round(rawTop / 5) * 5;
+      const clamped = Math.max(0, Math.min(1439 - this.agendaDrag.origDuration, snapped));
+      this.agendaDrag.currentTop = clamped;
+      this.agendaDrag.previewLabel = this._dragBuildPreviewLabel(clamped, this.agendaDrag.origDuration);
+    },
+    localEndBlockDrag(e) {
+      if (!this.agendaDrag.blockId) return;
+      // Cleanup global listeners
+      if (this._dragMouseMove) { window.removeEventListener('mousemove', this._dragMouseMove); this._dragMouseMove = null; }
+      if (this._dragMouseUp)   { window.removeEventListener('mouseup',   this._dragMouseUp);   this._dragMouseUp   = null; }
+      if (this._dragTouchMove) { window.removeEventListener('touchmove', this._dragTouchMove); this._dragTouchMove = null; }
+      if (this._dragTouchEnd)  { window.removeEventListener('touchend',  this._dragTouchEnd);  this._dragTouchEnd  = null; }
+
+      const { block, didDrag, currentTop, origDuration } = this.agendaDrag;
+      this.agendaDrag = { blockId: null, block: null, startY:0, startTop:0, currentTop:0, previewLabel:'', didDrag:false, origDuration:0 };
+
+      if (!didDrag || !block || !block.raw) return; // klik biasa, biarkan @click handle
+
+      // Hitung waktu baru (snap 5 menit)
+      const newStartMin = Math.max(0, Math.min(1439, Math.round(currentTop / 5) * 5));
+      const newEndMin   = Math.min(1439, newStartMin + origDuration);
+      const newTime    = this._dragFmtMin(newStartMin);
+      const newEndTime = this._dragFmtMin(newEndMin);
+      const rawId = block.raw.id;
+      if (!rawId) return;
+
+      // Kalau acara berulang → tampilkan popup scope dulu (mirip Google Calendar)
+      const rec = block.raw.recurrence || 'none';
+      if (rec !== 'none') {
+        this.recurActionChoice = 'this';
+        this.recurActionPopup = {
+          mode: 'reschedule',
+          block,
+          newTime,
+          newEndTime,
+        };
+        return;
+      }
+
+      // Acara tidak berulang → langsung simpan
+      this.localApplyDragReschedule(block, 'all', newTime, newEndTime);
+    },
+
+    // ── Eksekusi simpan waktu baru hasil drag sesuai scope yang dipilih ──
+    localApplyDragReschedule(block, scope, newTime, newEndTime) {
+      const rawId = block.raw.id;
+      const occurDate = block.dateStr || this.localSelectedDate || this.localFmtDate(new Date());
+      const [hh, mm] = newTime.split(':').map(Number);
+      const [eh, em] = newEndTime.split(':').map(Number);
+
+      try {
+        const raw = WorkspaceStorage.getItem('ws_manual_notifs');
+        let manuals = raw ? JSON.parse(raw) : [];
+        const idx = manuals.findIndex(m => m.id === rawId);
+        if (idx === -1) return;
+
+        const original = manuals[idx];
+        const updatedFields = {
+          time:       newTime,
+          timeVal:    hh * 60 + mm,
+          endTime:    newEndTime,
+          endTimeVal: eh * 60 + em,
+          allDay:     false,
+        };
+
+        if (scope === 'all') {
+          // Edit semua: update seri asli langsung
+          manuals[idx] = { ...original, ...updatedFields };
+
+        } else if (scope === 'this') {
+          // Hanya hari ini: exclude tanggal ini dari seri lama, buat entri baru khusus hari ini
+          const excluded = Array.isArray(original.excludedDates) ? [...original.excludedDates] : [];
+          if (!excluded.includes(occurDate)) excluded.push(occurDate);
+          manuals[idx] = { ...original, excludedDates: excluded };
+          manuals.push({
+            ...original,
+            id: 'manual_drag_' + Date.now(),
+            date: occurDate,
+            endDate: occurDate,
+            recurrence: 'none',
+            customRecurrence: null,
+            excludedDates: [],
+            ...updatedFields,
+          });
+
+        } else if (scope === 'following') {
+          // Ini dan seterusnya: potong seri lama sehari sebelum, buat seri baru mulai hari ini
+          if (occurDate <= original.date) {
+            // Dari kejadian pertama → update seri lama langsung
+            manuals[idx] = { ...original, ...updatedFields };
+          } else {
+            manuals[idx] = { ...original, endDate: this.localDayBefore(occurDate) };
+            manuals.push({
+              ...original,
+              id: 'manual_drag_' + Date.now(),
+              date: occurDate,
+              endDate: original.endDate || null,
+              excludedDates: [],
+              ...updatedFields,
+            });
+          }
+        }
+
+        WorkspaceStorage.setItem('ws_manual_notifs', JSON.stringify(manuals));
+        this.localStorageTick++;
+        globalThis.dispatchEvent(new CustomEvent('ws-manual-notif-updated'));
+        // Toast mini
+        const scopeLabel = scope === 'this' ? ' (hari ini)' : scope === 'following' ? ' (ini & seterusnya)' : '';
+        this.localSuccess = `"${original.title}" dipindah ke ${newTime} – ${newEndTime}${scopeLabel}`;
+        setTimeout(() => { this.localSuccess = null; }, 2500);
+      } catch(_e) { /* ignore */ }
+
+      this.recurActionPopup = null;
     },
     addHour(timeStr) {
       const [h, m] = timeStr.split(':').map(Number);

@@ -5892,6 +5892,27 @@ input:checked + .switch-slider:before {
 .gcal-agenda-block-title { font-weight: 400; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
 .gcal-agenda-block-time { font-size: 11px; opacity: 0.75; flex-shrink: 0; white-space: nowrap; }
 
+/* Draggable manual blocks */
+.gcal-agenda-block-draggable { cursor: grab !important; }
+.gcal-agenda-block-draggable:active { cursor: grabbing !important; }
+.gcal-agenda-block-dragging {
+  opacity: 0.88;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.1) !important;
+  z-index: 10;
+  border-style: dashed !important;
+  border-width: 1.5px !important;
+  scale: 1.01;
+}
+.gcal-agenda-block-drag-handle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  margin-right: 4px;
+  color: currentColor;
+}
+.gcal-agenda-block-draggable:hover .gcal-agenda-block-drag-handle svg { opacity: 0.7 !important; }
+.gcal-agenda-block-dragging .gcal-agenda-block-time { font-weight: 700 !important; opacity: 1 !important; }
+
 .gcal-agenda-block-task { border-color: var(--color-terracotta); }
 .gcal-agenda-block-habit { border-color: var(--color-sage); }
 .gcal-agenda-block-manual { border-color: #F59E0B; }
