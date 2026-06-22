@@ -721,6 +721,11 @@
             📿
           </button>
 
+          <!-- 0c-alt. Al-Qur'an Harian Button -->
+          <button class="desk-config-floating-btn" @click="showQuranModal = true" title="Baca Al-Qur'an Harian">
+            🕌
+          </button>
+
           <!-- 0c. Bucket List 100 Button -->
           <button class="desk-config-floating-btn" @click="showBucketListModal = true" title="Bucket List 100">
             📋
@@ -1077,6 +1082,11 @@
         :show="showDzikirModal"
         @close="showDzikirModal = false">
       </dzikir-counter>
+
+      <quran-reader
+        :show="showQuranModal"
+        @close="showQuranModal = false">
+      </quran-reader>
 
       <bucket-list-yearly
         :show="showBucketListModal"

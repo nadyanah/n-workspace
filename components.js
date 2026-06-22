@@ -9025,7 +9025,7 @@ const GoogleCalendar = {
                   <span class="agenda-detail-row-icon">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
                   </span>
-                  <span class="agenda-detail-row-text" style="white-space:pre-wrap;">{{ agendaDetailItem.raw.subtitle }}</span>
+                  <span class="agenda-detail-row-text">{{ agendaDetailItem.raw.subtitle }}</span>
                 </div>
 
                 <!-- Kategori (untuk manual) -->
@@ -16303,3 +16303,364 @@ const MyPortfolio = {
 };
 
 
+
+// ============================================================================
+// QURAN READER — Modal baca Al-Qur'an harian
+// ============================================================================
+// Menggunakan API publik: https://api.alquran.cloud/v1
+//   • Daftar surah    : GET /surah
+//   • Ayat Arab       : GET /surah/{no}/ar.alafasy
+//   • Terjemahan Indo : GET /surah/{no}/id.indonesian
+//   • Terjemahan Eng  : GET /surah/{no}/en.asad
+// Progres baca tersimpan di WorkspaceStorage (ws_quran_progress)
+// ============================================================================
+
+// ============================================================================
+// QURAN READER — Modal baca Al-Qur'an harian
+// ============================================================================
+// API: https://api.alquran.cloud/v1
+//   Arab         : GET /surah/{no}/ar.alafasy
+//   Latin        : GET /surah/{no}/en.transliteration
+//   Terjemahan ID: GET /surah/{no}/id.indonesian
+//   Terjemahan EN: GET /surah/{no}/en.asad
+// Progres tersimpan di WorkspaceStorage (ws_quran_progress, ws_quran_prefs)
+// ============================================================================
+const QuranReader = {
+  template: `
+    <transition name="quran-modal-fade">
+      <div v-if="show" class="quran-overlay" @click.self="$emit('close')">
+        <div class="quran-card">
+
+          <!-- ── Header ── -->
+          <div class="quran-header">
+            <div class="quran-header-left">
+              <div class="quran-header-icon">☽</div>
+              <div>
+                <div class="quran-header-title">Al-Qur'an Harian</div>
+                <div class="quran-header-sub" v-if="selectedSurah">
+                  {{ selectedSurah.englishName }} · {{ selectedSurah.numberOfAyahs }} ayat
+                </div>
+              </div>
+            </div>
+            <button class="quran-close-btn" @click="$emit('close')" title="Tutup">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- ── Controls ── -->
+          <div class="quran-controls">
+            <!-- Surah selector -->
+            <div class="quran-surah-selector">
+              <label class="quran-ctrl-label">Surah</label>
+              <div class="quran-surah-select-wrap">
+                <select v-model="selectedSurahNo" @change="loadSurah" class="quran-select" :disabled="loadingList">
+                  <option v-if="loadingList" value="">Memuat daftar...</option>
+                  <option v-for="s in surahList" :key="s.number" :value="s.number">
+                    {{ s.number }}. {{ s.name }} – {{ s.englishName }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Prev / Next -->
+            <div class="quran-nav-btns">
+              <button class="quran-nav-btn" @click="prevSurah" :disabled="selectedSurahNo <= 1 || loadingAyat" title="Surah sebelumnya">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <button class="quran-nav-btn" @click="nextSurah" :disabled="selectedSurahNo >= 114 || loadingAyat" title="Surah berikutnya">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+
+            <!-- Toggle tampilan -->
+            <div class="quran-view-toggles">
+              <label class="quran-ctrl-label">Tampilan</label>
+              <div class="quran-toggle-row">
+                <!-- Latin toggle -->
+                <button class="quran-toggle-chip" :class="{ active: showLatin }" @click="toggleLatin" title="Tampilkan / sembunyikan latin">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h10M4 17h6"/></svg>
+                  Latin
+                </button>
+                <!-- Terjemahan cycle -->
+                <button class="quran-toggle-chip" :class="{ active: lang !== 'none' }" @click="cycleLang" title="Ganti bahasa terjemahan">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                  {{ langLabel }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Progress bar ── -->
+          <div class="quran-progress-bar-wrap" v-if="selectedSurah">
+            <div class="quran-progress-label">
+              <span>Progres harian</span>
+              <span>{{ readAyahs.size }} / {{ selectedSurah.numberOfAyahs }} ayat</span>
+            </div>
+            <div class="quran-progress-bar">
+              <div class="quran-progress-fill" :style="{ width: progressPercent + '%' }"></div>
+            </div>
+          </div>
+
+          <!-- ── Loading ── -->
+          <div v-if="loadingAyat" class="quran-loading">
+            <div class="quran-loading-spinner"></div>
+            <span>Memuat ayat...</span>
+          </div>
+
+          <!-- ── Error ── -->
+          <div v-else-if="errorMsg" class="quran-error">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>{{ errorMsg }}</span>
+            <button class="quran-retry-btn" @click="loadSurah">Coba lagi</button>
+          </div>
+
+          <!-- ── Ayat list ── -->
+          <div v-else-if="ayatList.length" class="quran-ayat-list" ref="ayatListEl">
+
+            <!-- Bismillah (kecuali Al-Fatihah & At-Taubah) -->
+            <div v-if="selectedSurahNo !== 1 && selectedSurahNo !== 9" class="quran-bismillah">
+              بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+              <div v-if="showLatin" class="quran-bismillah-latin">Bismillāhir raḥmānir raḥīm</div>
+            </div>
+
+            <div
+              v-for="ayah in ayatList"
+              :key="ayah.numberInSurah"
+              class="quran-ayah"
+              :class="{ 'quran-ayah-read': readAyahs.has(ayah.numberInSurah) }"
+              @click="toggleRead(ayah.numberInSurah)"
+            >
+              <!-- Nomor ayat -->
+              <div class="quran-ayah-num">
+                <span>{{ ayah.numberInSurah }}</span>
+              </div>
+
+              <!-- Konten -->
+              <div class="quran-ayah-content">
+                <!-- Arab -->
+                <div class="quran-ayah-arabic">{{ ayah.text }}</div>
+                <!-- Latin -->
+                <div v-if="showLatin && ayah.latin" class="quran-ayah-latin">{{ ayah.latin }}</div>
+                <!-- Terjemahan -->
+                <div v-if="lang !== 'none' && ayah.translation" class="quran-ayah-trans">{{ ayah.translation }}</div>
+              </div>
+
+              <!-- Check -->
+              <div class="quran-ayah-check" :class="{ visible: readAyahs.has(ayah.numberInSurah) }">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+            </div>
+
+            <!-- All done -->
+            <div v-if="progressPercent === 100" class="quran-all-done">
+              <span>🌙</span> Alhamdulillah, surah ini sudah selesai dibaca!
+            </div>
+          </div>
+
+          <!-- ── Footer ── -->
+          <div class="quran-footer" v-if="ayatList.length && !loadingAyat">
+            <button class="quran-footer-btn quran-footer-btn-outline" @click="resetRead">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.17"/></svg>
+              Reset
+            </button>
+            <button class="quran-footer-btn quran-footer-btn-fill" @click="markAllRead">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Tandai Semua Selesai
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </transition>
+  `,
+
+  emits: ['close'],
+  props: { show: { type: Boolean, default: false } },
+
+  data() {
+    return {
+      surahList:       [],
+      selectedSurahNo: 1,
+      selectedSurah:   null,
+      ayatList:        [],   // [{ numberInSurah, text, latin, translation }]
+      lang:            'id', // 'id' | 'en' | 'none'
+      showLatin:       true, // toggle latin on/off
+      loadingList:     false,
+      loadingAyat:     false,
+      errorMsg:        '',
+      readAyahs:       new Set(),
+      todayKey:        '',
+    };
+  },
+
+  computed: {
+    progressPercent() {
+      if (!this.selectedSurah) return 0;
+      return Math.round((this.readAyahs.size / this.selectedSurah.numberOfAyahs) * 100);
+    },
+    langLabel() {
+      if (this.lang === 'id') return '🇮🇩 Indo';
+      if (this.lang === 'en') return '🇬🇧 Eng';
+      return '— Trans';
+    }
+  },
+
+  watch: {
+    show(val) { if (val) this.onOpen(); }
+  },
+
+  methods: {
+    onOpen() {
+      this.todayKey = new Date().toISOString().split('T')[0];
+      this._loadPrefs();
+      if (!this.surahList.length) this.fetchSurahList();
+      else this.loadSurah();
+    },
+
+    _loadPrefs() {
+      try {
+        const p = JSON.parse(WorkspaceStorage.getItem('ws_quran_prefs') || '{}');
+        if (p.surahNo)              this.selectedSurahNo = p.surahNo;
+        if (p.lang)                 this.lang            = p.lang;
+        if (p.showLatin !== undefined) this.showLatin    = p.showLatin;
+      } catch(_e) {}
+    },
+
+    _savePrefs() {
+      try {
+        WorkspaceStorage.setItem('ws_quran_prefs', JSON.stringify({
+          surahNo:   this.selectedSurahNo,
+          lang:      this.lang,
+          showLatin: this.showLatin
+        }));
+      } catch(_e) {}
+    },
+
+    _progressKey() {
+      return `ws_quran_progress_${this.todayKey}_${this.selectedSurahNo}`;
+    },
+
+    _loadProgress() {
+      try {
+        const raw = WorkspaceStorage.getItem(this._progressKey());
+        this.readAyahs = raw ? new Set(JSON.parse(raw)) : new Set();
+      } catch(_e) { this.readAyahs = new Set(); }
+    },
+
+    _saveProgress() {
+      try {
+        WorkspaceStorage.setItem(this._progressKey(), JSON.stringify([...this.readAyahs]));
+      } catch(_e) {}
+    },
+
+    async fetchSurahList() {
+      this.loadingList = true;
+      try {
+        const res  = await fetch('https://api.alquran.cloud/v1/surah');
+        const json = await res.json();
+        if (json.code === 200) {
+          this.surahList = json.data;
+          await this.loadSurah();
+        } else {
+          this.errorMsg = 'Gagal memuat daftar surah.';
+        }
+      } catch(e) {
+        this.errorMsg = 'Koneksi gagal. Periksa internet.';
+      } finally {
+        this.loadingList = false;
+      }
+    },
+
+    async loadSurah() {
+      if (!this.selectedSurahNo) return;
+      this.loadingAyat = true;
+      this.errorMsg    = '';
+      this.ayatList    = [];
+
+      this.selectedSurah = this.surahList.find(s => s.number === Number(this.selectedSurahNo)) || null;
+      this._loadProgress();
+      this._savePrefs();
+
+      try {
+        const no           = this.selectedSurahNo;
+        const transEdition = this.lang === 'id' ? 'id.indonesian' : 'en.asad';
+
+        // Fetch Arab, Latin, Terjemahan secara paralel
+        const [arabRes, latinRes, transRes] = await Promise.all([
+          fetch(`https://api.alquran.cloud/v1/surah/${no}/ar.alafasy`),
+          fetch(`https://api.alquran.cloud/v1/surah/${no}/en.transliteration`),
+          this.lang !== 'none'
+            ? fetch(`https://api.alquran.cloud/v1/surah/${no}/${transEdition}`)
+            : Promise.resolve(null)
+        ]);
+
+        const arabJson  = await arabRes.json();
+        const latinJson = await latinRes.json();
+        const transJson = transRes ? await transRes.json() : null;
+
+        if (arabJson.code !== 200) throw new Error('Arab fetch failed');
+
+        const arabAyahs  = arabJson.data.ayahs;
+        const latinAyahs = (latinJson.code === 200) ? latinJson.data.ayahs : [];
+        const transAyahs = (transJson && transJson.code === 200) ? transJson.data.ayahs : [];
+
+        this.ayatList = arabAyahs.map((a, i) => ({
+          numberInSurah: a.numberInSurah,
+          text:          a.text,
+          latin:         latinAyahs[i]?.text || '',
+          translation:   transAyahs[i]?.text || ''
+        }));
+
+        this.$nextTick(() => {
+          if (this.$refs.ayatListEl) this.$refs.ayatListEl.scrollTop = 0;
+        });
+
+      } catch(e) {
+        this.errorMsg = 'Gagal memuat ayat. Coba lagi.';
+      } finally {
+        this.loadingAyat = false;
+      }
+    },
+
+    toggleLatin() {
+      this.showLatin = !this.showLatin;
+      this._savePrefs();
+    },
+
+    cycleLang() {
+      // Cycle: id → en → none → id
+      const order = ['id', 'en', 'none'];
+      const next  = order[(order.indexOf(this.lang) + 1) % order.length];
+      this.lang   = next;
+      // Reload kalau bukan 'none', supaya terjemahan ter-fetch
+      this.loadSurah();
+    },
+
+    prevSurah() {
+      if (this.selectedSurahNo > 1) { this.selectedSurahNo--; this.loadSurah(); }
+    },
+
+    nextSurah() {
+      if (this.selectedSurahNo < 114) { this.selectedSurahNo++; this.loadSurah(); }
+    },
+
+    toggleRead(ayahNo) {
+      const s = new Set(this.readAyahs);
+      s.has(ayahNo) ? s.delete(ayahNo) : s.add(ayahNo);
+      this.readAyahs = s;
+      this._saveProgress();
+    },
+
+    markAllRead() {
+      this.readAyahs = new Set(this.ayatList.map(a => a.numberInSurah));
+      this._saveProgress();
+    },
+
+    resetRead() {
+      this.readAyahs = new Set();
+      this._saveProgress();
+    }
+  }
+};
