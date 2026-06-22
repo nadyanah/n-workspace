@@ -512,6 +512,8 @@
       color: var(--text-dark, #3D2E22);
       line-height: 1.5;
       flex: 1;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
     .agenda-detail-recur-badge {
       display: inline-block;
@@ -717,6 +719,11 @@
           <!-- 0b. Dzikir Harian Button -->
           <button class="desk-config-floating-btn" @click="showDzikirModal = true" title="Dzikir Harian">
             📿
+          </button>
+
+          <!-- 0c. Bucket List 100 Button -->
+          <button class="desk-config-floating-btn" @click="showBucketListModal = true" title="Bucket List 100">
+            🪣
           </button>
 
           <!-- 1. Desk Icons Configuration Floating Button -->
@@ -1051,6 +1058,11 @@
         :show="showDzikirModal"
         @close="showDzikirModal = false">
       </dzikir-counter>
+
+      <bucket-list-yearly
+        :show="showBucketListModal"
+        @close="showBucketListModal = false">
+      </bucket-list-yearly>
 
       <icon-manager v-if="showSettings" 
                     :assigned-icons="assignedIcons" 

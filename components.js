@@ -9195,7 +9195,7 @@ const GoogleCalendar = {
                   </div>
                   <div>
                     <label class="gcal-label">Keterangan (opsional)</label>
-                    <textarea class="gcal-input" v-model="localNewReminder.subtitle" rows="2" style="resize:none;" maxlength="80" placeholder="Catatan singkat..."></textarea>
+                    <textarea class="gcal-input" v-model="localNewReminder.subtitle" rows="3" style="resize:vertical; min-height:64px; max-height:240px;" placeholder="Catatan singkat..."></textarea>
                   </div>
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                     <div>
@@ -13164,6 +13164,182 @@ const DzikirCounter = {
     }
   },
 };
+
+
+// ============================================================================
+// 10b. BUCKET LIST 100 (Yearly) Component
+// ============================================================================
+const BucketList100 = {
+  props: ['show'],
+  emits: ['close'],
+  template: `
+    <teleport to="body">
+      <transition name="insight-modal-fade">
+        <div v-if="show" class="bl100-overlay" @click.self="$emit('close')">
+          <div class="bl100-sheet">
+            <button class="bl100-close" @click="$emit('close')" title="Tutup">✕</button>
+
+            <div class="bl100-header-top">
+              <h2 class="bl100-title">ii . bucket list.</h2>
+              <div class="bl100-year-switch">
+                <button @click="changeYear(-1)" title="Tahun sebelumnya">‹</button>
+                <span>{{ year }}</span>
+                <button @click="changeYear(1)" title="Tahun berikutnya">›</button>
+              </div>
+            </div>
+            <div class="bl100-hr"></div>
+            <p class="bl100-subtitle">Random things? Fun things? Other little things! The ones I wanna try in {{ year }}...</p>
+
+            <div class="bl100-grid">
+              <div v-for="(it, idx) in items" :key="idx" class="bl100-cell" :class="{ 'is-done': it.done }">
+                <span class="bl100-num">{{ idx + 1 }}</span>
+
+                <textarea v-if="!it.done" v-model="it.text" @change="saveToStorage" class="bl100-input"
+                  placeholder=""></textarea>
+                <div v-else class="bl100-done-text" @click="onCellTextClick(idx)">{{ it.text || '—' }}</div>
+
+                <div v-if="it.done && it.completedDate" class="bl100-date">✓ {{ formatDate(it.completedDate) }}</div>
+
+                <button class="bl100-toggle" :class="{ 'is-done': it.done }" @click="onToggleClick(idx)"
+                  :title="it.done ? 'Batalkan status terealisasi' : 'Tandai sudah terealisasi'">
+                  <svg v-if="it.done" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </button>
+
+                <div v-if="dateInputFor === idx" class="bl100-date-popover" @click.stop>
+                  <label>Tanggal terealisasi</label>
+                  <input type="date" v-model="tempDate" :max="todayStr" />
+                  <div class="bl100-date-popover-actions">
+                    <button class="bl100-btn-save" @click="confirmDone(idx)">Simpan</button>
+                    <button class="bl100-btn-cancel" @click="dateInputFor = null">Batal</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bl100-counter-wrap">
+              <div class="bl100-counter">
+                <svg viewBox="0 0 200 200">
+                  <path d="M100,15 C140,15 145,55 140,75 C175,70 185,110 145,125 C150,160 115,185 100,185 C85,185 50,160 55,125 C15,110 25,70 60,75 C55,55 60,15 100,15 Z"
+                    fill="var(--color-paper, #FAF8EF)" stroke="rgba(180,130,130,0.6)" stroke-width="2.5" />
+                </svg>
+                <div class="bl100-counter-text">{{ doneCount }}/100</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </transition>
+    </teleport>
+  `,
+  data() {
+    return {
+      year: new Date().getFullYear(),
+      items: [],
+      dateInputFor: null,
+      tempDate: '',
+    };
+  },
+  computed: {
+    doneCount() {
+      return this.items.filter(it => it.done).length;
+    },
+    todayStr() {
+      const now = new Date();
+      return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    },
+  },
+  methods: {
+    storageKey(y) {
+      return 'bucketlist100_' + y;
+    },
+    blankItems() {
+      const arr = [];
+      for (let i = 0; i < 100; i++) arr.push({ text: '', done: false, completedDate: null });
+      return arr;
+    },
+    loadYear(y) {
+      try {
+        const raw = WorkspaceStorage.getItem(this.storageKey(y));
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          // Pastikan selalu 100 slot meski data lama lebih pendek
+          while (parsed.length < 100) parsed.push({ text: '', done: false, completedDate: null });
+          this.items = parsed.slice(0, 100);
+        } else {
+          this.items = this.blankItems();
+          this.saveToStorage();
+          this.registerYear(y);
+        }
+      } catch (_e) {
+        this.items = this.blankItems();
+      }
+    },
+    registerYear(y) {
+      try {
+        const raw = WorkspaceStorage.getItem('bucketlist100_years');
+        let years = raw ? JSON.parse(raw) : [];
+        if (!years.includes(y)) {
+          years.push(y);
+          years.sort((a, b) => a - b);
+          WorkspaceStorage.setItem('bucketlist100_years', JSON.stringify(years));
+        }
+      } catch (_e) {}
+    },
+    saveToStorage() {
+      WorkspaceStorage.setItem(this.storageKey(this.year), JSON.stringify(this.items));
+      this.registerYear(this.year);
+    },
+    changeYear(delta) {
+      this.dateInputFor = null;
+      this.year += delta;
+      this.loadYear(this.year);
+    },
+    onToggleClick(idx) {
+      if (this.items[idx].done) {
+        if (!confirm('Batalkan status terealisasi untuk item ini?')) return;
+        this.items[idx].done = false;
+        this.items[idx].completedDate = null;
+        this.dateInputFor = null;
+        this.saveToStorage();
+      } else {
+        if (!this.items[idx].text || !this.items[idx].text.trim()) {
+          alert('Isi dulu impian/list-nya sebelum ditandai selesai ya.');
+          return;
+        }
+        this.dateInputFor = idx;
+        this.tempDate = this.todayStr;
+      }
+    },
+    onCellTextClick(idx) {
+      // Klik teks yang sudah tercoret juga bisa membuka ulang tanggal (untuk koreksi)
+      if (this.items[idx].done) {
+        this.dateInputFor = idx;
+        this.tempDate = this.items[idx].completedDate || this.todayStr;
+      }
+    },
+    confirmDone(idx) {
+      if (!this.tempDate) { alert('Pilih tanggal terealisasi dulu ya.'); return; }
+      this.items[idx].done = true;
+      this.items[idx].completedDate = this.tempDate;
+      this.dateInputFor = null;
+      this.saveToStorage();
+    },
+    formatDate(dateStr) {
+      try {
+        const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+        const [y, m, d] = dateStr.split('-').map(Number);
+        return d + ' ' + months[m - 1] + ' ' + y;
+      } catch (_e) {
+        return dateStr;
+      }
+    },
+  },
+  async mounted() {
+    await globalThis._workspaceStorageReady;
+    this.loadYear(this.year);
+  },
+};
+
 
 
 // ============================================================================

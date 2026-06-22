@@ -9150,3 +9150,285 @@ input:checked + .switch-slider:before {
   color: var(--text-muted);
   border: 1px solid rgba(110, 99, 89, 0.2);
 }
+
+/* ============================================================================
+   BUCKET LIST 100 — Journal/Worksheet Style
+   ============================================================================ */
+.bl100-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 22, 16, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 20px;
+}
+
+.bl100-sheet {
+  position: relative;
+  background: var(--color-paper, #FAF8EF);
+  width: min(900px, 96vw);
+  max-height: 92vh;
+  overflow-y: auto;
+  border-radius: 18px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28), 0 4px 16px rgba(0, 0, 0, 0.12);
+  padding: 30px 34px 26px;
+  animation: insightPopIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.bl100-close {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  color: var(--text-muted);
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  transition: background 0.15s, color 0.15s;
+  z-index: 5;
+}
+.bl100-close:hover { background: var(--color-sand-light, #EDE8E1); color: var(--text-dark); }
+
+.bl100-header-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding-right: 30px;
+}
+
+.bl100-title {
+  font-family: 'Fontby-en', cursive;
+  font-weight: 700;
+  font-style: normal;
+  font-size: 32px;
+  color: var(--text-dark);
+  line-height: 1;
+  margin: 0;
+}
+
+.bl100-year-switch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.bl100-year-switch button {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+.bl100-year-switch button:hover { color: var(--color-terracotta); }
+.bl100-year-switch span {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  min-width: 32px;
+  text-align: center;
+}
+
+.bl100-hr {
+  height: 1.5px;
+  background: rgba(180, 130, 130, 0.45);
+  margin: 8px 0 10px;
+  width: 100%;
+}
+
+.bl100-subtitle {
+  font-family: 'Outfit', sans-serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 22px;
+}
+
+.bl100-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 11px;
+}
+
+@media (max-width: 760px) {
+  .bl100-grid { grid-template-columns: repeat(5, 1fr); }
+}
+@media (max-width: 560px) {
+  .bl100-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .bl100-title { font-size: 26px; }
+}
+@media (max-width: 420px) {
+  .bl100-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.bl100-cell {
+  position: relative;
+  border: 1.5px solid rgba(180, 130, 130, 0.55);
+  border-radius: 14px;
+  min-height: 92px;
+  padding: 8px 8px 24px;
+  background: transparent;
+  transition: background 0.2s, border-color 0.2s;
+}
+.bl100-cell.is-done {
+  background: rgba(163, 177, 138, 0.10);
+  border-color: rgba(163, 177, 138, 0.65);
+}
+
+.bl100-num {
+  position: absolute;
+  top: 6px;
+  right: 9px;
+  font-family: 'Outfit', sans-serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.bl100-input {
+  width: 100%;
+  height: 100%;
+  min-height: 56px;
+  border: none;
+  outline: none;
+  background: transparent;
+  resize: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-dark);
+  padding: 2px 2px 0;
+}
+.bl100-input::placeholder { color: var(--text-muted); opacity: 0.45; }
+
+.bl100-done-text {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-muted);
+  text-decoration: line-through;
+  padding: 2px 2px 0;
+  word-break: break-word;
+  cursor: pointer;
+}
+
+.bl100-date {
+  position: absolute;
+  bottom: 6px;
+  left: 9px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--color-sage, #A3B18A);
+  letter-spacing: 0.01em;
+}
+
+.bl100-toggle {
+  position: absolute;
+  bottom: 5px;
+  right: 7px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(180, 130, 130, 0.55);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: all 0.15s;
+  padding: 0;
+}
+.bl100-toggle.is-done {
+  background: var(--color-sage, #A3B18A);
+  border-color: var(--color-sage, #A3B18A);
+}
+
+.bl100-date-popover {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: rgba(250, 248, 239, 0.98);
+  border-radius: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.10);
+}
+.bl100-date-popover label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.bl100-date-popover input[type="date"] {
+  width: 92%;
+  height: 26px;
+  padding: 0 4px;
+  border: 1.5px solid var(--color-sand);
+  border-radius: 7px;
+  font-size: 11px;
+  font-family: inherit;
+  color: var(--text-dark);
+  background: #fff;
+  box-sizing: border-box;
+  outline: none;
+}
+.bl100-date-popover-actions { display: flex; gap: 5px; }
+.bl100-date-popover-actions button {
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+}
+.bl100-date-popover-actions .bl100-btn-save { background: var(--color-sage, #A3B18A); color: #fff; }
+.bl100-date-popover-actions .bl100-btn-cancel { background: transparent; border: 1.5px solid var(--color-sand); color: var(--text-muted); }
+
+.bl100-counter-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 26px;
+}
+
+.bl100-counter {
+  position: relative;
+  width: 140px;
+  height: 140px;
+}
+.bl100-counter svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.bl100-counter-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-dark);
+}

@@ -18,6 +18,7 @@ const App = {
     const showNotifPanel = ref(false);
     const showInspirationModal = ref(false);
     const showDzikirModal = ref(false);
+    const showBucketListModal = ref(false);
 
     // --- TAB BAR STATE (mirip Chrome) ---
     // Lucide SVG path strings — dirender via v-html di tab favicon
@@ -579,6 +580,7 @@ const App = {
       showNotifPanel,
       showInspirationModal,
       showDzikirModal,
+      showBucketListModal,
       // Tab bar
       openTabs,
       activeTabId,
@@ -861,6 +863,7 @@ app.component('reminder-popup', ReminderPopup);
 app.component('missed-tasks-page', MissedTasksPage);
 app.component('inspiration-board', InspirationBoard);
 app.component('dzikir-counter', DzikirCounter);
+app.component('bucket-list-yearly', BucketList100);
 app.component('push-notif-toggle', PushNotifToggle);
 
 app.mount('#app');
