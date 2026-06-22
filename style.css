@@ -5963,11 +5963,13 @@ input:checked + .switch-slider:before {
   border-width: 1.5px !important;
   scale: 1.01;
 }
-/* Visual feedback saat block sedang di-hold (long press aktif di touch) */
-.gcal-agenda-block-longpress {
+/* Visual feedback saat block siap di-drag setelah double-tap */
+.gcal-agenda-block-doubletap-ready {
   scale: 1.03;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.14) !important;
-  transition: scale 0.15s ease, box-shadow 0.15s ease !important;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.18) !important;
+  border-style: dashed !important;
+  border-width: 1.5px !important;
+  transition: scale 0.12s ease, box-shadow 0.12s ease !important;
 }
 .gcal-agenda-block-drag-handle {
   flex-shrink: 0;
