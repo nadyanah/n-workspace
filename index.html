@@ -731,6 +731,11 @@
             📋
           </button>
 
+          <!-- 0d. Wish List 2026 Button -->
+          <button class="desk-config-floating-btn" @click="showWishListModal = true" title="Wish List 2026">
+            🛍️
+          </button>
+
           <!-- ✦ Grouped: Pengaturan Ikon + My Mood Colour — 1 toggle button -->
           <div class="desk-settings-group" @click.stop>
             <!-- Sub-menu vertikal (muncul ke atas saat toggle aktif) -->
@@ -1092,6 +1097,11 @@
         :show="showBucketListModal"
         @close="showBucketListModal = false">
       </bucket-list-yearly>
+
+      <wish-list-2026
+        :show="showWishListModal"
+        @close="showWishListModal = false">
+      </wish-list-2026>
 
       <icon-manager v-if="showSettings" 
                     :assigned-icons="assignedIcons" 

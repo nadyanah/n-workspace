@@ -20,6 +20,7 @@ const App = {
     const showDzikirModal = ref(false);
     const showBucketListModal = ref(false);
     const showQuranModal = ref(false);
+    const showWishListModal = ref(false);
 
     // --- TAB BAR STATE (mirip Chrome) ---
     // Lucide SVG path strings — dirender via v-html di tab favicon
@@ -593,6 +594,7 @@ const App = {
       showDzikirModal,
       showBucketListModal,
       showQuranModal,
+      showWishListModal,
       showSettingsGroup,
       // Tab bar
       openTabs,
@@ -881,6 +883,7 @@ app.component('inspiration-board', InspirationBoard);
 app.component('dzikir-counter', DzikirCounter);
 app.component('bucket-list-yearly', BucketList100);
 app.component('quran-reader', QuranReader);
+app.component('wish-list-2026', WishList2026);
 app.component('push-notif-toggle', PushNotifToggle);
 
 app.mount('#app');

@@ -16664,3 +16664,241 @@ const QuranReader = {
     }
   }
 };
+
+// ============================================================================
+// WishList2026 — Daftar Belanja 2026
+//   Floating modal: nama barang, harga, checklist, total pengeluaran
+//   Storage: WorkspaceStorage key = 'ws_wishlist_2026'
+// ============================================================================
+const WishList2026 = {
+  props: ['show'],
+  emits: ['close'],
+  template: `
+    <teleport to="body">
+      <transition name="wl26-fade">
+        <div v-if="show" class="wl26-overlay" @click.self="$emit('close')">
+          <div class="wl26-sheet">
+            <!-- Header — warna tema, close di dalam -->
+            <div class="wl26-header">
+              <div class="wl26-header-icon">🛍️</div>
+              <div style="flex:1; min-width:0;">
+                <h2 class="wl26-title">wish list 2026.</h2>
+                <p class="wl26-subtitle">barang-barang yang pengen aku beli tahun ini ✦</p>
+              </div>
+              <button class="wl26-close" @click="$emit('close')" title="Tutup">✕</button>
+            </div>
+            <div class="wl26-divider"></div>
+
+            <!-- Summary bar -->
+            <div class="wl26-summary">
+              <div class="wl26-summary-item">
+                <span class="wl26-summary-label">total item</span>
+                <span class="wl26-summary-val">{{ items.length }}</span>
+              </div>
+              <div class="wl26-summary-sep"></div>
+              <div class="wl26-summary-item">
+                <span class="wl26-summary-label">sudah dibeli</span>
+                <span class="wl26-summary-val wl26-val-done">{{ boughtCount }}</span>
+              </div>
+              <div class="wl26-summary-sep"></div>
+              <div class="wl26-summary-item">
+                <span class="wl26-summary-label">total budget</span>
+                <span class="wl26-summary-val">{{ formatRp(totalAll) }}</span>
+              </div>
+              <div class="wl26-summary-sep"></div>
+              <div class="wl26-summary-item">
+                <span class="wl26-summary-label">sudah dikeluarkan</span>
+                <span class="wl26-summary-val wl26-val-spent">{{ formatRp(totalBought) }}</span>
+              </div>
+              <div class="wl26-summary-sep"></div>
+              <div class="wl26-summary-item">
+                <span class="wl26-summary-label">sisa budget</span>
+                <span class="wl26-summary-val wl26-val-remain">{{ formatRp(totalAll - totalBought) }}</span>
+              </div>
+            </div>
+
+            <!-- List -->
+            <div class="wl26-list" v-if="items.length">
+              <transition-group name="wl26-item">
+                <div v-for="item in sortedItems" :key="item.id"
+                  class="wl26-row"
+                  :class="{ 'wl26-row-done': item.bought }">
+
+                  <!-- Checkbox -->
+                  <button class="wl26-check" :class="{ checked: item.bought }" @click="toggleBought(item.id)" :title="item.bought ? 'Batalkan' : 'Tandai sudah dibeli'">
+                    <svg v-if="item.bought" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </button>
+
+                  <!-- Nama + tanggal beli -->
+                  <div class="wl26-name-col">
+                    <input
+                      class="wl26-name"
+                      :class="{ 'wl26-name-done': item.bought }"
+                      v-model="item.name"
+                      placeholder="nama barang..."
+                      @change="save"
+                      :disabled="item.bought" />
+                    <span v-if="item.bought && item.boughtDate" class="wl26-bought-date">
+                      <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                      dibeli {{ formatDate(item.boughtDate) }}
+                    </span>
+                  </div>
+
+                  <!-- Harga -->
+                  <div class="wl26-price-wrap">
+                    <span class="wl26-rp">Rp</span>
+                    <input
+                      class="wl26-price"
+                      type="text"
+                      :value="formatNumber(item.price)"
+                      @focus="onPriceFocusById(item.id, $event)"
+                      @blur="onPriceBlurById(item.id, $event)"
+                      @input="onPriceInputById(item.id, $event)"
+                      placeholder="0"
+                      :disabled="item.bought" />
+                  </div>
+
+                  <!-- Hapus -->
+                  <button class="wl26-del" @click="removeItemById(item.id)" title="Hapus">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                  </button>
+                </div>
+              </transition-group>
+            </div>
+
+            <!-- Empty state -->
+            <div v-else class="wl26-empty">
+              <div class="wl26-empty-icon">🛒</div>
+              <p>belum ada barang.<br>tambah barang pertama kamu!</p>
+            </div>
+
+            <!-- Add item -->
+            <div class="wl26-add-row">
+              <button class="wl26-add-btn" @click="addItem">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Tambah Barang
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </transition>
+    </teleport>
+  `,
+
+  data() {
+    return {
+      items: [],   // [{ id, name, price, bought, boughtDate }]
+    };
+  },
+
+  computed: {
+    boughtCount()  { return this.items.filter(i => i.bought).length; },
+    totalAll()     { return this.items.reduce((s, i) => s + (Number(i.price) || 0), 0); },
+    totalBought()  { return this.items.filter(i => i.bought).reduce((s, i) => s + (Number(i.price) || 0), 0); },
+    // Belum dibeli di atas (urutan asli), sudah dibeli di bawah (urut waktu beli)
+    sortedItems() {
+      const pending = this.items.filter(i => !i.bought);
+      const bought  = this.items.filter(i =>  i.bought)
+        .slice().sort((a, b) => (a.boughtDate || '') > (b.boughtDate || '') ? 1 : -1);
+      return [...pending, ...bought];
+    },
+  },
+
+  watch: {
+    show(val) { if (val) this.load(); }
+  },
+
+  mounted() { this.load(); },
+
+  methods: {
+    load() {
+      try {
+        const raw = WorkspaceStorage.getItem('ws_wishlist_2026');
+        this.items = raw ? JSON.parse(raw) : [];
+      } catch(e) { this.items = []; }
+    },
+
+    save() {
+      try {
+        WorkspaceStorage.setItem('ws_wishlist_2026', JSON.stringify(this.items));
+      } catch(e) {}
+    },
+
+    addItem() {
+      this.items.push({ id: Date.now(), name: '', price: 0, bought: false });
+      this.save();
+      // Focus ke input nama baru setelah render
+      this.$nextTick(() => {
+        const inputs = this.$el.querySelectorAll('.wl26-name:not(:disabled)');
+        if (inputs.length) inputs[inputs.length - 1].focus();
+      });
+    },
+
+    removeItem(idx) {
+      this.items.splice(idx, 1);
+      this.save();
+    },
+
+    toggleBought(id) {
+      const item = this.items.find(i => i.id === id);
+      if (!item) return;
+      item.bought = !item.bought;
+      if (item.bought) {
+        // Catat tanggal hari ini saat dicentang
+        const now = new Date();
+        item.boughtDate = now.getFullYear() + '-'
+          + String(now.getMonth() + 1).padStart(2, '0') + '-'
+          + String(now.getDate()).padStart(2, '0');
+      } else {
+        // Batalkan — hapus tanggal
+        item.boughtDate = null;
+      }
+      this.save();
+    },
+
+    removeItemById(id) {
+      const idx = this.items.findIndex(i => i.id === id);
+      if (idx !== -1) { this.items.splice(idx, 1); this.save(); }
+    },
+
+    // ── Format display: 1500000 → "1.500.000"
+    formatNumber(val) {
+      const n = Number(val) || 0;
+      if (n === 0) return '';
+      return n.toLocaleString('id-ID');
+    },
+
+    // ── Price handlers by id (karena list dirender dari sortedItems, index tidak bisa dipakai) ──
+    onPriceFocusById(id, e) {
+      const item = this.items.find(i => i.id === id);
+      e.target.value = item ? (item.price || '') : '';
+    },
+    onPriceInputById(id, e) {
+      const item = this.items.find(i => i.id === id);
+      if (!item) return;
+      const raw = e.target.value.replace(/\D/g, '');
+      item.price = raw ? parseInt(raw, 10) : 0;
+    },
+    onPriceBlurById(id, e) {
+      const item = this.items.find(i => i.id === id);
+      if (!item) return;
+      e.target.value = item.price ? this.formatNumber(item.price) : '';
+      this.save();
+    },
+
+    // ── Format tanggal: "2025-06-15" → "15 Jun 2025"
+    formatDate(dateStr) {
+      if (!dateStr) return '';
+      const [y, m, d] = dateStr.split('-');
+      const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+      return parseInt(d) + ' ' + months[parseInt(m)-1] + ' ' + y;
+    },
+
+    // ── Format ke Rp untuk summary
+    formatRp(val) {
+      if (!val) return 'Rp 0';
+      return 'Rp ' + Number(val).toLocaleString('id-ID');
+    },
+  }
+};
