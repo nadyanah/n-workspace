@@ -3091,6 +3091,7 @@ const DailyQuotePopup = {
         this.matched = isMatch;
         this.lastMode = 'voice';
         this._saveLogWithMode(isMatch, this.voiceTranscript, 'voice');
+        this._markShownToday();
 
         NotifSound.playCheck();
         this.submitted = true;
@@ -3122,6 +3123,13 @@ const DailyQuotePopup = {
       const quotes = this._loadQuotes();
       if (!quotes.length) return; // Koleksi Inspirasi masih kosong → skip diam-diam
 
+      // Sudah muncul hari ini? → skip
+      try {
+        const raw  = WorkspaceStorage.getItem('ws_daily_quote_shown');
+        const seen = raw ? JSON.parse(raw) : {};
+        if (seen[this.todayStr]) return;
+      } catch(e) {}
+
       const random = quotes[Math.floor(Math.random() * quotes.length)];
       this.quote         = random;
       this.writtenText   = '';
@@ -3135,6 +3143,16 @@ const DailyQuotePopup = {
       this.visible = true;
       this._triggerBellShake();
       NotifSound.playNotifSafe();
+    },
+
+    // ── Tandai sudah ditampilkan hari ini ──
+    _markShownToday() {
+      try {
+        const raw  = WorkspaceStorage.getItem('ws_daily_quote_shown');
+        const seen = raw ? JSON.parse(raw) : {};
+        seen[this.todayStr] = true;
+        WorkspaceStorage.setItem('ws_daily_quote_shown', JSON.stringify(seen));
+      } catch(e) {}
     },
 
     // ── Normalisasi teks untuk cek kecocokan (case/tanda baca/spasi diabaikan) ──
@@ -3159,6 +3177,7 @@ const DailyQuotePopup = {
         this.matched = isMatch;
         this.lastMode = 'write';
         this._saveLogWithMode(isMatch, this.writtenText, 'write');
+        this._markShownToday();
 
         NotifSound.playCheck();
         this.submitted = true;
