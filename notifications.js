@@ -2828,101 +2828,28 @@ const DailyQuotePopup = {
               <div class="daily-quote-text">&ldquo;{{ quote.quote }}&rdquo;</div>
               <div v-if="quote.source" class="daily-quote-source">— {{ quote.source }}</div>
 
-              <!-- ── Mode Toggle ── -->
-              <div class="daily-quote-mode-toggle">
-                <button
-                  type="button"
-                  class="daily-quote-mode-btn"
-                  :class="{ active: inputMode === 'write' }"
-                  @click.stop="switchMode('write')"
-                >
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
-                  Tulis
-                </button>
-                <button
-                  type="button"
-                  class="daily-quote-mode-btn"
-                  :class="{ active: inputMode === 'voice' }"
-                  @click.stop="switchMode('voice')"
-                >
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                  Ucapkan
-                </button>
-              </div>
-
               <!-- ── Mode: Tulis ── -->
-              <template v-if="inputMode === 'write'">
-                <div class="daily-quote-write-label">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
-                  Tulis ulang kalimat di atas di sini (wajib):
-                </div>
-                <textarea
-                  v-model="writtenText"
-                  class="daily-quote-textarea"
-                  rows="4"
-                  placeholder="Ketik ulang kalimat di atas persis sama..."
-                  @keydown.enter.meta="submitWriting"
-                  @keydown.enter.ctrl="submitWriting"
-                ></textarea>
-                <div v-if="writtenText.trim()" class="daily-quote-match-hint" :class="canSubmit ? 'match-ok' : 'match-no'">
-                  {{ canSubmit ? '✓ Kalimat sudah cocok!' : '✗ Belum cocok, cek lagi...' }}
-                </div>
-              </template>
-
-              <!-- ── Mode: Voice ── -->
-              <template v-else>
-                <div class="daily-quote-write-label">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                  Ucapkan ulang kalimat di atas (wajib):
-                </div>
-
-                <div class="daily-quote-voice-area">
-                  <!-- Tombol rekam -->
-                  <button
-                    type="button"
-                    class="daily-quote-record-btn"
-                    :class="{ recording: isRecording }"
-                    @click.stop="toggleRecording"
-                  >
-                    <span v-if="!isRecording">
-                      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="12" y1="19" x2="12" y2="23" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="8" y1="23" x2="16" y2="23" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                      {{ voiceTranscript ? 'Rekam Lagi' : 'Mulai Rekam' }}
-                    </span>
-                    <span v-else style="display:flex;align-items:center;gap:6px;">
-                      <span class="daily-quote-record-pulse"></span>
-                      Berhenti
-                    </span>
-                  </button>
-
-                  <!-- Error (termasuk browser tidak support / mic ditolak) -->
-                  <div v-if="_voiceError" class="daily-quote-voice-unsupported">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    {{ _voiceError }}
-                  </div>
-
-                  <!-- Hasil transkripsi -->
-                  <div v-if="voiceTranscript || interimTranscript" class="daily-quote-transcript-box">
-                    <span>{{ voiceTranscript }}</span><span style="color:var(--text-muted);font-style:italic;">{{ interimTranscript }}</span>
-                  </div>
-                  <div v-else-if="!isRecording && !_voiceError" class="daily-quote-transcript-placeholder">
-                    Tekan "Mulai Rekam" lalu ucapkan kalimatnya...
-                  </div>
-
-                  <!-- Ulangi dari awal -->
-                  <button type="button" v-if="voiceTranscript && !isRecording" class="daily-quote-reset-voice" @click.stop="resetVoice">
-                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
-                    Ulangi dari awal
-                  </button>
-                </div>
-              </template>
+              <div class="daily-quote-write-label">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+                Tulis ulang kalimat di atas di sini (wajib):
+              </div>
+              <textarea
+                v-model="writtenText"
+                class="daily-quote-textarea"
+                rows="4"
+                placeholder="Ketik ulang kalimat di atas persis sama..."
+                @keydown.enter.meta="submitWriting"
+                @keydown.enter.ctrl="submitWriting"
+              ></textarea>
+              <div v-if="writtenText.trim()" class="daily-quote-match-hint" :class="canSubmit ? 'match-ok' : 'match-no'">
+                {{ canSubmit ? '✓ Kalimat sudah cocok!' : '✗ Belum cocok, cek lagi...' }}
+              </div>
 
             </template>
 
             <div v-else class="daily-quote-success">
-              <div class="daily-quote-success-icon">{{ inputMode === 'voice' ? (matched ? '🎉' : '🎤') : '🎉' }}</div>
-              <div class="daily-quote-success-text">
-                {{ inputMode === 'voice' ? (matched ? 'Tepat sekali! Kalimat tersimpan.' : 'Bagus, sudah diucapkan! Terus berlatih ya.') : 'Tepat! Kalimat berhasil ditulis ulang.' }}
-              </div>
+              <div class="daily-quote-success-icon">🎉</div>
+              <div class="daily-quote-success-text">Tepat! Kalimat berhasil ditulis ulang.</div>
             </div>
 
           </div>
@@ -2931,7 +2858,7 @@ const DailyQuotePopup = {
           <div class="daily-quote-footer" v-if="quote && !submitted">
             <button type="button" class="daily-quote-btn-submit" :disabled="!canSubmit" @click.stop="submitWriting">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              {{ inputMode === 'voice' ? 'Selesai Mengucapkan' : 'Selesai Menulis' }}
+              Selesai Menulis
             </button>
           </div>
 
@@ -2947,13 +2874,7 @@ const DailyQuotePopup = {
       writtenText: '',
       submitted: false,
       matched: false,
-      // ── Mode ──
-      inputMode: 'write',   // 'write' | 'voice'
-      // ── Voice ──
-      isRecording: false,
-      voiceTranscript: '',
-      interimTranscript: '',
-      _voiceError: ''
+      inputMode: 'write'
     };
   },
 
@@ -2971,11 +2892,7 @@ const DailyQuotePopup = {
     },
     canSubmit() {
       if (!this.quote) return false;
-      if (this.inputMode === 'write') {
-        // Harus cocok dengan kalimat asli (normalisasi: abaikan huruf besar/tanda baca/spasi)
-        return this._normalize(this.writtenText) === this._normalize(this.quote.quote);
-      }
-      return this.voiceTranscript.trim().length > 0;
+      return this._normalize(this.writtenText) === this._normalize(this.quote.quote);
     }
   },
 
@@ -2984,10 +2901,7 @@ const DailyQuotePopup = {
     setTimeout(() => this._checkOnOpen(), 1000);
   },
 
-  beforeUnmount() {
-    // Pastikan SpeechRecognition tidak leak saat komponen di-unmount
-    this._stopRecognition();
-  },
+  beforeUnmount() {},
 
   methods: {
     // ── Public: bisa dipanggil manual setelah reset ws_daily_quote_shown
@@ -3019,19 +2933,11 @@ const DailyQuotePopup = {
       const quotes = this._loadQuotes();
       if (!quotes.length) return; // Koleksi Inspirasi masih kosong → skip diam-diam
 
-      // Abort voice jika masih aktif sebelum reset state
-      this._stopRecognition();
-
       const random = quotes[Math.floor(Math.random() * quotes.length)];
-      this.quote          = random;
-      this.writtenText    = '';
-      this.submitted      = false;
-      this.matched        = false;
-      // Reset mode & voice state supaya bersih
-      this.inputMode         = 'write';
-      this.voiceTranscript   = '';
-      this.interimTranscript = '';
-      this._voiceError       = '';
+      this.quote       = random;
+      this.writtenText = '';
+      this.submitted   = false;
+      this.matched     = false;
 
       this.visible = true;
       this._triggerBellShake();
@@ -3054,13 +2960,9 @@ const DailyQuotePopup = {
       try {
         NotifSound.flushPendingSound();
 
-        // Hentikan rekaman jika masih jalan
-        this._stopRecognition();
-
-        const inputText = this.inputMode === 'voice' ? this.voiceTranscript : this.writtenText;
-        const isMatch = this._normalize(inputText) === this._normalize(this.quote.quote);
+        const isMatch = this._normalize(this.writtenText) === this._normalize(this.quote.quote);
         this.matched = isMatch;
-        this._saveLogWithMode(isMatch, inputText);
+        this._saveLogWithMode(isMatch, this.writtenText);
 
         NotifSound.playCheck();
         this.submitted = true;
@@ -3072,148 +2974,7 @@ const DailyQuotePopup = {
       }
     },
 
-    // ── Switch mode tulis / voice ──
-    switchMode(mode) {
-      if (this.inputMode === mode) return;
-      // Abort dulu supaya onend tidak race-condition dengan state reset
-      if (this.$options._recInstance) {
-        try { this.$options._recInstance.abort(); } catch(_e) {}
-        this.$options._recInstance = null;
-      }
-      this.isRecording       = false;
-      this.inputMode         = mode;
-      this.voiceTranscript   = '';
-      this.interimTranscript = '';
-      this._voiceError       = '';
-    },
-
-    // ── Toggle rekaman voice ──
-    toggleRecording() {
-      if (this.isRecording) {
-        // Pakai stop() (bukan abort()) saat user klik berhenti secara eksplisit,
-        // supaya hasil ucapan terakhir yang belum final sempat masuk ke onresult
-        const rec = this.$options._recInstance;
-        if (rec) {
-          try { rec.stop(); } catch(_e) {}
-          // Jangan null-kan _recInstance di sini — biarkan onend yang handle
-        }
-        this.isRecording       = false;
-        this.interimTranscript = '';
-      } else {
-        this._startRecognition();
-      }
-    },
-
-    resetVoice() {
-      this._stopRecognition();
-      this.voiceTranscript   = '';
-      this.interimTranscript = '';
-    },
-
-    _startRecognition() {
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) {
-        this._voiceError = 'Browser kamu tidak mendukung fitur suara. Coba pakai Chrome.';
-        return;
-      }
-
-      // Pastikan instance lama sudah benar-benar berhenti sebelum buat yang baru
-      if (this.$options._recInstance) {
-        try { this.$options._recInstance.abort(); } catch(_e) {}
-        this.$options._recInstance = null;
-      }
-
-      const rec = new SR();
-      rec.lang           = 'id-ID';
-      rec.continuous     = true;
-      rec.interimResults = true;
-
-      // Simpan base transcript saat rekaman dimulai supaya tidak duplikat
-      // saat recognition restart (karena continuous mode kadang re-fire hasil lama)
-      const baseTranscript = this.voiceTranscript ? this.voiceTranscript.trim() : '';
-      let   sessionFinal   = '';
-
-      rec.onresult = (e) => {
-        let interim = '';
-        // Hanya proses dari resultIndex agar tidak duplikat hasil sebelumnya
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          const t = e.results[i][0].transcript;
-          if (e.results[i].isFinal) {
-            sessionFinal += (sessionFinal ? ' ' : '') + t.trim();
-          } else {
-            interim += t;
-          }
-        }
-        // Gabungkan base (sebelum rekaman ini) + final sesi ini
-        const combined = baseTranscript
-          ? (sessionFinal ? baseTranscript + ' ' + sessionFinal : baseTranscript)
-          : sessionFinal;
-        if (combined !== this.voiceTranscript) {
-          this.voiceTranscript = combined;
-        }
-        this.interimTranscript = interim;
-      };
-
-      rec.onerror = (e) => {
-        console.warn('[SpeechRecognition] error:', e.error);
-        this.isRecording       = false;
-        this.interimTranscript = '';
-        if (e.error === 'not-allowed') {
-          this.voiceTranscript = '';
-          this._voiceError = 'Izin mikrofon ditolak. Aktifkan mikrofon di browser lalu coba lagi.';
-          // Fallback otomatis ke mode tulis supaya user tidak stuck
-          this.$nextTick(() => {
-            this.inputMode   = 'write';
-            this._voiceError = '';
-          });
-        } else if (e.error === 'no-speech') {
-          // Tidak ada suara terdeteksi — tidak perlu tampilkan error, biarkan user coba lagi
-          this.$options._recInstance = null;
-        } else if (e.error !== 'aborted') {
-          // 'aborted' berarti kita sendiri yang stop — jangan tampilkan error
-          this._voiceError = 'Terjadi kesalahan mikrofon (' + e.error + '). Coba lagi.';
-          // Fallback ke mode tulis setelah delay singkat supaya user sempat baca error
-          setTimeout(() => {
-            if (this._voiceError) {
-              this.inputMode   = 'write';
-              this._voiceError = '';
-            }
-          }, 2500);
-        }
-      };
-
-      rec.onend = () => {
-        this.isRecording       = false;
-        this.interimTranscript = '';
-        this.$options._recInstance = null;
-      };
-
-      try {
-        rec.start();
-        this.$options._recInstance = rec;
-        this.isRecording = true;
-        this._voiceError = '';
-      } catch(err) {
-        console.warn('[SpeechRecognition] start failed:', err);
-        this.isRecording = false;
-        this.$options._recInstance = null;
-        this._voiceError = 'Gagal memulai rekaman. Coba lagi.';
-      }
-    },
-
-    _stopRecognition() {
-      const rec = this.$options._recInstance;
-      if (rec) {
-        // Pakai abort() supaya onend tidak ter-trigger dan tidak race-condition
-        // dengan state yang sudah kita reset manual di sini
-        try { rec.abort(); } catch(_e) {}
-        this.$options._recInstance = null;
-      }
-      this.isRecording       = false;
-      this.interimTranscript = '';
-    },
-
-    // ── Simpan log dengan info mode (voice/write) ──
+    // ── Simpan log dengan info mode (write) ──
     _saveLogWithMode(matched, inputText) {
       try {
         const raw = WorkspaceStorage.getItem('ws_quote_writing_log');
@@ -3223,7 +2984,7 @@ const DailyQuotePopup = {
           source:   this.quote.source || '',
           original: this.quote.quote,
           written:  inputText.trim(),
-          mode:     this.inputMode,
+          mode:     'write',
           matched,
           time: new Date().toISOString()
         };
