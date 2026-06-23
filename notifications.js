@@ -2871,13 +2871,7 @@ const DailyQuotePopup = {
                   Ucapkan ulang kalimat di atas (wajib):
                 </div>
 
-                <!-- Voice tidak support -->
-                <div v-if="!voiceSupported" class="daily-quote-voice-unsupported">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  Browser kamu tidak mendukung fitur suara. Gunakan mode Tulis.
-                </div>
-
-                <div v-else class="daily-quote-voice-area">
+                <div class="daily-quote-voice-area">
                   <!-- Tombol rekam -->
                   <button
                     class="daily-quote-record-btn"
@@ -2886,7 +2880,7 @@ const DailyQuotePopup = {
                   >
                     <span v-if="!isRecording">
                       <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="12" y1="19" x2="12" y2="23" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="8" y1="23" x2="16" y2="23" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                      Mulai Rekam
+                      {{ voiceTranscript ? 'Rekam Lagi' : 'Mulai Rekam' }}
                     </span>
                     <span v-else style="display:flex;align-items:center;gap:6px;">
                       <span class="daily-quote-record-pulse"></span>
@@ -2894,18 +2888,24 @@ const DailyQuotePopup = {
                     </span>
                   </button>
 
+                  <!-- Error (termasuk browser tidak support / mic ditolak) -->
+                  <div v-if="_voiceError" class="daily-quote-voice-unsupported">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    {{ _voiceError }}
+                  </div>
+
                   <!-- Hasil transkripsi -->
                   <div v-if="voiceTranscript || interimTranscript" class="daily-quote-transcript-box">
                     <span>{{ voiceTranscript }}</span><span style="color:var(--text-muted);font-style:italic;">{{ interimTranscript }}</span>
                   </div>
-                  <div v-else-if="!isRecording" class="daily-quote-transcript-placeholder">
+                  <div v-else-if="!isRecording && !_voiceError" class="daily-quote-transcript-placeholder">
                     Tekan "Mulai Rekam" lalu ucapkan kalimatnya...
                   </div>
 
-                  <!-- Reset -->
-                  <button v-if="voiceTranscript" class="daily-quote-reset-voice" @click="resetVoice">
+                  <!-- Ulangi dari awal -->
+                  <button v-if="voiceTranscript && !isRecording" class="daily-quote-reset-voice" @click="resetVoice">
                     <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
-                    Ulangi
+                    Ulangi dari awal
                   </button>
                 </div>
               </template>
@@ -2945,11 +2945,10 @@ const DailyQuotePopup = {
       // ── Mode ──
       inputMode: 'write',   // 'write' | 'voice'
       // ── Voice ──
-      voiceSupported: !!(window.SpeechRecognition || window.webkitSpeechRecognition),
       isRecording: false,
       voiceTranscript: '',
       interimTranscript: '',
-      _recognition: null
+      _voiceError: ''
     };
   },
 
@@ -3082,6 +3081,7 @@ const DailyQuotePopup = {
       this.inputMode = mode;
       this.voiceTranscript   = '';
       this.interimTranscript = '';
+      this._voiceError       = '';
     },
 
     // ── Toggle rekaman voice ──
@@ -3101,38 +3101,67 @@ const DailyQuotePopup = {
 
     _startRecognition() {
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) return;
+      if (!SR) {
+        this._voiceError = 'Browser kamu tidak mendukung fitur suara. Coba pakai Chrome.';
+        return;
+      }
+
+      // Simpan di luar Vue reactive system supaya SpeechRecognition tidak di-wrap Proxy
+      if (!this.$options._recInstance) this.$options._recInstance = null;
 
       const rec = new SR();
-      rec.lang          = 'id-ID';   // Bahasa Indonesia; bisa diganti 'en-US' kalau perlu
-      rec.continuous    = true;
+      rec.lang           = 'id-ID';
+      rec.continuous     = true;
       rec.interimResults = true;
 
       rec.onresult = (e) => {
-        let final = '';
-        let interim = '';
+        let finalChunk = '';
+        let interim    = '';
         for (let i = e.resultIndex; i < e.results.length; i++) {
           const t = e.results[i][0].transcript;
-          e.results[i].isFinal ? (final += t) : (interim += t);
+          e.results[i].isFinal ? (finalChunk += t) : (interim += t);
         }
-        if (final) this.voiceTranscript += (this.voiceTranscript ? ' ' : '') + final.trim();
+        // Gunakan Vue.set-safe assignment agar reaktif
+        if (finalChunk) {
+          this.voiceTranscript = (this.voiceTranscript ? this.voiceTranscript + ' ' : '') + finalChunk.trim();
+        }
         this.interimTranscript = interim;
       };
 
-      rec.onerror = () => { this.isRecording = false; this.interimTranscript = ''; };
-      rec.onend   = () => { this.isRecording = false; this.interimTranscript = ''; };
+      rec.onerror = (e) => {
+        console.warn('[SpeechRecognition] error:', e.error);
+        this.isRecording       = false;
+        this.interimTranscript = '';
+        // Tampilkan pesan kalau tidak ada izin mikrofon
+        if (e.error === 'not-allowed') {
+          this.voiceTranscript = '';
+          this._voiceError = 'Izin mikrofon ditolak. Aktifkan mikrofon di browser lalu coba lagi.';
+        }
+      };
 
-      rec.start();
-      this._recognition = rec;
-      this.isRecording  = true;
+      rec.onend = () => {
+        this.isRecording       = false;
+        this.interimTranscript = '';
+        this.$options._recInstance = null;
+      };
+
+      try {
+        rec.start();
+        this.$options._recInstance = rec;
+        this.isRecording = true;
+        this._voiceError = '';
+      } catch(err) {
+        console.warn('[SpeechRecognition] start failed:', err);
+      }
     },
 
     _stopRecognition() {
-      if (this._recognition) {
-        try { this._recognition.stop(); } catch(_e) {}
-        this._recognition = null;
+      const rec = this.$options._recInstance;
+      if (rec) {
+        try { rec.stop(); } catch(_e) {}
+        this.$options._recInstance = null;
       }
-      this.isRecording      = false;
+      this.isRecording       = false;
       this.interimTranscript = '';
     },
 
