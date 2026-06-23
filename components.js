@@ -14194,6 +14194,23 @@ const CareerFoundation = {
               <label class="cf-field-label">Isi Dokumen</label>
               <textarea class="cf-textarea" v-model="docForm.content" :placeholder="docContentPlaceholder" rows="10"></textarea>
             </div>
+            <div v-if="docForm.type === 'body_email' || docForm.type === 'cover_letter' || docForm.type === 'surat_lamaran'">
+              <label class="cf-field-label" style="display:flex; align-items:center; gap:6px;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <span v-if="docForm.type === 'body_email'">Catatan / Tips Body Email ini</span>
+                <span v-else-if="docForm.type === 'cover_letter'">Catatan / Tips Cover Letter ini</span>
+                <span v-else-if="docForm.type === 'surat_lamaran'">Catatan / Tips Surat Lamaran ini</span>
+              </label>
+              <textarea class="cf-textarea"
+                v-model="docForm.note"
+                :placeholder="docForm.type === 'body_email'
+                  ? 'mis. Email ini cocok untuk posisi marketing, tone formal, CC ke HRD langsung...'
+                  : docForm.type === 'cover_letter'
+                    ? 'mis. Versi ini untuk startup tech, tekankan skill adaptasi dan kolaborasi...'
+                    : 'mis. Versi formal, gunakan untuk BUMN atau perusahaan konvensional...'"
+                rows="3"
+                style="font-size:12.5px; color:var(--text-secondary, #7A6F66); background: #FFFBF5; border-color: #E8D9C4;"></textarea>
+            </div>
           </div>
           <div class="cf-modal-footer">
             <button class="cf-btn-ghost" @click="showDocModal=false">Batal</button>
@@ -14241,9 +14258,23 @@ const CareerFoundation = {
                   <p class="cf-email-body-text">{{ emailParts.body || '(Belum ada isi)' }}</p>
                 </div>
               </div>
+              <div v-if="viewingDoc.note" class="cf-doc-note-view">
+                <div class="cf-doc-note-view-label">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Catatan
+                </div>
+                <p class="cf-doc-note-view-text">{{ viewingDoc.note }}</p>
+              </div>
             </template>
             <template v-else>
               <p class="cf-view-content">{{ viewingDoc.content || '(Belum ada isi)' }}</p>
+              <div v-if="viewingDoc.note && (viewingDoc.type === 'cover_letter' || viewingDoc.type === 'surat_lamaran')" class="cf-doc-note-view">
+                <div class="cf-doc-note-view-label">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Catatan
+                </div>
+                <p class="cf-doc-note-view-text">{{ viewingDoc.note }}</p>
+              </div>
             </template>
           </div>
           <div class="cf-modal-footer">
@@ -14450,7 +14481,7 @@ const CareerFoundation = {
 
       // Docs
       docs: [],
-      docForm: { type: 'cover_letter', title: '', target: '', content: '' },
+      docForm: { type: 'cover_letter', title: '', target: '', content: '', note: '' },
       editingDocId: null,
       showDocModal: false,
 
@@ -14784,17 +14815,17 @@ const CareerFoundation = {
     },
     openAddDoc() {
       this.editingDocId = null;
-      this.docForm = { type: 'cover_letter', title: '', target: '', content: '' };
+      this.docForm = { type: 'cover_letter', title: '', target: '', content: '', note: '' };
       this.showDocModal = true;
     },
     openAddDocOfType(type) {
       this.editingDocId = null;
-      this.docForm = { type, title: '', target: '', content: '' };
+      this.docForm = { type, title: '', target: '', content: '', note: '' };
       this.showDocModal = true;
     },
     editDoc(doc) {
       this.editingDocId = doc.id;
-      this.docForm = { type: doc.type, title: doc.title, target: doc.target || '', content: doc.content || '' };
+      this.docForm = { type: doc.type, title: doc.title, target: doc.target || '', content: doc.content || '', note: doc.note || '' };
       this.showDocModal = true;
     },
     saveDoc() {
