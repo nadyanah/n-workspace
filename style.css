@@ -10328,6 +10328,8 @@ input:checked + .switch-slider:before {
 /* Body */
 .daily-quote-body {
   padding: 18px 20px 6px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--color-sand, #D9D0C3) transparent;
@@ -10380,6 +10382,24 @@ input:checked + .switch-slider:before {
 .daily-quote-textarea:focus {
   border-color: var(--color-terracotta, #D67B52);
   box-shadow: 0 0 0 3px rgba(var(--color-terracotta-rgb, 214, 123, 82), 0.14);
+}
+
+/* Hint cocok/belum cocok di bawah textarea */
+.daily-quote-match-hint {
+  margin-top: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 7px;
+  padding: 5px 10px;
+  transition: color 0.2s, background 0.2s;
+}
+.daily-quote-match-hint.match-ok {
+  color: #2e7d32;
+  background: rgba(46, 125, 50, 0.09);
+}
+.daily-quote-match-hint.match-no {
+  color: #b94040;
+  background: rgba(185, 64, 64, 0.08);
 }
 
 /* Success state */
