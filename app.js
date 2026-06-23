@@ -875,6 +875,7 @@ app.component('my-portfolio', MyPortfolio);
 app.component('notification-panel', NotificationPanel);
 app.component('reminder-popup', ReminderPopup);
 app.component('quran-noon-popup', QuranNoonPopup);
+app.component('daily-quote-popup', DailyQuotePopup);
 app.component('missed-tasks-page', MissedTasksPage);
 app.component('inspiration-board', InspirationBoard);
 app.component('dzikir-counter', DzikirCounter);
