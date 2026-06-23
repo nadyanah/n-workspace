@@ -731,11 +731,6 @@
             📋
           </button>
 
-          <!-- 0d. Wish List 2026 Button -->
-          <button class="desk-config-floating-btn" @click="showWishListModal = true" title="Wish List 2026">
-            🛍️
-          </button>
-
           <!-- ✦ Grouped: Pengaturan Ikon + My Mood Colour — 1 toggle button -->
           <div class="desk-settings-group" @click.stop>
             <!-- Sub-menu vertikal (muncul ke atas saat toggle aktif) -->
@@ -775,6 +770,12 @@
                     </div>
                   </div>
                 </div>
+
+
+                <!-- Sub-btn C: Wish List 2026 -->
+                <button class="desk-config-floating-btn desk-submenu-btn" @click="showWishListModal = true; showSettingsGroup = false" title="Wish List 2026">
+                  🛒
+                </button>
 
               </div>
             </transition>
