@@ -6955,6 +6955,7 @@ input:checked + .switch-slider:before {
 .cf-hero {
   background: linear-gradient(135deg, var(--bg-cream, #FDFBF7) 60%, #F5EDE5 100%);
   border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-bottom: 3px solid var(--color-terracotta, #D67B52);
   border-radius: 16px;
   padding: 32px 28px 28px;
   margin-bottom: 28px;
@@ -7013,21 +7014,26 @@ input:checked + .switch-slider:before {
 }
 .cf-hero-stats {
   display: flex;
-  gap: 20px;
+  gap: 12px;
   flex-wrap: wrap;
+  margin-top: 4px;
 }
 .cf-hero-stat {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 12px;
   color: var(--text-muted, #6E6359);
+  background: #fff;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  padding: 8px 14px;
+  border-radius: 10px;
 }
 .cf-hero-stat-num {
   font-family: 'Hack', monospace;
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 700;
-  color: var(--text-dark, #2C2621);
+  color: var(--color-terracotta, #D67B52);
 }
 
 /* ── Filter pills (job board style) ── */
@@ -7037,11 +7043,15 @@ input:checked + .switch-slider:before {
   flex-wrap: wrap;
   margin-bottom: 24px;
   align-items: center;
+  background: var(--bg-cream, #FDFBF7);
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 12px;
+  padding: 8px 12px;
 }
 .cf-filter-pill {
   padding: 6px 14px;
-  border-radius: 20px;
-  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 8px;
+  border: 1.5px solid transparent;
   background: transparent;
   font-size: 12px;
   font-weight: 600;
@@ -7052,9 +7062,9 @@ input:checked + .switch-slider:before {
   white-space: nowrap;
 }
 .cf-filter-pill:hover {
-  border-color: var(--color-terracotta, #D67B52);
+  border-color: rgba(214,123,82,0.3);
   color: var(--color-terracotta, #D67B52);
-  background: rgba(214,123,82,0.05);
+  background: rgba(214,123,82,0.06);
 }
 .cf-filter-pill.active {
   background: var(--text-dark, #2C2621);
@@ -7077,17 +7087,20 @@ input:checked + .switch-slider:before {
   width: 220px;
   background: var(--bg-cream, #FDFBF7);
   border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-top: 3px solid var(--color-gold, #DDA15E);
   border-radius: 14px;
   padding: 16px;
   position: sticky;
   top: 16px;
 }
 .cf-keyword-sidebar-title {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
-  color: var(--text-dark, #2C2621);
+  color: var(--color-gold, #DDA15E);
   margin: 0 0 4px;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Hack', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 .cf-keyword-sidebar-sub {
   font-size: 11px;
@@ -7227,6 +7240,7 @@ input:checked + .switch-slider:before {
 .mp-hero {
   background: linear-gradient(135deg, #FDF8F3 0%, #FAF0E8 60%, #F5E6D8 100%);
   border: 1.5px solid rgba(214,123,82,0.2);
+  border-bottom: 3px solid var(--color-terracotta, #D67B52);
   border-radius: 18px;
   padding: 32px 28px 26px;
   margin-bottom: 20px;
@@ -7290,17 +7304,21 @@ input:checked + .switch-slider:before {
 }
 .mp-section-divider-label {
   font-family: 'Hack', monospace;
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-muted, #6E6359);
+  color: var(--color-terracotta, #D67B52);
   white-space: nowrap;
   flex-shrink: 0;
+  background: rgba(214,123,82,0.08);
+  border: 1px solid rgba(214,123,82,0.22);
+  padding: 4px 10px;
+  border-radius: 6px;
 }
 .mp-section-divider-line {
   flex: 1;
-  height: 1px;
+  height: 1.5px;
   background: linear-gradient(to right, var(--color-sand, #E8DFD8), transparent);
 }
 
@@ -7422,10 +7440,11 @@ input:checked + .switch-slider:before {
   margin: 0;
 }
 
-/* ── Filter Row (Pengalaman Kerja + Search) ── */
+/* ── Filter Row (Pengalaman Kerja + Search) — upgraded to match Job Logbook clarity ── */
 .mp-filter-panel {
   background: #FFFFFF;
   border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-left: 4px solid var(--color-sage, #A3B18A);
   border-radius: 12px;
   padding: 14px 16px;
   margin-bottom: 20px;
@@ -7562,13 +7581,13 @@ input:checked + .switch-slider:before {
   min-width: 420px;
 }
 .mp-table th {
-  padding: 11px 16px;
+  padding: 12px 16px;
   font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.05em;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-muted, #6E6359);
-  border-bottom: 1.5px solid var(--color-sand, #E8DFD8);
+  color: var(--text-dark, #2C2621);
+  border-bottom: 2px solid var(--color-sand, #E8DFD8);
   background-color: #FAF7F3;
   white-space: nowrap;
   font-family: 'Hack', monospace;
@@ -8001,7 +8020,7 @@ input:checked + .switch-slider:before {
   line-height: 1.8;
 }
 
-/* ── Section bar ── */
+/* ── Section bar — upgraded to match Job Logbook's clear section headers ── */
 .cf-section-bar {
   display: flex;
   align-items: center;
@@ -8009,15 +8028,32 @@ input:checked + .switch-slider:before {
   margin-bottom: 16px;
   flex-wrap: wrap;
   gap: 10px;
+  padding: 14px 18px;
+  background: var(--bg-cream, #FDFBF7);
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 12px;
+  border-left: 4px solid var(--color-terracotta, #D67B52);
 }
 .cf-section-label {
   font-family: 'Hack', monospace;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-muted, #6E6359);
+  color: var(--text-dark, #2C2621);
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cf-section-label::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-terracotta, #D67B52);
+  flex-shrink: 0;
 }
 
 /* ── Buttons ── */
@@ -8159,36 +8195,47 @@ input:checked + .switch-slider:before {
   margin: 0;
 }
 
-/* ── Doc list — job board card rows ── */
+/* ── Doc list — upgraded to clear card rows like Job Logbook ── */
 .cf-doc-list {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 8px;
+  background: var(--bg-cream, #FDFBF7);
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 12px;
+  padding: 8px;
 }
 .cf-doc-row {
   display: flex;
   align-items: center;
-  padding: 16px 0;
-  border-bottom: 1.5px solid var(--color-sand, #E8DFD8);
+  padding: 14px 16px;
+  background: #fff;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 10px;
   gap: 14px;
   transition: all 0.15s;
   cursor: default;
 }
 .cf-doc-row:last-child { border-bottom: none; }
-.cf-doc-row:hover { padding-left: 4px; }
+.cf-doc-row:hover {
+  border-color: rgba(214,123,82,0.35);
+  box-shadow: 0 2px 10px rgba(214,123,82,0.08);
+  transform: translateY(-1px);
+}
 .cf-doc-type-dot {
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
   margin-top: 1px;
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
 }
 .cf-doc-info {
   flex: 1;
   min-width: 0;
 }
 .cf-doc-title {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
   color: var(--text-dark, #2C2621);
   margin: 0 0 4px;
@@ -8243,7 +8290,7 @@ input:checked + .switch-slider:before {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 6px 14px;
+  padding: 7px 14px;
   background: transparent;
   border: 1.5px solid var(--color-sand, #E8DFD8);
   border-radius: 8px;
@@ -8266,20 +8313,22 @@ input:checked + .switch-slider:before {
 .cf-empty {
   padding: 48px 20px;
   text-align: center;
-  border: 1.5px dashed var(--color-sand, #E8DFD8);
-  border-radius: 12px;
+  border: 2px dashed var(--color-sand, #E8DFD8);
+  border-radius: 14px;
+  background: var(--bg-cream, #FDFBF7);
 }
 .cf-empty-label {
   font-family: 'Hack', monospace;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  color: #C8BDB5;
-  margin: 0 0 4px;
+  color: #B8AEA8;
+  margin: 0 0 6px;
 }
 .cf-empty-sub {
-  font-size: 12px;
-  color: #D8D0CA;
+  font-size: 12.5px;
+  color: #C8C0BA;
   margin: 0;
+  line-height: 1.5;
 }
 
 /* ── ATS CV inside tab ── */
@@ -8399,27 +8448,38 @@ input:checked + .switch-slider:before {
 .cf-lang-item:last-child { border-bottom: none; }
 .cf-lang-level { color: #C8BDB5; font-size: 12px; font-family: 'Hack', monospace; }
 
-/* ── Tip banner slim ── */
+/* ── Tip banner — upgraded to a clear info card ── */
 .cf-tip {
-  border-left: 2.5px solid var(--color-terracotta, #D67B52);
-  padding: 8px 0 8px 14px;
+  border: 1.5px solid rgba(214,123,82,0.22);
+  border-left: 3.5px solid var(--color-terracotta, #D67B52);
+  padding: 12px 16px;
   margin-bottom: 20px;
-  background: rgba(214,123,82,0.04);
-  border-radius: 0 6px 6px 0;
+  background: rgba(214,123,82,0.05);
+  border-radius: 0 10px 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 .cf-tip-title {
   font-family: 'Hack', monospace;
   font-size: 10.5px;
   font-weight: 700;
   color: var(--color-terracotta, #D67B52);
-  margin: 0 0 3px;
+  margin: 0 0 2px;
   text-transform: uppercase;
   letter-spacing: 0.07em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cf-tip-title::before {
+  content: '💡';
+  font-size: 11px;
 }
 .cf-tip-text {
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--text-muted, #6E6359);
-  line-height: 1.6;
+  line-height: 1.65;
   margin: 0;
 }
 
@@ -8915,13 +8975,30 @@ input:checked + .switch-slider:before {
   margin-right: auto;
   flex-wrap: wrap;
   gap: 8px;
+  background: var(--bg-cream, #FDFBF7);
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-left: 4px solid var(--text-dark, #2C2621);
+  border-radius: 10px;
+  padding: 10px 16px;
 }
 .cv2-toolbar-label {
+  font-family: 'Hack', monospace;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-muted, #6E6359);
+  color: var(--text-dark, #2C2621);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.cv2-toolbar-label::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-dark, #2C2621);
 }
 .cv2-toolbar-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .cv2-modal-overlay {
