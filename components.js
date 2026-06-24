@@ -6691,7 +6691,8 @@ const HabitTracker = {
       <div class="grid-2" style="grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
         <div class="drawer-section" style="margin-bottom: 0; text-align: center;">
           <h4 style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Jumlah Habit</h4>
-          <p class="text-mono" style="font-size: 28px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ habits.length }}</p>
+          <p class="text-mono" style="font-size: 28px; font-weight: bold; color: var(--text-dark); margin-top: 6px;">{{ habits.filter(h => !h.archived).length }}</p>
+          <p v-if="archivedHabits.length > 0" style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">{{ archivedHabits.length }} diarsipkan</p>
         </div>
         <div class="drawer-section" style="margin-bottom: 0; text-align: center;">
           <h4 style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Total Checklist</h4>
@@ -6810,7 +6811,7 @@ const HabitTracker = {
         <div style="height: 30px; display: flex; align-items: center; justify-content: center; margin-top: 10px;">
           <span v-if="hoveredChartDay" class="text-mono" style="font-size: 13px; color: var(--color-terracotta); background-color: var(--bg-cream); padding: 4px 16px; border-radius: 20px; border: 1.5px solid var(--color-sand);">
             <strong>Tanggal {{ hoveredChartDay.day }}:</strong>
-            <span v-if="selectedChartHabitId === null"> Selesai {{ hoveredChartDay.completed }} dari {{ habits.length }} habit ({{ hoveredChartDay.percentage }}%)</span>
+            <span v-if="selectedChartHabitId === null"> Selesai {{ hoveredChartDay.completed }} dari {{ habits.filter(h => !h.archived).length }} habit ({{ hoveredChartDay.percentage }}%)</span>
             <span v-else> {{ hoveredChartDay.percentage === 100 ? 'Selesai' : 'Belum selesai' }} ({{ hoveredChartDay.percentage }}%)</span>
           </span>
           <span v-else style="font-size: 11.5px; color: var(--text-muted); font-style: italic;">
@@ -6917,7 +6918,7 @@ const HabitTracker = {
           </div>
         </div>
 
-        <div v-if="habits.length === 0" style="padding: 60px; text-align: center; color: var(--text-muted); background-color: var(--bg-cream); border-radius: 16px; border: 1px dashed var(--color-sand);">
+        <div v-if="habits.filter(h => !h.archived).length === 0 && !habitSearchQuery" style="padding: 60px; text-align: center; color: var(--text-muted); background-color: var(--bg-cream); border-radius: 16px; border: 1px dashed var(--color-sand);">
           <p style="font-size: 14px; margin-bottom: 8px;">Belum ada komitmen habit yang didaftarkan.</p>
           <p style="font-size: 12px; color: var(--text-muted);">Klik "Buat Habit Baru" di atas untuk mulai merekam progres harian!</p>
         </div>
@@ -6960,7 +6961,10 @@ const HabitTracker = {
                 <button class="card-nav-btn" @click="openEditHabit(habit)" title="Edit Habit" style="padding: 4px; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: #EFF6FF; border: 1px solid #BFDBFE;">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #3B82F6;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
                 </button>
-                <button class="card-nav-btn" @click="removeHabit(habit.id)" title="Hapus Habit" style="padding: 4px; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: var(--bg-cream); border: 1px solid var(--color-sand);">
+                <button class="card-nav-btn" @click="archiveHabit(habit.id)" title="Sembunyikan habit (data tetap aman)" style="padding: 4px; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: #FFFBEB; border: 1px solid #FDE68A;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #D97706;"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+                </button>
+                <button class="card-nav-btn" @click="removeHabit(habit.id)" title="Hapus Habit permanen" style="padding: 4px; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: var(--bg-cream); border: 1px solid var(--color-sand);">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #D67B52;"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                 </button>
               </div>
@@ -6983,6 +6987,72 @@ const HabitTracker = {
 
           </div>
         </div>
+      </div>
+
+      <!-- ── Archived Habits Section ── -->
+      <div v-if="archivedHabits.length > 0" style="margin-top: 28px;">
+        <button
+          @click="showArchivedSection = !showArchivedSection"
+          style="display: flex; align-items: center; gap: 10px; width: 100%; background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 12px; padding: 13px 18px; cursor: pointer; text-align: left; transition: all 0.2s; font-family: inherit;"
+          :style="showArchivedSection ? { borderColor: 'rgba(214,123,82,0.35)', background: 'rgba(214,123,82,0.04)' } : {}"
+          onmouseover="this.style.borderColor='rgba(214,123,82,0.4)'" onmouseout="this.style.borderColor = this.classList.contains('open') ? 'rgba(214,123,82,0.35)' : 'var(--color-sand)'">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta); flex-shrink: 0;"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+          <span style="font-size: 13px; font-weight: 700; color: var(--text-dark); flex: 1;">Habit Diarsipkan</span>
+          <span style="font-size: 11px; font-weight: 700; color: #fff; background: var(--color-terracotta); padding: 2px 10px; border-radius: 20px;">{{ archivedHabits.length }}</span>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+            :style="{ transition: 'transform 0.22s ease', transform: showArchivedSection ? 'rotate(180deg)' : 'rotate(0deg)', color: 'var(--text-muted)', flexShrink: 0 }">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <transition name="modal-fade">
+          <div v-if="showArchivedSection" style="margin-top: 12px;">
+            <p style="font-size: 11.5px; color: var(--text-muted); margin: 0 0 14px; padding: 0 4px; line-height: 1.5;">
+              Semua checklist dan riwayat dari habit di bawah ini tetap tersimpan. Klik <strong>Restore</strong> untuk memunculkan kembali ke grid utama.
+            </p>
+            <div class="grid-2" style="grid-template-columns: repeat(3, 1fr); gap: 14px; align-items: start;">
+              <div v-for="habit in archivedHabits" :key="'arch-' + habit.id"
+                style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; opacity: 0.82;">
+
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;">
+                  <div style="min-width: 0;">
+                    <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); border: 1px solid var(--color-sand); padding: 3px 8px; border-radius: 10px; background: #fff; display: inline-block; margin-bottom: 6px;">{{ habit.category }}</span>
+                    <h4 style="font-size: 14px; margin: 0; color: var(--text-dark); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" :title="habit.name">{{ habit.name }}</h4>
+                    <p v-if="habit.timeSchedule" style="font-size: 11px; color: var(--text-muted); margin: 4px 0 0; display: flex; align-items: center; gap: 4px;">
+                      <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                      {{ habit.timeSchedule }}
+                    </p>
+                  </div>
+                  <div style="display: flex; gap: 5px; flex-shrink: 0;">
+                    <button @click="unarchiveHabit(habit.id)" title="Restore habit ke grid utama"
+                      style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; font-size: 11.5px; font-weight: 700; color: var(--color-terracotta); background: rgba(214,123,82,0.1); border: 1.5px solid rgba(214,123,82,0.3); border-radius: 8px; cursor: pointer; font-family: inherit; transition: all 0.15s; white-space: nowrap;"
+                      onmouseover="this.style.background='var(--color-terracotta)';this.style.color='#fff'" onmouseout="this.style.background='rgba(214,123,82,0.1)';this.style.color='var(--color-terracotta)'">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                      Restore
+                    </button>
+                    <button @click="removeHabit(habit.id)" title="Hapus permanen"
+                      style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; padding: 0; background: transparent; border: 1.5px solid var(--color-sand); border-radius: 8px; cursor: pointer; color: var(--text-muted); transition: all 0.15s;"
+                      onmouseover="this.style.background='#FFF0F0';this.style.borderColor='#FECACA';this.style.color='#EF4444'" onmouseout="this.style.background='transparent';this.style.borderColor='var(--color-sand)';this.style.color='var(--text-muted)'">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Mini progress bar showing all-time data -->
+                <div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 5px; display: flex; justify-content: space-between;">
+                    <span>Progress bulan ini: <strong>{{ getCheckedDaysCount(habit) }}</strong> hari</span>
+                    <span style="font-family: 'Hack', monospace; font-weight: 700;">{{ getCompletionRate(habit) }}%</span>
+                  </div>
+                  <div style="width: 100%; background: var(--color-sand); height: 5px; border-radius: 10px; overflow: hidden;">
+                    <div :style="{ width: Math.min(getCompletionRate(habit), 100) + '%', backgroundColor: getHabitColor(habit) }" style="height: 100%; border-radius: 10px; opacity: 0.6;"></div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </transition>
       </div>
 
     </div>
@@ -7008,6 +7078,7 @@ const HabitTracker = {
       newCategoryInput: '',
       customCategories: [],
       notifFlashHabitId: null,  // habit yang sedang di-flash dari notif trigger
+      showArchivedSection: false, // toggle section archived habits
       form: {
         name: '',
         category: 'Kesehatan',
@@ -7020,7 +7091,7 @@ const HabitTracker = {
   },
   computed: {
     filteredHabitCards() {
-      let list = this.habits;
+      let list = this.habits.filter(h => !h.archived);
       if (this.habitSearchQuery.trim()) {
         const q = this.habitSearchQuery.trim().toLowerCase();
         list = list.filter(h =>
@@ -7045,21 +7116,25 @@ const HabitTracker = {
         return parseTime(a.timeSchedule) - parseTime(b.timeSchedule);
       });
     },
+    archivedHabits() {
+      return this.habits.filter(h => h.archived);
+    },
     allCategories() {
       const base = ['Kesehatan', 'Produktivitas', 'Pikiran', 'Rutinitas', 'Dzikir Waktu'];
       return [...base, ...this.customCategories.filter(c => !base.includes(c))];
     },
     totalChecksThisMonth() {
       let count = 0;
-      this.habits.forEach(h => {
+      this.habits.filter(h => !h.archived).forEach(h => {
         const checked = h.history[this.currentYearMonth] || [];
         count += checked.length;
       });
       return count;
     },
     overallCompletionRate() {
-      if (this.habits.length === 0) return 0;
-      const totalSlots = this.habits.length * this.daysInMonth;
+      const activeHabits = this.habits.filter(h => !h.archived);
+      if (activeHabits.length === 0) return 0;
+      const totalSlots = activeHabits.length * this.daysInMonth;
       return Math.round((this.totalChecksThisMonth / totalSlots) * 100);
     },
     habitsTableSorted() {
@@ -7071,10 +7146,11 @@ const HabitTracker = {
       return [...this.habits].sort((a, b) => parseTime(a.timeSchedule) - parseTime(b.timeSchedule));
     },
     starHabit() {
-      if (this.habits.length === 0) return 'Belum Ada';
+      const activeHabits = this.habits.filter(h => !h.archived);
+      if (activeHabits.length === 0) return 'Belum Ada';
       let maxChecked = -1;
       let worstName = 'Belum Ada';
-      this.habits.forEach(h => {
+      activeHabits.forEach(h => {
         const checked = h.history[this.currentYearMonth] || [];
         if (checked.length > maxChecked) {
           maxChecked = checked.length;
@@ -7098,14 +7174,15 @@ const HabitTracker = {
     },
     currentDailyProgressList() {
       const list = [];
+      const activeHabits = this.habits.filter(h => !h.archived);
       for (let day = 1; day <= this.daysInMonth; day++) {
         if (this.selectedChartHabitId === null) {
           let completedOnDay = 0;
-          this.habits.forEach(h => {
+          activeHabits.forEach(h => {
             const checked = h.history[this.currentYearMonth] || [];
             if (checked.includes(day)) completedOnDay++;
           });
-          const totalHabits = this.habits.length;
+          const totalHabits = activeHabits.length;
           const percentage = totalHabits > 0 ? Math.round((completedOnDay / totalHabits) * 100) : 0;
           list.push({ day, completed: completedOnDay, percentage });
         } else {
@@ -7485,6 +7562,19 @@ const HabitTracker = {
         this.saveToStorage();
       }
     },
+    archiveHabit(id) {
+      this.habits = this.habits.map(h =>
+        h.id === id ? { ...h, archived: true } : h
+      );
+      if (this.selectedChartHabitId === id) this.selectedChartHabitId = null;
+      this.saveToStorage();
+    },
+    unarchiveHabit(id) {
+      this.habits = this.habits.map(h =>
+        h.id === id ? { ...h, archived: false } : h
+      );
+      this.saveToStorage();
+    },
     saveToStorage() {
       WorkspaceStorage.setItem('aesthetic_habit_tracker_habits', JSON.stringify(this.habits));
       this.syncHabitsToNotif();
@@ -7525,9 +7615,9 @@ const HabitTracker = {
       });
     },
     syncHabitsToNotif() {
-      // Ambil habits yang punya timeSchedule, ekspor ke storage untuk notif
+      // Ambil habits yang punya timeSchedule, exclude archived, ekspor ke storage untuk notif
       const habitsWithTime = this.habits
-        .filter(h => h.timeSchedule && h.timeSchedule.trim())
+        .filter(h => !h.archived && h.timeSchedule && h.timeSchedule.trim())
         .map(h => ({
           id: 'habit_' + h.id,
           title: h.name,
