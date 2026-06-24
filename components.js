@@ -15296,6 +15296,36 @@ const MyPortfolio = {
       <p class="mp-hero-sub">Catat task portfolio untuk tiap pengalaman kerja. Task berstatus <strong>Fix</strong> otomatis tampil sebagai Poin Pencapaian di CV ATS.</p>
     </div>
 
+    <!-- ── Catatan General Porto: selalu tampil, tidak terpengaruh filter Pengalaman Kerja ── -->
+    <div class="mp-general-note-card" :class="{ 'mp-general-note-card--collapsed': !generalNoteExpanded }">
+      <!-- Header: klik area ini untuk toggle buka/tutup -->
+      <div class="mp-general-note-header" @click="generalNoteExpanded = !generalNoteExpanded">
+        <div class="mp-general-note-header-left">
+          <span class="mp-note-card-label" style="color: var(--color-terracotta, #D67B52);">✦ Catatan General Portfolio</span>
+          <!-- Preview satu baris saat collapsed dan sudah ada isi -->
+          <span v-if="!generalNoteExpanded && hasGeneralNote" class="mp-general-note-collapsed-preview">{{ truncate(stripHtml(generalNote), 80) }}</span>
+          <span v-else-if="generalNoteExpanded" class="mp-note-card-sub">Catatan bebas tentang portofolio ini secara keseluruhan — tujuan, narasi diri, atau hal yang ingin diingat.</span>
+        </div>
+        <div class="mp-general-note-header-right">
+          <!-- Tombol edit/tulis — hanya muncul saat expanded, tidak propagate ke toggle -->
+          <button v-if="generalNoteExpanded" class="mp-insight-btn" :class="{ 'mp-insight-filled': hasGeneralNote }"
+            @click.stop="openGeneralNoteModal"
+            :title="hasGeneralNote ? truncate(stripHtml(generalNote), 90) : 'Belum ada catatan general'">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            {{ hasGeneralNote ? 'Lihat Catatan' : 'Tulis Catatan' }}
+          </button>
+          <!-- Chevron toggle -->
+          <button class="mp-general-note-chevron" :class="{ 'mp-general-note-chevron--up': generalNoteExpanded }" @click.stop="generalNoteExpanded = !generalNoteExpanded" :title="generalNoteExpanded ? 'Tutup' : 'Buka'">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+      </div>
+      <!-- Body: hanya tampil saat expanded -->
+      <div v-if="generalNoteExpanded && hasGeneralNote" class="mp-general-note-body">
+        <p class="mp-note-card-preview" style="border-top: 1px dashed rgba(214,123,82,0.25); padding-top: 10px; margin: 0;">{{ truncate(stripHtml(generalNote), 220) }}</p>
+      </div>
+    </div>
+
     <!-- ── Empty: belum ada pengalaman kerja sama sekali di CV ATS ── -->
     <div v-if="!experiences.length" class="mp-empty-state">
       <div class="mp-empty-icon">
@@ -15311,20 +15341,29 @@ const MyPortfolio = {
 
     <!-- ── Filter + Tambah Task + Tabel ── -->
     <template v-else>
-      <div class="mp-filter-row">
-        <span class="mp-filter-label">Pengalaman Kerja</span>
-        <select class="form-input mp-filter-select" v-model="selectedExpKey">
-          <option v-for="exp in experiences" :key="exp.key" :value="exp.key">
-            {{ exp.role }}<template v-if="exp.company"> — {{ exp.company }}</template><template v-if="exp.period"> ({{ exp.period }})</template>
-          </option>
-        </select>
-        <div class="mp-search-wrap">
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mp-search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" class="form-input mp-search-input" v-model="portfolioGlobalSearch"
-            placeholder="Cari semua data di My Portfolio..." />
-          <button v-if="portfolioGlobalSearch" class="mp-search-clear" title="Hapus pencarian" @click="portfolioGlobalSearch = ''">
-            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
+
+      <!-- Section: Pilih Pengalaman Kerja -->
+      <div class="mp-section-divider">
+        <span class="mp-section-divider-label">Pilih Pengalaman</span>
+        <span class="mp-section-divider-line"></span>
+      </div>
+
+      <div class="mp-filter-panel">
+        <div class="mp-filter-row">
+          <span class="mp-filter-label">Pengalaman Kerja</span>
+          <select class="form-input mp-filter-select" v-model="selectedExpKey">
+            <option v-for="exp in experiences" :key="exp.key" :value="exp.key">
+              {{ exp.role }}<template v-if="exp.company"> — {{ exp.company }}</template><template v-if="exp.period"> ({{ exp.period }})</template>
+            </option>
+          </select>
+          <div class="mp-search-wrap">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mp-search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="form-input mp-search-input" v-model="portfolioGlobalSearch"
+              placeholder="Cari semua data di My Portfolio..." />
+            <button v-if="portfolioGlobalSearch" class="mp-search-clear" title="Hapus pencarian" @click="portfolioGlobalSearch = ''">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -15370,6 +15409,12 @@ const MyPortfolio = {
 
       <template v-else>
 
+      <!-- Section: Catatan Pengalaman -->
+      <div class="mp-section-divider">
+        <span class="mp-section-divider-label">Catatan Pengalaman</span>
+        <span class="mp-section-divider-line"></span>
+      </div>
+
       <!-- ── Catatan Pengalaman: ikut menyesuaikan filter Pengalaman Kerja di atas ── -->
       <div class="mp-note-card">
         <div class="mp-note-card-head">
@@ -15385,6 +15430,12 @@ const MyPortfolio = {
           </button>
         </div>
         <p v-if="hasExperienceNote" class="mp-note-card-preview">{{ truncate(stripHtml(currentExperienceNote), 220) }}</p>
+      </div>
+
+      <!-- Section: Daftar Task -->
+      <div class="mp-section-divider">
+        <span class="mp-section-divider-label">Daftar Task</span>
+        <span class="mp-section-divider-line"></span>
       </div>
 
       <div class="mp-add-row">
@@ -15667,6 +15718,75 @@ const MyPortfolio = {
       </div>
     </transition>
 
+    <!-- ══ MODAL: Catatan General Portfolio (tidak terpengaruh filter Pengalaman Kerja) ══ -->
+    <transition name="cf-fade">
+      <div v-if="generalNoteModalOpen" class="cf-modal-overlay" @click.self="generalNoteModalMode === 'edit' ? null : closeGeneralNoteModal()">
+        <div class="cf-modal cf-modal-xl">
+          <div class="cf-modal-header">
+            <div>
+              <h3 class="cf-modal-title">Catatan General Portfolio</h3>
+              <p style="font-size: 11.5px; color: var(--text-muted); margin: 3px 0 0;">Catatan umum untuk seluruh portofolio — tidak terikat pengalaman kerja tertentu.</p>
+            </div>
+            <button class="cf-modal-close" @click="closeGeneralNoteModal">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+
+          <!-- ── Mode VIEW ── -->
+          <template v-if="generalNoteModalMode === 'view'">
+            <div class="cf-modal-body">
+              <div class="mp-insight-view-box insight-rich-content" v-html="generalNoteModalDraft"></div>
+            </div>
+            <div class="cf-modal-footer">
+              <button class="cf-btn-danger" style="margin-right:auto" @click="deleteGeneralNoteModal">Hapus</button>
+              <button class="cf-btn-ghost" @click="closeGeneralNoteModal">Tutup</button>
+              <button class="cf-btn-primary" @click="startEditGeneralNoteModal">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                Edit
+              </button>
+            </div>
+          </template>
+
+          <!-- ── Mode EDIT ── -->
+          <template v-else>
+            <div class="cf-modal-body">
+              <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 10px; line-height:1.6;">Tulis catatan bebas tentang portofolio kamu secara keseluruhan — tujuan karir, narasi diri, hal yang ingin diingat, atau apapun yang relevan.</p>
+              <div class="mp-rte-toolbar">
+                <button type="button" @click="mpRteExec('generalNoteEditor', 'bold')" title="Bold (Ctrl+B)" class="mp-rte-btn"><b>B</b></button>
+                <button type="button" @click="mpRteExec('generalNoteEditor', 'italic')" title="Italic (Ctrl+I)" class="mp-rte-btn"><i>I</i></button>
+                <button type="button" @click="mpRteExec('generalNoteEditor', 'underline')" title="Underline" class="mp-rte-btn"><u>U</u></button>
+                <div class="mp-rte-sep"></div>
+                <button type="button" @click="mpRteExec('generalNoteEditor', 'formatBlock', 'h1')" title="Heading 1" class="mp-rte-btn mp-rte-btn-text">H1</button>
+                <button type="button" @click="mpRteExec('generalNoteEditor', 'formatBlock', 'h2')" title="Heading 2" class="mp-rte-btn mp-rte-btn-text">H2</button>
+                <button type="button" @click="mpRteExec('generalNoteEditor', 'formatBlock', 'p')" title="Paragraf Normal" class="mp-rte-btn mp-rte-btn-text" style="color:var(--text-muted);">¶</button>
+                <div class="mp-rte-sep"></div>
+                <button type="button" @click="mpRteExec('generalNoteEditor', 'insertUnorderedList')" title="Bullet List" class="mp-rte-btn">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
+                </button>
+                <button type="button" @click="mpRteExec('generalNoteEditor', 'insertOrderedList')" title="Numbered List" class="mp-rte-btn">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 10h2" stroke-linecap="round"/><path d="M4 14c0-1 2-1 2-2s-2-1-2 0" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18h2l-2 2h2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <div class="mp-rte-sep"></div>
+                <button type="button" @click="mpRteExec('generalNoteEditor', 'strikeThrough')" title="Strikethrough" class="mp-rte-btn"><s style="font-size:12px;">S</s></button>
+              </div>
+              <div
+                ref="generalNoteEditor"
+                contenteditable="true"
+                class="mp-rte-editor"
+                @input="onMpRteInput('generalNoteModalDraft', 'generalNoteEditor')"
+                @paste="onMpRtePaste('generalNoteEditor')"
+                data-placeholder="cth., Portofolio ini fokus ke bidang UX Writing & Digital Marketing..."
+              ></div>
+            </div>
+            <div class="cf-modal-footer">
+              <button class="cf-btn-ghost" @click="cancelEditGeneralNoteModal">Batal</button>
+              <button class="cf-btn-primary" @click="saveGeneralNoteModal">Simpan</button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </transition>
+
     <!-- ══ MODAL: Catatan Pengalaman (menyesuaikan filter Pengalaman Kerja yang dipilih) ══ -->
     <transition name="cf-fade">
       <div v-if="notesModalOpen" class="cf-modal-overlay" @click.self="notesModalMode === 'edit' ? null : closeNotesModal()">
@@ -15767,6 +15887,12 @@ const MyPortfolio = {
       notesModalOpen: false,
       notesModalDraft: '',
       notesModalMode: 'view', // 'view' (read-only) | 'edit' (textarea)
+      // ── Catatan General Portfolio (tidak terikat Pengalaman Kerja tertentu) ──
+      generalNote: '',
+      generalNoteExpanded: true, // toggle buka/tutup card
+      generalNoteModalOpen: false,
+      generalNoteModalDraft: '',
+      generalNoteModalMode: 'view', // 'view' | 'edit'
     };
   },
 
@@ -15882,6 +16008,11 @@ const MyPortfolio = {
 
     hasExperienceNote() {
       const stripped = this.currentExperienceNote.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+      return stripped.length > 0;
+    },
+
+    hasGeneralNote() {
+      const stripped = this.generalNote.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
       return stripped.length > 0;
     },
   },
@@ -16284,6 +16415,58 @@ const MyPortfolio = {
       return `hsl(${Math.abs(hash) % 360}, 65%, 45%)`;
     },
 
+    // ── Catatan General Portfolio (tidak terikat Pengalaman Kerja tertentu) ──
+    openGeneralNoteModal() {
+      this.generalNoteModalDraft = this.generalNote;
+      this.generalNoteModalMode = this.hasGeneralNote ? 'view' : 'edit';
+      this.generalNoteModalOpen = true;
+      if (this.generalNoteModalMode === 'edit') {
+        this.$nextTick(() => { if (this.$refs.generalNoteEditor) this.$refs.generalNoteEditor.innerHTML = this.generalNoteModalDraft; });
+      }
+    },
+
+    closeGeneralNoteModal() {
+      this.generalNoteModalOpen = false;
+      this.generalNoteModalDraft = '';
+      this.generalNoteModalMode = 'view';
+    },
+
+    startEditGeneralNoteModal() {
+      this.generalNoteModalMode = 'edit';
+      this.$nextTick(() => { if (this.$refs.generalNoteEditor) this.$refs.generalNoteEditor.innerHTML = this.generalNoteModalDraft; });
+    },
+
+    cancelEditGeneralNoteModal() {
+      if (this.hasGeneralNote) {
+        this.generalNoteModalDraft = this.generalNote;
+        this.generalNoteModalMode = 'view';
+      } else {
+        this.closeGeneralNoteModal();
+      }
+    },
+
+    saveGeneralNoteModal() {
+      if (this.$refs.generalNoteEditor) this.generalNoteModalDraft = this.$refs.generalNoteEditor.innerHTML;
+      this.generalNote = this.generalNoteModalDraft;
+      this.saveGeneralNote();
+      if (this.generalNoteModalDraft.replace(/<[^>]*>/g,'').trim()) {
+        this.generalNoteModalMode = 'view';
+      } else {
+        this.closeGeneralNoteModal();
+      }
+    },
+
+    deleteGeneralNoteModal() {
+      if (!confirm('Hapus catatan general portfolio ini?')) return;
+      this.generalNote = '';
+      this.saveGeneralNote();
+      this.closeGeneralNoteModal();
+    },
+
+    saveGeneralNote() {
+      try { WorkspaceStorage.setItem('portfolio_general_note', this.generalNote); } catch(_e) {}
+    },
+
     goToCareer() {
       globalThis.dispatchEvent(new CustomEvent('navigate-to-career-foundation'));
     },
@@ -16324,6 +16507,10 @@ const MyPortfolio = {
     try {
       const en = WorkspaceStorage.getItem('portfolio_experience_notes');
       if (en) this.experienceNotes = JSON.parse(en);
+    } catch(_e) {}
+    try {
+      const gn = WorkspaceStorage.getItem('portfolio_general_note');
+      if (gn) this.generalNote = gn;
     } catch(_e) {}
     this.loadKeywordBank();
     this.loadJobLogs();

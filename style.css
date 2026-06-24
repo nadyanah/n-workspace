@@ -7222,14 +7222,25 @@ input:checked + .switch-slider:before {
   max-width: 100%;
   box-sizing: border-box;
 }
+
+/* ── Hero ── */
 .mp-hero {
-  background: linear-gradient(135deg, var(--bg-cream, #FDFBF7) 60%, #F5EDE5 100%);
-  border: 1.5px solid var(--color-sand, #E8DFD8);
-  border-radius: 16px;
-  padding: 32px 28px 28px;
-  margin-bottom: 24px;
+  background: linear-gradient(135deg, #FDF8F3 0%, #FAF0E8 60%, #F5E6D8 100%);
+  border: 1.5px solid rgba(214,123,82,0.2);
+  border-radius: 18px;
+  padding: 32px 28px 26px;
+  margin-bottom: 20px;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 2px 12px rgba(214,123,82,0.07);
+}
+.mp-hero::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 220px; height: 140px;
+  background: radial-gradient(ellipse at top right, rgba(214,123,82,0.12) 0%, transparent 70%);
+  pointer-events: none;
 }
 .mp-hero-badge {
   display: inline-flex;
@@ -7242,7 +7253,7 @@ input:checked + .switch-slider:before {
   text-transform: uppercase;
   color: var(--color-terracotta, #D67B52);
   background: rgba(214,123,82,0.1);
-  border: 1px solid rgba(214,123,82,0.22);
+  border: 1px solid rgba(214,123,82,0.25);
   padding: 4px 10px;
   border-radius: 20px;
   margin: 0 0 14px;
@@ -7269,6 +7280,112 @@ input:checked + .switch-slider:before {
   line-height: 1.6;
   max-width: 600px;
 }
+
+/* ── Section Divider Label ── */
+.mp-section-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 24px 0 16px;
+}
+.mp-section-divider-label {
+  font-family: 'Hack', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted, #6E6359);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.mp-section-divider-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--color-sand, #E8DFD8), transparent);
+}
+
+/* ── General Note Card (selalu tampil, tidak ikut filter) ── */
+.mp-general-note-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 8px;
+  border: 1.5px solid rgba(214,123,82,0.25);
+  border-left: 3px solid var(--color-terracotta, #D67B52);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #FFFAF6 0%, #FFF6F0 100%);
+  box-shadow: 0 2px 8px rgba(214,123,82,0.06);
+  overflow: hidden;
+  transition: box-shadow 0.18s;
+}
+.mp-general-note-card--collapsed {
+  box-shadow: none;
+}
+.mp-general-note-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 14px 13px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.14s;
+}
+.mp-general-note-header:hover {
+  background: rgba(214,123,82,0.04);
+}
+.mp-general-note-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+.mp-general-note-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.mp-general-note-collapsed-preview {
+  font-size: 12px;
+  color: var(--text-muted, #6E6359);
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 480px;
+}
+.mp-general-note-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  border: 1.5px solid rgba(214,123,82,0.3);
+  background: rgba(214,123,82,0.08);
+  color: var(--color-terracotta, #D67B52);
+  cursor: pointer;
+  transition: background 0.14s, transform 0.22s cubic-bezier(0.4,0,0.2,1);
+  flex-shrink: 0;
+}
+.mp-general-note-chevron:hover {
+  background: rgba(214,123,82,0.16);
+}
+.mp-general-note-chevron--up svg {
+  transform: rotate(180deg);
+  transition: transform 0.22s cubic-bezier(0.4,0,0.2,1);
+}
+.mp-general-note-chevron:not(.mp-general-note-chevron--up) svg {
+  transform: rotate(0deg);
+  transition: transform 0.22s cubic-bezier(0.4,0,0.2,1);
+}
+.mp-general-note-body {
+  padding: 0 16px 13px;
+}
+
+/* ── Empty State ── */
 .mp-empty-state {
   display: flex;
   flex-direction: column;
@@ -7304,18 +7421,27 @@ input:checked + .switch-slider:before {
   line-height: 1.6;
   margin: 0;
 }
+
+/* ── Filter Row (Pengalaman Kerja + Search) ── */
+.mp-filter-panel {
+  background: #FFFFFF;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(44,38,33,0.04));
+}
 .mp-filter-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 20px;
   flex-wrap: wrap;
 }
 .mp-filter-label {
   font-family: 'Hack', monospace;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted, #6E6359);
   flex-shrink: 0;
@@ -7419,12 +7545,15 @@ input:checked + .switch-slider:before {
     flex-wrap: wrap;
   }
 }
+
+/* ── Task Table ── */
 .mp-table-container {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   background: #FFFFFF;
   border: 1.5px solid var(--color-sand, #E8DFD8);
   border-radius: 12px;
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(44,38,33,0.04));
 }
 .mp-table {
   width: 100%;
@@ -7433,14 +7562,16 @@ input:checked + .switch-slider:before {
   min-width: 420px;
 }
 .mp-table th {
-  padding: 12px 16px;
-  font-weight: 600;
-  font-size: 12.5px;
+  padding: 11px 16px;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--text-muted, #6E6359);
   border-bottom: 1.5px solid var(--color-sand, #E8DFD8);
-  background-color: var(--bg-cream, #FDFBF7);
+  background-color: #FAF7F3;
   white-space: nowrap;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Hack', monospace;
 }
 .mp-table td {
   padding: 12px 16px;
@@ -7452,7 +7583,7 @@ input:checked + .switch-slider:before {
   border-bottom: none;
 }
 .mp-table tr:hover {
-  background-color: rgba(245, 240, 235, 0.5);
+  background-color: rgba(253,248,244,0.8);
 }
 .mp-status-select {
   width: auto;
@@ -7474,15 +7605,17 @@ input:checked + .switch-slider:before {
   background-color: #EAFBF0;
   border-color: #B7E4C7;
 }
+
+/* ── Add Task Row ── */
 .mp-add-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   flex-wrap: wrap;
-  padding: 10px 10px 10px 14px;
-  background: linear-gradient(135deg, rgba(214,123,82,0.07), rgba(214,123,82,0.02));
-  border: 1.5px dashed var(--color-terracotta, #D67B52);
+  padding: 12px 14px;
+  background: linear-gradient(135deg, rgba(214,123,82,0.06), rgba(214,123,82,0.02));
+  border: 1.5px dashed rgba(214,123,82,0.45);
   border-radius: 12px;
 }
 .mp-add-input {
@@ -7543,7 +7676,7 @@ input:checked + .switch-slider:before {
   color: var(--color-terracotta, #D67B52);
 }
 
-/* ── Catatan Pengalaman: kartu catatan per pengalaman kerja (My Portfolio) ── */
+/* ── Note Cards ── */
 .mp-note-card {
   display: flex;
   flex-direction: column;
