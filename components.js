@@ -12827,7 +12827,7 @@ const JournalQuestionBoard = {
             <div style="display: flex; align-items: center; gap: 12px; padding: 16px 22px 14px; background: var(--color-terracotta, #D67B52); color: #fff; flex-shrink: 0;">
               <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 17px;">🎰</div>
               <div style="flex: 1; min-width: 0;">
-                <div style="font-size: 15px; font-weight: 800; letter-spacing: 0.2px;">Tanya Diri Sendiri</div>
+                <div style="font-size: 15px; font-weight: 800; letter-spacing: 0.2px;">Daily Journaling Question</div>
                 <div style="font-size: 11px; opacity: 0.82; margin-top: 1px;">pertanyaan refleksi harian ✦</div>
               </div>
               <button @click="$emit('close')"
@@ -18021,7 +18021,7 @@ const DailyQuestionFloatCircle = {
         class="desk-config-floating-btn"
         :class="{ 'dqfc-btn--open': showPopup }"
         @click="togglePopup"
-        title="Daily Question — Spin soal interview acak">
+        title="Daily Interview Practice — Spin soal interview acak">
         🎰
       </button>
 
