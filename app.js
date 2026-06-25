@@ -17,6 +17,7 @@ const App = {
     const showNavDrawer = ref(false);
     const showNotifPanel = ref(false);
     const showInspirationModal = ref(false);
+    const showJournalModal = ref(false);
     const showDzikirModal = ref(false);
     const showBucketListModal = ref(false);
     const showQuranModal = ref(false);
@@ -591,6 +592,7 @@ const App = {
       showNavDrawer,
       showNotifPanel,
       showInspirationModal,
+      showJournalModal,
       showDzikirModal,
       showBucketListModal,
       showQuranModal,
@@ -880,6 +882,7 @@ app.component('quran-noon-popup', QuranNoonPopup);
 app.component('daily-quote-popup', DailyQuotePopup);
 app.component('missed-tasks-page', MissedTasksPage);
 app.component('inspiration-board', InspirationBoard);
+app.component('journal-question-board', JournalQuestionBoard);
 app.component('dzikir-counter', DzikirCounter);
 app.component('bucket-list-yearly', BucketList100);
 app.component('quran-reader', QuranReader);

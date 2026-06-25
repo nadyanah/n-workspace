@@ -12803,6 +12803,396 @@ const InspirationBoard = {
 
 
 // ============================================================================
+// JOURNAL QUESTION BOARD — Koleksi pertanyaan refleksi + slot machine harian
+// ============================================================================
+// • Tab "Hari Ini"  → slot reel acak, 1x pilih per hari, hasil otomatis di-checklist
+// • Tab "Koleksi"   → kelola daftar pertanyaan (tambah/hapus/centang manual)
+// Storage: WorkspaceStorage (Supabase-synced)
+//   ws_journal_questions   → [{ id, text, done, answeredAt, createdAt }]
+//   ws_journal_today_pick  → { "YYYY-MM-DD": questionId }
+// ============================================================================
+const JournalQuestionBoard = {
+  props: ['show'],
+  emits: ['close'],
+  template: `
+    <teleport to="body">
+      <transition name="insight-modal-fade">
+        <div v-if="show"
+          style="position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; background: rgba(30,22,16,0.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); padding: 16px;"
+          @click.self="$emit('close')">
+
+          <div style="background: var(--color-paper, #FAF7F2); width: min(480px, 96vw); border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.12); display: flex; flex-direction: column; overflow: hidden; animation: insightPopIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-height: 90vh;">
+
+            <!-- Header -->
+            <div style="display: flex; align-items: center; gap: 12px; padding: 16px 22px 14px; background: var(--color-terracotta, #D67B52); color: #fff; flex-shrink: 0;">
+              <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 17px;">🎰</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 15px; font-weight: 800; letter-spacing: 0.2px;">Tanya Diri Sendiri</div>
+                <div style="font-size: 11px; opacity: 0.82; margin-top: 1px;">pertanyaan refleksi harian ✦</div>
+              </div>
+              <button @click="$emit('close')"
+                style="background: rgba(255,255,255,0.18); border: none; border-radius: 9px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 16px; flex-shrink: 0; transition: background 0.15s;"
+                onmouseover="this.style.background='rgba(255,255,255,0.32)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">✕</button>
+            </div>
+
+            <!-- Tabs -->
+            <div style="display: flex; border-bottom: 1px solid var(--color-sand, #E8DFD8); flex-shrink: 0;">
+              <button @click="activeTab = 'today'"
+                :style="{ flex: 1, padding: '11px 0', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '12.5px', fontWeight: 700, color: activeTab === 'today' ? 'var(--color-terracotta)' : 'var(--text-muted)', borderBottom: activeTab === 'today' ? '2.5px solid var(--color-terracotta)' : '2.5px solid transparent' }">
+                Hari Ini
+              </button>
+              <button @click="activeTab = 'collection'"
+                :style="{ flex: 1, padding: '11px 0', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '12.5px', fontWeight: 700, color: activeTab === 'collection' ? 'var(--color-terracotta)' : 'var(--text-muted)', borderBottom: activeTab === 'collection' ? '2.5px solid var(--color-terracotta)' : '2.5px solid transparent' }">
+                Koleksi
+                <span style="font-weight:600; opacity:0.7;">({{ answeredCount }}/{{ totalCount }})</span>
+              </button>
+            </div>
+
+            <!-- ══════════════ TAB: HARI INI ══════════════ -->
+            <div v-if="activeTab === 'today'" style="padding: 20px 22px 24px; overflow-y: auto; flex: 1;">
+
+              <!-- Empty state: koleksi kosong -->
+              <div v-if="questions.length === 0" style="text-align: center; padding: 30px 10px; color: var(--text-muted);">
+                <div style="font-size: 32px; margin-bottom: 10px;">📭</div>
+                <div style="font-size: 13.5px; font-weight: 600; margin-bottom: 6px; color: var(--text-dark);">Koleksi pertanyaan masih kosong</div>
+                <div style="font-size: 12px; margin-bottom: 16px;">Tambahkan pertanyaan dulu di tab Koleksi.</div>
+                <button @click="activeTab = 'collection'"
+                  style="height: 36px; padding: 0 16px; background: var(--color-terracotta, #D67B52); color: #fff; border: none; border-radius: 9px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;">
+                  Buka Koleksi
+                </button>
+              </div>
+
+              <template v-else>
+                <!-- Slot Reel -->
+                <div class="dqf-reel-wrap" style="border-radius: 12px; border: 1.5px solid var(--color-sand, #E8DFD8); border-bottom: 1.5px solid var(--color-sand, #E8DFD8);">
+                  <div class="dqf-reel">
+                    <div class="dqf-reel-blur dqf-reel-blur--top">{{ reelAbove }}</div>
+                    <div class="dqf-reel-center" :class="{ 'dqf-reel-center--spin': isSpinning, 'dqf-reel-center--landed': hasLanded }">
+                      <span class="dqf-reel-text">{{ reelCenter }}</span>
+                    </div>
+                    <div class="dqf-reel-blur dqf-reel-blur--bottom">{{ reelBelow }}</div>
+                  </div>
+                  <div class="dqf-reel-mask dqf-reel-mask--top"></div>
+                  <div class="dqf-reel-mask dqf-reel-mask--bottom"></div>
+                </div>
+
+                <!-- Status hari ini -->
+                <div v-if="todayQuestion" style="display:flex; align-items:center; gap:6px; margin-top:12px; font-size:11.5px; color:#16a34a; font-weight:700;">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Sudah terpilih & masuk checklist hari ini
+                </div>
+
+                <!-- Actions -->
+                <div style="display:flex; gap:8px; margin-top:14px;">
+                  <button @click="spin" :disabled="isSpinning || pool.length === 0 || !!todayQuestion"
+                    style="flex:1; height: 42px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display:flex; align-items:center; justify-content:center; gap:7px; transition: background 0.15s;"
+                    :style="{ background: (isSpinning || pool.length === 0 || !!todayQuestion) ? 'var(--color-sand)' : 'var(--color-terracotta, #D67B52)', color: (isSpinning || pool.length === 0 || !!todayQuestion) ? 'var(--text-muted)' : '#fff', cursor: (isSpinning || pool.length === 0 || !!todayQuestion) ? 'default' : 'pointer' }">
+                    <svg v-if="isSpinning" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="dqf-spin-icon"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>
+                    <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    {{ isSpinning ? 'Mengocok...' : (todayQuestion ? 'Sudah Dipilih' : 'Pilih Pertanyaan Hari Ini!') }}
+                  </button>
+                </div>
+
+                <!-- Pool kosong (semua sudah pernah keluar) -->
+                <div v-if="pool.length === 0 && !todayQuestion" style="margin-top:10px; font-size:11.5px; color:var(--text-muted); text-align:center;">
+                  Semua pertanyaan di koleksi sudah pernah terpilih.
+                  <button @click="resetAllChecklist" style="background:none; border:none; padding:0; color: var(--color-terracotta); font-weight:700; cursor:pointer; font-family:inherit; text-decoration:underline;">Reset checklist</button>
+                  biar bisa muncul lagi.
+                </div>
+
+                <!-- Pilih ulang hari ini -->
+                <div v-if="todayQuestion" style="margin-top:8px; text-align:center;">
+                  <button @click="redoToday" style="background:none; border:none; padding:0; font-size:11px; color:var(--text-muted); cursor:pointer; font-family:inherit; text-decoration:underline;">
+                    Salah pencet? Pilih ulang hari ini
+                  </button>
+                </div>
+              </template>
+            </div>
+
+            <!-- ══════════════ TAB: KOLEKSI ══════════════ -->
+            <div v-else style="padding: 18px 22px 22px; overflow-y: auto; flex: 1;">
+
+              <!-- Form tambah -->
+              <div style="display:flex; gap:8px; margin-bottom:16px;">
+                <input type="text" v-model="newQuestionText" placeholder="Tulis pertanyaan refleksi baru..."
+                  @keyup.enter="addQuestion"
+                  style="flex:1; height: 40px; padding: 0 12px; border: 1.5px solid var(--color-sand); border-radius: 9px; font-size: 13px; font-family: inherit; color: var(--text-dark); background: #fff; box-sizing: border-box; outline: none; transition: border-color 0.15s;"
+                  @focus="$event.target.style.borderColor='var(--color-terracotta)'" @blur="$event.target.style.borderColor='var(--color-sand)'" />
+                <button @click="addQuestion" :disabled="!newQuestionText.trim()"
+                  style="height: 40px; padding: 0 16px; background: var(--color-terracotta, #D67B52); color: #fff; border: none; border-radius: 9px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; flex-shrink:0;">
+                  + Tambah
+                </button>
+              </div>
+
+              <!-- Reset all -->
+              <div v-if="totalCount > 0" style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+                <button @click="resetAllChecklist" title="Uncheck semua pertanyaan agar bisa terpilih lagi"
+                  style="background:none; border:none; padding:0; font-size:11px; color:var(--text-muted); cursor:pointer; font-family:inherit; text-decoration:underline;">
+                  Reset semua checklist
+                </button>
+              </div>
+
+              <!-- Empty state -->
+              <div v-if="questions.length === 0" style="text-align: center; padding: 40px 10px; color: var(--text-muted);">
+                <div style="font-size: 32px; margin-bottom: 10px;">📝</div>
+                <div style="font-size: 13.5px; font-weight: 600; margin-bottom: 6px; color: var(--text-dark);">Belum ada pertanyaan</div>
+                <div style="font-size: 12px;">Tambahkan pertanyaan refleksi pertamamu di atas.</div>
+              </div>
+
+              <!-- List -->
+              <div v-for="(q, i) in questions" :key="q.id"
+                style="display:flex; align-items:flex-start; gap:10px; background:#fff; border: 1.5px solid var(--color-sand); border-radius: 12px; padding: 11px 12px; margin-bottom: 8px;">
+
+                <button @click="toggleDone(q)" :title="q.done ? 'Tandai belum terpilih' : 'Tandai sudah terpilih'"
+                  style="width:22px; height:22px; border-radius:6px; flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition: background 0.15s, border-color 0.15s;"
+                  :style="{ background: q.done ? '#16a34a' : '#fff', border: q.done ? '1.5px solid #16a34a' : '1.5px solid var(--color-sand)' }">
+                  <svg v-if="q.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </button>
+
+                <div style="flex:1; min-width:0;">
+                  <div :style="{ fontSize: '13px', color: 'var(--text-dark)', lineHeight: '1.5', textDecoration: q.done ? 'line-through' : 'none', opacity: q.done ? 0.55 : 1 }">{{ q.text }}</div>
+                  <div v-if="q.done && q.answeredAt" style="font-size: 10.5px; color: var(--text-muted); margin-top: 3px;">terpilih {{ formatDate(q.answeredAt) }}</div>
+                </div>
+
+                <button @click="deleteQuestion(i)" title="Hapus pertanyaan"
+                  style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background 0.15s;"
+                  onmouseover="this.style.background='#FEE2E2'" onmouseout="this.style.background='#FEF2F2'">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </transition>
+    </teleport>
+  `,
+  data() {
+    return {
+      activeTab: 'today',
+      questions: [],
+      newQuestionText: '',
+      todayPickMap: {},
+      isSpinning: false,
+      hasLanded: false,
+      reelAbove: '—',
+      reelCenter: 'Tekan tombol di bawah untuk mulai',
+      reelBelow: '—',
+      _spinInterval: null,
+    };
+  },
+  computed: {
+    todayStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    },
+    pool() {
+      return this.questions.filter(q => !q.done);
+    },
+    todayQuestionId() {
+      return this.todayPickMap[this.todayStr] || null;
+    },
+    todayQuestion() {
+      if (!this.todayQuestionId) return null;
+      return this.questions.find(q => q.id === this.todayQuestionId) || null;
+    },
+    answeredCount() {
+      return this.questions.filter(q => q.done).length;
+    },
+    totalCount() {
+      return this.questions.length;
+    },
+  },
+  watch: {
+    show(val) {
+      if (val) {
+        this.loadAll();
+        // Kalau hari ini sudah ada pick, tampilkan langsung di reel
+        this.$nextTick(() => {
+          if (this.todayQuestion) {
+            this.reelCenter = this.todayQuestion.text;
+            this.hasLanded = true;
+          } else {
+            this.resetReel();
+          }
+        });
+      }
+    },
+  },
+  methods: {
+    async loadAll() {
+      try {
+        await globalThis._workspaceStorageReady;
+        const rawQ = WorkspaceStorage.getItem('ws_journal_questions');
+        this.questions = rawQ ? JSON.parse(rawQ) : [];
+        const rawP = WorkspaceStorage.getItem('ws_journal_today_pick');
+        this.todayPickMap = rawP ? JSON.parse(rawP) : {};
+      } catch(e) {
+        this.questions = [];
+        this.todayPickMap = {};
+      }
+    },
+    saveQuestions() {
+      WorkspaceStorage.setItem('ws_journal_questions', JSON.stringify(this.questions));
+    },
+    saveTodayPickMap() {
+      WorkspaceStorage.setItem('ws_journal_today_pick', JSON.stringify(this.todayPickMap));
+    },
+    resetReel() {
+      this.hasLanded = false;
+      this.reelAbove = '—';
+      this.reelCenter = 'Tekan tombol di bawah untuk mulai';
+      this.reelBelow = '—';
+    },
+    addQuestion() {
+      const text = this.newQuestionText.trim();
+      if (!text) return;
+      this.questions.unshift({
+        id: 'jq-' + Date.now(),
+        text,
+        done: false,
+        answeredAt: null,
+        createdAt: new Date().toISOString(),
+      });
+      this.newQuestionText = '';
+      this.saveQuestions();
+    },
+    deleteQuestion(idx) {
+      const q = this.questions[idx];
+      if (!confirm('Hapus pertanyaan ini?')) return;
+      // Bersihkan pick hari ini kalau yang dihapus adalah pertanyaan yang sedang aktif
+      if (q && this.todayQuestionId === q.id) {
+        delete this.todayPickMap[this.todayStr];
+        this.saveTodayPickMap();
+        this.resetReel();
+      }
+      this.questions.splice(idx, 1);
+      this.saveQuestions();
+    },
+    toggleDone(q) {
+      q.done = !q.done;
+      q.answeredAt = q.done ? new Date().toISOString() : null;
+      // Kalau yang di-uncheck adalah pick hari ini, lepas juga picknya
+      if (!q.done && this.todayQuestionId === q.id) {
+        delete this.todayPickMap[this.todayStr];
+        this.saveTodayPickMap();
+        this.resetReel();
+      }
+      this.saveQuestions();
+    },
+    resetAllChecklist() {
+      if (!confirm('Uncheck semua pertanyaan di koleksi? Pertanyaan akan bisa terpilih lagi.')) return;
+      this.questions.forEach(q => { q.done = false; q.answeredAt = null; });
+      this.todayPickMap = {};
+      this.saveQuestions();
+      this.saveTodayPickMap();
+      this.resetReel();
+    },
+    redoToday() {
+      if (this.todayQuestion) {
+        this.todayQuestion.done = false;
+        this.todayQuestion.answeredAt = null;
+        this.saveQuestions();
+      }
+      delete this.todayPickMap[this.todayStr];
+      this.saveTodayPickMap();
+      this.resetReel();
+    },
+    spin() {
+      if (this.isSpinning || !!this.todayQuestion) return;
+      const pool = this.pool;
+      if (!pool || pool.length === 0) return;
+
+      this.isSpinning = true;
+      this.hasLanded = false;
+      this._playTick();
+
+      let cycles = 0;
+      const total = 18;
+      this._spinInterval = setInterval(() => {
+        cycles++;
+        this._playTick();
+        const i = Math.floor(Math.random() * pool.length);
+        this.reelCenter = pool[i].text;
+        this.reelAbove  = pool[(i - 1 + pool.length) % pool.length].text;
+        this.reelBelow  = pool[(i + 1) % pool.length].text;
+        if (cycles >= total) {
+          clearInterval(this._spinInterval);
+          this._land(pool);
+        }
+      }, 75);
+    },
+    _land(pool) {
+      const i = Math.floor(Math.random() * pool.length);
+      const q = pool[i];
+      this.reelCenter = q.text;
+      this.reelAbove  = pool[(i - 1 + pool.length) % pool.length].text;
+      this.reelBelow  = pool[(i + 1) % pool.length].text;
+      this.isSpinning = false;
+      this.hasLanded  = true;
+
+      // Otomatis checklist: tandai pertanyaan ini sudah terpilih
+      q.done = true;
+      q.answeredAt = new Date().toISOString();
+      this.saveQuestions();
+
+      this.todayPickMap[this.todayStr] = q.id;
+      this.saveTodayPickMap();
+
+      this._playWin();
+    },
+    _playTick() {
+      try {
+        const AC = globalThis.AudioContext || globalThis.webkitAudioContext;
+        if (!AC) return;
+        const ctx = new AC();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(280 + Math.random() * 80, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(90, ctx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.05, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + 0.04);
+      } catch(_) {}
+    },
+    _playWin() {
+      try {
+        const AC = globalThis.AudioContext || globalThis.webkitAudioContext;
+        if (!AC) return;
+        const ctx = new AC();
+        [329.63, 392.00, 493.88, 523.25].forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.09);
+          gain.gain.setValueAtTime(0.07, ctx.currentTime + idx * 0.09);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.09 + 0.28);
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + idx * 0.09);
+          osc.stop(ctx.currentTime + idx * 0.09 + 0.28);
+        });
+      } catch(_) {}
+    },
+    formatDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+      return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+    },
+  },
+  async mounted() {
+    await this.loadAll();
+  },
+  beforeUnmount() {
+    if (this._spinInterval) clearInterval(this._spinInterval);
+  },
+};
+
+
+
+// ============================================================================
 // DZIKIR COUNTER Component — Mini popup untuk dzikir harian dengan counter & target
 // ============================================================================
 const DzikirCounter = {

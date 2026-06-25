@@ -724,6 +724,11 @@
             💬
           </button>
 
+          <!-- 0a. Tanya Diri Sendiri (Question Journaling) Button -->
+          <button class="desk-config-floating-btn" @click="showJournalModal = true" title="Tanya Diri Sendiri — Pertanyaan Jurnal Harian">
+            🎰
+          </button>
+
           <!-- 0b. Dzikir Harian Button -->
           <button class="desk-config-floating-btn" @click="showDzikirModal = true" title="Dzikir Harian">
             📿
@@ -1091,6 +1096,11 @@
         :show="showInspirationModal"
         @close="showInspirationModal = false">
       </inspiration-board>
+
+      <journal-question-board
+        :show="showJournalModal"
+        @close="showJournalModal = false">
+      </journal-question-board>
 
       <dzikir-counter
         :show="showDzikirModal"
