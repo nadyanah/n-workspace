@@ -709,8 +709,16 @@
           </transition>
         </div>
 
+        <!-- Daily Question pill style lama — kode tetap ada, disembunyikan dari layar -->
+        <div style="display:none;" aria-hidden="true">
+          <daily-question-float></daily-question-float>
+        </div>
+
         <!-- Floating Action Dock in bottom-corner for Theme and Desk Icon Styles -->
         <div class="floating-action-dock" @click.stop>
+          <!-- Daily Q Button — circle style sejajar teman-temannya -->
+          <daily-question-float-circle></daily-question-float-circle>
+
           <!-- 0. Inspiration Board Button -->
           <button class="desk-config-floating-btn" @click="showInspirationModal = true" title="Papan Inspirasi">
             💬

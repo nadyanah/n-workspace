@@ -4995,7 +4995,7 @@ const InterviewPractice = {
                 <div style="font-size:13px; font-weight:700; color:var(--text-dark); line-height:1.45;">{{ aq.text }}</div>
                 <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;"><strong>Hint:</strong> {{ aq.hints }}</div>
               </div>
-              <button @click="practiceThisQuestion(aq)" class="ip-latih-btn">🎯 Latih</button>
+              <button @click="practiceThisQuestion(aq)" class="ip-latih-btn">🎰 Latih</button>
             </div>
           </div>
         </div>
@@ -5106,7 +5106,7 @@ const InterviewPractice = {
               <div class="reel-row reel-row-faded">{{ reelAboveText }}</div>
               <div class="reel-row reel-row-center">
                 <span style="font-size:11px; font-weight:800; color:var(--color-terracotta); text-transform:uppercase; letter-spacing:1.5px; display:block; margin-bottom:6px;">
-                  {{ isSpinning ? '🎰 SPINNING WHEEL...' : '🎯 PERTANYAAN PILIHAN' }}
+                  {{ isSpinning ? '🎰 SPINNING WHEEL...' : '🎰 PERTANYAAN PILIHAN' }}
                 </span>
                 <span style="font-size:16.5px; display:block;">{{ reelCenterText }}</span>
               </div>
@@ -17209,4 +17209,524 @@ const WishList2026 = {
       return 'Rp ' + Number(val).toLocaleString('id-ID');
     },
   }
+};
+
+// ============================================================================
+// DAILY QUESTION FLOAT — Floating Button + Slot Machine Popup (Daily Self-Drill)
+// Mengambil bank soal dari interview practice (storage yang sama).
+// Dipasang di dashboard sebagai tombol floating yang bisa di-tap kapan saja.
+// ============================================================================
+const DailyQuestionFloat = {
+  template: `
+    <div class="dqf-root" @click.stop>
+
+      <!-- ── Floating Trigger Button ── -->
+      <button
+        class="dqf-fab"
+        :class="{ 'dqf-fab--open': showPopup }"
+        @click="togglePopup"
+        title="Pertanyaan Harian — Tap untuk spin soal interview acak">
+        <span class="dqf-fab-icon">
+          <svg v-if="!showPopup" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+          </svg>
+          <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </span>
+        <span class="dqf-fab-label">Daily Q</span>
+      </button>
+
+      <!-- ── Popup Panel ── -->
+      <transition name="dqf-pop">
+        <div v-if="showPopup" class="dqf-popup">
+
+          <!-- Header -->
+          <div class="dqf-header">
+            <div class="dqf-header-left">
+              <span class="dqf-eyebrow">✦ Daily Self-Drill</span>
+              <h3 class="dqf-title">Pertanyaan Hari Ini</h3>
+            </div>
+            <div class="dqf-header-right">
+              <span class="dqf-count-pill">{{ questions.length }} soal</span>
+            </div>
+          </div>
+
+          <!-- Category Filter Chips -->
+          <div class="dqf-cats" v-if="categories.length > 1">
+            <button
+              v-for="cat in ['Semua', ...categories]" :key="cat"
+              class="dqf-cat-chip"
+              :class="{ 'dqf-cat-chip--active': selectedCat === cat }"
+              @click="selectCat(cat)">
+              {{ cat }}
+            </button>
+          </div>
+
+          <!-- Slot Reel -->
+          <div class="dqf-reel-wrap">
+            <!-- Reel Lines (above / center / below) -->
+            <div class="dqf-reel">
+              <div class="dqf-reel-blur dqf-reel-blur--top">{{ reelAbove }}</div>
+              <div class="dqf-reel-center" :class="{ 'dqf-reel-center--spin': isSpinning, 'dqf-reel-center--landed': hasLanded }">
+                <span class="dqf-reel-text">{{ reelCenter }}</span>
+              </div>
+              <div class="dqf-reel-blur dqf-reel-blur--bottom">{{ reelBelow }}</div>
+            </div>
+            <!-- Gradient masks -->
+            <div class="dqf-reel-mask dqf-reel-mask--top"></div>
+            <div class="dqf-reel-mask dqf-reel-mask--bottom"></div>
+          </div>
+
+          <!-- Meta: category + framework badge setelah landed -->
+          <transition name="dqf-meta-fade">
+            <div v-if="currentQ" class="dqf-meta-row">
+              <span class="dqf-meta-cat">{{ currentQ.category }}</span>
+              <span v-if="currentQ.framework" class="dqf-meta-fw" :class="'dqf-fw--' + currentQ.framework.toLowerCase()">
+                {{ currentQ.framework }}
+              </span>
+            </div>
+          </transition>
+
+          <!-- Hints accordion setelah landed -->
+          <transition name="dqf-hint-slide">
+            <div v-if="currentQ && currentQ.hints && showHint" class="dqf-hint-box">
+              <div class="dqf-hint-label">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                Tips Jawaban
+              </div>
+              <p class="dqf-hint-text">{{ currentQ.hints }}</p>
+            </div>
+          </transition>
+
+          <!-- Action Row -->
+          <div class="dqf-actions">
+            <!-- Spin Button -->
+            <button class="dqf-spin-btn" @click="spin" :disabled="isSpinning || questions.length === 0">
+              <svg v-if="isSpinning" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="dqf-spin-icon"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>
+              <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              {{ isSpinning ? 'Mengocok...' : (hasLanded ? 'Ganti Soal' : 'Spin Soal!') }}
+            </button>
+
+            <!-- Toggle hints -->
+            <button v-if="currentQ && currentQ.hints" class="dqf-hint-toggle" @click="showHint = !showHint" :title="showHint ? 'Sembunyikan tips' : 'Tampilkan tips'">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              {{ showHint ? 'Tutup tips' : 'Lihat tips' }}
+            </button>
+
+            <!-- Go to Practice -->
+            <button v-if="hasLanded" class="dqf-goto-btn" @click="gotoInterview" title="Latihan jawaban di Interview Practice">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+              Latihan Jawab
+            </button>
+          </div>
+
+          <!-- Empty state -->
+          <div v-if="questions.length === 0" class="dqf-empty">
+            <span>📭</span>
+            <p>Bank soal kosong.<br>Tambah dulu di Interview Practice!</p>
+          </div>
+
+        </div>
+      </transition>
+    </div>
+  `,
+
+  data() {
+    return {
+      showPopup: false,
+      questions: [],
+      selectedCat: 'Semua',
+      isSpinning: false,
+      hasLanded: false,
+      currentQ: null,
+      showHint: false,
+      reelAbove: 'General HR',
+      reelCenter: 'Tap "Spin Soal!" untuk mulai',
+      reelBelow: 'Behavioral & Teamwork',
+      _spinInterval: null,
+    };
+  },
+
+  computed: {
+    categories() {
+      const cats = [...new Set(this.questions.map(q => q.category))];
+      return cats.sort();
+    },
+    filteredPool() {
+      if (this.selectedCat === 'Semua') return this.questions;
+      return this.questions.filter(q => q.category === this.selectedCat);
+    },
+  },
+
+  methods: {
+    async loadQuestions() {
+      try {
+        await globalThis._workspaceStorageReady;
+        const raw = WorkspaceStorage.getItem('personal_workspace_interview_questions');
+        this.questions = raw ? JSON.parse(raw) : [];
+      } catch(e) {
+        this.questions = [];
+      }
+    },
+
+    togglePopup() {
+      this.showPopup = !this.showPopup;
+      if (this.showPopup) {
+        this.loadQuestions();
+        // Auto spin on open if no question yet
+        this.$nextTick(() => {
+          if (!this.hasLanded && this.questions.length > 0) {
+            setTimeout(() => this.spin(), 300);
+          }
+        });
+      }
+    },
+
+    selectCat(cat) {
+      this.selectedCat = cat;
+      this.resetReel();
+    },
+
+    resetReel() {
+      this.hasLanded = false;
+      this.currentQ = null;
+      this.showHint = false;
+      this.reelAbove  = '—';
+      this.reelCenter = 'Pilih kategori & tekan Spin!';
+      this.reelBelow  = '—';
+    },
+
+    spin() {
+      const pool = this.filteredPool;
+      if (!pool || pool.length === 0) return;
+      if (this.isSpinning) return;
+
+      this.isSpinning = true;
+      this.hasLanded  = false;
+      this.currentQ   = null;
+      this.showHint   = false;
+
+      // Play tick sound
+      this._playTick();
+
+      let cycles = 0;
+      const total = 18;
+      this._spinInterval = setInterval(() => {
+        cycles++;
+        this._playTick();
+        const i = Math.floor(Math.random() * pool.length);
+        this.reelCenter = pool[i].text;
+        this.reelAbove  = pool[(i - 1 + pool.length) % pool.length].text;
+        this.reelBelow  = pool[(i + 1) % pool.length].text;
+        if (cycles >= total) {
+          clearInterval(this._spinInterval);
+          this._land(pool);
+        }
+      }, 75);
+    },
+
+    _land(pool) {
+      const i = Math.floor(Math.random() * pool.length);
+      const q = pool[i];
+      this.currentQ   = q;
+      this.reelCenter = q.text;
+      this.reelAbove  = pool[(i - 1 + pool.length) % pool.length].text;
+      this.reelBelow  = pool[(i + 1) % pool.length].text;
+      this.isSpinning = false;
+      this.hasLanded  = true;
+      this._playWin();
+    },
+
+    _playTick() {
+      try {
+        const AC = globalThis.AudioContext || globalThis.webkitAudioContext;
+        if (!AC) return;
+        const ctx = new AC();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(280 + Math.random() * 80, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(90, ctx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.05, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + 0.04);
+      } catch(_) {}
+    },
+
+    _playWin() {
+      try {
+        const AC = globalThis.AudioContext || globalThis.webkitAudioContext;
+        if (!AC) return;
+        const ctx = new AC();
+        [329.63, 392.00, 493.88, 523.25].forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.09);
+          gain.gain.setValueAtTime(0.07, ctx.currentTime + idx * 0.09);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.09 + 0.28);
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + idx * 0.09);
+          osc.stop(ctx.currentTime + idx * 0.09 + 0.28);
+        });
+      } catch(_) {}
+    },
+
+    gotoInterview() {
+      // Navigasi ke halaman Interview Practice via custom event
+      globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'interviewPractice' }));
+      this.showPopup = false;
+    },
+  },
+
+  beforeUnmount() {
+    if (this._spinInterval) clearInterval(this._spinInterval);
+  },
+};
+
+// ============================================================================
+// DAILY QUESTION FLOAT CIRCLE — Versi circle button (style sejajar dock)
+// Popup sama persis dengan DailyQuestionFloat di atas.
+// Komponen ini yang ditampilkan; DailyQuestionFloat (pill) tetap ada tapi hidden.
+// ============================================================================
+const DailyQuestionFloatCircle = {
+  template: `
+    <div style="position:relative;" @click.stop>
+
+      <!-- ── Circle Trigger Button (sama style dengan desk-config-floating-btn) ── -->
+      <button
+        class="desk-config-floating-btn"
+        :class="{ 'dqfc-btn--open': showPopup }"
+        @click="togglePopup"
+        title="Daily Question — Spin soal interview acak">
+        🎰
+      </button>
+
+      <!-- ── Popup Panel (sama isinya dengan DailyQuestionFloat) ── -->
+      <transition name="dqf-pop">
+        <div v-if="showPopup" class="dqf-popup dqfc-popup-pos">
+
+          <!-- Header -->
+          <div class="dqf-header">
+            <div class="dqf-header-left">
+              <span class="dqf-eyebrow">✦ Daily Self-Drill</span>
+              <h3 class="dqf-title">Pertanyaan Hari Ini</h3>
+            </div>
+            <div class="dqf-header-right">
+              <span class="dqf-count-pill">{{ questions.length }} soal</span>
+            </div>
+          </div>
+
+          <!-- Category Filter Chips -->
+          <div class="dqf-cats" v-if="categories.length > 1">
+            <button
+              v-for="cat in ['Semua', ...categories]" :key="cat"
+              class="dqf-cat-chip"
+              :class="{ 'dqf-cat-chip--active': selectedCat === cat }"
+              @click="selectCat(cat)">
+              {{ cat }}
+            </button>
+          </div>
+
+          <!-- Slot Reel -->
+          <div class="dqf-reel-wrap">
+            <div class="dqf-reel">
+              <div class="dqf-reel-blur dqf-reel-blur--top">{{ reelAbove }}</div>
+              <div class="dqf-reel-center" :class="{ 'dqf-reel-center--spin': isSpinning, 'dqf-reel-center--landed': hasLanded }">
+                <span class="dqf-reel-text">{{ reelCenter }}</span>
+              </div>
+              <div class="dqf-reel-blur dqf-reel-blur--bottom">{{ reelBelow }}</div>
+            </div>
+            <div class="dqf-reel-mask dqf-reel-mask--top"></div>
+            <div class="dqf-reel-mask dqf-reel-mask--bottom"></div>
+          </div>
+
+          <!-- Meta badge -->
+          <transition name="dqf-meta-fade">
+            <div v-if="currentQ" class="dqf-meta-row">
+              <span class="dqf-meta-cat">{{ currentQ.category }}</span>
+              <span v-if="currentQ.framework" class="dqf-meta-fw" :class="'dqf-fw--' + currentQ.framework.toLowerCase()">
+                {{ currentQ.framework }}
+              </span>
+            </div>
+          </transition>
+
+          <!-- Hints -->
+          <transition name="dqf-hint-slide">
+            <div v-if="currentQ && currentQ.hints && showHint" class="dqf-hint-box">
+              <div class="dqf-hint-label">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                Tips Jawaban
+              </div>
+              <p class="dqf-hint-text">{{ currentQ.hints }}</p>
+            </div>
+          </transition>
+
+          <!-- Actions -->
+          <div class="dqf-actions">
+            <button class="dqf-spin-btn" @click="spin" :disabled="isSpinning || questions.length === 0">
+              <svg v-if="isSpinning" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="dqf-spin-icon"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>
+              <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              {{ isSpinning ? 'Mengocok...' : (hasLanded ? 'Ganti Soal' : 'Spin Soal!') }}
+            </button>
+
+            <button v-if="currentQ && currentQ.hints" class="dqf-hint-toggle" @click="showHint = !showHint">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              {{ showHint ? 'Tutup tips' : 'Lihat tips' }}
+            </button>
+
+            <button v-if="hasLanded" class="dqf-goto-btn" @click="gotoInterview">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+              Latihan Jawab
+            </button>
+          </div>
+
+          <!-- Empty state -->
+          <div v-if="questions.length === 0" class="dqf-empty">
+            <span>📭</span>
+            <p>Bank soal kosong.<br>Tambah dulu di Interview Practice!</p>
+          </div>
+
+        </div>
+      </transition>
+    </div>
+  `,
+
+  data() {
+    return {
+      showPopup: false,
+      questions: [],
+      selectedCat: 'Semua',
+      isSpinning: false,
+      hasLanded: false,
+      currentQ: null,
+      showHint: false,
+      reelAbove: 'General HR',
+      reelCenter: 'Tap "Spin Soal!" untuk mulai',
+      reelBelow: 'Behavioral & Teamwork',
+      _spinInterval: null,
+    };
+  },
+
+  computed: {
+    categories() {
+      return [...new Set(this.questions.map(q => q.category))].sort();
+    },
+    filteredPool() {
+      if (this.selectedCat === 'Semua') return this.questions;
+      return this.questions.filter(q => q.category === this.selectedCat);
+    },
+  },
+
+  methods: {
+    async loadQuestions() {
+      try {
+        await globalThis._workspaceStorageReady;
+        const raw = WorkspaceStorage.getItem('personal_workspace_interview_questions');
+        this.questions = raw ? JSON.parse(raw) : [];
+      } catch(e) { this.questions = []; }
+    },
+
+    togglePopup() {
+      this.showPopup = !this.showPopup;
+      if (this.showPopup) {
+        this.loadQuestions();
+        this.$nextTick(() => {
+          if (!this.hasLanded && this.questions.length > 0) {
+            setTimeout(() => this.spin(), 300);
+          }
+        });
+      }
+    },
+
+    selectCat(cat) {
+      this.selectedCat = cat;
+      this.hasLanded = false;
+      this.currentQ = null;
+      this.showHint = false;
+      this.reelAbove  = '—';
+      this.reelCenter = 'Pilih kategori & tekan Spin!';
+      this.reelBelow  = '—';
+    },
+
+    spin() {
+      const pool = this.filteredPool;
+      if (!pool || pool.length === 0) return;
+      if (this.isSpinning) return;
+      this.isSpinning = true;
+      this.hasLanded  = false;
+      this.currentQ   = null;
+      this.showHint   = false;
+      this._playTick();
+      let cycles = 0;
+      this._spinInterval = setInterval(() => {
+        cycles++;
+        this._playTick();
+        const i = Math.floor(Math.random() * pool.length);
+        this.reelCenter = pool[i].text;
+        this.reelAbove  = pool[(i - 1 + pool.length) % pool.length].text;
+        this.reelBelow  = pool[(i + 1) % pool.length].text;
+        if (cycles >= 18) { clearInterval(this._spinInterval); this._land(pool); }
+      }, 75);
+    },
+
+    _land(pool) {
+      const i = Math.floor(Math.random() * pool.length);
+      const q = pool[i];
+      this.currentQ   = q;
+      this.reelCenter = q.text;
+      this.reelAbove  = pool[(i - 1 + pool.length) % pool.length].text;
+      this.reelBelow  = pool[(i + 1) % pool.length].text;
+      this.isSpinning = false;
+      this.hasLanded  = true;
+      this._playWin();
+    },
+
+    _playTick() {
+      try {
+        const AC = globalThis.AudioContext || globalThis.webkitAudioContext;
+        if (!AC) return;
+        const ctx = new AC();
+        const osc = ctx.createOscillator(); const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(280 + Math.random() * 80, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(90, ctx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.05, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + 0.04);
+      } catch(_) {}
+    },
+
+    _playWin() {
+      try {
+        const AC = globalThis.AudioContext || globalThis.webkitAudioContext;
+        if (!AC) return;
+        const ctx = new AC();
+        [329.63, 392.00, 493.88, 523.25].forEach((freq, idx) => {
+          const osc = ctx.createOscillator(); const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.09);
+          gain.gain.setValueAtTime(0.07, ctx.currentTime + idx * 0.09);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.09 + 0.28);
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + idx * 0.09);
+          osc.stop(ctx.currentTime + idx * 0.09 + 0.28);
+        });
+      } catch(_) {}
+    },
+
+    gotoInterview() {
+      globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'interviewPractice' }));
+      this.showPopup = false;
+    },
+  },
+
+  beforeUnmount() {
+    if (this._spinInterval) clearInterval(this._spinInterval);
+  },
 };

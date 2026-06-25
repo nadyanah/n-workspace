@@ -885,5 +885,7 @@ app.component('bucket-list-yearly', BucketList100);
 app.component('quran-reader', QuranReader);
 app.component('wish-list-2026', WishList2026);
 app.component('push-notif-toggle', PushNotifToggle);
+app.component('daily-question-float', DailyQuestionFloat);
+app.component('daily-question-float-circle', DailyQuestionFloatCircle);
 
 app.mount('#app');
