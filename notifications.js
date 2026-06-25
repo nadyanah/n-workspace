@@ -427,11 +427,27 @@ const ReminderPopup = {
 
     _allActions() {
       const base = [];
+      // Kumpulkan skipDays dari habits untuk filter libur hari ini
+      const todayStr = this.todayStr;
+      let skippedHabitNotifIds = new Set();
+      try {
+        const raw = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+        if (raw) {
+          const habits = JSON.parse(raw);
+          habits.forEach(h => {
+            if (Array.isArray(h.skipDays) && h.skipDays.includes(todayStr)) {
+              skippedHabitNotifIds.add('habit_' + h.id);
+            }
+          });
+        }
+      } catch(e) {}
       try {
         const raw = WorkspaceStorage.getItem('ws_habit_notifs');
         if (raw) {
           const habits = JSON.parse(raw);
           habits.forEach(h => {
+            // Juga skip jika kebetulan masih ada di ws_habit_notifs (safety fallback)
+            if (skippedHabitNotifIds.has(h.id)) return;
             if (!base.find(b => b.id === h.id)) base.push({ ...h, isHabit: true });
           });
         }
@@ -1769,6 +1785,19 @@ const NotificationPanel = {
     // Section 2: Actionable
     actionNotifs() {
       const status = this.actionStatus[this.todayStr] || {};
+      const todayStr = this.todayStr;
+      // Kumpulkan habit yang sedang libur hari ini
+      let skippedHabitNotifIds = new Set();
+      try {
+        const raw = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+        if (raw) {
+          JSON.parse(raw).forEach(h => {
+            if (Array.isArray(h.skipDays) && h.skipDays.includes(todayStr)) {
+              skippedHabitNotifIds.add('habit_' + h.id);
+            }
+          });
+        }
+      } catch(e) {}
       const base = [];
       try {
         const raw = WorkspaceStorage.getItem('ws_habit_notifs');
@@ -1782,6 +1811,8 @@ const NotificationPanel = {
           dzikirHabits.forEach((h, i) => { dzikirIndexMap[h.id] = i; });
 
           habits.forEach(h => {
+            // Skip habit yang sedang libur hari ini
+            if (skippedHabitNotifIds.has(h.id)) return;
             if (!base.find(b => b.id === h.id)) {
               const isDzikirWaktu = !!h.isDzikirWaktu || h.category === 'Dzikir Waktu';
               const habitIndex = isDzikirWaktu ? (dzikirIndexMap[h.id] ?? 0) : 0;
@@ -1954,6 +1985,10 @@ const NotificationPanel = {
     // habit "Dzikir Waktu" langsung terbuka tanpa nunggu polling 60 detik.
     this._onDzikirCompleted = () => { this.loadData(); };
     window.addEventListener('ws-dzikir-completed', this._onDzikirCompleted);
+
+    // Refresh panel saat habit di-liburkan/dibatalkan liburnya hari ini
+    this._onHabitSkipChanged = () => { this.loadData(); };
+    window.addEventListener('ws-habit-skip-changed', this._onHabitSkipChanged);
   },
 
   beforeUnmount() {
@@ -1962,6 +1997,7 @@ const NotificationPanel = {
     window.removeEventListener('ws-job-plans-updated', this._onJobPlansUpdated);
     window.removeEventListener('ws-manual-notif-updated', this._onJobPlansUpdated);
     window.removeEventListener('ws-dzikir-completed', this._onDzikirCompleted);
+    window.removeEventListener('ws-habit-skip-changed', this._onHabitSkipChanged);
   },
 
   methods: {

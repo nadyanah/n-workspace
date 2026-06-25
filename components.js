@@ -6854,6 +6854,7 @@ const HabitTracker = {
                     <div style="display: flex; flex-direction: column; min-width: 0;">
                       <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px;" :title="habit.name">{{ habit.name }}</span>
                       <span v-if="habit.timeSchedule" style="font-size: 10px; font-weight: 700; color: var(--color-terracotta); opacity: 0.8; margin-top: 1px;">⏰ {{ habit.timeSchedule }}</span>
+                      <span v-if="isSkippedToday(habit)" style="font-size: 9.5px; font-weight: 700; color: #92400E; background: #FEF3C7; padding: 1px 6px; border-radius: 10px; border: 1px solid #FDE68A; margin-top: 2px; display: inline-block; width: fit-content;">🏖️ Libur</span>
                     </div>
                   </div>
                 </td>
@@ -6929,45 +6930,78 @@ const HabitTracker = {
         </div>
 
         <div v-else class="grid-2" style="grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: start;">
-          <div v-for="habit in filteredHabitCards" :key="habit.id" class="drawer-section" style="margin-bottom: 0; padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+          <div v-for="habit in filteredHabitCards" :key="habit.id" class="drawer-section"
+            :style="isSkippedToday(habit)
+              ? 'margin-bottom:0;padding:18px 20px;display:flex;flex-direction:column;gap:14px;border-color:rgba(234,179,8,0.4);background:linear-gradient(135deg,rgba(254,252,232,0.7) 0%,rgba(255,255,255,0) 60%);'
+              : 'margin-bottom:0;padding:18px 20px;display:flex;flex-direction:column;gap:14px;'">
 
-            <div class="flex-between">
-              <div>
-                <span style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: var(--color-terracotta); border: 1px solid var(--color-sand); padding: 4px 10px; border-radius: 10px; background-color: var(--bg-cream); display: inline-flex; align-items: center; gap: 4px;">
-                  <span v-if="habit.category === 'Kesehatan'" style="display: inline-flex; align-items: center;"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></span>
-                  <span v-else-if="habit.category === 'Produktivitas'" style="display: inline-flex; align-items: center;"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span>
-                  <span v-else-if="habit.category === 'Pikiran'" style="display: inline-flex; align-items: center;"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1 0-3.88 2.5 2.5 0 0 1 0-3.88 2.5 2.5 0 0 1 0-3.88A2.5 2.5 0 0 1 9.5 2Z"></path><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 0-3.88 2.5 2.5 0 0 0 0-3.88 2.5 2.5 0 0 0 0-3.88A2.5 2.5 0 0 0 14.5 2Z"></path></svg></span>
-                  <span v-else-if="habit.category === 'Rutinitas'" style="display: inline-flex; align-items: center;"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
-                  <span v-else style="display: inline-flex; align-items: center;"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M12 22v-5"/><path d="M9 8c0-1.7 1.3-3 3-3s3 1.3 3 3c0 2.5-2 4-3 5-1-1-3-2.5-3-5z"/></svg></span>
-                  <span>{{ habit.category }}</span>
+            <!-- Baris 1: Kategori + tombol edit/arsip/hapus -->
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+              <span style="font-size:10px;font-weight:bold;text-transform:uppercase;color:var(--color-terracotta);border:1px solid var(--color-sand);padding:3px 9px;border-radius:10px;background-color:var(--bg-cream);display:inline-flex;align-items:center;gap:4px;flex-shrink:0;">
+                <span v-if="habit.category === 'Kesehatan'" style="display:inline-flex;align-items:center;"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></span>
+                <span v-else-if="habit.category === 'Produktivitas'" style="display:inline-flex;align-items:center;"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+                <span v-else-if="habit.category === 'Pikiran'" style="display:inline-flex;align-items:center;"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1 0-3.88 2.5 2.5 0 0 1 0-3.88 2.5 2.5 0 0 1 0-3.88A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 0-3.88 2.5 2.5 0 0 0 0-3.88 2.5 2.5 0 0 0 0-3.88A2.5 2.5 0 0 0 14.5 2Z"/></svg></span>
+                <span v-else-if="habit.category === 'Rutinitas'" style="display:inline-flex;align-items:center;"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+                <span v-else style="display:inline-flex;align-items:center;"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"/><path d="M9 8c0-1.7 1.3-3 3-3s3 1.3 3 3c0 2.5-2 4-3 5-1-1-3-2.5-3-5z"/></svg></span>
+                <span>{{ habit.category }}</span>
+              </span>
+              <!-- Edit · Arsip · Hapus -->
+              <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
+                <button class="card-nav-btn" @click="openEditHabit(habit)" title="Edit Habit"
+                  style="padding:4px;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background-color:#EFF6FF;border:1px solid #BFDBFE;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:#3B82F6;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                </button>
+                <button class="card-nav-btn" @click="archiveHabit(habit.id)" title="Sembunyikan habit (data tetap aman)"
+                  style="padding:4px;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background-color:#FFFBEB;border:1px solid #FDE68A;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:#D97706;"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+                </button>
+                <button class="card-nav-btn" @click="removeHabit(habit.id)" title="Hapus Habit permanen"
+                  style="padding:4px;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background-color:var(--bg-cream);border:1px solid var(--color-sand);">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:#D67B52;"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Baris 2: Nama habit -->
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span :style="{ width:'10px', height:'10px', borderRadius:'50%', backgroundColor: getHabitColor(habit), display:'inline-block', flexShrink:0 }"></span>
+              <h4 style="font-size:15px;margin:0;color:var(--text-dark);font-weight:700;line-height:1.3;">{{ habit.name }}</h4>
+            </div>
+
+            <!-- Baris 3: Waktu · status badges · tombol Libur -->
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+              <!-- Kiri: waktu + badge status -->
+              <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;flex:1;min-width:0;">
+                <span v-if="habit.timeSchedule"
+                  style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--color-terracotta);background:rgba(214,123,82,0.10);padding:3px 9px;border-radius:20px;border:1px solid rgba(214,123,82,0.25);">
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  {{ habit.timeSchedule }}
                 </span>
-                <h4 style="font-size: 16px; margin-top: 6px; color: var(--text-dark);">{{ habit.name }}</h4>
-                <div style="display: flex; align-items: center; gap: 6px; margin-top: 5px; flex-wrap: wrap;">
-                  <span v-if="habit.timeSchedule" style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--color-terracotta); background: rgba(214,123,82,0.10); padding: 2px 8px; border-radius: 20px; border: 1px solid rgba(214,123,82,0.25);">
-                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    {{ habit.timeSchedule }}
-                  </span>
-                  <span v-if="!habit.timeSchedule" style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--text-muted); background: var(--bg-cream); padding: 2px 8px; border-radius: 20px; border: 1px dashed var(--color-sand);">
-                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    Tanpa jadwal
-                  </span>
-                  <span v-if="isDoneTodayHabit(habit)" style="display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700; color: #16a34a; background: #dcfce7; padding: 2px 8px; border-radius: 20px; border: 1px solid #86efac;">
-                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    Selesai Hari Ini
-                  </span>
-                </div>
+                <span v-else
+                  style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;color:var(--text-muted);background:var(--bg-cream);padding:3px 9px;border-radius:20px;border:1px dashed var(--color-sand);">
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  Tanpa jadwal
+                </span>
+                <span v-if="isDoneTodayHabit(habit)"
+                  style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:#16a34a;background:#dcfce7;padding:3px 9px;border-radius:20px;border:1px solid #86efac;">
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Selesai
+                </span>
+                <span v-if="isSkippedToday(habit)"
+                  style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:#92400E;background:#FEF3C7;padding:3px 9px;border-radius:20px;border:1px solid #FDE68A;">
+                  🏖️ Libur
+                </span>
               </div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <button class="card-nav-btn" @click="openEditHabit(habit)" title="Edit Habit" style="padding: 4px; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: #EFF6FF; border: 1px solid #BFDBFE;">
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #3B82F6;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-                </button>
-                <button class="card-nav-btn" @click="archiveHabit(habit.id)" title="Sembunyikan habit (data tetap aman)" style="padding: 4px; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: #FFFBEB; border: 1px solid #FDE68A;">
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #D97706;"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
-                </button>
-                <button class="card-nav-btn" @click="removeHabit(habit.id)" title="Hapus Habit permanen" style="padding: 4px; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: var(--bg-cream); border: 1px solid var(--color-sand);">
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #D67B52;"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                </button>
-              </div>
+              <!-- Kanan: Tombol Libur Hari Ini -->
+              <button @click="toggleSkipToday(habit.id)"
+                :title="isSkippedToday(habit) ? 'Batalkan libur — besok aktif otomatis' : 'Libur hari ini saja, besok aktif otomatis'"
+                :style="isSkippedToday(habit)
+                  ? 'flex-shrink:0;display:inline-flex;align-items:center;gap:5px;padding:4px 10px;font-size:10.5px;font-weight:700;color:#15803D;background:#DCFCE7;border:1.5px solid #86EFAC;border-radius:20px;cursor:pointer;font-family:inherit;white-space:nowrap;'
+                  : 'flex-shrink:0;display:inline-flex;align-items:center;gap:5px;padding:4px 10px;font-size:10.5px;font-weight:700;color:#92400E;background:#FEF9C3;border:1.5px solid #FDE068;border-radius:20px;cursor:pointer;font-family:inherit;white-space:nowrap;'">
+                <svg v-if="isSkippedToday(habit)" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <svg v-else viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m14.5 14-5 4"/><path d="m9.5 14 5 4"/></svg>
+                {{ isSkippedToday(habit) ? 'Batalkan' : 'Libur Hari Ini' }}
+              </button>
             </div>
 
             <!-- Progress Bar -->
@@ -7294,6 +7328,11 @@ const HabitTracker = {
     }
   },
   mounted() {
+    // Sinkronisasi ulang ke notif saat komponen mount — ini yang memastikan
+    // habit yang kemarin "libur" kembali aktif otomatis hari ini, karena
+    // syncHabitsToNotif() selalu filter berdasarkan tanggal HARI INI.
+    this.$nextTick(() => this.syncHabitsToNotif());
+
     // Kalau pendingHabitTrigger sudah di-set sebelum komponen mount
     if (this.pendingHabitTrigger) {
       this.$nextTick(() => {
@@ -7614,10 +7653,61 @@ const HabitTracker = {
         }, 1800);
       });
     },
+    // ── Cek apakah habit di-skip hari ini ──────────────────────────────
+    isSkippedToday(habit) {
+      const todayStr = (() => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      })();
+      return Array.isArray(habit.skipDays) && habit.skipDays.includes(todayStr);
+    },
+    // ── Toggle libur hari ini untuk habit tertentu ──────────────────────
+    toggleSkipToday(habitId) {
+      const todayStr = (() => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      })();
+      this.habits = this.habits.map(h => {
+        if (h.id !== habitId) return h;
+        const skipDays = Array.isArray(h.skipDays) ? [...h.skipDays] : [];
+        const idx = skipDays.indexOf(todayStr);
+        if (idx >= 0) {
+          // Batalkan libur
+          skipDays.splice(idx, 1);
+        } else {
+          // Set libur hari ini
+          skipDays.push(todayStr);
+          // Bersihkan entri lama (>30 hari) supaya data tidak membengkak
+          const cutoff = new Date();
+          cutoff.setDate(cutoff.getDate() - 30);
+          const cutoffStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth()+1).padStart(2,'0')}-${String(cutoff.getDate()).padStart(2,'0')}`;
+          skipDays.splice(0, skipDays.length, ...skipDays.filter(d => d >= cutoffStr));
+        }
+        return { ...h, skipDays };
+      });
+      this.saveToStorage();
+      // Sinkronisasi status ke notif panel supaya langsung update
+      const notifId = 'habit_' + habitId;
+      const isNowSkipped = this.isSkippedToday(this.habits.find(h => h.id === habitId));
+      globalThis.dispatchEvent(new CustomEvent('ws-habit-skip-changed', {
+        detail: { habitId, notifId, skipped: isNowSkipped, date: todayStr }
+      }));
+    },
     syncHabitsToNotif() {
-      // Ambil habits yang punya timeSchedule, exclude archived, ekspor ke storage untuk notif
+      // Ambil habits yang punya timeSchedule, exclude archived & libur hari ini,
+      // ekspor ke storage untuk notif
+      const todayStr = (() => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      })();
       const habitsWithTime = this.habits
-        .filter(h => !h.archived && h.timeSchedule && h.timeSchedule.trim())
+        .filter(h => {
+          if (h.archived) return false;
+          if (!h.timeSchedule || !h.timeSchedule.trim()) return false;
+          // Exclude habit yang sedang libur hari ini
+          if (Array.isArray(h.skipDays) && h.skipDays.includes(todayStr)) return false;
+          return true;
+        })
         .map(h => ({
           id: 'habit_' + h.id,
           title: h.name,
