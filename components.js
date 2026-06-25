@@ -12863,49 +12863,85 @@ const JournalQuestionBoard = {
               </div>
 
               <template v-else>
-                <!-- Slot Reel -->
-                <div class="dqf-reel-wrap" style="border-radius: 12px; border: 1.5px solid var(--color-sand, #E8DFD8); border-bottom: 1.5px solid var(--color-sand, #E8DFD8);">
-                  <div class="dqf-reel">
-                    <div class="dqf-reel-blur dqf-reel-blur--top">{{ reelAbove }}</div>
-                    <div class="dqf-reel-center" :class="{ 'dqf-reel-center--spin': isSpinning, 'dqf-reel-center--landed': hasLanded }">
-                      <span class="dqf-reel-text">{{ reelCenter }}</span>
+
+                <!-- ── Scratch Card Area ── -->
+                <div style="margin-bottom: 6px; font-size: 11.5px; color: var(--text-muted); text-align: center; letter-spacing: 0.02em;">
+                  {{ scratchRevealed ? 'pertanyaan hari ini ✦' : (todayQuestion ? 'ketuk untuk lihat lagi' : 'gosok untuk ungkap pertanyaanmu') }}
+                </div>
+
+                <div class="jqb-scratch-wrap">
+
+                  <!-- Kartu sudah direveal (hari ini sudah punya pick) -->
+                  <div v-if="todayQuestion && scratchRevealed" class="jqb-scratch-revealed">
+                    <div class="jqb-scratch-check">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      sudah dipilih hari ini
                     </div>
-                    <div class="dqf-reel-blur dqf-reel-blur--bottom">{{ reelBelow }}</div>
+                    <div class="jqb-scratch-question-text">{{ todayQuestion.text }}</div>
                   </div>
-                  <div class="dqf-reel-mask dqf-reel-mask--top"></div>
-                  <div class="dqf-reel-mask dqf-reel-mask--bottom"></div>
+
+                  <!-- Kartu belum/belum direveal — canvas scratch -->
+                  <div v-else class="jqb-scratch-card-wrap">
+
+                    <!-- Layer bawah: teks pertanyaan (tersembunyi sampai digosok) -->
+                    <div class="jqb-scratch-under" :style="{ opacity: scratchDoneEnough ? 1 : 0, transition: 'opacity 0.35s ease' }">
+                      <div v-if="pendingQ" class="jqb-scratch-question-text">{{ pendingQ.text }}</div>
+                      <div v-else class="jqb-scratch-placeholder">— pilih dulu —</div>
+                    </div>
+
+                    <!-- Layer atas: canvas scratch -->
+                    <canvas
+                      v-if="!scratchRevealed"
+                      ref="scratchCanvas"
+                      class="jqb-scratch-canvas"
+                      @mousedown="onScratchStart"
+                      @mousemove="onScratchMove"
+                      @mouseup="onScratchEnd"
+                      @touchstart.prevent="onScratchStart"
+                      @touchmove.prevent="onScratchMove"
+                      @touchend="onScratchEnd"
+                    ></canvas>
+
+                    <!-- Overlay hint gosok -->
+                    <div v-if="!scratchStarted && !scratchRevealed && pendingQ" class="jqb-scratch-hint">
+                      <span class="jqb-scratch-hint-icon">✦</span>
+                      <span>gosok di sini</span>
+                    </div>
+
+                    <!-- Tombol acak pertanyaan (sebelum mulai gosok) -->
+                    <div v-if="!scratchStarted && !scratchRevealed" class="jqb-scratch-shuffle-area">
+                      <button @click="pickRandom" :disabled="pool.length === 0 || !!todayQuestion"
+                        class="jqb-shuffle-btn"
+                        :style="{ opacity: (pool.length === 0 || !!todayQuestion) ? 0.4 : 1 }">
+                        🎲 Acak Pertanyaan
+                      </button>
+                    </div>
+                  </div>
+
                 </div>
 
-                <!-- Status hari ini -->
-                <div v-if="todayQuestion" style="display:flex; align-items:center; gap:6px; margin-top:12px; font-size:11.5px; color:#16a34a; font-weight:700;">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  Sudah terpilih & masuk checklist hari ini
+                <!-- Progress gosok -->
+                <div v-if="scratchStarted && !scratchRevealed && !scratchDoneEnough" style="margin-top: 10px;">
+                  <div style="height: 4px; background: var(--color-sand); border-radius: 4px; overflow: hidden;">
+                    <div :style="{ width: scratchPercent + '%', height: '100%', background: 'var(--color-terracotta)', borderRadius: '4px', transition: 'width 0.1s' }"></div>
+                  </div>
+                  <div style="font-size: 10.5px; color: var(--text-muted); text-align: center; margin-top: 4px;">{{ scratchPercent }}% tergosok</div>
                 </div>
 
-                <!-- Actions -->
-                <div style="display:flex; gap:8px; margin-top:14px;">
-                  <button @click="spin" :disabled="isSpinning || pool.length === 0 || !!todayQuestion"
-                    style="flex:1; height: 42px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display:flex; align-items:center; justify-content:center; gap:7px; transition: background 0.15s;"
-                    :style="{ background: (isSpinning || pool.length === 0 || !!todayQuestion) ? 'var(--color-sand)' : 'var(--color-terracotta, #D67B52)', color: (isSpinning || pool.length === 0 || !!todayQuestion) ? 'var(--text-muted)' : '#fff', cursor: (isSpinning || pool.length === 0 || !!todayQuestion) ? 'default' : 'pointer' }">
-                    <svg v-if="isSpinning" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="dqf-spin-icon"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>
-                    <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                    {{ isSpinning ? 'Mengocok...' : (todayQuestion ? 'Sudah Dipilih' : 'Pilih Pertanyaan Hari Ini!') }}
-                  </button>
-                </div>
-
-                <!-- Pool kosong (semua sudah pernah keluar) -->
+                <!-- Pool kosong -->
                 <div v-if="pool.length === 0 && !todayQuestion" style="margin-top:10px; font-size:11.5px; color:var(--text-muted); text-align:center;">
-                  Semua pertanyaan di koleksi sudah pernah terpilih.
+                  Semua pertanyaan sudah pernah terpilih.
                   <button @click="resetAllChecklist" style="background:none; border:none; padding:0; color: var(--color-terracotta); font-weight:700; cursor:pointer; font-family:inherit; text-decoration:underline;">Reset checklist</button>
                   biar bisa muncul lagi.
                 </div>
 
-                <!-- Pilih ulang hari ini -->
-                <div v-if="todayQuestion" style="margin-top:8px; text-align:center;">
+                <!-- Pilih ulang -->
+                <div v-if="todayQuestion" style="margin-top:10px; text-align:center;">
                   <button @click="redoToday" style="background:none; border:none; padding:0; font-size:11px; color:var(--text-muted); cursor:pointer; font-family:inherit; text-decoration:underline;">
-                    Salah pencet? Pilih ulang hari ini
+                    Pilih ulang hari ini
                   </button>
                 </div>
+
               </template>
             </div>
 
@@ -12973,12 +13009,14 @@ const JournalQuestionBoard = {
       questions: [],
       newQuestionText: '',
       todayPickMap: {},
-      isSpinning: false,
-      hasLanded: false,
-      reelAbove: '—',
-      reelCenter: 'Tekan tombol di bawah untuk mulai',
-      reelBelow: '—',
-      _spinInterval: null,
+      // scratch state
+      pendingQ: null,          // pertanyaan yang sedang "tersembunyi" di balik kartu
+      scratchStarted: false,   // user sudah mulai gosok
+      scratchDoneEnough: false,// threshold gosok tercapai → reveal teks
+      scratchRevealed: false,  // animasi selesai, canvas dibuang
+      scratchPercent: 0,
+      _isScratchingNow: false,
+      _scratchCtx: null,
     };
   },
   computed: {
@@ -13007,15 +13045,18 @@ const JournalQuestionBoard = {
     show(val) {
       if (val) {
         this.loadAll();
-        // Kalau hari ini sudah ada pick, tampilkan langsung di reel
         this.$nextTick(() => {
           if (this.todayQuestion) {
-            this.reelCenter = this.todayQuestion.text;
-            this.hasLanded = true;
+            // Hari ini sudah punya pick → langsung revealed
+            this.pendingQ = this.todayQuestion;
+            this.scratchRevealed = true;
+            this.scratchDoneEnough = true;
           } else {
-            this.resetReel();
+            this.resetScratch();
           }
         });
+      } else {
+        this.resetScratch();
       }
     },
   },
@@ -13038,123 +13079,161 @@ const JournalQuestionBoard = {
     saveTodayPickMap() {
       WorkspaceStorage.setItem('ws_journal_today_pick', JSON.stringify(this.todayPickMap));
     },
-    resetReel() {
-      this.hasLanded = false;
-      this.reelAbove = '—';
-      this.reelCenter = 'Tekan tombol di bawah untuk mulai';
-      this.reelBelow = '—';
+    resetScratch() {
+      this.pendingQ = null;
+      this.scratchStarted = false;
+      this.scratchDoneEnough = false;
+      this.scratchRevealed = false;
+      this.scratchPercent = 0;
+      this._isScratchingNow = false;
+      this._scratchCtx = null;
     },
-    addQuestion() {
-      const text = this.newQuestionText.trim();
-      if (!text) return;
-      this.questions.unshift({
-        id: 'jq-' + Date.now(),
-        text,
-        done: false,
-        answeredAt: null,
-        createdAt: new Date().toISOString(),
-      });
-      this.newQuestionText = '';
-      this.saveQuestions();
+    pickRandom() {
+      if (this.pool.length === 0 || this.todayQuestion) return;
+      const i = Math.floor(Math.random() * this.pool.length);
+      this.pendingQ = this.pool[i];
+      this.scratchStarted = false;
+      this.scratchDoneEnough = false;
+      this.scratchRevealed = false;
+      this.scratchPercent = 0;
+      this._scratchCtx = null;
+      this.$nextTick(() => this._initCanvas());
+      this._playPick();
     },
-    deleteQuestion(idx) {
-      const q = this.questions[idx];
-      if (!confirm('Hapus pertanyaan ini?')) return;
-      // Bersihkan pick hari ini kalau yang dihapus adalah pertanyaan yang sedang aktif
-      if (q && this.todayQuestionId === q.id) {
-        delete this.todayPickMap[this.todayStr];
-        this.saveTodayPickMap();
-        this.resetReel();
-      }
-      this.questions.splice(idx, 1);
-      this.saveQuestions();
-    },
-    toggleDone(q) {
-      q.done = !q.done;
-      q.answeredAt = q.done ? new Date().toISOString() : null;
-      // Kalau yang di-uncheck adalah pick hari ini, lepas juga picknya
-      if (!q.done && this.todayQuestionId === q.id) {
-        delete this.todayPickMap[this.todayStr];
-        this.saveTodayPickMap();
-        this.resetReel();
-      }
-      this.saveQuestions();
-    },
-    resetAllChecklist() {
-      if (!confirm('Uncheck semua pertanyaan di koleksi? Pertanyaan akan bisa terpilih lagi.')) return;
-      this.questions.forEach(q => { q.done = false; q.answeredAt = null; });
-      this.todayPickMap = {};
-      this.saveQuestions();
-      this.saveTodayPickMap();
-      this.resetReel();
-    },
-    redoToday() {
-      if (this.todayQuestion) {
-        this.todayQuestion.done = false;
-        this.todayQuestion.answeredAt = null;
-        this.saveQuestions();
-      }
-      delete this.todayPickMap[this.todayStr];
-      this.saveTodayPickMap();
-      this.resetReel();
-    },
-    spin() {
-      if (this.isSpinning || !!this.todayQuestion) return;
-      const pool = this.pool;
-      if (!pool || pool.length === 0) return;
+    _initCanvas() {
+      const canvas = this.$refs.scratchCanvas;
+      if (!canvas) return;
+      const W = canvas.offsetWidth;
+      const H = canvas.offsetHeight;
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext('2d');
+      this._scratchCtx = ctx;
 
-      this.isSpinning = true;
-      this.hasLanded = false;
-      this._playTick();
+      // Gambar layer penutup (texture garis-garis diagonal)
+      ctx.fillStyle = '#3D2E22';
+      ctx.fillRect(0, 0, W, H);
 
-      let cycles = 0;
-      const total = 18;
-      this._spinInterval = setInterval(() => {
-        cycles++;
-        this._playTick();
-        const i = Math.floor(Math.random() * pool.length);
-        this.reelCenter = pool[i].text;
-        this.reelAbove  = pool[(i - 1 + pool.length) % pool.length].text;
-        this.reelBelow  = pool[(i + 1) % pool.length].text;
-        if (cycles >= total) {
-          clearInterval(this._spinInterval);
-          this._land(pool);
-        }
-      }, 75);
+      // Pattern diagonal lines
+      ctx.strokeStyle = 'rgba(214,123,82,0.18)';
+      ctx.lineWidth = 1.2;
+      for (let x = -H; x < W + H; x += 14) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x + H, H);
+        ctx.stroke();
+      }
+
+      // Teks hint di tengah
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.font = 'bold 13px Outfit, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('gosok untuk ungkap ✦', W / 2, H / 2 - 8);
+      ctx.font = '11px Outfit, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.32)';
+      ctx.fillText('scratch to reveal', W / 2, H / 2 + 12);
     },
-    _land(pool) {
-      const i = Math.floor(Math.random() * pool.length);
-      const q = pool[i];
-      this.reelCenter = q.text;
-      this.reelAbove  = pool[(i - 1 + pool.length) % pool.length].text;
-      this.reelBelow  = pool[(i + 1) % pool.length].text;
-      this.isSpinning = false;
-      this.hasLanded  = true;
+    _getPos(e, canvas) {
+      const rect = canvas.getBoundingClientRect();
+      const src = e.touches ? e.touches[0] : e;
+      return {
+        x: (src.clientX - rect.left) * (canvas.width / rect.width),
+        y: (src.clientY - rect.top) * (canvas.height / rect.height),
+      };
+    },
+    onScratchStart(e) {
+      if (this.scratchRevealed || !this.pendingQ) return;
+      this._isScratchingNow = true;
+      this.scratchStarted = true;
+      const canvas = this.$refs.scratchCanvas;
+      if (!canvas || !this._scratchCtx) return;
+      const pos = this._getPos(e, canvas);
+      this._scratchDot(pos.x, pos.y);
+    },
+    onScratchMove(e) {
+      if (!this._isScratchingNow || this.scratchRevealed || !this.pendingQ) return;
+      const canvas = this.$refs.scratchCanvas;
+      if (!canvas || !this._scratchCtx) return;
+      const pos = this._getPos(e, canvas);
+      this._scratchDot(pos.x, pos.y);
+      this._checkPercent(canvas);
+    },
+    onScratchEnd() {
+      this._isScratchingNow = false;
+    },
+    _scratchDot(x, y) {
+      const ctx = this._scratchCtx;
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      ctx.arc(x, y, 28, 0, Math.PI * 2);
+      ctx.fill();
+    },
+    _checkPercent(canvas) {
+      const ctx = this._scratchCtx;
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      let cleared = 0;
+      for (let i = 3; i < data.length; i += 4) {
+        if (data[i] < 128) cleared++;
+      }
+      const total = canvas.width * canvas.height;
+      this.scratchPercent = Math.min(100, Math.round((cleared / total) * 100));
 
-      // Otomatis checklist: tandai pertanyaan ini sudah terpilih
+      if (this.scratchPercent >= 40 && !this.scratchDoneEnough) {
+        this.scratchDoneEnough = true;
+        this._playReveal();
+        // Setelah animasi teks muncul, hapus canvas sepenuhnya
+        setTimeout(() => {
+          this.scratchRevealed = true;
+          this._confirmPick();
+        }, 600);
+      }
+    },
+    _confirmPick() {
+      const q = this.pendingQ;
+      if (!q || this.todayQuestion) return;
       q.done = true;
       q.answeredAt = new Date().toISOString();
       this.saveQuestions();
-
       this.todayPickMap[this.todayStr] = q.id;
       this.saveTodayPickMap();
-
       this._playWin();
     },
-    _playTick() {
+    _playPick() {
       try {
         const AC = globalThis.AudioContext || globalThis.webkitAudioContext;
         if (!AC) return;
         const ctx = new AC();
-        const osc = ctx.createOscillator();
+        [300, 420].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.07);
+          gain.gain.setValueAtTime(0.05, ctx.currentTime + i * 0.07);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.07 + 0.12);
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + i * 0.07);
+          osc.stop(ctx.currentTime + i * 0.07 + 0.12);
+        });
+      } catch(_) {}
+    },
+    _playReveal() {
+      try {
+        const AC = globalThis.AudioContext || globalThis.webkitAudioContext;
+        if (!AC) return;
+        const ctx = new AC();
+        // Efek "whoosh" lalu chime kecil
+        const buf = ctx.createBuffer(1, ctx.sampleRate * 0.18, ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
         const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(280 + Math.random() * 80, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(90, ctx.currentTime + 0.04);
-        gain.gain.setValueAtTime(0.05, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.start(); osc.stop(ctx.currentTime + 0.04);
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'highpass'; filter.frequency.value = 1200;
+        gain.gain.setValueAtTime(0.07, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+        src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+        src.start();
       } catch(_) {}
     },
     _playWin() {
@@ -13175,6 +13254,58 @@ const JournalQuestionBoard = {
         });
       } catch(_) {}
     },
+    addQuestion() {
+      const text = this.newQuestionText.trim();
+      if (!text) return;
+      this.questions.unshift({
+        id: 'jq-' + Date.now(),
+        text,
+        done: false,
+        answeredAt: null,
+        createdAt: new Date().toISOString(),
+      });
+      this.newQuestionText = '';
+      this.saveQuestions();
+    },
+    deleteQuestion(idx) {
+      const q = this.questions[idx];
+      if (!confirm('Hapus pertanyaan ini?')) return;
+      if (q && this.todayQuestionId === q.id) {
+        delete this.todayPickMap[this.todayStr];
+        this.saveTodayPickMap();
+        this.resetScratch();
+      }
+      this.questions.splice(idx, 1);
+      this.saveQuestions();
+    },
+    toggleDone(q) {
+      q.done = !q.done;
+      q.answeredAt = q.done ? new Date().toISOString() : null;
+      if (!q.done && this.todayQuestionId === q.id) {
+        delete this.todayPickMap[this.todayStr];
+        this.saveTodayPickMap();
+        this.resetScratch();
+      }
+      this.saveQuestions();
+    },
+    resetAllChecklist() {
+      if (!confirm('Uncheck semua pertanyaan di koleksi? Pertanyaan akan bisa terpilih lagi.')) return;
+      this.questions.forEach(q => { q.done = false; q.answeredAt = null; });
+      this.todayPickMap = {};
+      this.saveQuestions();
+      this.saveTodayPickMap();
+      this.resetScratch();
+    },
+    redoToday() {
+      if (this.todayQuestion) {
+        this.todayQuestion.done = false;
+        this.todayQuestion.answeredAt = null;
+        this.saveQuestions();
+      }
+      delete this.todayPickMap[this.todayStr];
+      this.saveTodayPickMap();
+      this.resetScratch();
+    },
     formatDate(iso) {
       if (!iso) return '';
       const d = new Date(iso);
@@ -13185,9 +13316,7 @@ const JournalQuestionBoard = {
   async mounted() {
     await this.loadAll();
   },
-  beforeUnmount() {
-    if (this._spinInterval) clearInterval(this._spinInterval);
-  },
+  beforeUnmount() {},
 };
 
 
