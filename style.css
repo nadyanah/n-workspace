@@ -11468,22 +11468,45 @@ input:checked + .switch-slider:before {
   font-size: 13px; color: var(--text-muted); font-style: italic;
 }
 
+/* State awal: belum ada pertanyaan dipilih */
+.jqb-scratch-idle {
+  background: linear-gradient(135deg, #FDF8F3 0%, #FAF0E8 60%, #F5E6D8 100%);
+  border: 1.5px solid rgba(214,123,82,0.18);
+  border-radius: 16px;
+  min-height: 160px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px;
+  box-shadow: 0 4px 16px rgba(214,123,82,0.10);
+}
+.jqb-scratch-idle-icon {
+  font-size: 34px;
+  opacity: 0.55;
+}
+.jqb-scratch-idle-text {
+  font-size: 12px;
+  color: rgba(140,75,45,0.50);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 /* Container kartu yang belum digosok */
 .jqb-scratch-card-wrap {
   position: relative;
   border-radius: 16px;
   overflow: hidden;
-  min-height: 140px;
+  min-height: 160px;
+  box-shadow: 0 4px 16px rgba(214,123,82,0.13), 0 1px 4px rgba(0,0,0,0.05);
+  border: 1.5px solid rgba(214,123,82,0.18);
 }
 
 /* Layer bawah: teks pertanyaan */
 .jqb-scratch-under {
-  background: var(--color-cream, #FDF5EB);
-  border: 2px solid var(--color-terracotta, #D67B52);
+  background: linear-gradient(135deg, #FDF8F3 0%, #FAF0E8 60%, #F5E6D8 100%);
   border-radius: 14px;
-  padding: 24px 20px;
+  padding: 28px 24px;
   text-align: center;
-  min-height: 140px;
+  min-height: 160px;
   display: flex; align-items: center; justify-content: center;
 }
 
@@ -11498,7 +11521,7 @@ input:checked + .switch-slider:before {
   touch-action: none;
 }
 
-/* Hint gosok */
+/* Hint gosok — warna gelap karena bg terang */
 .jqb-scratch-hint {
   position: absolute;
   inset: 0;
@@ -11506,7 +11529,7 @@ input:checked + .switch-slider:before {
   align-items: center; justify-content: center;
   gap: 6px;
   pointer-events: none;
-  color: rgba(255,255,255,0.70);
+  color: rgba(140,75,45,0.65);
   font-size: 13px; font-weight: 700;
   letter-spacing: 0.03em;
   animation: jqbHintPulse 2s ease-in-out infinite;
@@ -11524,21 +11547,23 @@ input:checked + .switch-slider:before {
   50%       { transform: translateY(-5px); }
 }
 
-/* Tombol acak pertanyaan */
+/* Tombol acak pertanyaan — di bawah kartu, flow normal */
 .jqb-scratch-shuffle-area {
-  position: absolute;
-  bottom: 12px; left: 0; right: 0;
-  display: flex; justify-content: center;
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
 }
 .jqb-shuffle-btn {
-  padding: 7px 18px;
+  padding: 9px 22px;
   background: var(--color-terracotta, #D67B52);
   color: #fff; border: none; border-radius: 20px;
-  font-size: 12px; font-weight: 700; cursor: pointer;
+  font-size: 12.5px; font-weight: 700; cursor: pointer;
   font-family: inherit;
-  box-shadow: 0 2px 8px rgba(214,123,82,0.35);
-  transition: background 0.15s, transform 0.12s;
+  box-shadow: 0 3px 10px rgba(214,123,82,0.35);
+  transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
+  letter-spacing: 0.02em;
 }
 .jqb-shuffle-btn:not(:disabled):hover {
   background: #B8663F; transform: scale(1.04);
+  box-shadow: 0 4px 14px rgba(214,123,82,0.42);
 }

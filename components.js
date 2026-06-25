@@ -12827,7 +12827,7 @@ const JournalQuestionBoard = {
             <div style="display: flex; align-items: center; gap: 12px; padding: 16px 22px 14px; background: var(--color-terracotta, #D67B52); color: #fff; flex-shrink: 0;">
               <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 17px;">🎰</div>
               <div style="flex: 1; min-width: 0;">
-                <div style="font-size: 15px; font-weight: 800; letter-spacing: 0.2px;">Daily Journaling Question</div>
+                <div style="font-size: 15px; font-weight: 800; letter-spacing: 0.2px;">Tanya Diri Sendiri</div>
                 <div style="font-size: 11px; opacity: 0.82; margin-top: 1px;">pertanyaan refleksi harian ✦</div>
               </div>
               <button @click="$emit('close')"
@@ -12853,7 +12853,7 @@ const JournalQuestionBoard = {
 
               <!-- Empty state: koleksi kosong -->
               <div v-if="questions.length === 0" style="text-align: center; padding: 30px 10px; color: var(--text-muted);">
-                <div style="font-size: 32px; margin-bottom: 10px;">📭</div>
+                <div style="font-size: 32px; margin-bottom: 10px;">🪄</div>
                 <div style="font-size: 13.5px; font-weight: 600; margin-bottom: 6px; color: var(--text-dark);">Koleksi pertanyaan masih kosong</div>
                 <div style="font-size: 12px; margin-bottom: 16px;">Tambahkan pertanyaan dulu di tab Koleksi.</div>
                 <button @click="activeTab = 'collection'"
@@ -12865,8 +12865,8 @@ const JournalQuestionBoard = {
               <template v-else>
 
                 <!-- ── Scratch Card Area ── -->
-                <div style="margin-bottom: 6px; font-size: 11.5px; color: var(--text-muted); text-align: center; letter-spacing: 0.02em;">
-                  {{ scratchRevealed ? 'pertanyaan hari ini ✦' : (todayQuestion ? 'ketuk untuk lihat lagi' : 'gosok untuk ungkap pertanyaanmu') }}
+                <div style="margin-bottom: 10px; font-size: 11px; color: var(--text-muted); text-align: center; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700;">
+                  {{ scratchRevealed ? '✦ pertanyaan hari ini' : (todayQuestion ? 'ketuk untuk lihat lagi' : pendingQ ? '✦ gosok kartunya!' : '✦ siap mulai?') }}
                 </div>
 
                 <div class="jqb-scratch-wrap">
@@ -12880,13 +12880,18 @@ const JournalQuestionBoard = {
                     <div class="jqb-scratch-question-text">{{ todayQuestion.text }}</div>
                   </div>
 
-                  <!-- Kartu belum/belum direveal — canvas scratch -->
+                  <!-- Belum ada pertanyaan dipilih: tampilkan placeholder card aesthetic -->
+                  <div v-else-if="!pendingQ" class="jqb-scratch-idle">
+                    <div class="jqb-scratch-idle-icon">🌱</div>
+                    <div class="jqb-scratch-idle-text">acak dulu, lalu gosok kartu</div>
+                  </div>
+
+                  <!-- Kartu siap digosok — canvas scratch -->
                   <div v-else class="jqb-scratch-card-wrap">
 
                     <!-- Layer bawah: teks pertanyaan (tersembunyi sampai digosok) -->
                     <div class="jqb-scratch-under" :style="{ opacity: scratchDoneEnough ? 1 : 0, transition: 'opacity 0.35s ease' }">
-                      <div v-if="pendingQ" class="jqb-scratch-question-text">{{ pendingQ.text }}</div>
-                      <div v-else class="jqb-scratch-placeholder">— pilih dulu —</div>
+                      <div class="jqb-scratch-question-text">{{ pendingQ.text }}</div>
                     </div>
 
                     <!-- Layer atas: canvas scratch -->
@@ -12903,21 +12908,22 @@ const JournalQuestionBoard = {
                     ></canvas>
 
                     <!-- Overlay hint gosok -->
-                    <div v-if="!scratchStarted && !scratchRevealed && pendingQ" class="jqb-scratch-hint">
+                    <div v-if="!scratchStarted && !scratchRevealed" class="jqb-scratch-hint">
                       <span class="jqb-scratch-hint-icon">✦</span>
                       <span>gosok di sini</span>
                     </div>
 
-                    <!-- Tombol acak pertanyaan (sebelum mulai gosok) -->
-                    <div v-if="!scratchStarted && !scratchRevealed" class="jqb-scratch-shuffle-area">
-                      <button @click="pickRandom" :disabled="pool.length === 0 || !!todayQuestion"
-                        class="jqb-shuffle-btn"
-                        :style="{ opacity: (pool.length === 0 || !!todayQuestion) ? 0.4 : 1 }">
-                        🎲 Acak Pertanyaan
-                      </button>
-                    </div>
                   </div>
 
+                </div>
+
+                <!-- Tombol acak pertanyaan — di LUAR kartu, di bawah -->
+                <div v-if="!scratchStarted && !scratchRevealed && !todayQuestion" class="jqb-scratch-shuffle-area">
+                  <button @click="pickRandom" :disabled="pool.length === 0"
+                    class="jqb-shuffle-btn"
+                    :style="{ opacity: pool.length === 0 ? 0.4 : 1 }">
+                    🎲 {{ pendingQ ? 'Ganti Pertanyaan' : 'Acak Pertanyaan' }}
+                  </button>
                 </div>
 
                 <!-- Progress gosok -->
@@ -13010,13 +13016,19 @@ const JournalQuestionBoard = {
       newQuestionText: '',
       todayPickMap: {},
       // scratch state
-      pendingQ: null,          // pertanyaan yang sedang "tersembunyi" di balik kartu
-      scratchStarted: false,   // user sudah mulai gosok
-      scratchDoneEnough: false,// threshold gosok tercapai → reveal teks
-      scratchRevealed: false,  // animasi selesai, canvas dibuang
+      pendingQ: null,
+      scratchStarted: false,
+      scratchDoneEnough: false,
+      scratchRevealed: false,
       scratchPercent: 0,
       _isScratchingNow: false,
       _scratchCtx: null,
+      _lastScratchPos: null,
+      // scratch sound nodes
+      _scratchAC: null,
+      _scratchNoiseSrc: null,
+      _scratchGain: null,
+      _scratchBP: null,
     };
   },
   computed: {
@@ -13080,6 +13092,7 @@ const JournalQuestionBoard = {
       WorkspaceStorage.setItem('ws_journal_today_pick', JSON.stringify(this.todayPickMap));
     },
     resetScratch() {
+      this._stopScratchSound();
       this.pendingQ = null;
       this.scratchStarted = false;
       this.scratchDoneEnough = false;
@@ -13087,6 +13100,7 @@ const JournalQuestionBoard = {
       this.scratchPercent = 0;
       this._isScratchingNow = false;
       this._scratchCtx = null;
+      this._lastScratchPos = null;
     },
     pickRandom() {
       if (this.pool.length === 0 || this.todayQuestion) return;
@@ -13110,27 +13124,79 @@ const JournalQuestionBoard = {
       const ctx = canvas.getContext('2d');
       this._scratchCtx = ctx;
 
-      // Gambar layer penutup (texture garis-garis diagonal)
-      ctx.fillStyle = '#3D2E22';
+      // ── Base gradient: palette persis dari mp-hero (#FDF8F3 → #FAF0E8 → #F5E6D8) ──
+      const bg = ctx.createLinearGradient(0, 0, W, H);
+      bg.addColorStop(0,   '#FDF8F3');
+      bg.addColorStop(0.55,'#FAF0E8');
+      bg.addColorStop(1,   '#F5E6D8');
+      ctx.fillStyle = bg;
       ctx.fillRect(0, 0, W, H);
 
-      // Pattern diagonal lines
-      ctx.strokeStyle = 'rgba(214,123,82,0.18)';
-      ctx.lineWidth = 1.2;
-      for (let x = -H; x < W + H; x += 14) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x + H, H);
-        ctx.stroke();
+      // ── Radial glow terracotta di pojok kanan atas (persis mp-hero::before) ──
+      const glow = ctx.createRadialGradient(W, 0, 0, W, 0, W * 0.75);
+      glow.addColorStop(0,    'rgba(214,123,82,0.14)');
+      glow.addColorStop(0.5,  'rgba(214,123,82,0.06)');
+      glow.addColorStop(1,    'rgba(214,123,82,0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, W, H);
+
+      // ── Subtle warm noise — efek tekstur kertas parchment ──
+      for (let i = 0; i < 1200; i++) {
+        const nx = Math.random() * W;
+        const ny = Math.random() * H;
+        ctx.fillStyle = `rgba(180,120,70,${Math.random() * 0.04})`;
+        ctx.fillRect(nx, ny, 1.5, 1.5);
       }
 
-      // Teks hint di tengah
-      ctx.fillStyle = 'rgba(255,255,255,0.55)';
-      ctx.font = 'bold 13px Outfit, sans-serif';
+      // ── Inner border tipis seperti kartu premium ──
+      const bm = 8;
+      ctx.strokeStyle = 'rgba(214,123,82,0.22)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.roundRect(bm, bm, W - bm * 2, H - bm * 2, 8);
+      ctx.stroke();
+
+      // ── Tiny decorative dots di sudut dalam ──
+      const dotPos = [[bm+6, bm+6], [W-bm-6, bm+6], [bm+6, H-bm-6], [W-bm-6, H-bm-6]];
+      dotPos.forEach(([dx, dy]) => {
+        ctx.beginPath();
+        ctx.arc(dx, dy, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(214,123,82,0.30)';
+        ctx.fill();
+      });
+
+      // ── Scatter sparkles kecil ✦ ──
+      const sparkles = [
+        [W*0.12, H*0.20], [W*0.85, H*0.16], [W*0.50, H*0.12],
+        [W*0.22, H*0.82], [W*0.78, H*0.80], [W*0.92, H*0.65],
+        [W*0.07, H*0.60],
+      ];
+      sparkles.forEach(([sx, sy]) => {
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.fillStyle = 'rgba(214,123,82,0.28)';
+        const sr = 3;
+        ctx.beginPath();
+        for (let pt = 0; pt < 8; pt++) {
+          const angle = (pt * Math.PI) / 4;
+          const rad = pt % 2 === 0 ? sr : sr * 0.38;
+          ctx.lineTo(Math.cos(angle) * rad, Math.sin(angle) * rad);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // ── Teks hint di tengah — warna gelap sesuai palet ──
       ctx.textAlign = 'center';
-      ctx.fillText('gosok untuk ungkap ✦', W / 2, H / 2 - 8);
+      ctx.shadowColor = 'rgba(214,123,82,0.15)';
+      ctx.shadowBlur = 6;
+      ctx.fillStyle = 'rgba(140,75,45,0.75)';
+      ctx.font = 'bold 13.5px Outfit, sans-serif';
+      ctx.fillText('✦ gosok untuk ungkap ✦', W / 2, H / 2 - 9);
+      ctx.shadowBlur = 0;
       ctx.font = '11px Outfit, sans-serif';
-      ctx.fillStyle = 'rgba(255,255,255,0.32)';
+      ctx.fillStyle = 'rgba(140,75,45,0.42)';
       ctx.fillText('scratch to reveal', W / 2, H / 2 + 12);
     },
     _getPos(e, canvas) {
@@ -13148,25 +13214,111 @@ const JournalQuestionBoard = {
       const canvas = this.$refs.scratchCanvas;
       if (!canvas || !this._scratchCtx) return;
       const pos = this._getPos(e, canvas);
-      this._scratchDot(pos.x, pos.y);
+      this._lastScratchPos = pos;
+      this._scratchLine(pos.x, pos.y, pos.x, pos.y);
+      this._startScratchSound();
     },
     onScratchMove(e) {
       if (!this._isScratchingNow || this.scratchRevealed || !this.pendingQ) return;
       const canvas = this.$refs.scratchCanvas;
       if (!canvas || !this._scratchCtx) return;
       const pos = this._getPos(e, canvas);
-      this._scratchDot(pos.x, pos.y);
+      const last = this._lastScratchPos || pos;
+      // hitung kecepatan untuk suara
+      const dx = pos.x - last.x;
+      const dy = pos.y - last.y;
+      const speed = Math.sqrt(dx * dx + dy * dy);
+      this._scratchLine(last.x, last.y, pos.x, pos.y);
+      this._lastScratchPos = pos;
+      this._updateScratchSound(speed);
       this._checkPercent(canvas);
     },
     onScratchEnd() {
       this._isScratchingNow = false;
+      this._lastScratchPos = null;
+      this._stopScratchSound();
     },
-    _scratchDot(x, y) {
+    _scratchLine(x1, y1, x2, y2) {
       const ctx = this._scratchCtx;
       ctx.globalCompositeOperation = 'destination-out';
-      ctx.beginPath();
-      ctx.arc(x, y, 28, 0, Math.PI * 2);
-      ctx.fill();
+      // Interpolasi titik-titik di sepanjang garis agar stroke mulus
+      const dist = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+      const steps = Math.max(1, Math.ceil(dist / 3));
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const x = x1 + (x2 - x1) * t;
+        const y = y1 + (y2 - y1) * t;
+        // kuas oval kecil, sedikit miring seperti koin gosok beneran
+        ctx.beginPath();
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(Math.PI / 8);
+        ctx.scale(1, 0.65);
+        ctx.arc(0, 0, 11, 0, Math.PI * 2);
+        ctx.restore();
+        ctx.fill();
+      }
+    },
+    // ── Suara gosok: white noise filtered, realtime saat drag ──
+    _startScratchSound() {
+      try {
+        const AC = globalThis.AudioContext || globalThis.webkitAudioContext;
+        if (!AC) return;
+        if (this._scratchAC) { try { this._scratchAC.close(); } catch(_){} }
+        const ac = new AC();
+        this._scratchAC = ac;
+        // Buffer noise putih panjang (0.5s, loop)
+        const bufLen = Math.ceil(ac.sampleRate * 0.5);
+        const buf = ac.createBuffer(1, bufLen, ac.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < bufLen; i++) data[i] = Math.random() * 2 - 1;
+        const src = ac.createBufferSource();
+        src.buffer = buf;
+        src.loop = true;
+        this._scratchNoiseSrc = src;
+        // Bandpass filter — frekuensi kertas 2000-5000 Hz
+        const bp = ac.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.value = 3200;
+        bp.Q.value = 1.8;
+        this._scratchBP = bp;
+        // Gain master — mulai pelan
+        const gain = ac.createGain();
+        gain.gain.setValueAtTime(0.0, ac.currentTime);
+        gain.gain.linearRampToValueAtTime(0.055, ac.currentTime + 0.04);
+        this._scratchGain = gain;
+        src.connect(bp); bp.connect(gain); gain.connect(ac.destination);
+        src.start();
+      } catch(_) {}
+    },
+    _updateScratchSound(speed) {
+      try {
+        if (!this._scratchAC || !this._scratchGain || !this._scratchBP) return;
+        const t = this._scratchAC.currentTime;
+        // Gain ikuti kecepatan tangan — makin cepat makin keras, max 0.10
+        const targetGain = Math.min(0.10, 0.02 + speed * 0.003);
+        this._scratchGain.gain.setTargetAtTime(targetGain, t, 0.03);
+        // Pitch filter naik/turun sedikit sesuai kecepatan — lebih hidup
+        const targetFreq = 2400 + Math.min(speed * 40, 2200);
+        this._scratchBP.frequency.setTargetAtTime(targetFreq, t, 0.04);
+      } catch(_) {}
+    },
+    _stopScratchSound() {
+      try {
+        if (!this._scratchGain || !this._scratchAC) return;
+        const t = this._scratchAC.currentTime;
+        this._scratchGain.gain.setTargetAtTime(0.0, t, 0.04);
+        setTimeout(() => {
+          try {
+            if (this._scratchNoiseSrc) this._scratchNoiseSrc.stop();
+            if (this._scratchAC) this._scratchAC.close();
+          } catch(_) {}
+          this._scratchNoiseSrc = null;
+          this._scratchGain = null;
+          this._scratchBP = null;
+          this._scratchAC = null;
+        }, 120);
+      } catch(_) {}
     },
     _checkPercent(canvas) {
       const ctx = this._scratchCtx;
@@ -13316,7 +13468,9 @@ const JournalQuestionBoard = {
   async mounted() {
     await this.loadAll();
   },
-  beforeUnmount() {},
+  beforeUnmount() {
+    this._stopScratchSound();
+  },
 };
 
 
@@ -18021,7 +18175,7 @@ const DailyQuestionFloatCircle = {
         class="desk-config-floating-btn"
         :class="{ 'dqfc-btn--open': showPopup }"
         @click="togglePopup"
-        title="Daily Interview Practice — Spin soal interview acak">
+        title="Daily Question — Spin soal interview acak">
         🎰
       </button>
 
