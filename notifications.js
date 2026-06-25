@@ -1667,10 +1667,10 @@ const NotificationPanel = {
       missedLog: [],
       expandedMissedDays: [],
       showPushSettings: false,
-      openSlotNoTime: true,
-      openSlotPagi: true,
-      openSlotSiang: true,
-      openSlotMalam: true
+      openSlotNoTime: false,
+      openSlotPagi: false,
+      openSlotSiang: false,
+      openSlotMalam: false
     };
   },
 
