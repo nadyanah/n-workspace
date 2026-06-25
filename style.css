@@ -11439,11 +11439,11 @@ input:checked + .switch-slider:before {
 
 /* Kartu sudah revealed (hari ini sudah punya pick, tidak perlu gosok) */
 .jqb-scratch-revealed {
-  background: var(--color-cream, #FDF5EB);
+  background: linear-gradient(135deg, #FDF8F3 0%, #FAF0E8 60%, #F5E6D8 100%);
   border: 2px solid var(--color-terracotta, #D67B52);
   border-radius: 16px;
-  padding: 20px 20px 22px;
-  text-align: center;
+  padding: 18px 20px 22px;
+  text-align: left;
   animation: jqbRevealFade 0.4s ease;
 }
 @keyframes jqbRevealFade {
@@ -11452,10 +11452,10 @@ input:checked + .switch-slider:before {
 }
 .jqb-scratch-check {
   display: inline-flex; align-items: center; gap: 5px;
-  font-size: 11px; font-weight: 700; color: #16a34a;
-  background: #f0fdf4; border: 1px solid #86efac;
+  font-size: 10.5px; font-weight: 700; color: #8C4B2D;
+  background: rgba(214,123,82,0.10); border: 1px solid rgba(214,123,82,0.30);
   padding: 3px 10px; border-radius: 20px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 /* Teks pertanyaan (dipakai di revealed dan under layer) */
@@ -11505,9 +11505,9 @@ input:checked + .switch-slider:before {
   background: linear-gradient(135deg, #FDF8F3 0%, #FAF0E8 60%, #F5E6D8 100%);
   border-radius: 14px;
   padding: 28px 24px;
-  text-align: center;
+  text-align: left;
   min-height: 160px;
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: flex-start;
 }
 
 /* Canvas gosok (layer atas) */

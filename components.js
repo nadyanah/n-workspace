@@ -13281,7 +13281,7 @@ const JournalQuestionBoard = {
           const bp = ac.createBiquadFilter();
           bp.type = 'bandpass'; bp.frequency.value = 2800 + i * 180; bp.Q.value = 2.2;
           const gain = ac.createGain();
-          const vol = 0.10 - i * 0.008;
+          const vol = 0.55 - i * 0.03;
           gain.gain.setValueAtTime(vol, ac.currentTime + t);
           gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + t + 0.055);
           src.connect(bp); bp.connect(gain); gain.connect(ac.destination);
@@ -13298,7 +13298,7 @@ const JournalQuestionBoard = {
             for (let j = 0; j < bufLen2; j++) d2[j] = (Math.random()*2-1) * Math.pow(1 - j/bufLen2, 2.5);
             const src2 = ac2.createBufferSource(); src2.buffer = buf2;
             const lp = ac2.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
-            const g2 = ac2.createGain(); g2.gain.setValueAtTime(0.18, ac2.currentTime);
+            const g2 = ac2.createGain(); g2.gain.setValueAtTime(0.7, ac2.currentTime);
             g2.gain.exponentialRampToValueAtTime(0.001, ac2.currentTime + 0.08);
             src2.connect(lp); lp.connect(g2); g2.connect(ac2.destination);
             src2.start(); src2.stop(ac2.currentTime + 0.09);
