@@ -18596,3 +18596,628 @@ const DailyQuestionFloatCircle = {
     if (this._spinInterval) clearInterval(this._spinInterval);
   },
 };
+
+// ============================================================================
+// WORD GLOSSARY
+// ============================================================================
+// • Klik kanan 1 kata        → tambah/edit arti kata itu
+// • Blok 2+ kata lalu klik kanan → tambah/edit arti kalimat/frasa itu
+// • Case-sensitive: "am" dan "AM" disimpan terpisah
+// • Hover kata/frasa yang sudah punya arti → tooltip warm retro
+// • Data: localStorage key "ws_word_glossary"
+// ============================================================================
+
+(function () {
+  'use strict';
+
+  const STORAGE_KEY = 'ws_word_glossary';
+
+  function loadGlossary() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch (e) { return {}; }
+  }
+  function saveGlossary(data) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+    catch (e) {}
+  }
+
+  // Key = teks asli (case-sensitive), bersihkan tanda baca di tepi saja
+  function makeKey(text) {
+    return text.replace(/^[.,!?;:"'''""\-\u2014\u2013\s]+|[.,!?;:"'''""\-\u2014\u2013\s]+$/g, '');
+  }
+
+  // ── CSS ───────────────────────────────────────────────────────────────────
+  const style = document.createElement('style');
+  style.textContent = `
+    #wg-context-menu {
+      position: fixed; z-index: 2147483647;
+      background: var(--bg-cream, #FDFBF7);
+      border: 1.5px solid var(--color-sand, #E8DFD8);
+      border-radius: 10px;
+      box-shadow: 0 8px 28px rgba(44,38,33,0.16), 0 2px 6px rgba(44,38,33,0.08);
+      padding: 4px; min-width: 178px;
+      font-family: 'Outfit', sans-serif;
+      animation: wg-menu-pop 0.15s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+    @keyframes wg-menu-pop {
+      from { opacity:0; transform:scale(0.92) translateY(-4px); }
+      to   { opacity:1; transform:scale(1) translateY(0); }
+    }
+    .wg-menu-item {
+      display:flex; align-items:center; gap:9px;
+      padding:8px 12px; border-radius:7px;
+      font-size:13px; font-weight:500;
+      color:var(--text-dark,#2C2621);
+      cursor:pointer; border:none; background:none;
+      width:100%; text-align:left; font-family:inherit;
+      transition:background 0.13s;
+    }
+    .wg-menu-item:hover { background:rgba(214,123,82,0.10); color:var(--color-terracotta,#D67B52); }
+    .wg-menu-item:hover .wg-menu-icon { color:var(--color-terracotta,#D67B52); }
+    .wg-menu-item-del:hover { background:rgba(180,60,40,0.08); color:#b43c28; }
+    .wg-menu-icon { color:var(--text-muted,#6E6359); flex-shrink:0; transition:color 0.13s; }
+    .wg-menu-divider { height:1px; background:var(--color-sand,#E8DFD8); margin:4px 8px; }
+    .wg-menu-word-label {
+      padding:6px 12px 4px; font-size:11px; font-weight:700;
+      color:var(--text-muted,#6E6359); letter-spacing:0.5px;
+      text-transform:uppercase; font-family:'Hack',monospace,sans-serif;
+      max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    /* badge kecil penanda kata vs frasa */
+    .wg-menu-badge {
+      display:inline-block; font-size:9.5px; font-weight:700; letter-spacing:0.3px;
+      padding:1px 6px; border-radius:20px; margin-left:6px;
+      background:rgba(214,123,82,0.12); color:var(--color-terracotta,#D67B52);
+      font-family:'Hack',monospace,sans-serif; vertical-align:middle;
+    }
+
+    /* ── Modal ── */
+    #wg-modal-overlay {
+      position:fixed; inset:0; z-index:2147483647;
+      background:rgba(44,38,33,0.36);
+      backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+      display:flex; align-items:center; justify-content:center;
+      animation:wg-fade-in 0.18s ease;
+    }
+    @keyframes wg-fade-in { from{opacity:0} to{opacity:1} }
+    #wg-modal-card {
+      background:var(--bg-cream,#FDFBF7); border-radius:16px;
+      box-shadow:0 16px 48px rgba(44,38,33,0.2),0 2px 8px rgba(44,38,33,0.10);
+      width:min(420px,92vw); overflow:hidden; font-family:'Outfit',sans-serif;
+      animation:wg-modal-pop 0.22s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+    @keyframes wg-modal-pop {
+      from{opacity:0;transform:scale(0.88) translateY(16px)}
+      to{opacity:1;transform:scale(1) translateY(0)}
+    }
+    #wg-modal-header {
+      display:flex; align-items:center; gap:10px; padding:16px 18px 14px;
+      background:var(--color-terracotta,#D67B52); color:#fff;
+    }
+    .wg-modal-icon-wrap {
+      width:34px; height:34px; background:rgba(255,255,255,0.22);
+      border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    #wg-modal-title { font-size:14px; font-weight:700; letter-spacing:0.2px; }
+    #wg-modal-word-badge {
+      font-size:11.5px; opacity:0.9; margin-top:2px;
+      font-family:'Hack',monospace,sans-serif;
+      max-width:320px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .wg-modal-type-chip {
+      display:inline-block; font-size:9px; font-weight:700; letter-spacing:0.4px;
+      padding:1px 7px; border-radius:20px; margin-left:7px; vertical-align:middle;
+      background:rgba(255,255,255,0.22); color:#fff;
+    }
+    #wg-modal-body { padding:18px 18px 8px; }
+    #wg-modal-body label {
+      display:block; font-size:12px; font-weight:700;
+      color:var(--text-muted,#6E6359); letter-spacing:0.4px;
+      text-transform:uppercase; margin-bottom:8px;
+    }
+    #wg-modal-input {
+      width:100%; padding:10px 13px;
+      border:1.5px solid var(--color-sand,#E8DFD8); border-radius:10px;
+      font-size:13.5px; font-family:'Outfit',sans-serif;
+      color:var(--text-dark,#2C2621); background:#fff;
+      resize:vertical; min-height:80px; outline:none;
+      transition:border-color 0.18s,box-shadow 0.18s; line-height:1.55;
+    }
+    #wg-modal-input:focus {
+      border-color:var(--color-terracotta,#D67B52);
+      box-shadow:0 0 0 3px rgba(214,123,82,0.12);
+    }
+    #wg-modal-footer {
+      display:flex; align-items:center; justify-content:flex-end;
+      gap:8px; padding:12px 18px 16px;
+    }
+    .wg-btn-cancel {
+      padding:8px 14px; background:transparent;
+      border:1.5px solid var(--color-sand,#E8DFD8);
+      color:var(--text-muted,#6E6359); border-radius:9px;
+      font-size:13px; font-family:inherit; cursor:pointer; transition:background 0.14s;
+    }
+    .wg-btn-cancel:hover { background:var(--color-sand,#E8DFD8); }
+    .wg-btn-save {
+      display:flex; align-items:center; gap:6px; padding:8px 18px;
+      background:var(--color-terracotta,#D67B52); color:#fff; border:none;
+      border-radius:9px; font-size:13px; font-weight:600; font-family:inherit;
+      cursor:pointer; transition:background 0.14s,transform 0.1s;
+    }
+    .wg-btn-save:hover { background:#b8663f; transform:scale(1.03); }
+    .wg-btn-save:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+
+    /* ── Tooltip warm retro ── */
+    #wg-tooltip {
+      position:fixed; z-index:2147483647; pointer-events:none;
+      max-width:280px; opacity:0; transition:opacity 0.18s ease;
+    }
+    #wg-tooltip.wg-tooltip-visible { opacity:1; }
+    .wg-tooltip-inner {
+      background:var(--bg-cream,#FDFBF7);
+      border:1.5px solid var(--color-terracotta,#D67B52);
+      border-radius:10px; padding:9px 13px 10px;
+      font-family:'Outfit',sans-serif;
+      box-shadow:0 6px 20px rgba(44,38,33,0.14),0 2px 6px rgba(214,123,82,0.10);
+      position:relative;
+    }
+    .wg-tooltip-head {
+      display:flex; align-items:center; gap:6px; margin-bottom:4px;
+    }
+    .wg-tooltip-word {
+      font-size:10.5px; font-weight:700;
+      color:var(--color-terracotta,#D67B52);
+      letter-spacing:0.5px; text-transform:uppercase;
+      font-family:'Hack',monospace,sans-serif;
+    }
+    .wg-tooltip-chip {
+      font-size:9px; font-weight:700; letter-spacing:0.3px;
+      padding:1px 5px; border-radius:20px;
+      background:rgba(214,123,82,0.12); color:var(--color-terracotta,#D67B52);
+      font-family:'Hack',monospace,sans-serif;
+    }
+    .wg-tooltip-meaning {
+      font-size:12.5px; line-height:1.55; color:var(--text-dark,#2C2621);
+    }
+    .wg-tooltip-arrow {
+      position:absolute; left:50%; transform:translateX(-50%); width:0; height:0;
+    }
+    .wg-tooltip-arrow.arrow-down {
+      bottom:-7px;
+      border-left:6px solid transparent; border-right:6px solid transparent;
+      border-top:7px solid var(--color-terracotta,#D67B52);
+    }
+    .wg-tooltip-arrow.arrow-down::after {
+      content:''; position:absolute; bottom:2px; left:-5px;
+      border-left:5px solid transparent; border-right:5px solid transparent;
+      border-top:6px solid var(--bg-cream,#FDFBF7);
+    }
+    .wg-tooltip-arrow.arrow-up {
+      top:-7px;
+      border-left:6px solid transparent; border-right:6px solid transparent;
+      border-bottom:7px solid var(--color-terracotta,#D67B52);
+    }
+    .wg-tooltip-arrow.arrow-up::after {
+      content:''; position:absolute; top:2px; left:-5px;
+      border-left:5px solid transparent; border-right:5px solid transparent;
+      border-bottom:6px solid var(--bg-cream,#FDFBF7);
+    }
+
+    /* ── Underline highlight ── */
+    .wg-has-meaning {
+      border-bottom:1.5px dotted var(--color-terracotta,#D67B52);
+      cursor:default; transition:color 0.14s;
+    }
+    .wg-has-meaning:hover {
+      border-bottom-style:solid;
+      color:var(--color-terracotta,#D67B52);
+    }
+  `;
+  document.head.appendChild(style);
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let glossary     = loadGlossary();
+  let contextMenu  = null;
+  let modalOverlay = null;
+  let tooltip      = null;
+  let tooltipTimer = null;
+  let currentText  = '';   // teks asli (case-sensitive)
+  let currentKey   = '';   // key storage
+  let isPhrase     = false;
+
+  // ── Tooltip ────────────────────────────────────────────────────────────────
+  function ensureTooltip() {
+    if (tooltip && document.body.contains(tooltip)) return tooltip;
+    const el = document.createElement('div');
+    el.id = 'wg-tooltip';
+    el.innerHTML = `
+      <div class="wg-tooltip-inner">
+        <div class="wg-tooltip-head">
+          <span class="wg-tooltip-word"  id="wg-tt-word"></span>
+          <span class="wg-tooltip-chip"  id="wg-tt-chip"></span>
+        </div>
+        <div class="wg-tooltip-meaning" id="wg-tt-meaning"></div>
+        <div class="wg-tooltip-arrow"   id="wg-tt-arrow"></div>
+      </div>`;
+    document.body.appendChild(el);
+    tooltip = el;
+    return el;
+  }
+
+  function showTooltip(entry, anchorRect) {
+    const tt = ensureTooltip();
+    const isP = entry.isPhrase;
+    document.getElementById('wg-tt-word').textContent    = entry.word;
+    document.getElementById('wg-tt-chip').textContent    = isP ? 'frasa' : 'kata';
+    document.getElementById('wg-tt-meaning').textContent = entry.meaning;
+
+    tt.style.left = '-9999px'; tt.style.top = '-9999px';
+    tt.classList.add('wg-tooltip-visible');
+
+    requestAnimationFrame(() => {
+      const tw = tt.offsetWidth || 220;
+      const th = tt.offsetHeight || 60;
+      const gap = 8;
+      const arrow = document.getElementById('wg-tt-arrow');
+      let x = anchorRect.left + anchorRect.width / 2 - tw / 2;
+      let y = anchorRect.top  - th - gap;
+      let arrowDown = true;
+      if (y < 8) { y = anchorRect.bottom + gap; arrowDown = false; }
+      if (arrow) arrow.className = 'wg-tooltip-arrow ' + (arrowDown ? 'arrow-down' : 'arrow-up');
+      x = Math.max(8, Math.min(x, window.innerWidth - tw - 8));
+      tt.style.left = x + 'px';
+      tt.style.top  = y + 'px';
+    });
+  }
+
+  function hideTooltip() {
+    clearTimeout(tooltipTimer);
+    if (tooltip) tooltip.classList.remove('wg-tooltip-visible');
+  }
+
+  // ── Context Menu ───────────────────────────────────────────────────────────
+  function removeContextMenu() {
+    if (contextMenu && contextMenu.parentNode) contextMenu.parentNode.removeChild(contextMenu);
+    contextMenu = null;
+  }
+
+  function buildContextMenu(x, y, text, key, phrase, existingMeaning) {
+    removeContextMenu();
+    const menu = document.createElement('div');
+    menu.id = 'wg-context-menu';
+
+    const label = document.createElement('div');
+    label.className = 'wg-menu-word-label';
+    // Truncate tampilan jika panjang
+    const display = text.length > 28 ? text.slice(0, 26) + '…' : text;
+    label.innerHTML = `"${display}" <span class="wg-menu-badge">${phrase ? 'frasa' : 'kata'}</span>`;
+    menu.appendChild(label);
+
+    const div1 = document.createElement('div');
+    div1.className = 'wg-menu-divider';
+    menu.appendChild(div1);
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'wg-menu-item';
+    addBtn.innerHTML = `
+      <svg class="wg-menu-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        ${existingMeaning
+          ? '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>'
+          : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}
+      </svg>
+      <span>${existingMeaning ? 'Edit Arti' : 'Tambah Arti'}</span>`;
+    addBtn.addEventListener('click', () => { removeContextMenu(); openModal(text, key, phrase, existingMeaning || ''); });
+    menu.appendChild(addBtn);
+
+    if (existingMeaning) {
+      const delBtn = document.createElement('button');
+      delBtn.className = 'wg-menu-item wg-menu-item-del';
+      delBtn.innerHTML = `
+        <svg class="wg-menu-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+        </svg>
+        <span>Hapus Arti</span>`;
+      delBtn.addEventListener('click', () => { removeContextMenu(); deleteMeaning(key); });
+      menu.appendChild(delBtn);
+    }
+
+    document.body.appendChild(menu);
+    contextMenu = menu;
+
+    const mw = menu.offsetWidth || 178;
+    const mh = menu.offsetHeight || 80;
+    let px = x, py = y;
+    if (px + mw > window.innerWidth  - 8) px = window.innerWidth  - mw - 8;
+    if (py + mh > window.innerHeight - 8) py = window.innerHeight - mh - 8;
+    menu.style.left = px + 'px';
+    menu.style.top  = py + 'px';
+  }
+
+  // ── Modal Input ────────────────────────────────────────────────────────────
+  function removeModal() {
+    if (modalOverlay && modalOverlay.parentNode) modalOverlay.parentNode.removeChild(modalOverlay);
+    modalOverlay = null;
+  }
+
+  function openModal(text, key, phrase, existingMeaning) {
+    removeModal();
+    const typeLabel = phrase ? 'Frasa' : 'Kata';
+    const display   = text.length > 40 ? text.slice(0, 38) + '…' : text;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'wg-modal-overlay';
+    overlay.innerHTML = `
+      <div id="wg-modal-card">
+        <div id="wg-modal-header">
+          <div class="wg-modal-icon-wrap">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+          </div>
+          <div style="min-width:0; flex:1;">
+            <div id="wg-modal-title">
+              ${existingMeaning ? 'Edit' : 'Tambah'} Arti
+              <span class="wg-modal-type-chip">${typeLabel}</span>
+            </div>
+            <div id="wg-modal-word-badge">${display}</div>
+          </div>
+        </div>
+        <div id="wg-modal-body">
+          <label for="wg-modal-input">Arti / Makna</label>
+          <textarea id="wg-modal-input" placeholder="Tulis arti atau makna ${phrase ? 'frasa' : 'kata'} ini… (Ctrl+Enter untuk simpan)">${existingMeaning}</textarea>
+        </div>
+        <div id="wg-modal-footer">
+          <button class="wg-btn-cancel" id="wg-modal-cancel">Batal</button>
+          <button class="wg-btn-save" id="wg-modal-save"${!existingMeaning ? ' disabled' : ''}>
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Simpan
+          </button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+    modalOverlay = overlay;
+
+    const input     = document.getElementById('wg-modal-input');
+    const saveBtn   = document.getElementById('wg-modal-save');
+    const cancelBtn = document.getElementById('wg-modal-cancel');
+
+    input.addEventListener('input', () => { saveBtn.disabled = input.value.trim() === ''; });
+    setTimeout(() => { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }, 80);
+
+    function doSave() {
+      const val = input.value.trim();
+      if (!val) return;
+      glossary = loadGlossary();
+      glossary[key] = { word: text, meaning: val, isPhrase: phrase, saved: new Date().toISOString() };
+      saveGlossary(glossary);
+      removeModal();
+      applyGlossaryHighlights();
+    }
+
+    saveBtn.addEventListener('click', doSave);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) doSave();
+      if (e.key === 'Escape') removeModal();
+    });
+    cancelBtn.addEventListener('click', removeModal);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) removeModal(); });
+  }
+
+  // ── Hapus arti ─────────────────────────────────────────────────────────────
+  function deleteMeaning(key) {
+    glossary = loadGlossary();
+    delete glossary[key];
+    saveGlossary(glossary);
+    applyGlossaryHighlights();
+  }
+
+  // ── Highlight DOM ──────────────────────────────────────────────────────────
+  const SKIP_TAGS = new Set(['SCRIPT','STYLE','NOSCRIPT','TEXTAREA','INPUT','SELECT','SVG','CANVAS','CODE','PRE']);
+
+  function shouldSkipNode(node) {
+    let el = node.parentElement;
+    while (el) {
+      if (SKIP_TAGS.has(el.tagName)) return true;
+      if (el.isContentEditable) return true;
+      const id = el.id || '';
+      if (id === 'wg-context-menu' || id === 'wg-modal-overlay' || id === 'wg-tooltip') return true;
+      el = el.parentElement;
+    }
+    return false;
+  }
+
+  function getTextNodes(rootEl) {
+    const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        if (shouldSkipNode(node)) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes = [];
+    let n;
+    while ((n = walker.nextNode())) nodes.push(n);
+    return nodes;
+  }
+
+  function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+  function applyGlossaryHighlights() {
+    glossary = loadGlossary();
+    const keys = Object.keys(glossary);
+
+    // Bersihkan highlight lama
+    document.querySelectorAll('.wg-has-meaning').forEach(span => {
+      if (!span.parentNode) return;
+      span.parentNode.replaceChild(document.createTextNode(span.textContent), span);
+      span.parentNode.normalize();
+    });
+
+    if (keys.length === 0) return;
+
+    // Urutkan: frasa (multi-kata) dulu, lalu single kata, lalu terpanjang duluan
+    // supaya "I am" match sebelum "am"
+    const sorted = keys.slice().sort((a, b) => {
+      const wa = glossary[a].word, wb = glossary[b].word;
+      const pa = glossary[a].isPhrase, pb = glossary[b].isPhrase;
+      if (pa && !pb) return -1;
+      if (!pa && pb) return 1;
+      return wb.length - wa.length;
+    });
+
+    // Regex TANPA flag i → case-sensitive
+    const pattern = sorted.map(k => escapeRe(glossary[k].word)).join('|');
+    const re = new RegExp(`(?<![\\w\u00C0-\u024F])(?:${pattern})(?![\\w\u00C0-\u024F])`, 'g');
+
+    getTextNodes(document.body).forEach(node => {
+      const val = node.nodeValue;
+      if (!re.test(val)) { re.lastIndex = 0; return; }
+      re.lastIndex = 0;
+
+      const frag = document.createDocumentFragment();
+      let last = 0, m;
+      while ((m = re.exec(val)) !== null) {
+        const k = makeKey(m[0]);
+        if (!glossary[k]) { continue; }
+        if (m.index > last) frag.appendChild(document.createTextNode(val.slice(last, m.index)));
+        const span = document.createElement('span');
+        span.className     = 'wg-has-meaning';
+        span.dataset.wgKey = k;
+        span.textContent   = m[0];
+        frag.appendChild(span);
+        last = m.index + m[0].length;
+      }
+      if (last === 0) return;
+      if (last < val.length) frag.appendChild(document.createTextNode(val.slice(last)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
+  // ── Ambil kata tunggal dari klik ───────────────────────────────────────────
+  function getWordAtPoint(e) {
+    let node, offset;
+    if (document.caretPositionFromPoint) {
+      const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
+      if (!pos) return '';
+      node = pos.offsetNode; offset = pos.offset;
+    } else if (document.caretRangeFromPoint) {
+      const r = document.caretRangeFromPoint(e.clientX, e.clientY);
+      if (!r) return '';
+      node = r.startContainer; offset = r.startOffset;
+    } else return '';
+
+    if (!node || node.nodeType !== Node.TEXT_NODE) return '';
+    if (shouldSkipNode(node)) return '';
+
+    const text = node.nodeValue || '';
+    let start = offset, end = offset;
+    while (start > 0 && /[\w\u00C0-\u024F]/.test(text[start - 1])) start--;
+    while (end < text.length && /[\w\u00C0-\u024F]/.test(text[end])) end++;
+    return text.slice(start, end).trim();
+  }
+
+  // ── Event: contextmenu ────────────────────────────────────────────────────
+  document.addEventListener('contextmenu', (e) => {
+    if (e.target.closest('#wg-context-menu, #wg-modal-overlay, #wg-tooltip')) return;
+
+    let text   = '';
+    let phrase = false;
+
+    const sel = window.getSelection();
+    const selText = sel ? sel.toString() : '';
+
+    if (selText.trim().length > 0) {
+      // Ada teks terseleksi
+      const cleaned = selText.trim();
+      const wordCount = cleaned.split(/\s+/).filter(Boolean).length;
+      if (wordCount >= 2) {
+        // Multi-kata → frasa
+        text   = makeKey(cleaned);
+        phrase = true;
+      } else {
+        // Seleksi 1 kata
+        text   = makeKey(cleaned);
+        phrase = false;
+      }
+    } else {
+      // Tidak ada seleksi → ambil kata dari klik
+      text   = getWordAtPoint(e);
+      phrase = false;
+    }
+
+    if (!text || text.length < 1) return;
+
+    e.preventDefault();
+
+    currentText = text;
+    currentKey  = text;   // key = teks asli, case-sensitive
+    isPhrase    = phrase;
+
+    glossary    = loadGlossary();
+    const entry = glossary[currentKey];
+    buildContextMenu(e.clientX + 2, e.clientY + 2, currentText, currentKey, isPhrase, entry ? entry.meaning : null);
+  });
+
+  // ── Hover tooltip ──────────────────────────────────────────────────────────
+  document.addEventListener('mouseover', (e) => {
+    const span = e.target.closest('.wg-has-meaning');
+    if (!span) return;
+    clearTimeout(tooltipTimer);
+    const key = span.dataset.wgKey;
+    if (!key) return;
+    const g     = loadGlossary();
+    const entry = g[key];
+    if (!entry || !entry.meaning) return;
+    tooltipTimer = setTimeout(() => {
+      const rect = span.getBoundingClientRect();
+      showTooltip(entry, rect);
+    }, 150);
+  });
+
+  document.addEventListener('mouseout', (e) => {
+    if (!e.target.closest('.wg-has-meaning')) return;
+    clearTimeout(tooltipTimer);
+    hideTooltip();
+  });
+
+  document.addEventListener('click', (e) => {
+    if (contextMenu && !contextMenu.contains(e.target)) removeContextMenu();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { removeContextMenu(); removeModal(); }
+  });
+  document.addEventListener('scroll', hideTooltip, true);
+
+  // ── MutationObserver ───────────────────────────────────────────────────────
+  let _hlTimer = null;
+  const _observer = new MutationObserver((mutations) => {
+    const selfCaused = mutations.every(m => {
+      const nodes = [...m.addedNodes, ...m.removedNodes];
+      return nodes.length > 0 && nodes.every(n => {
+        if (n.nodeType !== 1) return false;
+        const id = n.id || '';
+        return id.startsWith('wg-') || (n.classList && n.classList.contains('wg-has-meaning'));
+      });
+    });
+    if (selfCaused) return;
+    clearTimeout(_hlTimer);
+    _hlTimer = setTimeout(applyGlossaryHighlights, 700);
+  });
+  _observer.observe(document.body, { childList: true, subtree: true });
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(applyGlossaryHighlights, 900));
+  } else {
+    setTimeout(applyGlossaryHighlights, 900);
+  }
+
+  window.WordGlossary = {
+    getAll:   loadGlossary,
+    clearAll: () => { localStorage.removeItem(STORAGE_KEY); applyGlossaryHighlights(); },
+    refresh:  applyGlossaryHighlights,
+  };
+
+})();
