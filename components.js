@@ -12825,7 +12825,7 @@ const JournalQuestionBoard = {
 
             <!-- Header -->
             <div style="display: flex; align-items: center; gap: 12px; padding: 16px 22px 14px; background: var(--color-terracotta, #D67B52); color: #fff; flex-shrink: 0;">
-              <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 17px;">🎰</div>
+              <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 17px;">🔮</div>
               <div style="flex: 1; min-width: 0;">
                 <div style="font-size: 15px; font-weight: 800; letter-spacing: 0.2px;">Tanya Diri Sendiri</div>
                 <div style="font-size: 11px; opacity: 0.82; margin-top: 1px;">pertanyaan refleksi harian ✦</div>
@@ -12853,7 +12853,7 @@ const JournalQuestionBoard = {
 
               <!-- Empty state: koleksi kosong -->
               <div v-if="questions.length === 0" style="text-align: center; padding: 30px 10px; color: var(--text-muted);">
-                <div style="font-size: 32px; margin-bottom: 10px;">🪄</div>
+                <div style="font-size: 32px; margin-bottom: 10px;">📭</div>
                 <div style="font-size: 13.5px; font-weight: 600; margin-bottom: 6px; color: var(--text-dark);">Koleksi pertanyaan masih kosong</div>
                 <div style="font-size: 12px; margin-bottom: 16px;">Tambahkan pertanyaan dulu di tab Koleksi.</div>
                 <button @click="activeTab = 'collection'"
@@ -12866,7 +12866,7 @@ const JournalQuestionBoard = {
 
                 <!-- ── Scratch Card Area ── -->
                 <div style="margin-bottom: 10px; font-size: 11px; color: var(--text-muted); text-align: center; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700;">
-                  {{ scratchRevealed ? '✦ pertanyaan hari ini' : (todayQuestion ? 'ketuk untuk lihat lagi' : pendingQ ? '✦ gosok kartunya!' : '✦ siap mulai?') }}
+                  {{ scratchRevealed ? '✦ pertanyaan hari ini' : (todayQuestion ? 'ketuk untuk lihat lagi' : isShuffling ? '✦ mengocok kartu...' : pendingQ ? '✦ gosok kartunya!' : '✦ siap mulai?') }}
                 </div>
 
                 <div class="jqb-scratch-wrap">
@@ -12881,9 +12881,14 @@ const JournalQuestionBoard = {
                   </div>
 
                   <!-- Belum ada pertanyaan dipilih: tampilkan placeholder card aesthetic -->
-                  <div v-else-if="!pendingQ" class="jqb-scratch-idle">
-                    <div class="jqb-scratch-idle-icon">🌱</div>
+                  <div v-else-if="!pendingQ && !isShuffling" class="jqb-scratch-idle">
+                    <div class="jqb-scratch-idle-icon">🎟️</div>
                     <div class="jqb-scratch-idle-text">acak dulu, lalu gosok kartu</div>
+                  </div>
+
+                  <!-- Animasi kartu dikocok -->
+                  <div v-else-if="isShuffling" class="jqb-scratch-card-wrap">
+                    <canvas ref="shuffleCanvas" class="jqb-scratch-canvas" style="cursor:default;"></canvas>
                   </div>
 
                   <!-- Kartu siap digosok — canvas scratch -->
@@ -12919,10 +12924,10 @@ const JournalQuestionBoard = {
 
                 <!-- Tombol acak pertanyaan — di LUAR kartu, di bawah -->
                 <div v-if="!scratchStarted && !scratchRevealed && !todayQuestion" class="jqb-scratch-shuffle-area">
-                  <button @click="pickRandom" :disabled="pool.length === 0"
+                  <button @click="pickRandom" :disabled="pool.length === 0 || isShuffling"
                     class="jqb-shuffle-btn"
-                    :style="{ opacity: pool.length === 0 ? 0.4 : 1 }">
-                    🎲 {{ pendingQ ? 'Ganti Pertanyaan' : 'Acak Pertanyaan' }}
+                    :style="{ opacity: (pool.length === 0 || isShuffling) ? 0.5 : 1 }">
+                    {{ isShuffling ? '🎟️ Mengocok...' : (pendingQ ? '🎲 Ganti Pertanyaan' : '🎲 Acak Pertanyaan') }}
                   </button>
                 </div>
 
@@ -13029,6 +13034,9 @@ const JournalQuestionBoard = {
       _scratchNoiseSrc: null,
       _scratchGain: null,
       _scratchBP: null,
+      // shuffle animation
+      isShuffling: false,
+      _shuffleRAF: null,
     };
   },
   computed: {
@@ -13093,6 +13101,8 @@ const JournalQuestionBoard = {
     },
     resetScratch() {
       this._stopScratchSound();
+      if (this._shuffleRAF) { cancelAnimationFrame(this._shuffleRAF); this._shuffleRAF = null; }
+      this.isShuffling = false;
       this.pendingQ = null;
       this.scratchStarted = false;
       this.scratchDoneEnough = false;
@@ -13103,16 +13113,198 @@ const JournalQuestionBoard = {
       this._lastScratchPos = null;
     },
     pickRandom() {
-      if (this.pool.length === 0 || this.todayQuestion) return;
+      if (this.pool.length === 0 || this.todayQuestion || this.isShuffling) return;
       const i = Math.floor(Math.random() * this.pool.length);
-      this.pendingQ = this.pool[i];
+      const chosen = this.pool[i];
+      this.isShuffling = true;
+      this.pendingQ = null;
       this.scratchStarted = false;
       this.scratchDoneEnough = false;
       this.scratchRevealed = false;
       this.scratchPercent = 0;
       this._scratchCtx = null;
-      this.$nextTick(() => this._initCanvas());
-      this._playPick();
+      this._playShuffleDeal();
+      // Jalankan animasi kartu dikocok di canvas khusus
+      this.$nextTick(() => this._runShuffleAnim(chosen));
+    },
+
+    _runShuffleAnim(chosen) {
+      const el = this.$refs.shuffleCanvas;
+      if (!el) {
+        // fallback langsung set
+        this.isShuffling = false;
+        this.pendingQ = chosen;
+        this.$nextTick(() => this._initCanvas());
+        return;
+      }
+      const W = el.offsetWidth;
+      const H = el.offsetHeight;
+      el.width = W;
+      el.height = H;
+      const ctx = el.getContext('2d');
+
+      // Kartu-kartu yang dikocok: 6 kartu terbang dari bawah
+      const CARD_W = W * 0.52;
+      const CARD_H = H * 0.72;
+      const CX = W / 2;
+      const CY = H / 2;
+      const totalDuration = 820; // ms
+      const startTime = performance.now();
+
+      // Generate 6 kartu dengan properti acak
+      const cards = Array.from({ length: 6 }, (_, k) => ({
+        startX: CX + (Math.random() - 0.5) * W * 0.5,
+        startY: H + CARD_H * 0.4,
+        startRot: (Math.random() - 0.5) * 0.8,
+        endRot: (Math.random() - 0.5) * 0.22,
+        delay: k * 68,
+        // warna sedikit berbeda tiap kartu, makin depan makin terang
+        tint: k / 6,
+      }));
+
+      const drawCard = (ctx, x, y, rot, tint, alpha) => {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.translate(x, y);
+        ctx.rotate(rot);
+        // shadow
+        ctx.shadowColor = 'rgba(61,46,34,0.22)';
+        ctx.shadowBlur = 14;
+        ctx.shadowOffsetY = 6;
+        // body gradient
+        const grd = ctx.createLinearGradient(-CARD_W/2, -CARD_H/2, CARD_W/2, CARD_H/2);
+        const t = tint;
+        grd.addColorStop(0, `rgb(${Math.round(253-t*8)},${Math.round(248-t*8)},${Math.round(243-t*8)})`);
+        grd.addColorStop(0.55, `rgb(${Math.round(250-t*8)},${Math.round(240-t*8)},${Math.round(232-t*8)})`);
+        grd.addColorStop(1, `rgb(${Math.round(245-t*8)},${Math.round(230-t*8)},${Math.round(216-t*8)})`);
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.roundRect(-CARD_W/2, -CARD_H/2, CARD_W, CARD_H, 10);
+        ctx.fill();
+        ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+        // inner border
+        ctx.strokeStyle = 'rgba(214,123,82,0.25)';
+        ctx.lineWidth = 1.2;
+        const bm = 7;
+        ctx.beginPath();
+        ctx.roundRect(-CARD_W/2+bm, -CARD_H/2+bm, CARD_W-bm*2, CARD_H-bm*2, 6);
+        ctx.stroke();
+        // sparkle pattern atas-bawah
+        ctx.fillStyle = 'rgba(214,123,82,0.18)';
+        [[-CARD_W*0.28, -CARD_H*0.32],[CARD_W*0.28, -CARD_H*0.32],
+         [-CARD_W*0.28,  CARD_H*0.32],[CARD_W*0.28,  CARD_H*0.32]].forEach(([sx, sy]) => {
+          ctx.save(); ctx.translate(sx, sy);
+          ctx.beginPath();
+          for (let p = 0; p < 8; p++) {
+            const a = p * Math.PI / 4;
+            const r = p % 2 === 0 ? 4 : 1.5;
+            ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r);
+          }
+          ctx.closePath(); ctx.fill(); ctx.restore();
+        });
+        // tanda tanya di tengah
+        ctx.fillStyle = 'rgba(140,75,45,0.12)';
+        ctx.font = `bold ${CARD_H * 0.28}px Outfit, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('?', 0, 0);
+        ctx.restore();
+      };
+
+      const easeOutBack = (t) => {
+        const c1 = 1.70158, c3 = c1 + 1;
+        return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+      };
+      const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+      const animate = (now) => {
+        const elapsed = now - startTime;
+        ctx.clearRect(0, 0, W, H);
+
+        let allDone = true;
+        cards.forEach((card, k) => {
+          const cardElapsed = elapsed - card.delay;
+          if (cardElapsed < 0) { allDone = false; return; }
+          const progress = Math.min(1, cardElapsed / (totalDuration - card.delay));
+          if (progress < 1) allDone = false;
+
+          // fase 1 (0→0.6): terbang masuk dari bawah, naik dan sedikit melayang
+          // fase 2 (0.6→1): settle ke posisi tengah + rotasi kecil
+          let x, y, rot, alpha;
+          if (progress < 0.6) {
+            const p = easeOutBack(progress / 0.6);
+            x = CX + (card.startX - CX) * (1 - p);
+            y = card.startY + (CY - card.startY) * p - Math.sin(p * Math.PI) * H * 0.08;
+            rot = card.startRot * (1 - p) + card.endRot * p;
+            alpha = Math.min(1, progress / 0.15);
+          } else {
+            const p = easeOutCubic((progress - 0.6) / 0.4);
+            x = CX;
+            y = CY;
+            rot = card.endRot * (1 - p * 0.6);
+            alpha = 1;
+          }
+          drawCard(ctx, x, y, rot, card.tint, alpha);
+        });
+
+        if (!allDone || elapsed < totalDuration) {
+          this._shuffleRAF = requestAnimationFrame(animate);
+        } else {
+          // Animasi selesai: tumpuk semua kartu di tengah, tunggu sebentar lalu transisi
+          ctx.clearRect(0, 0, W, H);
+          // Gambar tumpukan akhir 3 kartu (sedikit offset)
+          [0.08, 0.04, 0].forEach((offset, idx) => {
+            drawCard(ctx, CX + (idx-1)*3, CY - offset*H*0.04, offset*(idx%2===0?1:-1), idx/3, 1);
+          });
+          setTimeout(() => {
+            this.isShuffling = false;
+            this.pendingQ = chosen;
+            this.$nextTick(() => this._initCanvas());
+          }, 180);
+        }
+      };
+      this._shuffleRAF = requestAnimationFrame(animate);
+    },
+
+    _playShuffleDeal() {
+      try {
+        const AC = globalThis.AudioContext || globalThis.webkitAudioContext;
+        if (!AC) return;
+        const ac = new AC();
+        // Suara "srrrt" kartu dikocok: noise burst pendek berulang
+        [0, 0.07, 0.14, 0.21, 0.29, 0.37].forEach((t, i) => {
+          const bufLen = Math.ceil(ac.sampleRate * 0.055);
+          const buf = ac.createBuffer(1, bufLen, ac.sampleRate);
+          const d = buf.getChannelData(0);
+          for (let j = 0; j < bufLen; j++) d[j] = (Math.random()*2-1) * Math.pow(1 - j/bufLen, 1.8);
+          const src = ac.createBufferSource(); src.buffer = buf;
+          const bp = ac.createBiquadFilter();
+          bp.type = 'bandpass'; bp.frequency.value = 2800 + i * 180; bp.Q.value = 2.2;
+          const gain = ac.createGain();
+          const vol = 0.10 - i * 0.008;
+          gain.gain.setValueAtTime(vol, ac.currentTime + t);
+          gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + t + 0.055);
+          src.connect(bp); bp.connect(gain); gain.connect(ac.destination);
+          src.start(ac.currentTime + t);
+          src.stop(ac.currentTime + t + 0.06);
+        });
+        // "thwack" lembut saat kartu landing
+        setTimeout(() => {
+          try {
+            const ac2 = new AC();
+            const bufLen2 = Math.ceil(ac2.sampleRate * 0.08);
+            const buf2 = ac2.createBuffer(1, bufLen2, ac2.sampleRate);
+            const d2 = buf2.getChannelData(0);
+            for (let j = 0; j < bufLen2; j++) d2[j] = (Math.random()*2-1) * Math.pow(1 - j/bufLen2, 2.5);
+            const src2 = ac2.createBufferSource(); src2.buffer = buf2;
+            const lp = ac2.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
+            const g2 = ac2.createGain(); g2.gain.setValueAtTime(0.18, ac2.currentTime);
+            g2.gain.exponentialRampToValueAtTime(0.001, ac2.currentTime + 0.08);
+            src2.connect(lp); lp.connect(g2); g2.connect(ac2.destination);
+            src2.start(); src2.stop(ac2.currentTime + 0.09);
+          } catch(_) {}
+        }, 480);
+      } catch(_) {}
     },
     _initCanvas() {
       const canvas = this.$refs.scratchCanvas;
@@ -13470,6 +13662,7 @@ const JournalQuestionBoard = {
   },
   beforeUnmount() {
     this._stopScratchSound();
+    if (this._shuffleRAF) cancelAnimationFrame(this._shuffleRAF);
   },
 };
 
