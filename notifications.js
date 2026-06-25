@@ -977,6 +977,113 @@ const NotificationPanel = {
               <span>Tidak ada agenda hari ini</span>
             </div>
 
+            <!-- ══ SECTION: INGAT HARI INI (item tanpa jam spesifik) ══ -->
+            <div v-if="noTimeItems.length > 0" style="margin-bottom:6px; border-radius:10px; overflow:visible; border:1px solid var(--color-sand);">
+              <button @click="openSlotNoTime = !openSlotNoTime"
+                style="width:100%; display:flex; align-items:center; justify-content:space-between; padding:9px 12px; background:rgba(163,177,138,0.12); border:none; cursor:pointer; font-family:inherit; border-radius:10px;">
+                <div style="display:flex; align-items:center; gap:9px;">
+                  <div style="width:28px; height:28px; background:var(--color-sage, #A3B18A); border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#fff;">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>
+                  </div>
+                  <div style="text-align:left;">
+                    <div style="font-size:11.5px; font-weight:700; color:var(--text-dark); letter-spacing:0.2px;">Ingat Hari Ini</div>
+                    <div style="font-size:10px; color:var(--text-muted); margin-top:1px;">Tanpa jam tertentu</div>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span v-if="noTimeItems.length > 0"
+                    style="font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; background:var(--color-sand); color:var(--text-dark);">
+                    {{ noTimeItems.length }}
+                  </span>
+                  <span style="color:var(--text-muted);" :style="{ transform: openSlotNoTime ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.22s', display:'inline-flex' }">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </span>
+                </div>
+              </button>
+              <transition name="notif-slot-slide">
+                <div v-if="openSlotNoTime">
+                  <template v-for="slot in [noTimeItems]" :key="'slotNoTime'">
+              <template v-for="entry in slot" :key="entry.key">
+                <!-- ═ INFO ITEM ═ -->
+                <template v-if="entry.kind === 'info'">
+                  <div v-if="entry.item.hasTime"
+                       class="notif-item notif-item-info notif-item-clickable"
+                       style="border-left: 2.5px solid var(--color-terracotta, #D67B52);"
+                       @click="handleInfoClick(entry.item)">
+                    <div class="notif-item-icon notif-icon-task">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </div>
+                    <div class="notif-item-content">
+                      <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : ''">{{ entry.item.title }}</div>
+                      <div class="notif-item-sub">{{ entry.item.subtitle }}</div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
+                      <span class="notif-time-badge">{{ entry.item.time }}</span>
+                      <span v-if="entry.item.badge" class="notif-badge" :class="'notif-badge-' + entry.item.badgeColor" style="margin-top:2px;">{{ entry.item.badge }}</span>
+                    </div>
+                  </div>
+                  <div v-else
+                       class="notif-item notif-item-info notif-item-clickable"
+                       @click="handleInfoClick(entry.item)">
+                    <div class="notif-item-icon" :class="'notif-icon-' + entry.item.type">
+                      <svg v-if="entry.item.type === 'task'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                      <svg v-else-if="entry.item.type === 'content-today'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                      <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div class="notif-item-content">
+                      <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : ''">{{ entry.item.title }}</div>
+                      <div class="notif-item-sub">{{ entry.item.subtitle }}</div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
+                      <span v-if="entry.item.badge" class="notif-badge" :class="'notif-badge-' + entry.item.badgeColor">{{ entry.item.badge }}</span>
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted); margin-top: 2px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </div>
+                  </div>
+                </template>
+                <!-- ═ PENGINGAT ITEM ═ -->
+                <div v-else
+                     class="notif-item notif-item-action"
+                     :class="{ 'notif-item-done': entry.item.done, 'notif-item-locked': entry.item.isDzikirWaktu && !entry.item.done && entry.item.dzikirLocked }"
+                     :title="entry.item.done ? 'Klik untuk batalkan (tandai belum selesai)' : (entry.item.isDzikirWaktu && entry.item.dzikirLocked ? 'Dzikir untuk waktu ini belum tuntas — klik untuk buka Dzikir Counter' : 'Klik untuk tandai selesai')"
+                     @click="handleActionClick(entry.item)">
+                  <div class="notif-item-icon" :class="entry.item.done ? 'notif-icon-done' : 'notif-icon-action'" :style="entry.item.isHabit && !entry.item.done ? { backgroundColor: entry.item.color + '22', border: '1.5px solid ' + entry.item.color + '55' } : {}">
+                    <svg v-if="entry.item.done" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg v-else-if="entry.item.isDzikirWaktu && entry.item.dzikirLocked" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <svg v-else-if="entry.item.isHabit" viewBox="0 0 24 24" width="14" height="14" fill="none" :stroke="entry.item.color" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
+                    <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
+                  <div class="notif-item-content">
+                    <div class="notif-item-title" :style="entry.item.done ? 'text-decoration: line-through; opacity: 0.55;' : (entry.item.isDzikirWaktu && entry.item.dzikirLocked ? 'opacity: 0.65;' : '')">{{ entry.item.title }}</div>
+                    <div class="notif-item-sub" style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
+                      <span v-if="entry.item.isDzikirWaktu && !entry.item.done && entry.item.dzikirLocked" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5;">
+                        <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        Tuntaskan dzikir dulu
+                      </span>
+                      <span v-else-if="entry.item.isHabit && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #f0fdf4; color: #16a34a; border: 1px solid #86efac;">
+                        <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/></svg>
+                        Habit
+                      </span>
+                      <span v-if="entry.item.isManual && !entry.item.done" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: #fefce8; color: #a16207; border: 1px solid #fde68a;">
+                        <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        {{ manualCategoryLabel(entry.item) }}
+                      </span>
+                      <span v-if="entry.item.done">Sudah dikerjakan ✓ <span style="opacity:0.6;">· klik untuk batalkan</span></span>
+                      <span v-else-if="!(entry.item.isDzikirWaktu && entry.item.dzikirLocked)" style="white-space:pre-wrap;">{{ entry.item.subtitle }}</span>
+                    </div>
+                  </div>
+                  <div class="notif-item-right">
+                    <span class="notif-time-badge">{{ entry.item.endTime ? entry.item.time + '–' + entry.item.endTime : entry.item.time }}</span>
+                    <svg v-if="entry.item.isDzikirWaktu && !entry.item.done && entry.item.dzikirLocked" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" title="Terkunci — selesaikan dzikir dulu"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <svg v-else-if="!entry.item.done" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    <svg v-else viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);" title="Klik untuk batalkan"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></svg>
+                  </div>
+                </div>
+              </template>
+                  </template>
+                </div>
+              </transition>
+            </div>
+
             <!-- ══ SLOT: PAGI ══ -->
             <div style="margin-bottom:6px; border-radius:10px; overflow:visible; border:1px solid var(--color-sand);">
               <button @click="openSlotPagi = !openSlotPagi"
@@ -1560,6 +1667,7 @@ const NotificationPanel = {
       missedLog: [],
       expandedMissedDays: [],
       showPushSettings: false,
+      openSlotNoTime: true,
       openSlotPagi: true,
       openSlotSiang: true,
       openSlotMalam: true
@@ -1754,9 +1862,13 @@ const NotificationPanel = {
       return result.sort((a, b) => a.timeVal - b.timeVal);
     },
 
-    // Slot Pagi: 00:00–11:59 (timeVal 0–719) + item tanpa waktu (timeVal -1)
+    // Item tanpa jam spesifik (timeVal -1) — section "Ingat Hari Ini", dipisah dari slot Pagi
+    noTimeItems() {
+      return this.mergedTodayPanelItems.filter(e => e.timeVal === -1);
+    },
+    // Slot Pagi: 00:00–11:59 (timeVal 0–719), item tanpa waktu sudah dipisah ke noTimeItems
     slotPagi() {
-      return this.mergedTodayPanelItems.filter(e => e.timeVal < 720);
+      return this.mergedTodayPanelItems.filter(e => e.timeVal >= 0 && e.timeVal < 720);
     },
     // Slot Siang: 12:00–17:59 (timeVal 720–1079)
     slotSiang() {
