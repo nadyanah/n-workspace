@@ -1007,10 +1007,11 @@ const NotificationPanel = {
                   </div>
                 </div>
                 <div style="display:flex; align-items:center; gap:6px;">
-                  <span v-if="noTimeItems.length > 0"
+                  <span v-if="noTimeUndoneCount > 0"
                     style="font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; background:var(--color-sand); color:var(--text-dark);">
-                    {{ noTimeItems.length }}
+                    {{ noTimeUndoneCount }}
                   </span>
+                  <span v-else-if="noTimeItems.length > 0" style="font-size:10px; color:var(--text-muted); opacity:0.55;">✓ semua selesai</span>
                   <span style="color:var(--text-muted);" :style="{ transform: openSlotNoTime ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.22s', display:'inline-flex' }">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                   </span>
@@ -1114,11 +1115,11 @@ const NotificationPanel = {
                   </div>
                 </div>
                 <div style="display:flex; align-items:center; gap:6px;">
-                  <span v-if="slotPagi.length > 0"
+                  <span v-if="slotPagiUndoneCount > 0"
                     style="font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; background:var(--color-sand); color:var(--text-dark);">
-                    {{ slotPagi.length }}
+                    {{ slotPagiUndoneCount }}
                   </span>
-                  <span v-else style="font-size:10px; color:var(--text-muted); opacity:0.55;">kosong</span>
+                  <span v-else style="font-size:10px; color:var(--text-muted); opacity:0.55;">{{ slotPagi.length > 0 ? '✓ semua selesai' : 'kosong' }}</span>
                   <span style="color:var(--text-muted);" :style="{ transform: openSlotPagi ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.22s', display:'inline-flex' }">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                   </span>
@@ -1224,11 +1225,11 @@ const NotificationPanel = {
                   </div>
                 </div>
                 <div style="display:flex; align-items:center; gap:6px;">
-                  <span v-if="slotSiang.length > 0"
+                  <span v-if="slotSiangUndoneCount > 0"
                     style="font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; background:var(--color-sand); color:var(--text-dark);">
-                    {{ slotSiang.length }}
+                    {{ slotSiangUndoneCount }}
                   </span>
-                  <span v-else style="font-size:10px; color:var(--text-muted); opacity:0.55;">kosong</span>
+                  <span v-else style="font-size:10px; color:var(--text-muted); opacity:0.55;">{{ slotSiang.length > 0 ? '✓ semua selesai' : 'kosong' }}</span>
                   <span style="color:var(--text-muted);" :style="{ transform: openSlotSiang ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.22s', display:'inline-flex' }">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                   </span>
@@ -1334,11 +1335,11 @@ const NotificationPanel = {
                   </div>
                 </div>
                 <div style="display:flex; align-items:center; gap:6px;">
-                  <span v-if="slotMalam.length > 0"
+                  <span v-if="slotMalamUndoneCount > 0"
                     style="font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; background:var(--color-sand); color:var(--text-dark);">
-                    {{ slotMalam.length }}
+                    {{ slotMalamUndoneCount }}
                   </span>
-                  <span v-else style="font-size:10px; color:var(--text-muted); opacity:0.55;">kosong</span>
+                  <span v-else style="font-size:10px; color:var(--text-muted); opacity:0.55;">{{ slotMalam.length > 0 ? '✓ semua selesai' : 'kosong' }}</span>
                   <span style="color:var(--text-muted);" :style="{ transform: openSlotMalam ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.22s', display:'inline-flex' }">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                   </span>
@@ -1897,17 +1898,32 @@ const NotificationPanel = {
     noTimeItems() {
       return this.mergedTodayPanelItems.filter(e => e.timeVal === -1);
     },
-    // Slot Pagi: 00:00–11:59 (timeVal 0–719), item tanpa waktu sudah dipisah ke noTimeItems
+    // Slot Pagi: 00:00-11:59 (timeVal 0-719), item tanpa waktu sudah dipisah ke noTimeItems
     slotPagi() {
       return this.mergedTodayPanelItems.filter(e => e.timeVal >= 0 && e.timeVal < 720);
     },
-    // Slot Siang: 12:00–17:59 (timeVal 720–1079)
+    // Slot Siang: 12:00-17:59 (timeVal 720-1079)
     slotSiang() {
       return this.mergedTodayPanelItems.filter(e => e.timeVal >= 720 && e.timeVal < 1080);
     },
-    // Slot Malam: 18:00–23:59 (timeVal 1080–1439)
+    // Slot Malam: 18:00-23:59 (timeVal 1080-1439)
     slotMalam() {
       return this.mergedTodayPanelItems.filter(e => e.timeVal >= 1080);
+    },
+
+    // Undone counts per slot: hanya item yang belum selesai (done !== true)
+    // Angka badge di header section mengikuti ini - berkurang saat item di-checklist
+    noTimeUndoneCount() {
+      return this.noTimeItems.filter(e => !e.item.done).length;
+    },
+    slotPagiUndoneCount() {
+      return this.slotPagi.filter(e => !e.item.done).length;
+    },
+    slotSiangUndoneCount() {
+      return this.slotSiang.filter(e => !e.item.done).length;
+    },
+    slotMalamUndoneCount() {
+      return this.slotMalam.filter(e => !e.item.done).length;
     },
   },
 
