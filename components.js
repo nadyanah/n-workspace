@@ -13150,10 +13150,6 @@ const JournalQuestionBoard = {
 
                   <!-- Kartu sudah direveal (hari ini sudah punya pick) -->
                   <div v-if="todayQuestion && scratchRevealed" class="jqb-scratch-revealed">
-                    <div class="jqb-scratch-check">
-                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                      sudah dipilih hari ini
-                    </div>
                     <div class="jqb-scratch-question-text">{{ todayQuestion.text }}</div>
                   </div>
 
@@ -13197,6 +13193,14 @@ const JournalQuestionBoard = {
 
                   </div>
 
+                </div>
+
+                <!-- Badge "sudah dipilih" — di LUAR layout kartu pertanyaan -->
+                <div v-if="todayQuestion && scratchRevealed" class="jqb-scratch-check-outer">
+                  <div class="jqb-scratch-check">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    sudah dipilih hari ini
+                  </div>
                 </div>
 
                 <!-- Tombol acak pertanyaan — di LUAR kartu, di bawah -->

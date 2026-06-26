@@ -11415,9 +11415,13 @@ input:checked + .switch-slider:before {
 
 /* DailyQuestionFloatCircle — popup muncul ke atas dari dalam dock */
 .dqfc-popup-pos {
-  position: absolute;
-  bottom: calc(100% + 12px);
-  left: 0;
+  position: fixed;
+  bottom: 90px;
+  left: 16px;
+  right: 16px;
+  width: min(340px, calc(100vw - 32px));
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
   z-index: 9999;
 }
 
@@ -11439,23 +11443,34 @@ input:checked + .switch-slider:before {
 
 /* Kartu sudah revealed (hari ini sudah punya pick, tidak perlu gosok) */
 .jqb-scratch-revealed {
-  background: linear-gradient(135deg, #FDF8F3 0%, #FAF0E8 60%, #F5E6D8 100%);
-  border: 2px solid var(--color-terracotta, #D67B52);
-  border-radius: 16px;
-  padding: 18px 20px 22px;
-  text-align: left;
-  animation: jqbRevealFade 0.4s ease;
+  background: #F5EFE8;
+  border: none;
+  border-radius: 20px;
+  padding: 22px 22px 26px;
+  text-align: center;
+  position: relative;
+  box-shadow:
+    -5px -5px 12px rgba(255, 255, 255, 0.85),
+     5px  5px 14px rgba(180, 140, 110, 0.40),
+     2px  2px  5px rgba(160, 120, 90, 0.18);
+  animation: jqbRevealPop 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-@keyframes jqbRevealFade {
-  from { opacity: 0; transform: scale(0.96); }
+@keyframes jqbRevealPop {
+  from { opacity: 0; transform: scale(0.94); box-shadow: none; }
   to   { opacity: 1; transform: scale(1); }
+}
+
+/* Badge "sudah dipilih" — wrapper di luar kartu */
+.jqb-scratch-check-outer {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
 }
 .jqb-scratch-check {
   display: inline-flex; align-items: center; gap: 5px;
   font-size: 10.5px; font-weight: 700; color: #8C4B2D;
   background: rgba(214,123,82,0.10); border: 1px solid rgba(214,123,82,0.30);
   padding: 3px 10px; border-radius: 20px;
-  margin-bottom: 12px;
 }
 
 /* Teks pertanyaan (dipakai di revealed dan under layer) */
@@ -11463,6 +11478,7 @@ input:checked + .switch-slider:before {
   font-size: 15px; font-weight: 700;
   color: var(--text-dark, #2C2621);
   line-height: 1.65; letter-spacing: 0.01em;
+  text-align: center;
 }
 .jqb-scratch-placeholder {
   font-size: 13px; color: var(--text-muted); font-style: italic;
