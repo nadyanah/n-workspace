@@ -11417,7 +11417,8 @@ input:checked + .switch-slider:before {
 .dqfc-popup-pos {
   position: absolute;
   bottom: calc(100% + 12px);
-  left: 0;
+  right: 0;
+  left: auto;
   z-index: 9999;
 }
 
