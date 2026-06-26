@@ -3916,68 +3916,105 @@ const ContentTracker = {
                    @dragend="draggedOverCol = null"
                    style="transition: transform 0.2s; position: relative;">
                 
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px;">
-                  <div class="board-card-title" style="font-family: 'Outfit', sans-serif; font-size: 13.5px; font-weight: 600; color: #2C2621; word-break: break-word; flex: 1; margin-bottom: 0;">
+                <!-- ── Card Header: judul + toggle chevron + urgency icon ── -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 4px;">
+                  <div class="board-card-title" style="font-family: 'Outfit', sans-serif; font-size: 13.5px; font-weight: 600; color: #2C2621; word-break: break-word; flex: 1; margin-bottom: 0; line-height: 1.4;">
                     {{ item.title }}
                   </div>
-                  <!-- Bulan Kedip Visual Animation di Ujung Setiap Task -->
-                  <div v-if="getDueDateAlert(item.dueDate).isUrgent" class="blink-moon-glow" :title="getDueDateAlert(item.dueDate).label" style="flex-shrink: 0; display: inline-flex;">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" :stroke="getDueDateAlert(item.dueDate).color" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" :style="{ color: getDueDateAlert(item.dueDate).color }">
-                      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
-                    </svg>
+                  <div style="display:flex; align-items:center; gap:4px; flex-shrink:0; margin-top:1px;">
+                    <!-- Urgency moon icon -->
+                    <div v-if="getDueDateAlert(item.dueDate).isUrgent" class="blink-moon-glow" :title="getDueDateAlert(item.dueDate).label" style="display: inline-flex;">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" :stroke="getDueDateAlert(item.dueDate).color" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" :style="{ color: getDueDateAlert(item.dueDate).color }">
+                        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                      </svg>
+                    </div>
+                    <!-- Toggle collapse/expand button -->
+                    <button @click.stop="toggleCard(item.id)"
+                      :title="expandedCards.has(item.id) ? 'Sembunyikan detail' : 'Lihat detail'"
+                      style="display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; padding:0; background:transparent; border:1px solid #EAE5DD; border-radius:4px; cursor:pointer; color:#9A8F85; transition: background 0.15s, border-color 0.15s;"
+                      onmouseover="this.style.background='#F5F2EB'; this.style.borderColor='#C8BDB5'"
+                      onmouseout="this.style.background='transparent'; this.style.borderColor='#EAE5DD'">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"
+                        :style="{ transform: expandedCards.has(item.id) ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }">
+                        <polyline points="6 9 12 15 18 9"/>
+                      </svg>
+                    </button>
                   </div>
                 </div>
 
-                <!-- Visual Notification Near Target Release date (H-2 / Mendekati / Terlewat) -->
-                <div v-if="getDueDateAlert(item.dueDate).isUrgent" 
-                     :style="{
-                       display: 'inline-flex',
-                       alignItems: 'center',
-                       gap: '4px',
-                       fontSize: '9.5px',
-                       fontWeight: '700',
-                       color: getDueDateAlert(item.dueDate).color,
-                       backgroundColor: getDueDateAlert(item.dueDate).bgColor,
-                       border: '1px solid ' + getDueDateAlert(item.dueDate).borderColor,
-                       padding: '2px 6px',
-                       borderRadius: '4px',
-                       marginBottom: '8px',
-                       width: 'fit-content'
-                     }">
-                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                  {{ getDueDateAlert(item.dueDate).label }}
-                </div>
-                
-                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; align-items: center;" v-if="visibility.platform || visibility.username">
-                  <span v-if="visibility.platform" class="pill" :class="getPlatformClass(item.platform)" style="font-size: 10px; padding: 2px 6px;">
-                    {{ item.platform }}
-                  </span>
-                  <span v-if="visibility.username && item.username" style="font-size: 10px; font-weight: 600; color: #7A6F66; background-color: #F8F5F0; border: 1px solid #EAE5DD; padding: 2px 6px; border-radius: 4px; font-family: 'Space Mono', monospace;">
-                    {{ item.username }}
+                <!-- ── Collapsed preview: platform pill + tanggal kecil ── -->
+                <div v-if="!expandedCards.has(item.id)" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:4px;">
+                  <span v-if="visibility.platform" class="pill" :class="getPlatformClass(item.platform)" style="font-size: 9.5px; padding: 1px 5px;">{{ item.platform }}</span>
+                  <span v-if="visibility.dueDate && item.dueDate" class="text-mono" style="font-size:9.5px; color:#9A8F85;">{{ item.dueDate }}<span v-if="item.dueTime"> · {{ item.dueTime }}</span></span>
+                  <span v-if="getDueDateAlert(item.dueDate).isUrgent"
+                    :style="{ fontSize:'9px', fontWeight:'700', color: getDueDateAlert(item.dueDate).color, background: getDueDateAlert(item.dueDate).bgColor, border: '1px solid ' + getDueDateAlert(item.dueDate).borderColor, padding:'1px 5px', borderRadius:'3px' }">
+                    {{ getDueDateAlert(item.dueDate).label }}
                   </span>
                 </div>
 
-                <div v-if="visibility.notes && item.notes" style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4; background: #FCFAF7; padding: 6px 8px; border-radius: 6px; border-left: 3px solid var(--color-gold); word-break: break-word;">
-                  {{ item.notes }}
-                </div>
-
-                <div class="board-card-footer" style="border-top: 1px dashed #FAF6F0; padding-top: 8px; margin-top: 8px;">
-                  <span class="text-mono" v-if="visibility.dueDate" style="font-size: 10px; color: #000000; display: inline-flex; align-items: center; gap: 4px;">
-                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #000000;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    {{ item.dueDate }}<span v-if="item.dueTime"> · {{ item.dueTime }}</span>
-                  </span>
-                  <span class="text-mono" v-else></span>
+                <!-- ── Expanded detail ── -->
+                <div v-if="expandedCards.has(item.id)" style="margin-top: 6px;">
+                  <!-- Visual Notification Near Target Release date -->
+                  <div v-if="getDueDateAlert(item.dueDate).isUrgent" 
+                       :style="{
+                         display: 'inline-flex',
+                         alignItems: 'center',
+                         gap: '4px',
+                         fontSize: '9.5px',
+                         fontWeight: '700',
+                         color: getDueDateAlert(item.dueDate).color,
+                         backgroundColor: getDueDateAlert(item.dueDate).bgColor,
+                         border: '1px solid ' + getDueDateAlert(item.dueDate).borderColor,
+                         padding: '2px 6px',
+                         borderRadius: '4px',
+                         marginBottom: '8px',
+                         width: 'fit-content'
+                       }">
+                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    {{ getDueDateAlert(item.dueDate).label }}
+                  </div>
                   
-                  <div class="board-card-actions" style="display: flex; gap: 4px; align-items: center;">
-                    <!-- Edit Button next to Delete Button -->
-                    <button class="card-nav-btn" @click="startEdit(item)" title="Ubah Konten" style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; color: #000000; background: #F5F2EB; border: 1.5px solid #EAE5DD; border-radius: 4px;">
-                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #000000;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    </button>
-                    <!-- Delete Button -->
-                    <button class="card-nav-btn" @click="deleteItem(item)" title="Hapus" style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; color: #000000; background: #F5F2EB; border: 1.5px solid #EAE5DD; border-radius: 4px;">
-                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #000000;"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                    </button>
+                  <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; align-items: center;" v-if="visibility.platform || visibility.username">
+                    <span v-if="visibility.platform" class="pill" :class="getPlatformClass(item.platform)" style="font-size: 10px; padding: 2px 6px;">
+                      {{ item.platform }}
+                    </span>
+                    <span v-if="visibility.username && item.username" style="font-size: 10px; font-weight: 600; color: #7A6F66; background-color: #F8F5F0; border: 1px solid #EAE5DD; padding: 2px 6px; border-radius: 4px; font-family: 'Space Mono', monospace;">
+                      {{ item.username }}
+                    </span>
                   </div>
+
+                  <div v-if="visibility.notes && item.notes" style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4; background: #FCFAF7; padding: 6px 8px; border-radius: 6px; border-left: 3px solid var(--color-gold); word-break: break-word;">
+                    {{ item.notes }}
+                  </div>
+
+                  <div class="board-card-footer" style="border-top: 1px dashed #FAF6F0; padding-top: 8px; margin-top: 8px;">
+                    <span class="text-mono" v-if="visibility.dueDate" style="font-size: 10px; color: #000000; display: inline-flex; align-items: center; gap: 4px;">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #000000;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                      {{ item.dueDate }}<span v-if="item.dueTime"> · {{ item.dueTime }}</span>
+                    </span>
+                    <span class="text-mono" v-else></span>
+                    
+                    <div class="board-card-actions" style="display: flex; gap: 4px; align-items: center;">
+                      <!-- Edit Button -->
+                      <button class="card-nav-btn" @click="startEdit(item)" title="Ubah Konten" style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; color: #000000; background: #F5F2EB; border: 1.5px solid #EAE5DD; border-radius: 4px;">
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #000000;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                      </button>
+                      <!-- Delete Button -->
+                      <button class="card-nav-btn" @click="deleteItem(item)" title="Hapus" style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; color: #000000; background: #F5F2EB; border: 1.5px solid #EAE5DD; border-radius: 4px;">
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #000000;"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ── Collapsed footer: tombol edit & hapus tetap muncul walau collapsed ── -->
+                <div v-if="!expandedCards.has(item.id)" style="display:flex; justify-content:flex-end; gap:4px; margin-top:6px; padding-top:6px; border-top:1px dashed #FAF6F0;">
+                  <button class="card-nav-btn" @click="startEdit(item)" title="Ubah Konten" style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; color: #000000; background: #F5F2EB; border: 1.5px solid #EAE5DD; border-radius: 4px;">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #000000;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  <button class="card-nav-btn" @click="deleteItem(item)" title="Hapus" style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; color: #000000; background: #F5F2EB; border: 1.5px solid #EAE5DD; border-radius: 4px;">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: #000000;"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                  </button>
                 </div>
               </div>
 
@@ -4290,6 +4327,9 @@ const ContentTracker = {
       showPlatDropdown: false,
       showUserDropdown: false,
       
+      // Toggle collapse per card (Set of item IDs yang sedang expanded)
+      expandedCards: new Set(),
+
       // Filters
       filterSearch: '',
       filterPlatform: 'Semua',
@@ -4399,6 +4439,17 @@ const ContentTracker = {
     }
   },
   methods: {
+    toggleCard(id) {
+      // expandedCards adalah Set — Vue 3 tidak reactive-aware pada Set secara native,
+      // jadi kita replace dengan Set baru agar Vue detect perubahannya.
+      const next = new Set(this.expandedCards);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      this.expandedCards = next;
+    },
     getItemsInCol(col) {
       const filtered = this.items.filter(item => {
         if (item.status !== col) return false;
@@ -16760,9 +16811,21 @@ const MyPortfolio = {
         </div>
         <div v-else class="mp-search-results">
           <p class="mp-search-results-count">{{ globalSearchResults.length }} hasil ditemukan</p>
-          <template v-for="r in globalSearchResults" :key="r.type === 'note' ? ('note-' + r.expKey) : r.task.id">
+          <template v-for="r in globalSearchResults" :key="r.type === 'generalNote' ? 'general-note' : r.type === 'note' ? ('note-' + r.expKey) : r.task.id">
+            <!-- ── Hasil dari Catatan General Portfolio ── -->
+            <div v-if="r.type === 'generalNote'" class="mp-search-result-row" style="border-left: 3px solid var(--color-terracotta, #D67B52);">
+              <div class="mp-search-result-main">
+                <span class="mp-search-result-exp">✦ Catatan General Portfolio</span>
+                <p class="mp-search-result-title" style="display:flex; align-items:center; gap:6px;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                  Catatan General
+                </p>
+                <p style="font-size:12px; color:var(--text-muted); margin:3px 0 0; line-height:1.5;">{{ truncate(r.noteText, 120) }}</p>
+              </div>
+              <button class="cf-btn-ghost" @click="openGeneralNoteModal(); portfolioGlobalSearch = ''">Buka</button>
+            </div>
             <!-- ── Hasil dari Catatan Pengalaman ── -->
-            <div v-if="r.type === 'note'" class="mp-search-result-row" style="border-left: 3px solid var(--color-terracotta, #D67B52);">
+            <div v-else-if="r.type === 'note'" class="mp-search-result-row" style="border-left: 3px solid var(--color-terracotta, #D67B52);">
               <div class="mp-search-result-main">
                 <span class="mp-search-result-exp">{{ r.expLabel }}</span>
                 <p class="mp-search-result-title" style="display:flex; align-items:center; gap:6px;">
@@ -16774,7 +16837,7 @@ const MyPortfolio = {
               <button class="cf-btn-ghost" @click="openSearchResultNote(r.expKey)">Buka</button>
             </div>
             <!-- ── Hasil dari Task ── -->
-            <div v-else class="mp-search-result-row">
+            <div v-else-if="r.type === 'task'" class="mp-search-result-row">
               <div class="mp-search-result-main">
                 <span class="mp-search-result-exp">{{ r.expLabel }}</span>
                 <p class="mp-search-result-title">{{ r.task.title }}</p>
@@ -17321,7 +17384,7 @@ const MyPortfolio = {
       return this.portfolioTasks[this.selectedExperience.key] || [];
     },
 
-    // ── Search bar global: cari semua data task (judul, kata kunci, insight, status, pengalaman) di SEMUA pengalaman kerja ──
+    // ── Search bar global: cari semua data task (judul, kata kunci, insight, status, pengalaman, bukti kerja, catatan general) di SEMUA pengalaman kerja ──
     isGlobalSearching() {
       return this.portfolioGlobalSearch.trim().length > 0;
     },
@@ -17329,6 +17392,13 @@ const MyPortfolio = {
       const q = this.portfolioGlobalSearch.trim().toLowerCase();
       if (!q) return [];
       const results = [];
+
+      // ── Cek Catatan General Portfolio ──
+      const generalNoteText = this.generalNote.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+      if (generalNoteText.toLowerCase().includes(q)) {
+        results.push({ type: 'generalNote', expKey: null, expLabel: 'Catatan General Portfolio', noteText: generalNoteText });
+      }
+
       this.experiences.forEach(exp => {
         const expLabel = exp.role + (exp.company ? ' — ' + exp.company : '') + (exp.period ? ' (' + exp.period + ')' : '');
 
@@ -17343,12 +17413,19 @@ const MyPortfolio = {
         const list = this.portfolioTasks[exp.key] || [];
         list.forEach(task => {
           const insightText = (task.insightSummary || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
+          // ── Cek isi Bukti Kerja (log teks dari Job Logbook yang dilink ke task ini) ──
+          const buktiText = (task.buktiKerja || []).map(logId => {
+            const log = this.jobLogs.find(l => l.id === logId);
+            if (!log) return '';
+            return [(log.tasks || ''), (log.category || ''), (log.achievements || '')].join(' ');
+          }).join(' ');
           const haystacks = [
             task.title || '',
             (task.keywords || []).join(' '),
             insightText,
             task.status === 'fix' ? 'fix' : 'draft',
             expLabel,
+            buktiText,
           ];
           if (haystacks.some(h => h.toLowerCase().includes(q))) {
             results.push({ type: 'task', task, expKey: exp.key, expLabel });
