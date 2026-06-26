@@ -11415,13 +11415,9 @@ input:checked + .switch-slider:before {
 
 /* DailyQuestionFloatCircle — popup muncul ke atas dari dalam dock */
 .dqfc-popup-pos {
-  position: fixed;
-  bottom: 90px;
-  left: 16px;
-  right: 16px;
-  width: min(340px, calc(100vw - 32px));
-  max-height: calc(100vh - 110px);
-  overflow-y: auto;
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 0;
   z-index: 9999;
 }
 
@@ -11443,34 +11439,23 @@ input:checked + .switch-slider:before {
 
 /* Kartu sudah revealed (hari ini sudah punya pick, tidak perlu gosok) */
 .jqb-scratch-revealed {
-  background: #F5EFE8;
-  border: none;
-  border-radius: 20px;
-  padding: 22px 22px 26px;
-  text-align: center;
-  position: relative;
-  box-shadow:
-    -5px -5px 12px rgba(255, 255, 255, 0.85),
-     5px  5px 14px rgba(180, 140, 110, 0.40),
-     2px  2px  5px rgba(160, 120, 90, 0.18);
-  animation: jqbRevealPop 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background: linear-gradient(135deg, #FDF8F3 0%, #FAF0E8 60%, #F5E6D8 100%);
+  border: 2px solid var(--color-terracotta, #D67B52);
+  border-radius: 16px;
+  padding: 18px 20px 22px;
+  text-align: left;
+  animation: jqbRevealFade 0.4s ease;
 }
-@keyframes jqbRevealPop {
-  from { opacity: 0; transform: scale(0.94); box-shadow: none; }
+@keyframes jqbRevealFade {
+  from { opacity: 0; transform: scale(0.96); }
   to   { opacity: 1; transform: scale(1); }
-}
-
-/* Badge "sudah dipilih" — wrapper di luar kartu */
-.jqb-scratch-check-outer {
-  display: flex;
-  justify-content: center;
-  margin-top: 10px;
 }
 .jqb-scratch-check {
   display: inline-flex; align-items: center; gap: 5px;
   font-size: 10.5px; font-weight: 700; color: #8C4B2D;
   background: rgba(214,123,82,0.10); border: 1px solid rgba(214,123,82,0.30);
   padding: 3px 10px; border-radius: 20px;
+  margin-bottom: 12px;
 }
 
 /* Teks pertanyaan (dipakai di revealed dan under layer) */
@@ -11478,7 +11463,6 @@ input:checked + .switch-slider:before {
   font-size: 15px; font-weight: 700;
   color: var(--text-dark, #2C2621);
   line-height: 1.65; letter-spacing: 0.01em;
-  text-align: center;
 }
 .jqb-scratch-placeholder {
   font-size: 13px; color: var(--text-muted); font-style: italic;
@@ -11582,4 +11566,319 @@ input:checked + .switch-slider:before {
 .jqb-shuffle-btn:not(:disabled):hover {
   background: #B8663F; transform: scale(1.04);
   box-shadow: 0 4px 14px rgba(214,123,82,0.42);
+}
+
+/* ============================================================================
+   MY DAILY LIFE HABITS — 1 kolom dokumen
+   ============================================================================ */
+
+/* ── Wrapper ── */
+.lh-wrapper {
+  margin-bottom: 28px;
+}
+
+/* ── Header ── */
+.lh-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.lh-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.lh-header-icon {
+  background: linear-gradient(135deg, rgba(214,123,82,0.15), rgba(90,135,100,0.12));
+  border: 1.5px solid var(--color-sand);
+  border-radius: 9px;
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.lh-title {
+  font-size: 14px; font-weight: 800;
+  color: var(--text-dark); margin: 0;
+  letter-spacing: 0.01em;
+}
+.lh-subtitle {
+  font-size: 11px; color: var(--text-muted);
+  margin: 0; line-height: 1.4;
+}
+
+/* ── Header buttons ── */
+.lh-btn-detail {
+  height: 32px; padding: 0 12px;
+  background: #FFF4ED;
+  border: 1.5px solid rgba(214,123,82,0.35);
+  color: var(--color-terracotta);
+  border-radius: 8px; font-size: 11.5px; font-weight: 700;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+  font-family: inherit; transition: all 0.16s;
+}
+.lh-btn-detail:hover { background: rgba(214,123,82,0.15); }
+.lh-btn-add {
+  height: 32px; padding: 0 12px;
+  background: var(--color-terracotta);
+  border: none; color: #fff;
+  border-radius: 8px; font-size: 11.5px; font-weight: 700;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+  font-family: inherit; transition: background 0.16s;
+}
+.lh-btn-add:hover { background: #B8663F; }
+
+/* ── Empty state ── */
+.lh-empty {
+  padding: 40px 20px; text-align: center;
+  background: var(--bg-cream); border: 1.5px dashed var(--color-sand);
+  border-radius: 14px;
+}
+
+/* ── List (1 kolom) ── */
+.lh-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Card ── */
+.lh-card {
+  background: var(--bg-cream, #FDF5EB);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 13px;
+  display: flex;
+  overflow: hidden;
+  transition: box-shadow 0.18s;
+}
+.lh-card:hover {
+  box-shadow: 0 3px 12px rgba(0,0,0,0.07);
+}
+.lh-card-accent {
+  width: 4px;
+  flex-shrink: 0;
+}
+.lh-card-body {
+  flex: 1;
+  padding: 13px 16px 13px 14px;
+  min-width: 0;
+}
+
+/* ── Card read mode ── */
+.lh-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+.lh-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.lh-card-num {
+  font-size: 10px; font-weight: 800;
+  color: var(--text-muted); font-family: 'Hack', monospace;
+  letter-spacing: 0.04em; flex-shrink: 0;
+}
+.lh-card-title {
+  font-size: 13px; font-weight: 800;
+  color: var(--text-dark); margin: 0;
+  letter-spacing: 0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lh-card-actions {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── Action buttons ── */
+.lh-act-btn {
+  height: 26px; padding: 0 9px;
+  border-radius: 6px; font-size: 11px; font-weight: 700;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+  font-family: inherit; border: 1.5px solid; transition: all 0.15s;
+}
+.lh-act-btn--view {
+  background: var(--bg-cream); border-color: var(--color-sand);
+  color: var(--text-muted);
+}
+.lh-act-btn--view:hover { border-color: var(--text-muted); color: var(--text-dark); }
+.lh-act-btn--edit {
+  background: #EFF6FF; border-color: #93C5FD; color: #1D4ED8;
+}
+.lh-act-btn--edit:hover { background: #DBEAFE; }
+.lh-act-btn--del {
+  background: #FEF2F2; border-color: #FCA5A5; color: #B91C1C;
+  padding: 0 7px;
+}
+.lh-act-btn--del:hover { background: #FEE2E2; }
+
+/* ── Preview text (collapsed) ── */
+.lh-preview {
+  font-size: 12px; color: var(--text-muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  max-width: 100%;
+}
+.lh-preview--empty { font-style: italic; }
+
+/* ── Expanded content ── */
+.lh-expand-enter-active, .lh-expand-leave-active {
+  transition: max-height 0.28s ease, opacity 0.22s ease;
+  overflow: hidden;
+}
+.lh-expand-enter-from, .lh-expand-leave-to {
+  max-height: 0; opacity: 0;
+}
+.lh-expand-enter-to, .lh-expand-leave-from {
+  max-height: 600px; opacity: 1;
+}
+.lh-content { padding-top: 8px; }
+.lh-divider {
+  height: 1px; background: var(--color-sand);
+  margin-bottom: 10px;
+}
+.lh-note-text {
+  font-size: 13px; color: var(--text-dark);
+  line-height: 1.8; white-space: pre-wrap;
+}
+
+/* ── Edit form (inline card) ── */
+.lh-edit-form {
+  display: flex; flex-direction: column; gap: 9px;
+}
+.lh-input-title {
+  width: 100%; border: 1.5px solid var(--color-sand);
+  border-radius: 9px; padding: 8px 12px;
+  font-size: 13px; font-weight: 700; font-family: inherit;
+  color: var(--text-dark); background: #fff;
+  outline: none; box-sizing: border-box; transition: border-color 0.18s;
+}
+.lh-input-note {
+  width: 100%; border: 1.5px solid var(--color-sand);
+  border-radius: 9px; padding: 10px 12px;
+  font-size: 13px; font-family: inherit;
+  color: var(--text-dark); background: #fff;
+  resize: vertical; outline: none; line-height: 1.75;
+  box-sizing: border-box; transition: border-color 0.18s;
+}
+.lh-edit-actions {
+  display: flex; justify-content: flex-end; gap: 7px;
+}
+.lh-btn-cancel {
+  height: 32px; padding: 0 13px;
+  background: transparent; border: 1.5px solid var(--color-sand);
+  color: var(--text-muted); border-radius: 8px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: inherit; transition: background 0.15s;
+}
+.lh-btn-cancel:hover { background: var(--bg-cream); }
+.lh-btn-save {
+  height: 32px; padding: 0 14px;
+  background: var(--color-terracotta); color: #fff;
+  border: none; border-radius: 8px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  font-family: inherit; display: inline-flex; align-items: center; gap: 5px;
+  transition: background 0.15s;
+}
+.lh-btn-save:hover { background: #B8663F; }
+
+/* ============================================================================
+   MODAL DETAIL — Dokumen lengkap
+   ============================================================================ */
+
+.lhm-section { padding: 0; }
+.lhm-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--color-sand) 20%, var(--color-sand) 80%, transparent);
+  margin: 20px 0;
+}
+.lhm-section-header {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  gap: 12px; margin-bottom: 12px;
+}
+.lhm-section-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 7px;
+  font-size: 10px; font-weight: 800; color: #fff;
+  font-family: 'Hack', monospace; flex-shrink: 0;
+}
+.lhm-section-title {
+  font-size: 15px; font-weight: 800;
+  color: var(--text-dark); letter-spacing: 0.01em;
+}
+.lhm-section-body { padding-left: 36px; margin-bottom: 4px; }
+.lhm-note {
+  font-size: 13.5px; color: var(--text-dark);
+  line-height: 1.85; white-space: pre-wrap;
+  margin: 0;
+}
+.lhm-note--empty {
+  font-size: 12.5px; color: var(--text-muted);
+  font-style: italic; margin: 0;
+}
+.lhm-act-btn {
+  height: 28px; padding: 0 10px;
+  border-radius: 7px; font-size: 11.5px; font-weight: 700;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+  font-family: inherit; border: 1.5px solid; transition: all 0.15s;
+}
+.lhm-act-btn--edit {
+  background: #EFF6FF; border-color: #93C5FD; color: #1D4ED8;
+}
+.lhm-act-btn--edit:hover { background: #DBEAFE; }
+.lhm-act-btn--del {
+  background: #FEF2F2; border-color: #FCA5A5; color: #B91C1C;
+  padding: 0 8px;
+}
+.lhm-act-btn--del:hover { background: #FEE2E2; }
+.lhm-act-btn--cancel {
+  background: transparent; border-color: var(--color-sand);
+  color: var(--text-muted);
+}
+.lhm-act-btn--cancel:hover { background: var(--bg-cream); }
+.lhm-act-btn--save {
+  background: var(--color-terracotta); border-color: var(--color-terracotta);
+  color: #fff;
+}
+.lhm-act-btn--save:hover { background: #B8663F; }
+.lhm-input-title {
+  flex: 1; min-width: 0;
+  border: 1.5px solid var(--color-sand); border-radius: 8px;
+  padding: 6px 11px; font-size: 14px; font-weight: 700;
+  font-family: inherit; color: var(--text-dark);
+  background: #fff; outline: none; box-sizing: border-box;
+  transition: border-color 0.18s;
+}
+.lhm-input-note {
+  width: 100%; border: 1.5px solid var(--color-sand);
+  border-radius: 9px; padding: 10px 13px;
+  font-size: 13.5px; font-family: inherit;
+  color: var(--text-dark); background: #fff;
+  resize: vertical; outline: none; line-height: 1.8;
+  box-sizing: border-box; transition: border-color 0.18s;
+}
+
+/* ── Toggle collapse button ── */
+.lh-btn-toggle {
+  width: 32px; height: 32px;
+  background: var(--bg-cream);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--text-muted);
+  transition: all 0.16s;
+  flex-shrink: 0;
+}
+.lh-btn-toggle:hover {
+  border-color: var(--color-terracotta);
+  color: var(--color-terracotta);
+  background: #FFF4ED;
 }

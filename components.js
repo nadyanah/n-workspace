@@ -5879,118 +5879,133 @@ const DailyNutrition = {
         </div>
       </div>
 
-      <!-- MY DAILY LIFE HABITS — Multi-section sticky (diam, tidak ikut bergeser) -->
-      <div style="margin-bottom: 28px;">
+      <!-- MY DAILY LIFE HABITS — 1 kolom dokumen dengan sub-bagian -->
+      <div class="lh-wrapper">
 
-        <!-- Header row -->
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="background: linear-gradient(135deg, rgba(214,123,82,0.15), rgba(90,135,100,0.12)); border: 1.5px solid var(--color-sand); border-radius: 8px; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <!-- ── Header ── -->
+        <div class="lh-header">
+          <div class="lh-header-left">
+            <span class="lh-header-icon">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             </span>
             <div>
-              <h3 style="font-size: 14px; font-weight: 800; color: var(--text-dark); margin: 0; letter-spacing: 0.01em;">My Daily Life Habits</h3>
-              <p style="font-size: 11px; color: var(--text-muted); margin: 0; line-height: 1.4;">catatan kebiasaan hidup — selalu tampil di sini ✦</p>
+              <h3 class="lh-title">My Daily Life Habits</h3>
+              <p class="lh-subtitle">{{ lifeHabitSections.length }} bagian · catatan kebiasaan hidup ✦</p>
             </div>
           </div>
-          <!-- Tambah section baru -->
-          <button @click="addLifeHabitSection"
-            style="height: 34px; padding: 0 14px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.18s; flex-shrink: 0;"
-            onmouseover="this.style.borderColor='var(--color-terracotta)';this.style.color='var(--color-terracotta)';this.style.background='#FFF4ED'"
-            onmouseout="this.style.borderColor='var(--color-sand)';this.style.color='var(--text-dark)';this.style.background='var(--bg-cream)'">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Tambah Section
-          </button>
+          <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+            <!-- Buka detail lengkap -->
+            <button @click="openLifeHabitDetail"
+              class="lh-btn-detail"
+              title="Buka dokumen lengkap">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+              Lihat Semua
+            </button>
+            <!-- Tambah section -->
+            <button @click="addLifeHabitSection" class="lh-btn-add">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Tambah
+            </button>
+            <!-- Toggle collapse section -->
+            <button @click="lhCollapsed = !lhCollapsed"
+              class="lh-btn-toggle"
+              :title="lhCollapsed ? 'Tampilkan bagian' : 'Sembunyikan bagian'">
+              <svg :style="{ transform: lhCollapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.25s' }"
+                viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
-        <!-- Empty state -->
-        <div v-if="lifeHabitSections.length === 0"
-          style="padding: 36px 20px; text-align: center; background: var(--bg-cream); border: 1.5px dashed var(--color-sand); border-radius: 14px;">
-          <p style="font-size: 22px; margin-bottom: 8px;">✦</p>
-          <p style="font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px;">Belum ada section</p>
-          <p style="font-size: 12.5px; color: var(--text-muted);">Klik <strong style="color:var(--color-terracotta)">Tambah Section</strong> untuk mulai catat kebiasaan harianmu</p>
+        <!-- ── Empty state ── -->
+        <div v-show="!lhCollapsed">
+        <div v-if="lifeHabitSections.length === 0" class="lh-empty">
+          <p style="font-size:24px;margin-bottom:10px;">✦</p>
+          <p style="font-size:14px;font-weight:700;color:var(--text-dark);margin-bottom:4px;">Belum ada bagian</p>
+          <p style="font-size:12.5px;color:var(--text-muted);">Klik <strong style="color:var(--color-terracotta)">Tambah</strong> untuk mulai catat kebiasaan harianmu</p>
         </div>
 
-        <!-- Section cards -->
-        <div v-else style="display: flex; flex-direction: column; gap: 12px;">
-          <div v-for="(sec, sIdx) in lifeHabitSections" :key="sec.id"
-            style="background: var(--bg-cream, #FDF5EB); border: 1.5px solid var(--color-sand); border-radius: 14px; padding: 16px 18px; position: relative; overflow: hidden;">
-            <!-- Accent bar kiri -->
-            <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--color-terracotta, #D67B52); border-radius: 14px 0 0 14px;"></div>
-            <div style="padding-left: 8px;">
+        <!-- ── Daftar section — 1 kolom ── -->
+        <div v-else class="lh-list">
+          <div v-for="(sec, sIdx) in lifeHabitSections" :key="sec.id" class="lh-card">
 
-              <!-- Mode baca -->
+            <!-- Accent kiri -->
+            <div class="lh-card-accent" :style="{ background: lhAccentColor(sIdx) }"></div>
+
+            <div class="lh-card-body">
+
+              <!-- ── Mode baca ── -->
               <template v-if="editingLifeHabitIdx !== sIdx">
-                <!-- Row: judul + action buttons -->
-                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px;">
-                  <h4 style="font-size: 13px; font-weight: 800; color: var(--color-terracotta); margin: 0; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.4;">{{ sec.title || 'Section' }}</h4>
-                  <!-- Action buttons — sama persis gaya insight card -->
-                  <div style="display: inline-flex; gap: 5px; flex-shrink: 0; align-items: center;">
-                    <!-- Expand/collapse -->
+
+                <!-- Row judul + tombol aksi -->
+                <div class="lh-card-row">
+                  <div class="lh-card-meta">
+                    <span class="lh-card-num">{{ String(sIdx + 1).padStart(2, '0') }}</span>
+                    <h4 class="lh-card-title">{{ sec.title || 'Bagian Baru' }}</h4>
+                  </div>
+                  <div class="lh-card-actions">
+                    <!-- Lihat/collapse -->
                     <button @click="toggleLifeHabitExpand(sec.id)"
                       :title="expandedLifeHabits.has(sec.id) ? 'Sembunyikan' : 'Lihat catatan'"
-                      style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
-                      <svg :style="{ transform: expandedLifeHabits.has(sec.id) ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.22s' }"
-                        viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="6 9 12 15 18 9"></polyline>
+                      class="lh-act-btn lh-act-btn--view">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path v-if="!expandedLifeHabits.has(sec.id)" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle v-if="!expandedLifeHabits.has(sec.id)" cx="12" cy="12" r="3"/>
+                        <path v-if="expandedLifeHabits.has(sec.id)" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line v-if="expandedLifeHabits.has(sec.id)" x1="1" y1="1" x2="23" y2="23"/>
                       </svg>
+                      {{ expandedLifeHabits.has(sec.id) ? 'Tutup' : 'Lihat' }}
                     </button>
-                    <!-- Edit -->
+                    <!-- Catat (edit inline) -->
                     <button @click="startEditLifeHabit(sIdx)"
-                      title="Edit section"
-                      style="background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
-                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      title="Edit catatan"
+                      class="lh-act-btn lh-act-btn--edit">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      Catat
                     </button>
-                    <!-- Hapus -->
+                    <!-- Delete -->
                     <button @click="deleteLifeHabitSection(sIdx)"
-                      title="Hapus section"
-                      style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
-                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                      title="Hapus bagian"
+                      class="lh-act-btn lh-act-btn--del">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                     </button>
                   </div>
                 </div>
-                <!-- Catatan (collapsible) — default collapsed, preview 1 baris -->
-                <div :style="{ maxHeight: expandedLifeHabits.has(sec.id) ? '600px' : '0px', overflow: 'hidden', transition: 'max-height 0.28s ease' }">
-                  <div style="height: 1px; background: var(--color-sand); margin-bottom: 10px;"></div>
-                  <div style="font-size: 13px; color: var(--text-dark); line-height: 1.75; white-space: pre-wrap;">{{ sec.note }}</div>
+
+                <!-- Preview collapsed -->
+                <div v-if="!expandedLifeHabits.has(sec.id)" class="lh-preview">
+                  <span v-if="sec.note">{{ sec.note }}</span>
+                  <span v-else class="lh-preview--empty">belum ada catatan · klik Catat untuk isi</span>
                 </div>
-                <!-- Preview 1 baris saat collapsed -->
-                <div v-if="!expandedLifeHabits.has(sec.id) && sec.note"
-                  style="font-size: 12.5px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90%;">
-                  {{ sec.note }}
-                </div>
-                <div v-if="!expandedLifeHabits.has(sec.id) && !sec.note"
-                  style="font-size: 12px; color: var(--text-muted); font-style: italic;">
-                  belum ada catatan — klik edit untuk isi
-                </div>
+
+                <!-- Isi lengkap saat expanded -->
+                <transition name="lh-expand">
+                  <div v-if="expandedLifeHabits.has(sec.id)" class="lh-content">
+                    <div class="lh-divider"></div>
+                    <div class="lh-note-text">{{ sec.note || '—' }}</div>
+                  </div>
+                </transition>
+
               </template>
 
-              <!-- Mode edit inline -->
+              <!-- ── Mode edit/catat inline ── -->
               <template v-else>
-                <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div class="lh-edit-form">
                   <input v-model="lifeHabitEditForm.title" type="text"
-                    placeholder="Judul section (misal: Pagi Hari, Kesehatan, Ibadah...)"
-                    style="width: 100%; border: 1.5px solid var(--color-sand); border-radius: 9px; padding: 9px 13px; font-size: 13px; font-weight: 700; font-family: inherit; color: var(--text-dark); background: #fff; outline: none; box-sizing: border-box; transition: border-color 0.18s;"
+                    placeholder="Nama bagian (mis: Pagi Hari, Ibadah, Olahraga...)"
+                    class="lh-input-title"
                     @focus="$event.target.style.borderColor='var(--color-terracotta)'"
                     @blur="$event.target.style.borderColor='var(--color-sand)'" />
                   <textarea v-model="lifeHabitEditForm.note"
-                    placeholder="Tulis catatan kebiasaan untuk section ini..."
-                    rows="4"
-                    style="width: 100%; border: 1.5px solid var(--color-sand); border-radius: 9px; padding: 10px 13px; font-size: 13px; font-family: inherit; color: var(--text-dark); background: #fff; resize: vertical; outline: none; line-height: 1.75; box-sizing: border-box; transition: border-color 0.18s;"
+                    placeholder="Tulis catatan kebiasaan untuk bagian ini..."
+                    rows="5"
+                    class="lh-input-note"
                     @focus="$event.target.style.borderColor='var(--color-terracotta)'"
                     @blur="$event.target.style.borderColor='var(--color-sand)'">
                   </textarea>
-                  <!-- Save / Cancel row -->
-                  <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                    <button @click="cancelEditLifeHabit"
-                      style="height: 34px; padding: 0 14px; background: transparent; border: 1.5px solid var(--color-sand); color: var(--text-muted); border-radius: 8px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: background 0.15s;"
-                      onmouseover="this.style.background='var(--bg-cream)'"
-                      onmouseout="this.style.background='transparent'">Batal</button>
-                    <button @click="saveEditLifeHabit(sIdx)"
-                      style="height: 34px; padding: 0 16px; background: var(--color-terracotta); color: #fff; border: none; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s;"
-                      onmouseover="this.style.background='var(--color-terracotta-dark, #B8663F)'"
-                      onmouseout="this.style.background='var(--color-terracotta)'">
-                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <div class="lh-edit-actions">
+                    <button @click="cancelEditLifeHabit" class="lh-btn-cancel">Batal</button>
+                    <button @click="saveEditLifeHabit(sIdx)" class="lh-btn-save">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                       Simpan
                     </button>
                   </div>
@@ -6000,7 +6015,113 @@ const DailyNutrition = {
             </div>
           </div>
         </div>
+        </div><!-- end v-show collapse -->
+
       </div>
+
+      <!-- ── MODAL DETAIL LENGKAP — Semua section dalam 1 dokumen ── -->
+      <transition name="insight-modal-fade">
+        <div v-if="showLifeHabitDetail"
+          style="position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(30,22,16,0.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:16px;"
+          @click.self="showLifeHabitDetail = false">
+
+          <div style="background:var(--color-paper,#FAF7F2);width:min(640px,96vw);max-height:90vh;border-radius:20px;box-shadow:0 24px 64px rgba(0,0,0,0.28),0 4px 16px rgba(0,0,0,0.12);display:flex;flex-direction:column;overflow:hidden;animation:insightPopIn 0.28s cubic-bezier(0.175,0.885,0.32,1.275);">
+
+            <!-- Header modal -->
+            <div style="display:flex;align-items:center;gap:12px;padding:18px 24px;background:var(--color-terracotta,#D67B52);color:#fff;flex-shrink:0;">
+              <div style="width:38px;height:38px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">✦</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:16px;font-weight:800;letter-spacing:0.01em;">My Daily Life Habits</div>
+                <div style="font-size:11px;opacity:0.82;margin-top:2px;">{{ lifeHabitSections.length }} bagian · dokumen kebiasaan hidup</div>
+              </div>
+              <!-- Tambah section dari modal -->
+              <button @click="addLifeHabitSection"
+                style="background:rgba(255,255,255,0.18);border:none;border-radius:8px;height:32px;padding:0 12px;display:flex;align-items:center;gap:6px;cursor:pointer;color:#fff;font-size:12px;font-weight:700;transition:background 0.15s;flex-shrink:0;"
+                onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Tambah Bagian
+              </button>
+              <button @click="showLifeHabitDetail = false"
+                style="background:rgba(255,255,255,0.18);border:none;border-radius:9px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:16px;flex-shrink:0;transition:background 0.15s;"
+                onmouseover="this.style.background='rgba(255,255,255,0.32)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">✕</button>
+            </div>
+
+            <!-- Body dokumen scrollable -->
+            <div style="overflow-y:auto;flex:1;padding:24px 28px 32px;">
+
+              <!-- Empty -->
+              <div v-if="lifeHabitSections.length === 0" style="text-align:center;padding:48px 20px;color:var(--text-muted);">
+                <p style="font-size:28px;margin-bottom:10px;">✦</p>
+                <p style="font-size:14px;font-weight:700;color:var(--text-dark);margin-bottom:6px;">Dokumen masih kosong</p>
+                <p style="font-size:12.5px;">Tambah bagian pertamamu dari tombol di atas</p>
+              </div>
+
+              <!-- Dokumen: tiap section = sub-bagian -->
+              <div v-else style="display:flex;flex-direction:column;gap:0;">
+                <div v-for="(sec, sIdx) in lifeHabitSections" :key="'modal-'+sec.id" class="lhm-section">
+
+                  <!-- Sub-header bagian -->
+                  <div class="lhm-section-header">
+                    <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+                      <span class="lhm-section-num" :style="{ background: lhAccentColor(sIdx) }">{{ String(sIdx + 1).padStart(2, '0') }}</span>
+                      <template v-if="lhModalEditingIdx !== sIdx">
+                        <span class="lhm-section-title">{{ sec.title || 'Bagian Baru' }}</span>
+                      </template>
+                      <template v-else>
+                        <input v-model="lifeHabitEditForm.title" type="text"
+                          placeholder="Nama bagian..."
+                          class="lhm-input-title"
+                          @focus="$event.target.style.borderColor='var(--color-terracotta)'"
+                          @blur="$event.target.style.borderColor='var(--color-sand)'" />
+                      </template>
+                    </div>
+                    <div style="display:flex;gap:5px;align-items:center;flex-shrink:0;">
+                      <template v-if="lhModalEditingIdx !== sIdx">
+                        <button @click="startEditLifeHabitModal(sIdx)" class="lhm-act-btn lhm-act-btn--edit" title="Edit">
+                          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          Edit
+                        </button>
+                        <button @click="deleteLifeHabitSection(sIdx)" class="lhm-act-btn lhm-act-btn--del" title="Hapus">
+                          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        </button>
+                      </template>
+                      <template v-else>
+                        <button @click="cancelEditLifeHabit(); lhModalEditingIdx = null" class="lhm-act-btn lhm-act-btn--cancel">Batal</button>
+                        <button @click="saveEditLifeHabitModal(sIdx)" class="lhm-act-btn lhm-act-btn--save">
+                          <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          Simpan
+                        </button>
+                      </template>
+                    </div>
+                  </div>
+
+                  <!-- Isi catatan bagian -->
+                  <div class="lhm-section-body">
+                    <template v-if="lhModalEditingIdx !== sIdx">
+                      <p v-if="sec.note" class="lhm-note">{{ sec.note }}</p>
+                      <p v-else class="lhm-note--empty">belum ada catatan · klik Edit untuk mengisi</p>
+                    </template>
+                    <template v-else>
+                      <textarea v-model="lifeHabitEditForm.note"
+                        placeholder="Tulis catatan kebiasaan untuk bagian ini..."
+                        rows="6"
+                        class="lhm-input-note"
+                        @focus="$event.target.style.borderColor='var(--color-terracotta)'"
+                        @blur="$event.target.style.borderColor='var(--color-sand)'">
+                      </textarea>
+                    </template>
+                  </div>
+
+                  <!-- Divider antar section -->
+                  <div v-if="sIdx < lifeHabitSections.length - 1" class="lhm-divider"></div>
+
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </transition>
 
       <!-- TIMELINE -->
       <div class="nutrition-container">
@@ -6339,10 +6460,13 @@ const DailyNutrition = {
         takeaway: ''
       },
       // My Daily Life Habits — multi-section
-      lifeHabitSections: [],       // [{ id, title, note }]
-      editingLifeHabitIdx: null,   // index section yang sedang diedit (-1 = form baru)
+      lifeHabitSections: [],
+      editingLifeHabitIdx: null,
       expandedLifeHabits: new Set(),
       lifeHabitEditForm: { title: '', note: '' },
+      showLifeHabitDetail: false,
+      lhModalEditingIdx: null,
+      lhCollapsed: false,
       // Plan Next Insight
       showAddPlan: false,
       nextPlans: [],
@@ -6605,12 +6729,26 @@ const DailyNutrition = {
     saveLifeHabitSections() {
       WorkspaceStorage.setItem('personal_workspace_life_habits_sections', JSON.stringify(this.lifeHabitSections));
     },
+    lhAccentColor(idx) {
+      const palette = ['#D67B52','#5A8764','#6B7FC4','#C4896B','#7CB5A4','#C47B8E','#A47BC4'];
+      return palette[idx % palette.length];
+    },
+    openLifeHabitDetail() {
+      this.showLifeHabitDetail = true;
+      this.lhModalEditingIdx = null;
+    },
     addLifeHabitSection() {
       const newSec = { id: 'lh-' + Date.now(), title: '', note: '' };
       this.lifeHabitSections.push(newSec);
-      this.editingLifeHabitIdx = this.lifeHabitSections.length - 1;
+      const newIdx = this.lifeHabitSections.length - 1;
       this.lifeHabitEditForm = { title: '', note: '' };
       this.expandedLifeHabits.add(newSec.id);
+      this.expandedLifeHabits = new Set(this.expandedLifeHabits);
+      if (this.showLifeHabitDetail) {
+        this.lhModalEditingIdx = newIdx;
+      } else {
+        this.editingLifeHabitIdx = newIdx;
+      }
       this.saveLifeHabitSections();
     },
     startEditLifeHabit(idx) {
@@ -6618,17 +6756,30 @@ const DailyNutrition = {
       const sec = this.lifeHabitSections[idx];
       this.lifeHabitEditForm = { title: sec.title, note: sec.note };
       this.expandedLifeHabits.add(sec.id);
+      this.expandedLifeHabits = new Set(this.expandedLifeHabits);
+    },
+    startEditLifeHabitModal(idx) {
+      this.lhModalEditingIdx = idx;
+      const sec = this.lifeHabitSections[idx];
+      this.lifeHabitEditForm = { title: sec.title, note: sec.note };
     },
     saveEditLifeHabit(idx) {
       const sec = this.lifeHabitSections[idx];
-      sec.title = this.lifeHabitEditForm.title.trim() || 'Section';
+      sec.title = this.lifeHabitEditForm.title.trim() || 'Bagian Baru';
       sec.note  = this.lifeHabitEditForm.note;
       this.editingLifeHabitIdx = null;
       this.lifeHabitEditForm = { title: '', note: '' };
       this.saveLifeHabitSections();
     },
+    saveEditLifeHabitModal(idx) {
+      const sec = this.lifeHabitSections[idx];
+      sec.title = this.lifeHabitEditForm.title.trim() || 'Bagian Baru';
+      sec.note  = this.lifeHabitEditForm.note;
+      this.lhModalEditingIdx = null;
+      this.lifeHabitEditForm = { title: '', note: '' };
+      this.saveLifeHabitSections();
+    },
     cancelEditLifeHabit() {
-      // Jika section baru & masih kosong → hapus
       if (this.editingLifeHabitIdx !== null) {
         const sec = this.lifeHabitSections[this.editingLifeHabitIdx];
         if (sec && !sec.title && !sec.note) {
@@ -6637,11 +6788,14 @@ const DailyNutrition = {
         }
       }
       this.editingLifeHabitIdx = null;
+      this.lhModalEditingIdx = null;
       this.lifeHabitEditForm = { title: '', note: '' };
     },
     deleteLifeHabitSection(idx) {
-      if (!confirm('Hapus section ini?')) return;
+      if (!confirm('Hapus bagian ini?')) return;
       this.lifeHabitSections.splice(idx, 1);
+      if (this.lhModalEditingIdx === idx) this.lhModalEditingIdx = null;
+      if (this.editingLifeHabitIdx === idx) this.editingLifeHabitIdx = null;
       this.saveLifeHabitSections();
     },
     toggleLifeHabitExpand(id) {
@@ -6650,7 +6804,6 @@ const DailyNutrition = {
       } else {
         this.expandedLifeHabits.add(id);
       }
-      // Paksa Vue reaktif — Set mutasi tidak terdeteksi otomatis
       this.expandedLifeHabits = new Set(this.expandedLifeHabits);
     },
     saveToStorage() {
@@ -13150,6 +13303,10 @@ const JournalQuestionBoard = {
 
                   <!-- Kartu sudah direveal (hari ini sudah punya pick) -->
                   <div v-if="todayQuestion && scratchRevealed" class="jqb-scratch-revealed">
+                    <div class="jqb-scratch-check">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      sudah dipilih hari ini
+                    </div>
                     <div class="jqb-scratch-question-text">{{ todayQuestion.text }}</div>
                   </div>
 
@@ -13193,14 +13350,6 @@ const JournalQuestionBoard = {
 
                   </div>
 
-                </div>
-
-                <!-- Badge "sudah dipilih" — di LUAR layout kartu pertanyaan -->
-                <div v-if="todayQuestion && scratchRevealed" class="jqb-scratch-check-outer">
-                  <div class="jqb-scratch-check">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    sudah dipilih hari ini
-                  </div>
                 </div>
 
                 <!-- Tombol acak pertanyaan — di LUAR kartu, di bawah -->
