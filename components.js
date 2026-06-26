@@ -18690,11 +18690,11 @@ const DailyQuestionFloatCircle = {
 // ============================================================================
 // WORD GLOSSARY
 // ============================================================================
-// • Klik kanan 1 kata        → tambah/edit arti kata itu
-// • Blok 2+ kata lalu klik kanan → tambah/edit arti kalimat/frasa itu
+// • Double-click 1 kata             → tambah/edit arti kata itu
+// • Seleksi 2+ kata lalu double-click di mana saja → tambah/edit frasa
 // • Case-sensitive: "am" dan "AM" disimpan terpisah
 // • Hover kata/frasa yang sudah punya arti → tooltip warm retro
-// • Data: localStorage key "ws_word_glossary"
+// • Data: Supabase via WorkspaceStorage (key "ws_word_glossary"), fallback localStorage
 // ============================================================================
 
 (function () {
@@ -18703,11 +18703,23 @@ const DailyQuestionFloatCircle = {
   const STORAGE_KEY = 'ws_word_glossary';
 
   function loadGlossary() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    try {
+      const raw = (typeof WorkspaceStorage !== 'undefined')
+        ? WorkspaceStorage.getItem(STORAGE_KEY)
+        : localStorage.getItem(STORAGE_KEY);
+      return JSON.parse(raw || '{}');
+    }
     catch (e) { return {}; }
   }
   function saveGlossary(data) {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+    try {
+      const json = JSON.stringify(data);
+      if (typeof WorkspaceStorage !== 'undefined' && WorkspaceStorage._initialized) {
+        WorkspaceStorage.setItem(STORAGE_KEY, json);
+      } else {
+        localStorage.setItem(STORAGE_KEY, json);
+      }
+    }
     catch (e) {}
   }
 
@@ -18893,7 +18905,7 @@ const DailyQuestionFloatCircle = {
       border-bottom:6px solid var(--bg-cream,#FDFBF7);
     }
 
-    /* ── Underline highlight ── */
+    /* ── Underline highlight — hover tooltip, double-click untuk edit ── */
     .wg-has-meaning {
       border-bottom:1.5px dotted var(--color-terracotta,#D67B52);
       cursor:default; transition:color 0.14s;
@@ -19208,46 +19220,53 @@ const DailyQuestionFloatCircle = {
     return text.slice(start, end).trim();
   }
 
-  // ── Event: contextmenu ────────────────────────────────────────────────────
-  document.addEventListener('contextmenu', (e) => {
+  // ── Event: dblclick ───────────────────────────────────────────────────────
+  // Double-click browser otomatis menyeleksi 1 kata. Kita baca dari Selection API.
+  // Jika sebelum double-click user sudah seleksi 2+ kata, pakai seleksi itu sebagai frasa.
+  document.addEventListener('dblclick', (e) => {
     if (e.target.closest('#wg-context-menu, #wg-modal-overlay, #wg-tooltip')) return;
+    // Jangan trigger di input/textarea/contenteditable
+    const tag = e.target.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
+    if (e.target.closest('[contenteditable="true"]')) return;
 
     let text   = '';
     let phrase = false;
 
-    const sel = window.getSelection();
-    const selText = sel ? sel.toString() : '';
-
-    if (selText.trim().length > 0) {
-      // Ada teks terseleksi
+    // Beri jeda micro agar browser selesai update seleksi double-click
+    setTimeout(() => {
+      const sel     = window.getSelection();
+      const selText = sel ? sel.toString() : '';
       const cleaned = selText.trim();
-      const wordCount = cleaned.split(/\s+/).filter(Boolean).length;
-      if (wordCount >= 2) {
-        // Multi-kata → frasa
+
+      if (cleaned.length > 0) {
+        const wordCount = cleaned.split(/\s+/).filter(Boolean).length;
         text   = makeKey(cleaned);
-        phrase = true;
-      } else {
-        // Seleksi 1 kata
-        text   = makeKey(cleaned);
-        phrase = false;
+        phrase = wordCount >= 2;
       }
-    } else {
-      // Tidak ada seleksi → ambil kata dari klik
-      text   = getWordAtPoint(e);
-      phrase = false;
-    }
 
-    if (!text || text.length < 1) return;
+      if (!text || text.length < 1) return;
 
-    e.preventDefault();
+      // Posisi popup — di bawah tengah seleksi, fallback ke posisi klik
+      let px = e.clientX + 2;
+      let py = e.clientY + 2;
+      try {
+        const range = sel.getRangeAt(0);
+        const rect  = range.getBoundingClientRect();
+        if (rect.width > 0) {
+          px = rect.left + rect.width / 2;
+          py = rect.bottom + 6;
+        }
+      } catch (_) {}
 
-    currentText = text;
-    currentKey  = text;   // key = teks asli, case-sensitive
-    isPhrase    = phrase;
+      currentText = text;
+      currentKey  = text;
+      isPhrase    = phrase;
 
-    glossary    = loadGlossary();
-    const entry = glossary[currentKey];
-    buildContextMenu(e.clientX + 2, e.clientY + 2, currentText, currentKey, isPhrase, entry ? entry.meaning : null);
+      glossary    = loadGlossary();
+      const entry = glossary[currentKey];
+      buildContextMenu(px, py, currentText, currentKey, isPhrase, entry ? entry.meaning : null);
+    }, 0);
   });
 
   // ── Hover tooltip ──────────────────────────────────────────────────────────
@@ -19306,7 +19325,14 @@ const DailyQuestionFloatCircle = {
 
   window.WordGlossary = {
     getAll:   loadGlossary,
-    clearAll: () => { localStorage.removeItem(STORAGE_KEY); applyGlossaryHighlights(); },
+    clearAll: () => {
+      if (typeof WorkspaceStorage !== 'undefined' && WorkspaceStorage._initialized) {
+        WorkspaceStorage.removeItem(STORAGE_KEY);
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+      applyGlossaryHighlights();
+    },
     refresh:  applyGlossaryHighlights,
   };
 
