@@ -716,35 +716,31 @@
 
         <!-- Floating Action Dock in bottom-corner for Theme and Desk Icon Styles -->
         <div class="floating-action-dock" @click.stop>
-          <!-- Daily Q Button — circle style sejajar teman-temannya -->
-          <daily-question-float-circle></daily-question-float-circle>
 
-          <!-- 0. Inspiration Board Button -->
-          <button class="desk-config-floating-btn" @click="showInspirationModal = true" title="Papan Inspirasi">
-            💬
-          </button>
-
-          <!-- 0a. Daily Journaling Question Button -->
-          <button class="desk-config-floating-btn" @click="showJournalModal = true" title="Daily Journaling Question — Pertanyaan Jurnal Harian">
-            🔮
-          </button>
-
-          <!-- 0b. Dzikir Harian Button -->
+          <!-- 1. Dzikir Harian Button -->
           <button class="desk-config-floating-btn" @click="showDzikirModal = true" title="Dzikir Harian">
             📿
           </button>
 
-          <!-- 0c-alt. Al-Qur'an Harian Button -->
+          <!-- 2. Al-Qur'an Harian Button -->
           <button class="desk-config-floating-btn" @click="showQuranModal = true" title="Baca Al-Qur'an Harian">
             🕌
           </button>
 
-          <!-- 0c. Bucket List 100 Button -->
+          <!-- 3. Daily Journaling Question Button -->
+          <button class="desk-config-floating-btn" @click="showJournalModal = true" title="Daily Journaling Question — Pertanyaan Jurnal Harian">
+            🔮
+          </button>
+
+          <!-- 4. Daily Interview (Daily Question) Button -->
+          <daily-question-float-circle></daily-question-float-circle>
+
+          <!-- 5. Bucket List 100 Button -->
           <button class="desk-config-floating-btn" @click="showBucketListModal = true" title="Bucket List 100">
             📋
           </button>
 
-          <!-- ✦ Grouped: Pengaturan Ikon + My Mood Colour — 1 toggle button -->
+          <!-- ✦ Grouped: Pengaturan & Tema — 1 toggle button -->
           <div class="desk-settings-group" @click.stop>
             <!-- Sub-menu vertikal (muncul ke atas saat toggle aktif) -->
             <transition name="desk-settings-expand">
@@ -784,8 +780,12 @@
                   </div>
                 </div>
 
+                <!-- Sub-btn C: Papan Inspirasi -->
+                <button class="desk-config-floating-btn desk-submenu-btn" @click="showInspirationModal = true; showSettingsGroup = false" title="Papan Inspirasi">
+                  💬
+                </button>
 
-                <!-- Sub-btn C: Wish List 2026 -->
+                <!-- Sub-btn D: Wish List 2026 -->
                 <button class="desk-config-floating-btn desk-submenu-btn" @click="showWishListModal = true; showSettingsGroup = false" title="Wish List 2026">
                   🛒
                 </button>
