@@ -5879,6 +5879,129 @@ const DailyNutrition = {
         </div>
       </div>
 
+      <!-- MY DAILY LIFE HABITS — Multi-section sticky (diam, tidak ikut bergeser) -->
+      <div style="margin-bottom: 28px;">
+
+        <!-- Header row -->
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="background: linear-gradient(135deg, rgba(214,123,82,0.15), rgba(90,135,100,0.12)); border: 1.5px solid var(--color-sand); border-radius: 8px; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </span>
+            <div>
+              <h3 style="font-size: 14px; font-weight: 800; color: var(--text-dark); margin: 0; letter-spacing: 0.01em;">My Daily Life Habits</h3>
+              <p style="font-size: 11px; color: var(--text-muted); margin: 0; line-height: 1.4;">catatan kebiasaan hidup — selalu tampil di sini ✦</p>
+            </div>
+          </div>
+          <!-- Tambah section baru -->
+          <button @click="addLifeHabitSection"
+            style="height: 34px; padding: 0 14px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.18s; flex-shrink: 0;"
+            onmouseover="this.style.borderColor='var(--color-terracotta)';this.style.color='var(--color-terracotta)';this.style.background='#FFF4ED'"
+            onmouseout="this.style.borderColor='var(--color-sand)';this.style.color='var(--text-dark)';this.style.background='var(--bg-cream)'">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah Section
+          </button>
+        </div>
+
+        <!-- Empty state -->
+        <div v-if="lifeHabitSections.length === 0"
+          style="padding: 36px 20px; text-align: center; background: var(--bg-cream); border: 1.5px dashed var(--color-sand); border-radius: 14px;">
+          <p style="font-size: 22px; margin-bottom: 8px;">✦</p>
+          <p style="font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px;">Belum ada section</p>
+          <p style="font-size: 12.5px; color: var(--text-muted);">Klik <strong style="color:var(--color-terracotta)">Tambah Section</strong> untuk mulai catat kebiasaan harianmu</p>
+        </div>
+
+        <!-- Section cards -->
+        <div v-else style="display: flex; flex-direction: column; gap: 12px;">
+          <div v-for="(sec, sIdx) in lifeHabitSections" :key="sec.id"
+            style="background: var(--bg-cream, #FDF5EB); border: 1.5px solid var(--color-sand); border-radius: 14px; padding: 16px 18px; position: relative; overflow: hidden;">
+            <!-- Accent bar kiri -->
+            <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--color-terracotta, #D67B52); border-radius: 14px 0 0 14px;"></div>
+            <div style="padding-left: 8px;">
+
+              <!-- Mode baca -->
+              <template v-if="editingLifeHabitIdx !== sIdx">
+                <!-- Row: judul + action buttons -->
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px;">
+                  <h4 style="font-size: 13px; font-weight: 800; color: var(--color-terracotta); margin: 0; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.4;">{{ sec.title || 'Section' }}</h4>
+                  <!-- Action buttons — sama persis gaya insight card -->
+                  <div style="display: inline-flex; gap: 5px; flex-shrink: 0; align-items: center;">
+                    <!-- Expand/collapse -->
+                    <button @click="toggleLifeHabitExpand(sec.id)"
+                      :title="expandedLifeHabits.has(sec.id) ? 'Sembunyikan' : 'Lihat catatan'"
+                      style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                      <svg :style="{ transform: expandedLifeHabits.has(sec.id) ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.22s' }"
+                        viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </button>
+                    <!-- Edit -->
+                    <button @click="startEditLifeHabit(sIdx)"
+                      title="Edit section"
+                      style="background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <!-- Hapus -->
+                    <button @click="deleteLifeHabitSection(sIdx)"
+                      title="Hapus section"
+                      style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <!-- Catatan (collapsible) — default collapsed, preview 1 baris -->
+                <div :style="{ maxHeight: expandedLifeHabits.has(sec.id) ? '600px' : '0px', overflow: 'hidden', transition: 'max-height 0.28s ease' }">
+                  <div style="height: 1px; background: var(--color-sand); margin-bottom: 10px;"></div>
+                  <div style="font-size: 13px; color: var(--text-dark); line-height: 1.75; white-space: pre-wrap;">{{ sec.note }}</div>
+                </div>
+                <!-- Preview 1 baris saat collapsed -->
+                <div v-if="!expandedLifeHabits.has(sec.id) && sec.note"
+                  style="font-size: 12.5px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90%;">
+                  {{ sec.note }}
+                </div>
+                <div v-if="!expandedLifeHabits.has(sec.id) && !sec.note"
+                  style="font-size: 12px; color: var(--text-muted); font-style: italic;">
+                  belum ada catatan — klik edit untuk isi
+                </div>
+              </template>
+
+              <!-- Mode edit inline -->
+              <template v-else>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <input v-model="lifeHabitEditForm.title" type="text"
+                    placeholder="Judul section (misal: Pagi Hari, Kesehatan, Ibadah...)"
+                    style="width: 100%; border: 1.5px solid var(--color-sand); border-radius: 9px; padding: 9px 13px; font-size: 13px; font-weight: 700; font-family: inherit; color: var(--text-dark); background: #fff; outline: none; box-sizing: border-box; transition: border-color 0.18s;"
+                    @focus="$event.target.style.borderColor='var(--color-terracotta)'"
+                    @blur="$event.target.style.borderColor='var(--color-sand)'" />
+                  <textarea v-model="lifeHabitEditForm.note"
+                    placeholder="Tulis catatan kebiasaan untuk section ini..."
+                    rows="4"
+                    style="width: 100%; border: 1.5px solid var(--color-sand); border-radius: 9px; padding: 10px 13px; font-size: 13px; font-family: inherit; color: var(--text-dark); background: #fff; resize: vertical; outline: none; line-height: 1.75; box-sizing: border-box; transition: border-color 0.18s;"
+                    @focus="$event.target.style.borderColor='var(--color-terracotta)'"
+                    @blur="$event.target.style.borderColor='var(--color-sand)'">
+                  </textarea>
+                  <!-- Save / Cancel row -->
+                  <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                    <button @click="cancelEditLifeHabit"
+                      style="height: 34px; padding: 0 14px; background: transparent; border: 1.5px solid var(--color-sand); color: var(--text-muted); border-radius: 8px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: background 0.15s;"
+                      onmouseover="this.style.background='var(--bg-cream)'"
+                      onmouseout="this.style.background='transparent'">Batal</button>
+                    <button @click="saveEditLifeHabit(sIdx)"
+                      style="height: 34px; padding: 0 16px; background: var(--color-terracotta); color: #fff; border: none; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s;"
+                      onmouseover="this.style.background='var(--color-terracotta-dark, #B8663F)'"
+                      onmouseout="this.style.background='var(--color-terracotta)'">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      Simpan
+                    </button>
+                  </div>
+                </div>
+              </template>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- TIMELINE -->
       <div class="nutrition-container">
         <div v-if="filteredInsights.length === 0" style="padding: 60px 20px; text-align: center; color: var(--text-muted); background: var(--bg-cream); border-radius: 12px; border: 1.5px dashed var(--color-sand);">
@@ -6215,6 +6338,11 @@ const DailyNutrition = {
         details: '',
         takeaway: ''
       },
+      // My Daily Life Habits — multi-section
+      lifeHabitSections: [],       // [{ id, title, note }]
+      editingLifeHabitIdx: null,   // index section yang sedang diedit (-1 = form baru)
+      expandedLifeHabits: new Set(),
+      lifeHabitEditForm: { title: '', note: '' },
       // Plan Next Insight
       showAddPlan: false,
       nextPlans: [],
@@ -6270,7 +6398,8 @@ const DailyNutrition = {
     latestInsightTitle() {
       const sorted = [...this.insights].sort((a, b) => new Date(b.date) - new Date(a.date));
       return sorted[0]?.title || '—';
-    }
+    },
+    // (life habits pakai lifeHabitSections, tidak perlu computed terpisah)
   },
   async created() {
     // ✅ FIX: Tunggu Supabase storage siap sebelum baca data
@@ -6299,6 +6428,12 @@ const DailyNutrition = {
       const savedPlans = WorkspaceStorage.getItem('personal_workspace_next_plans');
       if (savedPlans) this.nextPlans = JSON.parse(savedPlans);
     } catch(_e) { this.nextPlans = []; }
+
+    // Load My Daily Life Habits sections
+    try {
+      const savedHabits = WorkspaceStorage.getItem('personal_workspace_life_habits_sections');
+      if (savedHabits) this.lifeHabitSections = JSON.parse(savedHabits);
+    } catch(_e) { this.lifeHabitSections = []; }
   },
   methods: {
     calPrevMonth() { if (this.calMonth === 0) { this.calMonth = 11; this.calYear--; } else this.calMonth--; },
@@ -6465,6 +6600,58 @@ const DailyNutrition = {
     },
     closeInsightDetail() {
       this.viewingInsight = null;
+    },
+    // ── My Daily Life Habits methods ──────────────────────────────
+    saveLifeHabitSections() {
+      WorkspaceStorage.setItem('personal_workspace_life_habits_sections', JSON.stringify(this.lifeHabitSections));
+    },
+    addLifeHabitSection() {
+      const newSec = { id: 'lh-' + Date.now(), title: '', note: '' };
+      this.lifeHabitSections.push(newSec);
+      this.editingLifeHabitIdx = this.lifeHabitSections.length - 1;
+      this.lifeHabitEditForm = { title: '', note: '' };
+      this.expandedLifeHabits.add(newSec.id);
+      this.saveLifeHabitSections();
+    },
+    startEditLifeHabit(idx) {
+      this.editingLifeHabitIdx = idx;
+      const sec = this.lifeHabitSections[idx];
+      this.lifeHabitEditForm = { title: sec.title, note: sec.note };
+      this.expandedLifeHabits.add(sec.id);
+    },
+    saveEditLifeHabit(idx) {
+      const sec = this.lifeHabitSections[idx];
+      sec.title = this.lifeHabitEditForm.title.trim() || 'Section';
+      sec.note  = this.lifeHabitEditForm.note;
+      this.editingLifeHabitIdx = null;
+      this.lifeHabitEditForm = { title: '', note: '' };
+      this.saveLifeHabitSections();
+    },
+    cancelEditLifeHabit() {
+      // Jika section baru & masih kosong → hapus
+      if (this.editingLifeHabitIdx !== null) {
+        const sec = this.lifeHabitSections[this.editingLifeHabitIdx];
+        if (sec && !sec.title && !sec.note) {
+          this.lifeHabitSections.splice(this.editingLifeHabitIdx, 1);
+          this.saveLifeHabitSections();
+        }
+      }
+      this.editingLifeHabitIdx = null;
+      this.lifeHabitEditForm = { title: '', note: '' };
+    },
+    deleteLifeHabitSection(idx) {
+      if (!confirm('Hapus section ini?')) return;
+      this.lifeHabitSections.splice(idx, 1);
+      this.saveLifeHabitSections();
+    },
+    toggleLifeHabitExpand(id) {
+      if (this.expandedLifeHabits.has(id)) {
+        this.expandedLifeHabits.delete(id);
+      } else {
+        this.expandedLifeHabits.add(id);
+      }
+      // Paksa Vue reaktif — Set mutasi tidak terdeteksi otomatis
+      this.expandedLifeHabits = new Set(this.expandedLifeHabits);
     },
     saveToStorage() {
       WorkspaceStorage.setItem('personal_workspace_nutrition_insights', JSON.stringify(this.insights));
