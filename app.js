@@ -222,9 +222,11 @@ const App = {
     };
 
     // Global Date State for Month Trackers (Habit & Calendar)
-    const habitYearMonth = ref('2026-05'); // default
-    const habitDaysInMonth = ref(31);
-    const habitMonthKey = ref('05');
+    // Selalu mulai dari bulan & tahun berjalan (ambil dari jam sistem device), bukan nilai tetap.
+    const _habitNow = new Date();
+    const habitYearMonth = ref(`${_habitNow.getFullYear()}-${String(_habitNow.getMonth() + 1).padStart(2, '0')}`);
+    const habitDaysInMonth = ref(new Date(_habitNow.getFullYear(), _habitNow.getMonth() + 1, 0).getDate());
+    const habitMonthKey = ref(String(_habitNow.getMonth() + 1).padStart(2, '0'));
 
     const updateHabitDays = () => {
       const [year, month] = habitYearMonth.value.split('-').map(Number);
