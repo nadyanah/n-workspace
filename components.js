@@ -9652,7 +9652,7 @@ const GoogleCalendar = {
                   <span class="agenda-detail-row-icon">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                   </span>
-                  <span class="agenda-detail-row-text" style="color: var(--color-terracotta, #D67B52); font-weight:600; cursor:pointer; line-height:1.6;" @click="localNavigateFromDetail('habitTracker')">
+                  <span class="agenda-detail-row-text" style="color: var(--color-terracotta, #D67B52); font-weight:600; cursor:pointer; line-height:1.6;" @click="localNavigateToHabitTracker(agendaDetailItem)">
                     Habit Tracker
                     <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:4px; vertical-align:middle;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                   </span>
@@ -9694,7 +9694,7 @@ const GoogleCalendar = {
                   </button>
                 </template>
                 <button v-if="agendaDetailItem.type === 'habit'"
-                  @click="localNavigateFromDetail('habitTracker')"
+                  @click="localNavigateToHabitTracker(agendaDetailItem)"
                   class="agenda-detail-btn-nav">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                   Buka Habit Tracker
@@ -10236,6 +10236,7 @@ const GoogleCalendar = {
 
     </div>
   `,
+  emits: ['trigger-habit'],
   data() {
     return {
       auth: null,
@@ -11043,6 +11044,25 @@ const GoogleCalendar = {
     localNavigateFromDetail(page) {
       if (!page) return;
       globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: page }));
+      this.agendaDetailItem = null;
+    },
+
+    // Khusus item habit dari Agenda View: navigasi ke Habit Tracker SEKALIGUS
+    // trigger animasi pohon aktif, sama persis seperti saat diklik dari Panel Notifikasi.
+    localNavigateToHabitTracker(item) {
+      // Ekstrak habitId:
+      //   - Hari ini  : item.raw.habitId langsung tersedia dari ws_habit_notifs
+      //   - Hari lain : item.raw.id = 'habit-' + h.id  → strip prefix 'habit-'
+      const habitId = item && item.raw && (
+        item.raw.habitId ||
+        (item.raw.id ? String(item.raw.id).replace(/^habit-/, '') : null)
+      );
+      globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'habitTracker' }));
+      if (habitId) {
+        // Gunakan event global (jalur yang sama dengan push notifikasi) agar
+        // animasi pohon terpicu andal tanpa bergantung timing $emit vs v-if unmount.
+        globalThis.dispatchEvent(new CustomEvent('ws-trigger-habit', { detail: { habitId } }));
+      }
       this.agendaDetailItem = null;
     },
 
