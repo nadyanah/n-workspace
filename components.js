@@ -4091,8 +4091,13 @@ const ContentTracker = {
                        required />
               </div>
               <div class="form-group">
-                <label>Target Tanggal Rilis</label>
-                <input type="date" class="form-input" v-model="form.dueDate" required style="height: 38px;" />
+                <label>Target Tanggal Rilis<span v-if="(form.status || columns[0]) !== (columns[0] || 'Idea')"> *</span></label>
+                <input type="date" class="form-input" v-model="form.dueDate"
+                       :required="(form.status || columns[0]) !== (columns[0] || 'Idea')"
+                       style="height: 38px;" />
+                <span v-if="(form.status || columns[0]) === (columns[0] || 'Idea')" style="font-size: 11px; color: #9A8F85; margin-top: 4px; display: block;">
+                  Boleh dikosongkan dulu selama masih tahap Ide
+                </span>
               </div>
             </div>
 
@@ -4359,7 +4364,8 @@ const ContentTracker = {
         dueDate: localDateStr(),
         dueTime: '',
         notes: '',
-        username: '@nadya'
+        username: '@nadya',
+        status: ''
       }
     };
   },
@@ -4592,9 +4598,11 @@ const ContentTracker = {
       this.editingItemId = null;
       this.form.title = '';
       this.form.notes = '';
+      this.form.dueDate = '';
       this.form.dueTime = '';
       this.form.platform = this.platforms[0] || 'Instagram';
       this.form.username = this.usernames[0] || '@nadya';
+      this.form.status = this.columns[0] || 'Idea';
       this.customPlatformName = '';
       this.customUsernameVal = '';
       this.showPlatDropdown = false;
@@ -4606,6 +4614,7 @@ const ContentTracker = {
       this.editingItemId = item.id;
       this.form.title = item.title;
       this.form.notes = item.notes || '';
+      this.form.status = item.status;
       this.showPlatDropdown = false;
       this.showUserDropdown = false;
       
@@ -4663,6 +4672,13 @@ const ContentTracker = {
         finalUsername = customUser;
       }
 
+      // Target Tanggal Rilis wajib diisi kecuali kontennya masih di tahap Ide (kolom pertama)
+      const isIdeaStage = (this.form.status || this.columns[0]) === (this.columns[0] || 'Idea');
+      if (!isIdeaStage && !this.form.dueDate) {
+        alert('Target Tanggal Rilis wajib diisi untuk konten yang sudah lewat tahap Ide.');
+        return;
+      }
+
       if (this.isEditing && this.editingItemId !== null) {
         const existing = this.items.find(i => i.id === this.editingItemId);
         if (existing) {
@@ -4676,7 +4692,7 @@ const ContentTracker = {
       } else {
         const newItem = {
           id: Date.now(),
-          status: this.columns[0] || 'Idea',
+          status: this.form.status || this.columns[0] || 'Idea',
           title: this.form.title,
           platform: finalPlatform,
           dueDate: this.form.dueDate,
