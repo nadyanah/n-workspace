@@ -10731,9 +10731,19 @@ const GoogleCalendar = {
       }
 
       // --- Assign overlap columns for timed items ---
+      // Kategori "daily" selalu diprioritaskan menempati kolom paling kiri (dekat jam)
+      // dan tidak boleh tergeser oleh item lain yang overlap jamnya.
       timed.sort((a, b) => a.startMin - b.startMin || a.endMin - b.endMin);
       const columns = []; // each: last endMin
-      timed.forEach(item => {
+      const dailyPinned = timed.filter(item => this.isDailyPinnedItem(item));
+      const restTimed = timed.filter(item => !this.isDailyPinnedItem(item));
+      dailyPinned.forEach(item => {
+        let colIdx = columns.findIndex(endMin => endMin <= item.startMin);
+        if (colIdx === -1) { colIdx = columns.length; columns.push(0); }
+        columns[colIdx] = item.endMin;
+        item.col = colIdx;
+      });
+      restTimed.forEach(item => {
         let colIdx = columns.findIndex(endMin => endMin <= item.startMin);
         if (colIdx === -1) { colIdx = columns.length; columns.push(0); }
         columns[colIdx] = item.endMin;
@@ -11040,6 +11050,15 @@ const GoogleCalendar = {
       const custom = this.customReminderCategories.find(c => c.key === cat);
       if (custom) return custom.label;
       return cat;
+    },
+
+    // ── Deteksi item kategori "Daily Block" agar selalu dipin di kolom paling kiri (dekat jam), tidak tergeser item lain. Hanya berlaku di Agenda View (day view). ──
+    isDailyPinnedItem(item) {
+      if (!item || item.type !== 'manual' || !item.category) return false;
+      const rawCat = String(item.category).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+      if (rawCat.includes('daily block') || rawCat.includes('daily_block')) return true;
+      const label = String(this.localCategoryLabel(item.category)).toLowerCase().trim();
+      return label === 'daily block';
     },
 
     localPageLabel(page) {
