@@ -14439,7 +14439,7 @@ const DzikirCounter = {
               <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 17px;">📝</div>
               <div style="flex: 1; min-width: 0;">
                 <div style="font-size: 15px; font-weight: 800;">Catatan Dzikir</div>
-                <div style="font-size: 11px; opacity: 0.82; margin-top: 1px;">tersimpan otomatis ✦</div>
+                <div style="font-size: 11px; opacity: 0.82; margin-top: 1px;">{{ notesEditing ? 'sedang mengedit ✎' : 'tersimpan ✦' }}</div>
               </div>
               <button @click="closeNotes"
                 style="background: rgba(255,255,255,0.18); border: none; border-radius: 9px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 16px; transition: background 0.15s;"
@@ -14448,11 +14448,19 @@ const DzikirCounter = {
 
             <!-- Notes Body -->
             <div style="padding: 20px 24px 4px; flex: 1; display: flex; flex-direction: column; overflow-y: auto;">
-              <textarea v-model="notesText" @input="onNotesInput"
+              <textarea v-if="notesEditing" v-model="notesText" @input="onNotesInput"
                 placeholder="Tulis catatan, niat, atau refleksi dzikirmu di sini..."
                 style="width: 100%; flex: 1; min-height: 220px; resize: vertical; padding: 14px 16px; border: 1.5px solid var(--color-sand); border-radius: 12px; font-size: 13.5px; line-height: 1.6; font-family: inherit; color: var(--text-dark); background: #fff; box-sizing: border-box; outline: none;"
                 @focus="$event.target.style.borderColor='var(--color-terracotta)'" @blur="$event.target.style.borderColor='var(--color-sand)'"></textarea>
-              <div style="font-size: 11px; color: var(--text-muted); margin-top: 10px; text-align: right;">
+
+              <!-- Mode baca: teks catatan yang sudah tersimpan, tidak bisa diketik sampai klik Edit -->
+              <div v-else @click="startEditNotes" title="Klik untuk edit"
+                style="width: 100%; flex-shrink: 0; height: auto; min-height: 220px; padding: 14px 16px; border: 1.5px solid var(--color-sand); border-radius: 12px; font-size: 13.5px; line-height: 1.6; color: var(--text-dark); background: var(--bg-cream); box-sizing: border-box; white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word; cursor: text;">
+                <span v-if="notesText">{{ notesText }}</span>
+                <span v-else style="color: var(--text-muted); font-style: italic;">Belum ada catatan. Klik di sini untuk mulai menulis.</span>
+              </div>
+
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 10px; text-align: right; flex-shrink: 0;">
                 {{ notesText.length }} karakter
               </div>
             </div>
@@ -14469,10 +14477,15 @@ const DzikirCounter = {
                 style="height: 38px; padding: 0 16px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); border-radius: 9px; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit;">
                 Tutup
               </button>
-              <button @click="saveNotes"
+              <button v-if="notesEditing" @click="saveNotes"
                 style="height: 38px; padding: 0 20px; background: var(--color-terracotta, #D67B52); color: #fff; border: none; border-radius: 9px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit;"
                 onmouseover="this.style.background='var(--color-terracotta-dark, #B8663F)'" onmouseout="this.style.background='var(--color-terracotta, #D67B52)'">
-                Simpan
+                💾 Simpan
+              </button>
+              <button v-else @click="startEditNotes"
+                style="height: 38px; padding: 0 20px; background: var(--color-terracotta, #D67B52); color: #fff; border: none; border-radius: 9px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit;"
+                onmouseover="this.style.background='var(--color-terracotta-dark, #B8663F)'" onmouseout="this.style.background='var(--color-terracotta, #D67B52)'">
+                ✎ Edit
               </button>
             </div>
 
@@ -14488,6 +14501,7 @@ const DzikirCounter = {
       showManage: false,
       showNotes: false,
       notesText: '',
+      notesEditing: false,
       notesJustSaved: false,
       _notesSaveTimer: null,
       justCompleted: false,
@@ -14698,16 +14712,21 @@ const DzikirCounter = {
     },
     openNotes() {
       this.showNotes = true;
+      // Kalau sudah ada catatan tersimpan, buka dalam mode baca. Kalau masih kosong, langsung mode edit.
+      this.notesEditing = !this.notesText;
     },
     closeNotes() {
       this.showNotes = false;
     },
+    startEditNotes() {
+      this.notesEditing = true;
+    },
     onNotesInput() {
-      // Autosave diam-diam tiap perubahan, tanpa munculkan notifikasi "Tersimpan"
-      WorkspaceStorage.setItem('dzikir_notes', this.notesText);
+      // Draft belum final, hanya tersimpan permanen saat tombol Simpan ditekan
     },
     saveNotes() {
       WorkspaceStorage.setItem('dzikir_notes', this.notesText);
+      this.notesEditing = false;
       this.notesJustSaved = true;
       if (this._notesSaveTimer) clearTimeout(this._notesSaveTimer);
       this._notesSaveTimer = setTimeout(() => {
