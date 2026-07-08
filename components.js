@@ -14205,6 +14205,12 @@ const DzikirCounter = {
                   onmouseover="this.style.background='rgba(255,255,255,0.32)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">
                   <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                 </button>
+                <!-- Notes button -->
+                <button @click="openNotes" title="Catatan"
+                  style="background: rgba(255,255,255,0.18); border: none; border-radius: 9px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; transition: background 0.15s;"
+                  onmouseover="this.style.background='rgba(255,255,255,0.32)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+                </button>
                 <!-- Close button -->
                 <button @click="$emit('close')"
                   style="background: rgba(255,255,255,0.18); border: none; border-radius: 9px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 16px; transition: background 0.15s;"
@@ -14419,6 +14425,60 @@ const DzikirCounter = {
           </div>
         </div>
       </transition>
+
+      <!-- NOTES POPUP — catatan bebas terkait dzikir, bisa diedit & tersimpan otomatis -->
+      <transition name="insight-modal-fade">
+        <div v-if="showNotes"
+          style="position: fixed; inset: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background: rgba(30,22,16,0.55); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); padding: 16px;"
+          @click.self="closeNotes">
+
+          <div style="background: var(--color-paper, #FAF7F2); width: min(480px, 96vw); max-height: 88vh; border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,0.32); display: flex; flex-direction: column; overflow: hidden; animation: insightPopIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+
+            <!-- Notes Header -->
+            <div style="display: flex; align-items: center; gap: 12px; padding: 16px 22px 14px; background: var(--color-terracotta, #D67B52); color: #fff; flex-shrink: 0;">
+              <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 17px;">📝</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 15px; font-weight: 800;">Catatan Dzikir</div>
+                <div style="font-size: 11px; opacity: 0.82; margin-top: 1px;">tersimpan otomatis ✦</div>
+              </div>
+              <button @click="closeNotes"
+                style="background: rgba(255,255,255,0.18); border: none; border-radius: 9px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 16px; transition: background 0.15s;"
+                onmouseover="this.style.background='rgba(255,255,255,0.32)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">✕</button>
+            </div>
+
+            <!-- Notes Body -->
+            <div style="padding: 20px 24px 4px; flex: 1; display: flex; flex-direction: column; overflow-y: auto;">
+              <textarea v-model="notesText" @input="onNotesInput"
+                placeholder="Tulis catatan, niat, atau refleksi dzikirmu di sini..."
+                style="width: 100%; flex: 1; min-height: 220px; resize: vertical; padding: 14px 16px; border: 1.5px solid var(--color-sand); border-radius: 12px; font-size: 13.5px; line-height: 1.6; font-family: inherit; color: var(--text-dark); background: #fff; box-sizing: border-box; outline: none;"
+                @focus="$event.target.style.borderColor='var(--color-terracotta)'" @blur="$event.target.style.borderColor='var(--color-sand)'"></textarea>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 10px; text-align: right;">
+                {{ notesText.length }} karakter
+              </div>
+            </div>
+
+            <!-- Notes Footer -->
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 14px 24px 20px; flex-shrink: 0;">
+              <transition name="insight-modal-fade">
+                <span v-if="notesJustSaved" style="font-size: 11.5px; font-weight: 700; color: #16a34a; display: flex; align-items: center; gap: 4px;">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Tersimpan
+                </span>
+              </transition>
+              <button @click="closeNotes"
+                style="height: 38px; padding: 0 16px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); border-radius: 9px; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit;">
+                Tutup
+              </button>
+              <button @click="saveNotes"
+                style="height: 38px; padding: 0 20px; background: var(--color-terracotta, #D67B52); color: #fff; border: none; border-radius: 9px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit;"
+                onmouseover="this.style.background='var(--color-terracotta-dark, #B8663F)'" onmouseout="this.style.background='var(--color-terracotta, #D67B52)'">
+                Simpan
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </transition>
     </teleport>
   `,
   data() {
@@ -14426,6 +14486,10 @@ const DzikirCounter = {
       list: [],
       activeIndex: 0,
       showManage: false,
+      showNotes: false,
+      notesText: '',
+      notesJustSaved: false,
+      _notesSaveTimer: null,
       justCompleted: false,
       editingId: null,
       form: { text: '', arabic: '', meaning: '', target: 33 },
@@ -14632,6 +14696,24 @@ const DzikirCounter = {
       this.showManage = false;
       this.cancelEdit();
     },
+    openNotes() {
+      this.showNotes = true;
+    },
+    closeNotes() {
+      this.showNotes = false;
+    },
+    onNotesInput() {
+      // Autosave diam-diam tiap perubahan, tanpa munculkan notifikasi "Tersimpan"
+      WorkspaceStorage.setItem('dzikir_notes', this.notesText);
+    },
+    saveNotes() {
+      WorkspaceStorage.setItem('dzikir_notes', this.notesText);
+      this.notesJustSaved = true;
+      if (this._notesSaveTimer) clearTimeout(this._notesSaveTimer);
+      this._notesSaveTimer = setTimeout(() => {
+        this.notesJustSaved = false;
+      }, 1800);
+    },
     saveToStorage() {
       WorkspaceStorage.setItem('dzikir_list', JSON.stringify(this.list));
     },
@@ -14656,6 +14738,8 @@ const DzikirCounter = {
       } else {
         this.seedDefaults();
       }
+      const savedNotes = WorkspaceStorage.getItem('dzikir_notes');
+      if (savedNotes !== null) this.notesText = savedNotes;
     } catch (_e) {
       this.seedDefaults();
     }
