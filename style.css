@@ -1248,7 +1248,7 @@ h1, h2, h3, h4 {
   bottom: 0;
   background-color: rgba(44, 38, 33, 0.25);
   backdrop-filter: blur(4px);
-  z-index: 110;
+  z-index: 300;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3235,6 +3235,63 @@ input:checked + .switch-slider:before {
   padding: 24px;
   margin-top: 28px;
   box-shadow: 0 4px 12px rgba(44,38,33,0.03);
+}
+
+/* Questions Update Panel — rendered as a centered popup instead of an inline drawer */
+.questions-manage-modal-card {
+  margin-top: 0;
+  width: min(760px, 92vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 48px rgba(44,38,33,0.22), 0 2px 8px rgba(44,38,33,0.10);
+}
+@media (max-width: 640px) {
+  .questions-manage-modal-card {
+    width: 96vw;
+    padding: 18px;
+    max-height: 92vh;
+  }
+}
+
+/* Popup detail terpisah — nampilin Hints & Note per pertanyaan */
+.questions-detail-modal-card {
+  background-color: #FAF8F5;
+  border: 1.5px solid #EAE5DD;
+  border-radius: 20px;
+  padding: 22px;
+  width: min(480px, 90vw);
+  max-height: 82vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 48px rgba(44,38,33,0.22), 0 2px 8px rgba(44,38,33,0.10);
+}
+.questions-detail-block {
+  background: var(--bg-card, #fff);
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-top: 12px;
+}
+.questions-detail-block label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: var(--color-terracotta, #D67B52);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.questions-detail-block p {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-dark, #3D2E22);
+  margin: 0;
+  white-space: pre-line;
+}
+@media (max-width: 640px) {
+  .questions-detail-modal-card {
+    width: 94vw;
+    padding: 18px;
+  }
 }
 
 .questions-manage-table {

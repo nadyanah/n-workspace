@@ -4876,12 +4876,19 @@ const InterviewPractice = {
         </div>
       </div>
 
-      <!-- ═══ MANUAL MODE: Question Manager Panel ═══ -->
-      <div v-if="activeMode==='manual'" v-show="showManagePanel" class="questions-manage-drawer animate-fade-in" style="margin-bottom: 28px;">
-        <h3 style="font-size:15px; font-weight:800; color:var(--color-forest,#1C3B34); margin:0 0 14px 0; display:flex; align-items:center; gap:6px;">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-terracotta);"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
-          Kelola & Update Daftar Pertanyaan
-        </h3>
+      <!-- ═══ MANUAL MODE: Question Manager Popup ═══ -->
+      <transition name="modal-fade">
+      <div v-if="activeMode==='manual' && showManagePanel" class="modal-backdrop" @click.self="toggleManagePanel">
+      <div class="questions-manage-drawer questions-manage-modal-card animate-fade-in">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+          <h3 style="font-size:15px; font-weight:800; color:var(--color-forest,#1C3B34); margin:0; display:flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-terracotta);"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+            Kelola & Update Daftar Pertanyaan
+          </h3>
+          <button class="card-nav-btn" @click="toggleManagePanel" title="Tutup" style="background:var(--bg-cream); border:1px solid var(--color-sand); width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
         <div style="background:var(--bg-card,#fff); border:1.5px solid var(--color-sand,#E8DFD8); border-radius:12px; padding:16px; display:grid; gap:12px; margin-bottom:16px;">
           <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
             <div>
@@ -4949,6 +4956,10 @@ const InterviewPractice = {
             <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:4px;">Tips / Hints Jawaban</label>
             <textarea class="form-input" v-model="formHints" rows="2" placeholder="Saran kerangka jawaban..." style="padding:10px; font-size:13px; border:1.5px solid var(--color-sand);"></textarea>
           </div>
+          <div>
+            <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:4px;">Note Pertanyaan</label>
+            <textarea class="form-input" v-model="formNote" rows="2" placeholder="Catatan tambahan tentang pertanyaan ini (opsional)..." style="padding:10px; font-size:13px; border:1.5px solid var(--color-sand);"></textarea>
+          </div>
           <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:4px;">
             <button v-show="editingId !== null" class="btn btn-secondary" @click="cancelEdit" style="font-size:12.5px; padding:8px 16px;">Batal</button>
             <button class="spin-btn-teal" @click="saveCustomQuestion" style="font-size:13px; padding:8px 24px; box-shadow:none;">
@@ -4961,10 +4972,10 @@ const InterviewPractice = {
             <thead>
               <tr>
                 <th style="width:16%;">Kategori</th>
-                <th style="width:10%; text-align:center;">Framework</th>
-                <th style="width:38%;">Pertanyaan</th>
-                <th style="width:24%;">Hints</th>
-                <th style="width:12%; text-align:center;">Aksi</th>
+                <th style="width:11%; text-align:center;">Framework</th>
+                <th style="width:39%;">Pertanyaan</th>
+                <th style="width:14%; text-align:center;">Detail</th>
+                <th style="width:20%; text-align:center;">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -4975,7 +4986,12 @@ const InterviewPractice = {
                   <span v-else class="ip-fw-badge ip-fw-badge--none">Bebas</span>
                 </td>
                 <td style="font-weight:600; color:var(--color-forest,#1C3B34);">{{ q.text }}</td>
-                <td style="font-size:11.5px; color:var(--text-muted);">{{ q.hints }}</td>
+                <td style="text-align:center;">
+                  <button class="card-nav-btn" @click="viewingQuestion = q" title="Lihat Hints & Note" style="background:var(--bg-cream); border:1px solid var(--color-sand); padding:6px 10px; display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; color:var(--color-forest,#1C3B34); border-radius:8px;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    Lihat
+                  </button>
+                </td>
                 <td style="text-align:center;">
                   <div style="display:flex; gap:6px; justify-content:center;">
                     <button class="card-nav-btn" @click="startEdit(q)" style="background:var(--bg-cream); border:1px solid var(--color-sand); width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center;">
@@ -4996,6 +5012,37 @@ const InterviewPractice = {
           </div>
         </div>
       </div>
+      </div>
+      </transition>
+
+      <!-- ═══ Popup Detail Hints & Note (terpisah dari panel Kelola Soal) ═══ -->
+      <transition name="modal-fade">
+      <div v-if="viewingQuestion" class="modal-backdrop" @click.self="viewingQuestion = null" style="z-index:310;">
+        <div class="questions-detail-modal-card animate-fade-in">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px;">
+            <div>
+              <span class="framework-step-pill" style="margin:0 0 8px 0; font-size:10px;">{{ viewingQuestion.category }}</span>
+              <h3 style="font-size:14.5px; font-weight:800; color:var(--color-forest,#1C3B34); margin:8px 0 0 0; line-height:1.5;">{{ viewingQuestion.text }}</h3>
+            </div>
+            <button class="card-nav-btn" @click="viewingQuestion = null" title="Tutup" style="background:var(--bg-cream); border:1px solid var(--color-sand); width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+          <div style="margin-bottom:6px;">
+            <span v-if="viewingQuestion.framework" class="ip-fw-badge" :class="'ip-fw-badge--' + viewingQuestion.framework.toLowerCase()">{{ viewingQuestion.framework }}</span>
+            <span v-else class="ip-fw-badge ip-fw-badge--none">Bebas</span>
+          </div>
+          <div class="questions-detail-block">
+            <label>Tips / Hints Jawaban</label>
+            <p>{{ viewingQuestion.hints || '—' }}</p>
+          </div>
+          <div class="questions-detail-block">
+            <label>Note Pertanyaan</label>
+            <p>{{ viewingQuestion.note || '—' }}</p>
+          </div>
+        </div>
+      </div>
+      </transition>
 
       <!-- ═══ AI MODE: Setup Panel ═══ -->
       <div v-if="activeMode==='ai'" class="ip-ai-panel animate-fade-in" style="margin-bottom:24px;">
@@ -5331,9 +5378,11 @@ const InterviewPractice = {
 
       // ── Manage panel ──
       showManagePanel: false,
+      viewingQuestion: null,
       formCategory: 'General HR',
       formText: '',
       formHints: '',
+      formNote: '',
       formFramework: 'STAR',
       editingId: null,
       quickCustomQuestionText: '',
@@ -5381,7 +5430,7 @@ const InterviewPractice = {
     // ── Category (manual) ──
     toggleCategoryDropdown() { this.showCategoryDropdown = !this.showCategoryDropdown; },
     selectCategory(cat) { this.selectedCategory = cat; this.showCategoryDropdown = false; this.resetToReSpin(); },
-    toggleManagePanel() { if (this.activeMode === 'ai') return; this.showManagePanel = !this.showManagePanel; this.cancelEdit(); },
+    toggleManagePanel() { if (this.activeMode === 'ai') return; this.showManagePanel = !this.showManagePanel; this.cancelEdit(); this.viewingQuestion = null; },
 
     // ── Reset ──
     resetToReSpin() {
@@ -5478,16 +5527,16 @@ const InterviewPractice = {
       if (!this.formText.trim()) { alert('Teks pertanyaan tidak boleh kosong!'); return; }
       if (this.editingId !== null) {
         const idx = this.questions.findIndex(q => q.id === this.editingId);
-        if (idx !== -1) { this.questions[idx].category = this.formCategory; this.questions[idx].text = this.formText.trim(); this.questions[idx].hints = this.formHints.trim() || 'Fokuskan penyampaian dengan kerangka berpikir rasional.'; this.questions[idx].framework = this.formFramework || null; }
+        if (idx !== -1) { this.questions[idx].category = this.formCategory; this.questions[idx].text = this.formText.trim(); this.questions[idx].hints = this.formHints.trim() || 'Fokuskan penyampaian dengan kerangka berpikir rasional.'; this.questions[idx].note = this.formNote.trim(); this.questions[idx].framework = this.formFramework || null; }
         this.editingId = null;
       } else {
-        this.questions.push({ id: Date.now(), category: this.formCategory, text: this.formText.trim(), hints: this.formHints.trim() || 'Fokuskan penyampaian dengan kerangka berpikir rasional.', framework: this.formFramework || null });
+        this.questions.push({ id: Date.now(), category: this.formCategory, text: this.formText.trim(), hints: this.formHints.trim() || 'Fokuskan penyampaian dengan kerangka berpikir rasional.', note: this.formNote.trim(), framework: this.formFramework || null });
       }
-      this.saveQuestionsToLocalStorage(); this.formText = ''; this.formHints = ''; this.formFramework = 'STAR';
+      this.saveQuestionsToLocalStorage(); this.formText = ''; this.formHints = ''; this.formNote = ''; this.formFramework = 'STAR';
       alert('Pertanyaan berhasil disimpan!');
     },
-    startEdit(q) { this.editingId = q.id; this.formCategory = q.category; this.formText = q.text; this.formHints = q.hints; this.formFramework = q.framework || ''; globalThis.scrollTo({ top: 300, behavior: 'smooth' }); },
-    cancelEdit() { this.editingId = null; this.formText = ''; this.formHints = ''; this.formFramework = 'STAR'; },
+    startEdit(q) { this.editingId = q.id; this.formCategory = q.category; this.formText = q.text; this.formHints = q.hints; this.formNote = q.note || ''; this.formFramework = q.framework || ''; globalThis.scrollTo({ top: 300, behavior: 'smooth' }); },
+    cancelEdit() { this.editingId = null; this.formText = ''; this.formHints = ''; this.formNote = ''; this.formFramework = 'STAR'; },
     deleteCustomQuestion(id) {
       if (confirm('Hapus pertanyaan ini?')) { this.questions = this.questions.filter(q => q.id !== id); this.saveQuestionsToLocalStorage(); this.resetToReSpin(); }
     },
