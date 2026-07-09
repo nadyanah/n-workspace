@@ -5226,25 +5226,27 @@ const InterviewPractice = {
               </div>
               <div class="reel-row reel-row-faded">{{ reelBelowText }}</div>
             </div>
-            <div class="lever-widget">
-              <div class="lever-tip-text">pull lever<br>↓</div>
-              <div class="lever-track-container">
-                <div class="lever-track-slot">
-                  <div class="lever-rod-shaft" :style="{ height: (30 + leverTopValue) + 'px' }"></div>
-                  <div class="lever-handle-knob" :style="{ top: leverTopValue + 'px' }" @mousedown="pullLever" @touchstart.prevent="pullLever"></div>
-                  <div class="lever-base-indicator"></div>
+            <div class="lever-spin-stack">
+              <div class="lever-widget">
+                <div class="lever-tip-text">pull lever<br>↓</div>
+                <div class="lever-track-container">
+                  <div class="lever-track-slot">
+                    <div class="lever-rod-shaft" :style="{ height: (30 + leverTopValue) + 'px' }"></div>
+                    <div class="lever-handle-knob" :style="{ top: leverTopValue + 'px' }" @mousedown="pullLever" @touchstart.prevent="pullLever"></div>
+                    <div class="lever-base-indicator"></div>
+                  </div>
                 </div>
               </div>
+              <button class="spin-btn-teal spin-btn-lever" @click="spinRollOnce" :disabled="isSpinning">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                Spin!
+              </button>
             </div>
           </div>
 
-          <!-- Spin Buttons -->
-          <div class="ip-spin-btns">
-            <button class="spin-btn-teal" @click="spinRollOnce" :disabled="isSpinning" style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-              Spin!
-            </button>
-            <button v-if="chosenAfterLever && selectedQ" class="ip-reset-btn" @click="resetToReSpin">
+          <!-- Reset Button -->
+          <div class="ip-spin-btns" v-if="chosenAfterLever && selectedQ">
+            <button class="ip-reset-btn" @click="resetToReSpin">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
               Reset Pilihan
             </button>
