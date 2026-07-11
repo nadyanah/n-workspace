@@ -15557,7 +15557,6 @@ const CareerFoundation = {
           <div class="cf-doc-info">
             <p class="cf-doc-title">{{ doc.title }}</p>
             <div class="cf-doc-meta">
-              <span class="cf-doc-type-badge" style="background:#EDE8E1;color:var(--text-secondary,#7A6F66);">{{ langFlag(doc.language) }} {{ langLabel(doc.language) }}</span>
               <span v-if="doc.target" style="font-size:11.5px;color:var(--text-muted,#6E6359);">{{ doc.target }}</span>
               <span v-if="doc.updatedAt" style="font-size:11px;color:#C8BDB5;font-family:'Hack',monospace;">{{ formatLastUpdated(doc.updatedAt) }}</span>
             </div>
@@ -15602,7 +15601,6 @@ const CareerFoundation = {
           <div class="cf-doc-info">
             <p class="cf-doc-title">{{ doc.title }}</p>
             <div class="cf-doc-meta">
-              <span class="cf-doc-type-badge" style="background:#EDE8E1;color:var(--text-secondary,#7A6F66);">{{ langFlag(doc.language) }} {{ langLabel(doc.language) }}</span>
               <span v-if="doc.target" style="font-size:11.5px;color:var(--text-muted,#6E6359);">{{ doc.target }}</span>
               <span v-if="doc.updatedAt" style="font-size:11px;color:#C8BDB5;font-family:'Hack',monospace;">{{ formatLastUpdated(doc.updatedAt) }}</span>
             </div>
@@ -15647,9 +15645,9 @@ const CareerFoundation = {
           <div class="cf-doc-info">
             <p class="cf-doc-title">{{ doc.title }}</p>
             <div class="cf-doc-meta">
-              <span class="cf-doc-type-badge" style="background:#EDE8E1;color:var(--text-secondary,#7A6F66);">{{ langFlag(doc.language) }} {{ langLabel(doc.language) }}</span>
               <span v-if="doc.target" style="font-size:11.5px;color:var(--text-muted,#6E6359);">{{ doc.target }}</span>
-              <span style="font-size:11px;font-family:'Hack',monospace;" :style="{ color: (doc.content||'').length > 300 ? '#DC2626' : '#C8BDB5' }">{{ (doc.content||'').length }}/300</span>
+              <span style="font-size:11px;font-family:'Hack',monospace;" :style="{ color: (doc.content_id||'').length > 300 ? '#DC2626' : '#C8BDB5' }">🇮🇩 {{ (doc.content_id||'').length }}/300</span>
+              <span style="font-size:11px;font-family:'Hack',monospace;" :style="{ color: (doc.content_en||'').length > 300 ? '#DC2626' : '#C8BDB5' }">🇬🇧 {{ (doc.content_en||'').length }}/300</span>
               <span v-if="doc.updatedAt" style="font-size:11px;color:#C8BDB5;font-family:'Hack',monospace;">{{ formatLastUpdated(doc.updatedAt) }}</span>
             </div>
           </div>
@@ -15693,7 +15691,6 @@ const CareerFoundation = {
           <div class="cf-doc-info">
             <p class="cf-doc-title">{{ doc.title }}</p>
             <div class="cf-doc-meta">
-              <span class="cf-doc-type-badge" style="background:#EDE8E1;color:var(--text-secondary,#7A6F66);">{{ langFlag(doc.language) }} {{ langLabel(doc.language) }}</span>
               <span v-if="doc.target" style="font-size:11.5px;color:var(--text-muted,#6E6359);">{{ doc.target }}</span>
               <span v-if="doc.updatedAt" style="font-size:11px;color:#C8BDB5;font-family:'Hack',monospace;">{{ formatLastUpdated(doc.updatedAt) }}</span>
             </div>
@@ -15735,7 +15732,6 @@ const CareerFoundation = {
             <p class="cf-doc-title">{{ doc.title }}</p>
             <div class="cf-doc-meta">
               <span class="cf-doc-type-badge" :style="{ background: docTypeColor(doc.type) + '18', color: docTypeColor(doc.type) }">{{ docTypeLabel(doc.type) }}</span>
-              <span v-if="doc.type !== 'cv'" class="cf-doc-type-badge" style="background:#EDE8E1;color:var(--text-secondary,#7A6F66);">{{ langFlag(doc.language) }} {{ langLabel(doc.language) }}</span>
               <span v-if="doc.target" style="font-size:11.5px;color:var(--text-muted,#6E6359);">{{ doc.target }}</span>
               <span v-if="doc.updatedAt" style="font-size:11px;color:#C8BDB5;font-family:'Hack',monospace;">{{ formatLastUpdated(doc.updatedAt) }}</span>
             </div>
@@ -15882,13 +15878,6 @@ const CareerFoundation = {
                 </button>
               </div>
             </div>
-            <div v-if="docForm.type !== 'cv'">
-              <label class="cf-field-label">Bahasa Dokumen</label>
-              <div class="cf-type-pills">
-                <button class="cf-type-pill" :class="{ active: docForm.language === 'id' }" @click="docForm.language = 'id'">🇮🇩 Bahasa Indonesia</button>
-                <button class="cf-type-pill" :class="{ active: docForm.language === 'en' }" @click="docForm.language = 'en'">🇬🇧 English</button>
-              </div>
-            </div>
             <div>
               <label class="cf-field-label">Judul Dokumen *</label>
               <input class="cf-input" v-model="docForm.title" placeholder="mis. CV Umum — Fresh Graduate 2025"/>
@@ -15897,18 +15886,35 @@ const CareerFoundation = {
               <label class="cf-field-label">Target Perusahaan / Posisi</label>
               <input class="cf-input" v-model="docForm.target" placeholder="mis. Posisi Content Creator di Shopee"/>
             </div>
-            <div>
+            <div v-if="docForm.type !== 'cv'">
               <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                <label class="cf-field-label" style="margin-bottom:0;">Isi Dokumen</label>
-                <button v-if="docForm.type !== 'cv'" type="button" class="cf-btn-ghost" style="padding:4px 10px; font-size:11px;" @click="useDocTemplate">
+                <label class="cf-field-label" style="margin-bottom:0;">🇮🇩 Isi Dokumen — Bahasa Indonesia</label>
+                <button type="button" class="cf-btn-ghost" style="padding:4px 10px; font-size:11px;" @click="useDocTemplate('id')">
                   <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-                  Gunakan Template {{ langLabel(docForm.language) }}
+                  Gunakan Template ID
                 </button>
               </div>
-              <textarea class="cf-textarea" v-model="docForm.content" :placeholder="docContentPlaceholder" rows="10"></textarea>
-              <p v-if="docForm.type === 'linkedin_note'" style="margin:5px 2px 0; font-size:11.5px; font-family:'Hack',monospace;" :style="{ color: docForm.content.length > 300 ? '#DC2626' : 'var(--text-muted,#A09690)' }">
-                {{ docForm.content.length }}/300 karakter {{ docForm.content.length > 300 ? '— melebihi batas LinkedIn' : '' }}
+              <textarea class="cf-textarea" v-model="docForm.content_id" :placeholder="docContentPlaceholderId" rows="8"></textarea>
+              <p v-if="docForm.type === 'linkedin_note'" style="margin:5px 2px 0; font-size:11.5px; font-family:'Hack',monospace;" :style="{ color: docForm.content_id.length > 300 ? '#DC2626' : 'var(--text-muted,#A09690)' }">
+                {{ docForm.content_id.length }}/300 karakter {{ docForm.content_id.length > 300 ? '— melebihi batas LinkedIn' : '' }}
               </p>
+            </div>
+            <div v-if="docForm.type !== 'cv'">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <label class="cf-field-label" style="margin-bottom:0;">🇬🇧 Isi Dokumen — English</label>
+                <button type="button" class="cf-btn-ghost" style="padding:4px 10px; font-size:11px;" @click="useDocTemplate('en')">
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                  Gunakan Template EN
+                </button>
+              </div>
+              <textarea class="cf-textarea" v-model="docForm.content_en" :placeholder="docContentPlaceholderEn" rows="8"></textarea>
+              <p v-if="docForm.type === 'linkedin_note'" style="margin:5px 2px 0; font-size:11.5px; font-family:'Hack',monospace;" :style="{ color: docForm.content_en.length > 300 ? '#DC2626' : 'var(--text-muted,#A09690)' }">
+                {{ docForm.content_en.length }}/300 karakter {{ docForm.content_en.length > 300 ? '— melebihi batas LinkedIn' : '' }}
+              </p>
+            </div>
+            <div v-if="docForm.type === 'cv'">
+              <label class="cf-field-label">Isi Dokumen</label>
+              <textarea class="cf-textarea" v-model="docForm.content_id" placeholder="Ringkasan poin-poin CV kamu — pengalaman, keahlian, pendidikan..." rows="10"></textarea>
             </div>
             <div v-if="docForm.type === 'body_email' || docForm.type === 'cover_letter' || docForm.type === 'surat_lamaran' || docForm.type === 'linkedin_note'">
               <label class="cf-field-label" style="display:flex; align-items:center; gap:6px;">
@@ -15945,10 +15951,7 @@ const CareerFoundation = {
         <div class="cf-modal cf-modal-wide">
           <div class="cf-modal-header">
             <div>
-              <h3 class="cf-modal-title" style="display:flex; align-items:center; gap:8px;">
-                {{ viewingDoc.title }}
-                <span v-if="viewingDoc.type !== 'cv'" class="cf-doc-type-badge" style="background:#EDE8E1;color:var(--text-secondary,#7A6F66); font-size:10.5px;">{{ langFlag(viewingDoc.language) }} {{ langLabel(viewingDoc.language) }}</span>
-              </h3>
+              <h3 class="cf-modal-title">{{ viewingDoc.title }}</h3>
               <p v-if="viewingDoc.target" style="font-size:11.5px; color:#AAA; margin:3px 0 0;">{{ viewingDoc.target }}</p>
             </div>
             <button class="cf-modal-close" @click="showViewModal=false">
@@ -15957,29 +15960,35 @@ const CareerFoundation = {
           </div>
           <div class="cf-modal-body">
             <template v-if="viewingDoc.type === 'body_email'">
-              <div class="cf-email-view">
-                <div class="cf-email-toolbar">
-                  <span class="cf-email-toolbar-tag">📧 Body Email</span>
-                  <span v-if="viewingDoc.updatedAt" class="cf-email-toolbar-date">{{ formatLastUpdated(viewingDoc.updatedAt) }}</span>
+              <template v-for="lang in ['id','en']" :key="lang">
+                <div style="display:flex; align-items:center; gap:6px; margin:0 0 6px;">
+                  <span class="cf-doc-type-badge" style="background:#EDE8E1;color:var(--text-secondary,#7A6F66);">{{ langFlag(lang) }} {{ langLabel(lang) }}</span>
                 </div>
-                <div class="cf-email-card">
-                  <div class="cf-email-subject-bar">
-                    <h4 class="cf-email-subject">{{ emailParts.subject || '(Tanpa subjek)' }}</h4>
+                <div class="cf-email-view" style="margin-bottom:16px;">
+                  <div class="cf-email-toolbar">
+                    <span class="cf-email-toolbar-tag">📧 Body Email</span>
+                    <span v-if="viewingDoc.updatedAt" class="cf-email-toolbar-date">{{ formatLastUpdated(viewingDoc.updatedAt) }}</span>
                   </div>
-                  <div class="cf-email-meta">
-                    <div class="cf-email-avatar">{{ (resume.name || 'K').charAt(0).toUpperCase() }}</div>
-                    <div class="cf-email-meta-text">
-                      <p class="cf-email-from">
-                        <span class="cf-email-from-name">{{ resume.name || 'Nama Kamu' }}</span>
-                        <span class="cf-email-from-addr">&lt;{{ resume.email || 'email@kamu.com' }}&gt;</span>
-                      </p>
-                      <p class="cf-email-to">kepada <span class="cf-email-to-target">{{ viewingDoc.target || 'HRD Perusahaan' }}</span></p>
+                  <div class="cf-email-card">
+                    <div class="cf-email-subject-bar">
+                      <h4 class="cf-email-subject">{{ emailPartsFor(lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en).subject || '(Tanpa subjek)' }}</h4>
                     </div>
+                    <div class="cf-email-meta">
+                      <div class="cf-email-avatar">{{ (resume.name || 'K').charAt(0).toUpperCase() }}</div>
+                      <div class="cf-email-meta-text">
+                        <p class="cf-email-from">
+                          <span class="cf-email-from-name">{{ resume.name || 'Nama Kamu' }}</span>
+                          <span class="cf-email-from-addr">&lt;{{ resume.email || 'email@kamu.com' }}&gt;</span>
+                        </p>
+                        <p class="cf-email-to">kepada <span class="cf-email-to-target">{{ viewingDoc.target || 'HRD Perusahaan' }}</span></p>
+                      </div>
+                    </div>
+                    <div class="cf-email-divider"></div>
+                    <p class="cf-email-body-text">{{ emailPartsFor(lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en).body || '(Belum ada isi)' }}</p>
                   </div>
-                  <div class="cf-email-divider"></div>
-                  <p class="cf-email-body-text">{{ emailParts.body || '(Belum ada isi)' }}</p>
+                  <button class="cf-btn-ghost" style="margin-top:8px;" @click="copyDocContent(lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en, lang)">{{ copySuccess === lang ? 'Tersalin!' : 'Salin teks ' + langLabel(lang) }}</button>
                 </div>
-              </div>
+              </template>
               <div v-if="viewingDoc.note" class="cf-doc-note-view">
                 <div class="cf-doc-note-view-label">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -15988,11 +15997,20 @@ const CareerFoundation = {
                 <p class="cf-doc-note-view-text">{{ viewingDoc.note }}</p>
               </div>
             </template>
+            <template v-else-if="viewingDoc.type === 'cv'">
+              <p class="cf-view-content">{{ viewingDoc.content_id || '(Belum ada isi)' }}</p>
+            </template>
             <template v-else>
-              <p v-if="viewingDoc.type === 'linkedin_note'" style="margin:0 0 10px; font-size:11px; font-family:'Hack',monospace;" :style="{ color: (viewingDoc.content||'').length > 300 ? '#DC2626' : 'var(--text-muted,#A09690)' }">
-                {{ (viewingDoc.content||'').length }}/300 karakter
-              </p>
-              <p class="cf-view-content">{{ viewingDoc.content || '(Belum ada isi)' }}</p>
+              <template v-for="lang in ['id','en']" :key="lang">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 6px;">
+                  <span class="cf-doc-type-badge" style="background:#EDE8E1;color:var(--text-secondary,#7A6F66);">{{ langFlag(lang) }} {{ langLabel(lang) }}</span>
+                  <button class="cf-btn-ghost" style="padding:4px 10px; font-size:11px;" @click="copyDocContent(lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en, lang)">{{ copySuccess === lang ? 'Tersalin!' : 'Salin teks' }}</button>
+                </div>
+                <p v-if="viewingDoc.type === 'linkedin_note'" style="margin:0 0 8px; font-size:11px; font-family:'Hack',monospace;" :style="{ color: ((lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en)||'').length > 300 ? '#DC2626' : 'var(--text-muted,#A09690)' }">
+                  {{ ((lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en)||'').length }}/300 karakter
+                </p>
+                <p class="cf-view-content" style="margin-bottom:16px;">{{ (lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en) || '(Belum ada isi)' }}</p>
+              </template>
               <div v-if="viewingDoc.note && (viewingDoc.type === 'cover_letter' || viewingDoc.type === 'surat_lamaran' || viewingDoc.type === 'linkedin_note')" class="cf-doc-note-view">
                 <div class="cf-doc-note-view-label">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -16003,7 +16021,6 @@ const CareerFoundation = {
             </template>
           </div>
           <div class="cf-modal-footer">
-            <button class="cf-btn-ghost" @click="copyDocContent(viewingDoc)">{{ copySuccess ? 'Tersalin!' : 'Salin teks' }}</button>
             <button class="cf-btn-primary" @click="editDoc(viewingDoc); showViewModal=false">Edit</button>
           </div>
         </div>
@@ -16207,7 +16224,7 @@ const CareerFoundation = {
 
       // Docs
       docs: [],
-      docForm: { type: 'cover_letter', title: '', target: '', content: '', note: '', language: 'id' },
+      docForm: { type: 'cover_letter', title: '', target: '', content_id: '', content_en: '', note: '' },
       editingDocId: null,
       showDocModal: false,
 
@@ -16234,7 +16251,7 @@ const CareerFoundation = {
       // View
       showViewModal: false,
       viewingDoc: null,
-      copySuccess: false,
+      copySuccess: null,
 
       // Meta
       lastUpdated: null,
@@ -16304,26 +16321,15 @@ const CareerFoundation = {
   },
 
   computed: {
-    docContentPlaceholder() {
+    docContentPlaceholderId() {
       if (this.docForm.type === 'cv') return 'Ringkasan poin-poin CV kamu — pengalaman, keahlian, pendidikan...';
       const tpl = this.docTemplates[this.docForm.type];
-      if (tpl) return tpl[this.docForm.language] || tpl.id;
-      return 'Tulis isi dokumen di sini...';
+      return tpl ? tpl.id : 'Tulis isi dokumen di sini...';
     },
-
-    emailParts() {
-      const doc = this.viewingDoc;
-      if (!doc) return { subject: '', body: '' };
-      const raw = doc.content || '';
-      const lines = raw.split('\n');
-      const firstLine = (lines[0] || '').trim();
-      const m = firstLine.match(/^(subjek|subject)\s*:\s*(.*)$/i);
-      if (m) {
-        const restLines = lines.slice(1);
-        while (restLines.length && restLines[0].trim() === '') restLines.shift();
-        return { subject: m[2].trim() || doc.title, body: restLines.join('\n') };
-      }
-      return { subject: doc.title, body: raw };
+    docContentPlaceholderEn() {
+      if (this.docForm.type === 'cv') return '';
+      const tpl = this.docTemplates[this.docForm.type];
+      return tpl ? tpl.en : 'Write the document content here...';
     },
 
     atsSectionLabel() {
@@ -16559,25 +16565,33 @@ const CareerFoundation = {
     },
     openAddDoc() {
       this.editingDocId = null;
-      this.docForm = { type: 'cover_letter', title: '', target: '', content: '', note: '', language: 'id' };
+      this.docForm = { type: 'cover_letter', title: '', target: '', content_id: '', content_en: '', note: '' };
       this.showDocModal = true;
     },
     openAddDocOfType(type) {
       this.editingDocId = null;
-      this.docForm = { type, title: '', target: '', content: '', note: '', language: 'id' };
+      this.docForm = { type, title: '', target: '', content_id: '', content_en: '', note: '' };
       this.showDocModal = true;
     },
     editDoc(doc) {
       this.editingDocId = doc.id;
-      this.docForm = { type: doc.type, title: doc.title, target: doc.target || '', content: doc.content || '', note: doc.note || '', language: doc.language || 'id' };
+      // Migrasi dokumen lama yang masih pakai field content/language tunggal
+      let contentId = doc.content_id;
+      let contentEn = doc.content_en;
+      if (contentId === undefined && contentEn === undefined && doc.content !== undefined) {
+        if (doc.language === 'en') { contentEn = doc.content; contentId = ''; }
+        else { contentId = doc.content; contentEn = ''; }
+      }
+      this.docForm = { type: doc.type, title: doc.title, target: doc.target || '', content_id: contentId || '', content_en: contentEn || '', note: doc.note || '' };
       this.showDocModal = true;
     },
-    useDocTemplate() {
+    useDocTemplate(lang) {
       const tpl = this.docTemplates[this.docForm.type];
       if (!tpl) return;
-      const text = tpl[this.docForm.language] || tpl.id;
-      if (this.docForm.content.trim() && !confirm('Isi dokumen saat ini akan ditimpa dengan template. Lanjutkan?')) return;
-      this.docForm.content = text;
+      const text = tpl[lang];
+      const field = lang === 'en' ? 'content_en' : 'content_id';
+      if (this.docForm[field].trim() && !confirm('Isi dokumen ' + this.langLabel(lang) + ' saat ini akan ditimpa dengan template. Lanjutkan?')) return;
+      this.docForm[field] = text;
     },
     langFlag(lang) {
       return lang === 'en' ? '🇬🇧' : '🇮🇩';
@@ -16591,7 +16605,10 @@ const CareerFoundation = {
       if (this.editingDocId) {
         const idx = this.docs.findIndex(d => d.id === this.editingDocId);
         if (idx !== -1) {
-          this.docs[idx] = { ...this.docs[idx], ...this.docForm, updatedAt: now };
+          const merged = { ...this.docs[idx], ...this.docForm, updatedAt: now };
+          delete merged.content;
+          delete merged.language;
+          this.docs[idx] = merged;
         }
       } else {
         this.docs.push({
@@ -16612,15 +16629,27 @@ const CareerFoundation = {
     },
     viewDoc(doc) {
       this.viewingDoc = doc;
-      this.copySuccess = false;
+      this.copySuccess = null;
       this.showViewModal = true;
     },
-    copyDocContent(doc) {
-      if (!doc.content) return;
-      navigator.clipboard.writeText(doc.content).then(() => {
-        this.copySuccess = true;
-        setTimeout(() => { this.copySuccess = false; }, 2000);
+    copyDocContent(text, lang) {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        this.copySuccess = lang;
+        setTimeout(() => { if (this.copySuccess === lang) this.copySuccess = null; }, 2000);
       });
+    },
+    emailPartsFor(raw) {
+      raw = raw || '';
+      const lines = raw.split('\n');
+      const firstLine = (lines[0] || '').trim();
+      const m = firstLine.match(/^(subjek|subject)\s*:\s*(.*)$/i);
+      if (m) {
+        const restLines = lines.slice(1);
+        while (restLines.length && restLines[0].trim() === '') restLines.shift();
+        return { subject: m[2].trim(), body: restLines.join('\n') };
+      }
+      return { subject: '', body: raw };
     },
 
     // ── Doc type helpers ──
