@@ -15544,8 +15544,11 @@ const CareerFoundation = {
         </button>
       </div>
       <div class="cf-tip">
-        <p class="cf-tip-title">Struktur Cover Letter</p>
-        <p class="cf-tip-text">Opening hook → kenapa kamu tertarik → apa yang kamu bawa → closing CTA. Jaga di bawah 300 kata, personal, dan spesifik ke perusahaan.</p>
+        <button class="cf-tip-edit-btn" title="Edit tip" @click="openTipEdit('cover_letter')">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <p class="cf-tip-title">{{ cfTips.cover_letter.title }}</p>
+        <p class="cf-tip-text">{{ cfTips.cover_letter.text }}</p>
       </div>
       <div v-if="docsByType('cover_letter').length === 0" class="cf-empty">
         <p class="cf-empty-label">Belum ada Cover Letter</p>
@@ -15588,8 +15591,11 @@ const CareerFoundation = {
         </button>
       </div>
       <div class="cf-tip">
-        <p class="cf-tip-title">Surat Lamaran Formal</p>
-        <p class="cf-tip-text">Sertakan: tanggal, nama HRD, perkenalan diri, posisi yang dilamar, pengalaman relevan, dan penutup sopan. Gunakan bahasa baku.</p>
+        <button class="cf-tip-edit-btn" title="Edit tip" @click="openTipEdit('surat_lamaran')">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <p class="cf-tip-title">{{ cfTips.surat_lamaran.title }}</p>
+        <p class="cf-tip-text">{{ cfTips.surat_lamaran.text }}</p>
       </div>
       <div v-if="docsByType('surat_lamaran').length === 0" class="cf-empty">
         <p class="cf-empty-label">Belum ada Surat Lamaran</p>
@@ -15632,8 +15638,11 @@ const CareerFoundation = {
         </button>
       </div>
       <div class="cf-tip">
-        <p class="cf-tip-title">Connect Note LinkedIn Singkat & Personal</p>
-        <p class="cf-tip-text">Maksimal 300 karakter. Sebut nama, konteks kenapa connect (alumni/event/posting), dan maksud singkat — hindari langsung minta kerjaan di pesan pertama.</p>
+        <button class="cf-tip-edit-btn" title="Edit tip" @click="openTipEdit('linkedin_note')">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <p class="cf-tip-title">{{ cfTips.linkedin_note.title }}</p>
+        <p class="cf-tip-text">{{ cfTips.linkedin_note.text }}</p>
       </div>
       <div v-if="docsByType('linkedin_note').length === 0" class="cf-empty">
         <p class="cf-empty-label">Belum ada Connect Note LinkedIn</p>
@@ -15678,8 +15687,11 @@ const CareerFoundation = {
         </button>
       </div>
       <div class="cf-tip">
-        <p class="cf-tip-title">Formula Email yang Dilirik HRD</p>
-        <p class="cf-tip-text">Subject jelas (Nama | Posisi), salam profesional, 2–3 paragraf padat: perkenalan → nilai tambah → lampiran, lalu tutup dengan salam.</p>
+        <button class="cf-tip-edit-btn" title="Edit tip" @click="openTipEdit('body_email')">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <p class="cf-tip-title">{{ cfTips.body_email.title }}</p>
+        <p class="cf-tip-text">{{ cfTips.body_email.text }}</p>
       </div>
       <div v-if="docsByType('body_email').length === 0" class="cf-empty">
         <p class="cf-empty-label">Belum ada Body Email</p>
@@ -15945,6 +15957,34 @@ const CareerFoundation = {
       </div>
     </transition>
 
+    <!-- ══ MODAL: Edit Tip (cf-tip) ══ -->
+    <transition name="cf-fade">
+      <div v-if="showTipModal" class="cf-modal-overlay" @click.self="closeTipEdit">
+        <div class="cf-modal">
+          <div class="cf-modal-header">
+            <h3 class="cf-modal-title">Edit Tip</h3>
+            <button class="cf-modal-close" @click="closeTipEdit">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="cf-modal-body">
+            <div>
+              <label class="cf-field-label">Judul Tip</label>
+              <input class="cf-input" v-model="tipEditForm.title" placeholder="mis. Struktur Cover Letter"/>
+            </div>
+            <div>
+              <label class="cf-field-label">Isi Tip</label>
+              <textarea class="cf-textarea" v-model="tipEditForm.text" rows="5" placeholder="Tulis tip/panduan singkat di sini..."></textarea>
+            </div>
+          </div>
+          <div class="cf-modal-footer">
+            <button class="cf-btn-ghost" @click="closeTipEdit">Batal</button>
+            <button class="cf-btn-primary" @click="saveTipEdit">Simpan</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <!-- ══ MODAL: Lihat Dokumen ══ -->
     <transition name="cf-fade">
       <div v-if="showViewModal && viewingDoc" class="cf-modal-overlay" @click.self="showViewModal=false">
@@ -16001,16 +16041,18 @@ const CareerFoundation = {
               <p class="cf-view-content">{{ viewingDoc.content_id || '(Belum ada isi)' }}</p>
             </template>
             <template v-else>
-              <template v-for="lang in ['id','en']" :key="lang">
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 6px;">
-                  <span class="cf-doc-type-badge" style="background:#EDE8E1;color:var(--text-secondary,#7A6F66);">{{ langFlag(lang) }} {{ langLabel(lang) }}</span>
+              <div v-for="lang in ['id','en']" :key="lang" class="cf-lang-card">
+                <div class="cf-lang-card-header">
+                  <span class="cf-lang-card-flag" :style="lang === 'id' ? { background:'#FEF3E7', color:'#C4673E' } : { background:'#EFF6FF', color:'#1D4ED8' }">{{ langFlag(lang) }} {{ lang === 'id' ? 'Bahasa Indonesia' : 'English' }}</span>
                   <button class="cf-btn-ghost" style="padding:4px 10px; font-size:11px;" @click="copyDocContent(lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en, lang)">{{ copySuccess === lang ? 'Tersalin!' : 'Salin teks' }}</button>
                 </div>
-                <p v-if="viewingDoc.type === 'linkedin_note'" style="margin:0 0 8px; font-size:11px; font-family:'Hack',monospace;" :style="{ color: ((lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en)||'').length > 300 ? '#DC2626' : 'var(--text-muted,#A09690)' }">
-                  {{ ((lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en)||'').length }}/300 karakter
-                </p>
-                <p class="cf-view-content" style="margin-bottom:16px;">{{ (lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en) || '(Belum ada isi)' }}</p>
-              </template>
+                <div class="cf-lang-card-body">
+                  <p v-if="viewingDoc.type === 'linkedin_note'" class="cf-lang-card-charcount" :style="{ color: ((lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en)||'').length > 300 ? '#DC2626' : 'var(--text-muted,#A09690)' }">
+                    {{ ((lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en)||'').length }}/300 karakter
+                  </p>
+                  <p class="cf-view-content">{{ (lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en) || '(Belum ada isi)' }}</p>
+                </div>
+              </div>
               <div v-if="viewingDoc.note && (viewingDoc.type === 'cover_letter' || viewingDoc.type === 'surat_lamaran' || viewingDoc.type === 'linkedin_note')" class="cf-doc-note-view">
                 <div class="cf-doc-note-view-label">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -16227,6 +16269,29 @@ const CareerFoundation = {
       docForm: { type: 'cover_letter', title: '', target: '', content_id: '', content_en: '', note: '' },
       editingDocId: null,
       showDocModal: false,
+
+      // Tip box per tab (cf-tip) — bisa diedit user
+      cfTips: {
+        cover_letter: {
+          title: 'Struktur Cover Letter',
+          text: 'Opening hook → kenapa kamu tertarik → apa yang kamu bawa → closing CTA. Jaga di bawah 300 kata, personal, dan spesifik ke perusahaan.',
+        },
+        surat_lamaran: {
+          title: 'Surat Lamaran Formal',
+          text: 'Sertakan: tanggal, nama HRD, perkenalan diri, posisi yang dilamar, pengalaman relevan, dan penutup sopan. Gunakan bahasa baku.',
+        },
+        linkedin_note: {
+          title: 'Connect Note LinkedIn Singkat & Personal',
+          text: 'Maksimal 300 karakter. Sebut nama, konteks kenapa connect (alumni/event/posting), dan maksud singkat — hindari langsung minta kerjaan di pesan pertama.',
+        },
+        body_email: {
+          title: 'Formula Email yang Dilirik HRD',
+          text: 'Subject jelas (Nama | Posisi), salam profesional, 2–3 paragraf padat: perkenalan → nilai tambah → lampiran, lalu tutup dengan salam.',
+        },
+      },
+      showTipModal: false,
+      tipEditKey: null,
+      tipEditForm: { title: '', text: '' },
 
       // Template siap pakai per jenis dokumen & bahasa (ID/EN)
       docTemplates: {
@@ -16965,6 +17030,33 @@ const CareerFoundation = {
       WorkspaceStorage.setItem('career_ats_cv', JSON.stringify(this.atsCV));
     },
 
+    // ── Tip box (cf-tip) ──
+    openTipEdit(key) {
+      this.tipEditKey = key;
+      this.tipEditForm = {
+        title: (this.cfTips[key] && this.cfTips[key].title) || '',
+        text: (this.cfTips[key] && this.cfTips[key].text) || '',
+      };
+      this.showTipModal = true;
+    },
+    closeTipEdit() {
+      this.showTipModal = false;
+      this.tipEditKey = null;
+    },
+    saveTipEdit() {
+      if (!this.tipEditKey) return;
+      this.cfTips[this.tipEditKey] = {
+        title: this.tipEditForm.title.trim(),
+        text: this.tipEditForm.text.trim(),
+      };
+      this.saveTips();
+      this.showTipModal = false;
+      this.tipEditKey = null;
+    },
+    saveTips() {
+      try { WorkspaceStorage.setItem('career_cf_tips', JSON.stringify(this.cfTips)); } catch(_e) {}
+    },
+
     // ── Formatting ──
     formatLastUpdated(iso) {
       if (!iso) return null;
@@ -17049,6 +17141,15 @@ const CareerFoundation = {
     try {
       const km = WorkspaceStorage.getItem('career_keyword_meanings');
       if (km) this.keywordMeanings = JSON.parse(km);
+    } catch(_e) {}
+    try {
+      const ct = WorkspaceStorage.getItem('career_cf_tips');
+      if (ct) {
+        const parsed = JSON.parse(ct);
+        Object.keys(parsed).forEach(k => {
+          if (this.cfTips[k]) this.cfTips[k] = { ...this.cfTips[k], ...parsed[k] };
+        });
+      }
     } catch(_e) {}
   },
 };
