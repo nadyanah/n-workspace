@@ -15083,6 +15083,10 @@ const CareerFoundation = {
           <span class="cf-hero-stat-num">{{ docsByType('surat_lamaran').length }}</span>
           <span>surat lamaran</span>
         </div>
+        <div class="cf-hero-stat">
+          <span class="cf-hero-stat-num">{{ docsByType('linkedin_note').length }}</span>
+          <span>connect note</span>
+        </div>
       </div>
     </div>
 
@@ -15553,6 +15557,7 @@ const CareerFoundation = {
           <div class="cf-doc-info">
             <p class="cf-doc-title">{{ doc.title }}</p>
             <div class="cf-doc-meta">
+              <span class="cf-doc-type-badge" style="background:#EDE8E1;color:var(--text-secondary,#7A6F66);">{{ langFlag(doc.language) }} {{ langLabel(doc.language) }}</span>
               <span v-if="doc.target" style="font-size:11.5px;color:var(--text-muted,#6E6359);">{{ doc.target }}</span>
               <span v-if="doc.updatedAt" style="font-size:11px;color:#C8BDB5;font-family:'Hack',monospace;">{{ formatLastUpdated(doc.updatedAt) }}</span>
             </div>
@@ -15597,7 +15602,54 @@ const CareerFoundation = {
           <div class="cf-doc-info">
             <p class="cf-doc-title">{{ doc.title }}</p>
             <div class="cf-doc-meta">
+              <span class="cf-doc-type-badge" style="background:#EDE8E1;color:var(--text-secondary,#7A6F66);">{{ langFlag(doc.language) }} {{ langLabel(doc.language) }}</span>
               <span v-if="doc.target" style="font-size:11.5px;color:var(--text-muted,#6E6359);">{{ doc.target }}</span>
+              <span v-if="doc.updatedAt" style="font-size:11px;color:#C8BDB5;font-family:'Hack',monospace;">{{ formatLastUpdated(doc.updatedAt) }}</span>
+            </div>
+          </div>
+          <div class="cf-doc-actions">
+            <button class="cf-doc-action-btn" @click="viewDoc(doc)">Lihat</button>
+            <button class="cf-doc-action-btn" @click="editDoc(doc)">Edit</button>
+            <button class="cf-doc-action-btn del" @click="deleteDoc(doc.id)">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
+          </div>
+          <button class="cf-doc-apply-btn" @click="viewDoc(doc)">
+            Buka
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    </transition>
+
+    <!-- ══ TAB: CONNECT NOTE LINKEDIN ══ -->
+    <transition name="cf-fade">
+    <div v-if="activeTab === 'linkedin_note'" key="linkedin_note">
+      <div class="cf-section-bar">
+        <span class="cf-section-label">Connect Note LinkedIn · {{ docsByType('linkedin_note').length }} dokumen</span>
+        <button class="cf-btn-primary" @click="openAddDocOfType('linkedin_note')">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah
+        </button>
+      </div>
+      <div class="cf-tip">
+        <p class="cf-tip-title">Connect Note LinkedIn Singkat & Personal</p>
+        <p class="cf-tip-text">Maksimal 300 karakter. Sebut nama, konteks kenapa connect (alumni/event/posting), dan maksud singkat — hindari langsung minta kerjaan di pesan pertama.</p>
+      </div>
+      <div v-if="docsByType('linkedin_note').length === 0" class="cf-empty">
+        <p class="cf-empty-label">Belum ada Connect Note LinkedIn</p>
+        <p class="cf-empty-sub">Simpan template pesan koneksi LinkedIn untuk tiap recruiter/HRD.</p>
+      </div>
+      <div v-else class="cf-doc-list">
+        <div v-for="doc in docsByType('linkedin_note')" :key="doc.id" class="cf-doc-row">
+          <span class="cf-doc-type-dot" style="background:#0A66C2;"></span>
+          <div class="cf-doc-info">
+            <p class="cf-doc-title">{{ doc.title }}</p>
+            <div class="cf-doc-meta">
+              <span class="cf-doc-type-badge" style="background:#EDE8E1;color:var(--text-secondary,#7A6F66);">{{ langFlag(doc.language) }} {{ langLabel(doc.language) }}</span>
+              <span v-if="doc.target" style="font-size:11.5px;color:var(--text-muted,#6E6359);">{{ doc.target }}</span>
+              <span style="font-size:11px;font-family:'Hack',monospace;" :style="{ color: (doc.content||'').length > 300 ? '#DC2626' : '#C8BDB5' }">{{ (doc.content||'').length }}/300</span>
               <span v-if="doc.updatedAt" style="font-size:11px;color:#C8BDB5;font-family:'Hack',monospace;">{{ formatLastUpdated(doc.updatedAt) }}</span>
             </div>
           </div>
@@ -15641,6 +15693,7 @@ const CareerFoundation = {
           <div class="cf-doc-info">
             <p class="cf-doc-title">{{ doc.title }}</p>
             <div class="cf-doc-meta">
+              <span class="cf-doc-type-badge" style="background:#EDE8E1;color:var(--text-secondary,#7A6F66);">{{ langFlag(doc.language) }} {{ langLabel(doc.language) }}</span>
               <span v-if="doc.target" style="font-size:11.5px;color:var(--text-muted,#6E6359);">{{ doc.target }}</span>
               <span v-if="doc.updatedAt" style="font-size:11px;color:#C8BDB5;font-family:'Hack',monospace;">{{ formatLastUpdated(doc.updatedAt) }}</span>
             </div>
@@ -15682,6 +15735,7 @@ const CareerFoundation = {
             <p class="cf-doc-title">{{ doc.title }}</p>
             <div class="cf-doc-meta">
               <span class="cf-doc-type-badge" :style="{ background: docTypeColor(doc.type) + '18', color: docTypeColor(doc.type) }">{{ docTypeLabel(doc.type) }}</span>
+              <span v-if="doc.type !== 'cv'" class="cf-doc-type-badge" style="background:#EDE8E1;color:var(--text-secondary,#7A6F66);">{{ langFlag(doc.language) }} {{ langLabel(doc.language) }}</span>
               <span v-if="doc.target" style="font-size:11.5px;color:var(--text-muted,#6E6359);">{{ doc.target }}</span>
               <span v-if="doc.updatedAt" style="font-size:11px;color:#C8BDB5;font-family:'Hack',monospace;">{{ formatLastUpdated(doc.updatedAt) }}</span>
             </div>
@@ -15828,6 +15882,13 @@ const CareerFoundation = {
                 </button>
               </div>
             </div>
+            <div v-if="docForm.type !== 'cv'">
+              <label class="cf-field-label">Bahasa Dokumen</label>
+              <div class="cf-type-pills">
+                <button class="cf-type-pill" :class="{ active: docForm.language === 'id' }" @click="docForm.language = 'id'">🇮🇩 Bahasa Indonesia</button>
+                <button class="cf-type-pill" :class="{ active: docForm.language === 'en' }" @click="docForm.language = 'en'">🇬🇧 English</button>
+              </div>
+            </div>
             <div>
               <label class="cf-field-label">Judul Dokumen *</label>
               <input class="cf-input" v-model="docForm.title" placeholder="mis. CV Umum — Fresh Graduate 2025"/>
@@ -15837,15 +15898,25 @@ const CareerFoundation = {
               <input class="cf-input" v-model="docForm.target" placeholder="mis. Posisi Content Creator di Shopee"/>
             </div>
             <div>
-              <label class="cf-field-label">Isi Dokumen</label>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <label class="cf-field-label" style="margin-bottom:0;">Isi Dokumen</label>
+                <button v-if="docForm.type !== 'cv'" type="button" class="cf-btn-ghost" style="padding:4px 10px; font-size:11px;" @click="useDocTemplate">
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                  Gunakan Template {{ langLabel(docForm.language) }}
+                </button>
+              </div>
               <textarea class="cf-textarea" v-model="docForm.content" :placeholder="docContentPlaceholder" rows="10"></textarea>
+              <p v-if="docForm.type === 'linkedin_note'" style="margin:5px 2px 0; font-size:11.5px; font-family:'Hack',monospace;" :style="{ color: docForm.content.length > 300 ? '#DC2626' : 'var(--text-muted,#A09690)' }">
+                {{ docForm.content.length }}/300 karakter {{ docForm.content.length > 300 ? '— melebihi batas LinkedIn' : '' }}
+              </p>
             </div>
-            <div v-if="docForm.type === 'body_email' || docForm.type === 'cover_letter' || docForm.type === 'surat_lamaran'">
+            <div v-if="docForm.type === 'body_email' || docForm.type === 'cover_letter' || docForm.type === 'surat_lamaran' || docForm.type === 'linkedin_note'">
               <label class="cf-field-label" style="display:flex; align-items:center; gap:6px;">
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 <span v-if="docForm.type === 'body_email'">Catatan / Tips Body Email ini</span>
                 <span v-else-if="docForm.type === 'cover_letter'">Catatan / Tips Cover Letter ini</span>
                 <span v-else-if="docForm.type === 'surat_lamaran'">Catatan / Tips Surat Lamaran ini</span>
+                <span v-else-if="docForm.type === 'linkedin_note'">Catatan / Tips Connect Note ini</span>
               </label>
               <textarea class="cf-textarea"
                 v-model="docForm.note"
@@ -15853,7 +15924,9 @@ const CareerFoundation = {
                   ? 'mis. Email ini cocok untuk posisi marketing, tone formal, CC ke HRD langsung...'
                   : docForm.type === 'cover_letter'
                     ? 'mis. Versi ini untuk startup tech, tekankan skill adaptasi dan kolaborasi...'
-                    : 'mis. Versi formal, gunakan untuk BUMN atau perusahaan konvensional...'"
+                    : docForm.type === 'surat_lamaran'
+                      ? 'mis. Versi formal, gunakan untuk BUMN atau perusahaan konvensional...'
+                      : 'mis. Dipakai untuk connect dengan recruiter tech startup, tone santai tapi sopan...'"
                 rows="3"
                 style="font-size:12.5px; color:var(--text-secondary, #7A6F66); background: #FFFBF5; border-color: #E8D9C4;"></textarea>
             </div>
@@ -15872,7 +15945,10 @@ const CareerFoundation = {
         <div class="cf-modal cf-modal-wide">
           <div class="cf-modal-header">
             <div>
-              <h3 class="cf-modal-title">{{ viewingDoc.title }}</h3>
+              <h3 class="cf-modal-title" style="display:flex; align-items:center; gap:8px;">
+                {{ viewingDoc.title }}
+                <span v-if="viewingDoc.type !== 'cv'" class="cf-doc-type-badge" style="background:#EDE8E1;color:var(--text-secondary,#7A6F66); font-size:10.5px;">{{ langFlag(viewingDoc.language) }} {{ langLabel(viewingDoc.language) }}</span>
+              </h3>
               <p v-if="viewingDoc.target" style="font-size:11.5px; color:#AAA; margin:3px 0 0;">{{ viewingDoc.target }}</p>
             </div>
             <button class="cf-modal-close" @click="showViewModal=false">
@@ -15913,8 +15989,11 @@ const CareerFoundation = {
               </div>
             </template>
             <template v-else>
+              <p v-if="viewingDoc.type === 'linkedin_note'" style="margin:0 0 10px; font-size:11px; font-family:'Hack',monospace;" :style="{ color: (viewingDoc.content||'').length > 300 ? '#DC2626' : 'var(--text-muted,#A09690)' }">
+                {{ (viewingDoc.content||'').length }}/300 karakter
+              </p>
               <p class="cf-view-content">{{ viewingDoc.content || '(Belum ada isi)' }}</p>
-              <div v-if="viewingDoc.note && (viewingDoc.type === 'cover_letter' || viewingDoc.type === 'surat_lamaran')" class="cf-doc-note-view">
+              <div v-if="viewingDoc.note && (viewingDoc.type === 'cover_letter' || viewingDoc.type === 'surat_lamaran' || viewingDoc.type === 'linkedin_note')" class="cf-doc-note-view">
                 <div class="cf-doc-note-view-label">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   Catatan
@@ -16110,6 +16189,7 @@ const CareerFoundation = {
         { key: 'cv',            label: 'CV ATS',           emoji: '📄', color: '#6366F1',                 shadowColor: 'rgba(99,102,241,0.3)' },
         { key: 'cover_letter',  label: 'Cover Letter',     emoji: '✉️',  color: '#D67B52',                 shadowColor: 'rgba(214,123,82,0.3)' },
         { key: 'surat_lamaran', label: 'Surat Lamaran',    emoji: '📝', color: '#059669',                 shadowColor: 'rgba(5,150,105,0.3)' },
+        { key: 'linkedin_note', label: 'Connect Note LinkedIn', emoji: '🔗', color: '#0A66C2',            shadowColor: 'rgba(10,102,194,0.3)' },
         { key: 'body_email',    label: 'Body Email',       emoji: '📧', color: '#0369A1',                 shadowColor: 'rgba(3,105,161,0.3)' },
         { key: 'all',           label: 'Semua Dokumen',    emoji: '📂', color: 'var(--color-forest)',      shadowColor: 'rgba(40,54,24,0.3)' },
       ],
@@ -16127,9 +16207,29 @@ const CareerFoundation = {
 
       // Docs
       docs: [],
-      docForm: { type: 'cover_letter', title: '', target: '', content: '', note: '' },
+      docForm: { type: 'cover_letter', title: '', target: '', content: '', note: '', language: 'id' },
       editingDocId: null,
       showDocModal: false,
+
+      // Template siap pakai per jenis dokumen & bahasa (ID/EN)
+      docTemplates: {
+        cover_letter: {
+          id: 'Kepada Bapak/Ibu Hiring Manager,\n\nSaya [Nama Kamu], sangat tertarik dengan posisi [Posisi] di [Perusahaan]. Berdasarkan pengalaman saya di [bidang/pengalaman relevan], saya yakin dapat memberikan kontribusi nyata untuk tim.\n\nSaya senang jika bisa mendiskusikan lebih lanjut bagaimana keahlian saya dapat mendukung kebutuhan tim Bapak/Ibu.\n\nTerima kasih atas waktu dan pertimbangannya.\n\nHormat saya,\n[Nama Kamu]',
+          en: 'Dear Hiring Manager,\n\nI am [Your Name], and I am excited to apply for the [Position] role at [Company]. With my background in [relevant experience/field], I am confident I can bring real value to your team.\n\nI would welcome the opportunity to discuss how my skills align with your team\'s needs.\n\nThank you for your time and consideration.\n\nBest regards,\n[Your Name]',
+        },
+        surat_lamaran: {
+          id: 'Kepada Yth.\nBapak/Ibu HRD [Nama Perusahaan]\nDi tempat\n\nDengan hormat,\n\nSaya yang bertanda tangan di bawah ini:\nNama: [Nama Kamu]\nAlamat: [Alamat]\nNo. HP: [No. HP]\n\nBermaksud mengajukan lamaran untuk posisi [Posisi] di perusahaan yang Bapak/Ibu pimpin. Sebagai bahan pertimbangan, saya lampirkan CV, portofolio, dan dokumen pendukung lainnya.\n\nBesar harapan saya untuk dapat bergabung dan berkontribusi bagi perusahaan. Atas perhatian Bapak/Ibu, saya ucapkan terima kasih.\n\nHormat saya,\n[Nama Kamu]',
+          en: 'To the HR Department\n[Company Name]\n\nDear Sir/Madam,\n\nI, the undersigned:\nName: [Your Name]\nAddress: [Address]\nPhone: [Phone Number]\n\nwould like to formally apply for the [Position] role at your company. As supporting materials, I have attached my CV, portfolio, and other relevant documents.\n\nI hope for the opportunity to join and contribute to your company. Thank you for your consideration.\n\nSincerely,\n[Your Name]',
+        },
+        body_email: {
+          id: 'Subjek: Lamaran Pekerjaan — [Posisi] | [Nama Kamu]\n\nYth. Bapak/Ibu HRD,\n\nSaya [Nama Kamu], bermaksud melamar posisi [Posisi] yang saya temukan di [sumber lowongan]. Saya melampirkan CV dan portofolio untuk pertimbangan lebih lanjut.\n\nSaya terbuka untuk dihubungi kapan saja guna proses selanjutnya. Terima kasih atas waktu dan kesempatannya.\n\nSalam hormat,\n[Nama Kamu]\n[No. HP]',
+          en: 'Subject: Job Application — [Position] | [Your Name]\n\nDear Hiring Team,\n\nI am [Your Name], writing to apply for the [Position] role I found on [job source]. Please find my CV and portfolio attached for your consideration.\n\nI am happy to be contacted at any time for the next steps. Thank you for your time and consideration.\n\nBest regards,\n[Your Name]\n[Phone Number]',
+        },
+        linkedin_note: {
+          id: 'Hai [Nama], senang bisa terhubung! Saya [Nama Kamu], tertarik dengan [konteks/posisi] di [Perusahaan]. Semoga bisa saling sharing ya 🙌',
+          en: 'Hi [Name], great to connect! I\'m [Your Name], interested in [context/role] at [Company]. Looking forward to staying in touch!',
+        },
+      },
 
       // View
       showViewModal: false,
@@ -16144,6 +16244,7 @@ const CareerFoundation = {
         { key: 'cv',            label: 'CV ATS',          emoji: '📄', color: '#6366F1' },
         { key: 'cover_letter',  label: 'Cover Letter',    emoji: '✉️',  color: '#D67B52' },
         { key: 'surat_lamaran', label: 'Surat Lamaran',   emoji: '📝', color: '#059669' },
+        { key: 'linkedin_note', label: 'Connect Note LinkedIn', emoji: '🔗', color: '#0A66C2' },
         { key: 'body_email',    label: 'Body Email',      emoji: '📧', color: '#0369A1' },
       ],
 
@@ -16204,13 +16305,10 @@ const CareerFoundation = {
 
   computed: {
     docContentPlaceholder() {
-      const map = {
-        cv:            'Ringkasan poin-poin CV kamu — pengalaman, keahlian, pendidikan...',
-        cover_letter:  'Dear Hiring Manager,\n\nSaya sangat tertarik dengan posisi ... di perusahaan Bapak/Ibu ...\n\n...',
-        surat_lamaran: 'Kepada Yth.\nBapak/Ibu HRD ...\n\nDengan hormat,\nSaya yang bertanda tangan di bawah ini ...',
-        body_email:    'Subjek: Lamaran Pekerjaan — [Posisi] | [Nama Kamu]\n\nYth. Bapak/Ibu HRD,\n\nSaya ...',
-      };
-      return map[this.docForm.type] || 'Tulis isi dokumen di sini...';
+      if (this.docForm.type === 'cv') return 'Ringkasan poin-poin CV kamu — pengalaman, keahlian, pendidikan...';
+      const tpl = this.docTemplates[this.docForm.type];
+      if (tpl) return tpl[this.docForm.language] || tpl.id;
+      return 'Tulis isi dokumen di sini...';
     },
 
     emailParts() {
@@ -16461,18 +16559,31 @@ const CareerFoundation = {
     },
     openAddDoc() {
       this.editingDocId = null;
-      this.docForm = { type: 'cover_letter', title: '', target: '', content: '', note: '' };
+      this.docForm = { type: 'cover_letter', title: '', target: '', content: '', note: '', language: 'id' };
       this.showDocModal = true;
     },
     openAddDocOfType(type) {
       this.editingDocId = null;
-      this.docForm = { type, title: '', target: '', content: '', note: '' };
+      this.docForm = { type, title: '', target: '', content: '', note: '', language: 'id' };
       this.showDocModal = true;
     },
     editDoc(doc) {
       this.editingDocId = doc.id;
-      this.docForm = { type: doc.type, title: doc.title, target: doc.target || '', content: doc.content || '', note: doc.note || '' };
+      this.docForm = { type: doc.type, title: doc.title, target: doc.target || '', content: doc.content || '', note: doc.note || '', language: doc.language || 'id' };
       this.showDocModal = true;
+    },
+    useDocTemplate() {
+      const tpl = this.docTemplates[this.docForm.type];
+      if (!tpl) return;
+      const text = tpl[this.docForm.language] || tpl.id;
+      if (this.docForm.content.trim() && !confirm('Isi dokumen saat ini akan ditimpa dengan template. Lanjutkan?')) return;
+      this.docForm.content = text;
+    },
+    langFlag(lang) {
+      return lang === 'en' ? '🇬🇧' : '🇮🇩';
+    },
+    langLabel(lang) {
+      return lang === 'en' ? 'EN' : 'ID';
     },
     saveDoc() {
       if (!this.docForm.title.trim()) return;
@@ -16522,6 +16633,7 @@ const CareerFoundation = {
         cv: '#4F46E5',
         cover_letter: '#C4673E',
         surat_lamaran: '#047857',
+        linkedin_note: '#084E8A',
         body_email: '#0284C7',
       };
       return map[type] || '#555';
