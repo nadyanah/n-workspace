@@ -17190,17 +17190,15 @@ const MyPortfolio = {
       <div class="mp-general-note-header" @click="generalNoteExpanded = !generalNoteExpanded">
         <div class="mp-general-note-header-left">
           <span class="mp-note-card-label" style="color: var(--color-terracotta, #D67B52);">✦ Catatan General Portfolio</span>
-          <!-- Preview satu baris saat collapsed dan sudah ada isi -->
-          <span v-if="!generalNoteExpanded && hasGeneralNote" class="mp-general-note-collapsed-preview">{{ truncate(stripHtml(generalNote), 80) }}</span>
-          <span v-else-if="generalNoteExpanded" class="mp-note-card-sub">Catatan bebas tentang portofolio ini secara keseluruhan — tujuan, narasi diri, atau hal yang ingin diingat.</span>
+          <!-- Preview jumlah catatan saat collapsed -->
+          <span v-if="!generalNoteExpanded && hasGeneralNote" class="mp-general-note-collapsed-preview">{{ generalNotes.length }} catatan</span>
+          <span v-else-if="generalNoteExpanded" class="mp-note-card-sub">Catatan bebas tentang portofolio ini secara keseluruhan — tambah sebanyak yang kamu butuhkan.</span>
         </div>
         <div class="mp-general-note-header-right">
-          <!-- Tombol edit/tulis — hanya muncul saat expanded, tidak propagate ke toggle -->
-          <button v-if="generalNoteExpanded" class="mp-insight-btn" :class="{ 'mp-insight-filled': hasGeneralNote }"
-            @click.stop="openGeneralNoteModal"
-            :title="hasGeneralNote ? truncate(stripHtml(generalNote), 90) : 'Belum ada catatan general'">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            {{ hasGeneralNote ? 'Lihat Catatan' : 'Tulis Catatan' }}
+          <!-- Tombol tambah catatan — hanya muncul saat expanded, tidak propagate ke toggle -->
+          <button v-if="generalNoteExpanded" class="mp-insight-btn" @click.stop="openGeneralNoteModal(null)" title="Tambah catatan baru">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah Catatan
           </button>
           <!-- Chevron toggle -->
           <button class="mp-general-note-chevron" :class="{ 'mp-general-note-chevron--up': generalNoteExpanded }" @click.stop="generalNoteExpanded = !generalNoteExpanded" :title="generalNoteExpanded ? 'Tutup' : 'Buka'">
@@ -17208,9 +17206,18 @@ const MyPortfolio = {
           </button>
         </div>
       </div>
-      <!-- Body: hanya tampil saat expanded -->
-      <div v-if="generalNoteExpanded && hasGeneralNote" class="mp-general-note-body">
-        <p class="mp-note-card-preview" style="border-top: 1px dashed rgba(214,123,82,0.25); padding-top: 10px; margin: 0;">{{ truncate(stripHtml(generalNote), 220) }}</p>
+      <!-- Body: hanya tampil saat expanded — daftar semua catatan general -->
+      <div v-if="generalNoteExpanded" class="mp-general-note-body">
+        <p v-if="!hasGeneralNote" class="mp-note-card-sub" style="margin:0; padding-top:2px;">Belum ada catatan. Klik "Tambah Catatan" untuk mulai menulis.</p>
+        <div v-else class="mp-note-list">
+          <div v-for="note in generalNotes" :key="note.id" class="mp-note-list-item" @click="openGeneralNoteModal(note.id)">
+            <div class="mp-note-list-item-main">
+              <p class="mp-note-list-item-title">{{ note.title || 'Tanpa Judul' }}</p>
+              <p class="mp-note-list-item-preview">{{ truncate(stripHtml(note.content), 140) }}</p>
+            </div>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="mp-note-list-item-arrow"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -17262,18 +17269,18 @@ const MyPortfolio = {
         </div>
         <div v-else class="mp-search-results">
           <p class="mp-search-results-count">{{ globalSearchResults.length }} hasil ditemukan</p>
-          <template v-for="r in globalSearchResults" :key="r.type === 'generalNote' ? 'general-note' : r.type === 'note' ? ('note-' + r.expKey) : r.task.id">
+          <template v-for="r in globalSearchResults" :key="r.type === 'generalNote' ? ('general-note-' + r.noteId) : r.type === 'note' ? ('note-' + r.expKey + '-' + r.noteId) : r.task.id">
             <!-- ── Hasil dari Catatan General Portfolio ── -->
             <div v-if="r.type === 'generalNote'" class="mp-search-result-row" style="border-left: 3px solid var(--color-terracotta, #D67B52);">
               <div class="mp-search-result-main">
                 <span class="mp-search-result-exp">✦ Catatan General Portfolio</span>
                 <p class="mp-search-result-title" style="display:flex; align-items:center; gap:6px;">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                  Catatan General
+                  {{ r.noteTitle || 'Catatan General' }}
                 </p>
                 <p style="font-size:12px; color:var(--text-muted); margin:3px 0 0; line-height:1.5;">{{ truncate(r.noteText, 120) }}</p>
               </div>
-              <button class="cf-btn-ghost" @click="openGeneralNoteModal(); portfolioGlobalSearch = ''">Buka</button>
+              <button class="cf-btn-ghost" @click="openGeneralNoteModal(r.noteId); portfolioGlobalSearch = ''">Buka</button>
             </div>
             <!-- ── Hasil dari Catatan Pengalaman ── -->
             <div v-else-if="r.type === 'note'" class="mp-search-result-row" style="border-left: 3px solid var(--color-terracotta, #D67B52);">
@@ -17281,11 +17288,11 @@ const MyPortfolio = {
                 <span class="mp-search-result-exp">{{ r.expLabel }}</span>
                 <p class="mp-search-result-title" style="display:flex; align-items:center; gap:6px;">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                  Catatan Pengalaman
+                  {{ r.noteTitle || 'Catatan Pengalaman' }}
                 </p>
                 <p style="font-size:12px; color:var(--text-muted); margin:3px 0 0; line-height:1.5;">{{ truncate(r.noteText, 120) }}</p>
               </div>
-              <button class="cf-btn-ghost" @click="openSearchResultNote(r.expKey)">Buka</button>
+              <button class="cf-btn-ghost" @click="openSearchResultNote(r.expKey, r.noteId)">Buka</button>
             </div>
             <!-- ── Hasil dari Task ── -->
             <div v-else-if="r.type === 'task'" class="mp-search-result-row">
@@ -17320,16 +17327,23 @@ const MyPortfolio = {
         <div class="mp-note-card-head">
           <div class="mp-note-card-head-text">
             <span class="mp-note-card-label">Catatan Pengalaman</span>
-            <span class="mp-note-card-sub">Catatan / refleksi umum untuk pengalaman kerja yang sedang dipilih di atas.</span>
+            <span class="mp-note-card-sub">Catatan / refleksi untuk pengalaman kerja yang sedang dipilih di atas — tambah sebanyak yang kamu butuhkan.</span>
           </div>
-          <button class="mp-insight-btn" :class="{ 'mp-insight-filled': hasExperienceNote }"
-            @click="openNotesModal"
-            :title="hasExperienceNote ? truncate(stripHtml(currentExperienceNote), 90) : 'Belum ada catatan'">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            {{ hasExperienceNote ? 'Lihat Catatan' : 'Tulis Catatan' }}
+          <button class="mp-insight-btn" @click="openNotesModal(null)" title="Tambah catatan baru">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah Catatan
           </button>
         </div>
-        <p v-if="hasExperienceNote" class="mp-note-card-preview">{{ truncate(stripHtml(currentExperienceNote), 220) }}</p>
+        <p v-if="!hasExperienceNote" class="mp-note-card-sub" style="margin:8px 0 0;">Belum ada catatan untuk pengalaman ini.</p>
+        <div v-else class="mp-note-list">
+          <div v-for="note in currentExperienceNotes" :key="note.id" class="mp-note-list-item" @click="openNotesModal(note.id)">
+            <div class="mp-note-list-item-main">
+              <p class="mp-note-list-item-title">{{ note.title || 'Tanpa Judul' }}</p>
+              <p class="mp-note-list-item-preview">{{ truncate(stripHtml(note.content), 140) }}</p>
+            </div>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="mp-note-list-item-arrow"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
       </div>
 
       <!-- Section: Daftar Task -->
@@ -17635,6 +17649,7 @@ const MyPortfolio = {
           <!-- ── Mode VIEW ── -->
           <template v-if="generalNoteModalMode === 'view'">
             <div class="cf-modal-body">
+              <h4 class="mp-note-modal-view-title">{{ generalNoteModalDraftTitle || 'Tanpa Judul' }}</h4>
               <div class="mp-insight-view-box insight-rich-content" v-html="generalNoteModalDraft"></div>
             </div>
             <div class="cf-modal-footer">
@@ -17650,7 +17665,11 @@ const MyPortfolio = {
           <!-- ── Mode EDIT ── -->
           <template v-else>
             <div class="cf-modal-body">
-              <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 10px; line-height:1.6;">Tulis catatan bebas tentang portofolio kamu secara keseluruhan — tujuan karir, narasi diri, hal yang ingin diingat, atau apapun yang relevan.</p>
+              <div style="margin-bottom:12px;">
+                <label class="cf-field-label">Judul Catatan</label>
+                <input class="cf-input" v-model="generalNoteModalDraftTitle" placeholder="mis. Tujuan Karir, Ide Proyek, Refleksi..." />
+              </div>
+              <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 10px; line-height:1.6;">Tulis catatan bebas tentang portofolio kamu — tujuan karir, narasi diri, hal yang ingin diingat, atau apapun yang relevan.</p>
               <div class="mp-rte-toolbar">
                 <button type="button" @click="mpRteExec('generalNoteEditor', 'bold')" title="Bold (Ctrl+B)" class="mp-rte-btn"><b>B</b></button>
                 <button type="button" @click="mpRteExec('generalNoteEditor', 'italic')" title="Italic (Ctrl+I)" class="mp-rte-btn"><i>I</i></button>
@@ -17706,6 +17725,7 @@ const MyPortfolio = {
           <!-- ── Mode VIEW: tampilkan catatan yang sudah tersimpan, read-only ── -->
           <template v-if="notesModalMode === 'view'">
             <div class="cf-modal-body">
+              <h4 class="mp-note-modal-view-title">{{ notesModalDraftTitle || 'Tanpa Judul' }}</h4>
               <div class="mp-insight-view-box insight-rich-content" v-html="notesModalDraft"></div>
             </div>
             <div class="cf-modal-footer">
@@ -17721,7 +17741,11 @@ const MyPortfolio = {
           <!-- ── Mode EDIT: Rich Text Editor untuk menulis / mengubah catatan pengalaman ── -->
           <template v-else>
             <div class="cf-modal-body">
-              <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 10px; line-height:1.6;">Tulis catatan atau refleksi umum untuk pengalaman kerja ini. Catatan akan tersimpan terpisah per pengalaman, sesuai pilihan di filter "Pengalaman Kerja".</p>
+              <div style="margin-bottom:12px;">
+                <label class="cf-field-label">Judul Catatan</label>
+                <input class="cf-input" v-model="notesModalDraftTitle" placeholder="mis. Highlight Proyek, Pelajaran, Tantangan..." />
+              </div>
+              <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 10px; line-height:1.6;">Tulis catatan atau refleksi untuk pengalaman kerja ini. Catatan akan tersimpan terpisah per pengalaman, sesuai pilihan di filter "Pengalaman Kerja".</p>
               <!-- Toolbar -->
               <div class="mp-rte-toolbar">
                 <button type="button" @click="mpRteExec('notesEditor', 'bold')" title="Bold (Ctrl+B)" class="mp-rte-btn"><b>B</b></button>
@@ -17769,7 +17793,7 @@ const MyPortfolio = {
       selectedExpKey: '',
       portfolioGlobalSearch: '',
       portfolioTasks: {}, // { [expKey]: [{ id, title, status, buktiKerja: [logId, ...], insightSummary }] }
-      experienceNotes: {}, // { [expKey]: noteString } — catatan umum per pengalaman kerja, ikut filter di atas
+      experienceNotes: {}, // { [expKey]: [{ id, title, content, updatedAt }] } — bisa lebih dari satu catatan per pengalaman kerja
       newTaskTitle: '',
       editingTaskId: null,    // id task yang sedang diedit judulnya
       editingTaskTitle: '',   // draft judul yang sedang diedit
@@ -17785,12 +17809,16 @@ const MyPortfolio = {
       insightModalDraft: '',
       insightModalMode: 'view', // 'view' (read-only) | 'edit' (textarea)
       notesModalOpen: false,
+      notesModalDraftId: null, // null = catatan baru, terisi = sedang edit catatan yang sudah ada
+      notesModalDraftTitle: '',
       notesModalDraft: '',
       notesModalMode: 'view', // 'view' (read-only) | 'edit' (textarea)
       // ── Catatan General Portfolio (tidak terikat Pengalaman Kerja tertentu) ──
-      generalNote: '',
+      generalNotes: [], // [{ id, title, content, updatedAt }] — bisa lebih dari satu catatan
       generalNoteExpanded: true, // toggle buka/tutup card
       generalNoteModalOpen: false,
+      generalNoteModalDraftId: null, // null = catatan baru, terisi = sedang edit catatan yang sudah ada
+      generalNoteModalDraftTitle: '',
       generalNoteModalDraft: '',
       generalNoteModalMode: 'view', // 'view' | 'edit'
     };
@@ -17844,21 +17872,27 @@ const MyPortfolio = {
       if (!q) return [];
       const results = [];
 
-      // ── Cek Catatan General Portfolio ──
-      const generalNoteText = this.generalNote.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-      if (generalNoteText.toLowerCase().includes(q)) {
-        results.push({ type: 'generalNote', expKey: null, expLabel: 'Catatan General Portfolio', noteText: generalNoteText });
-      }
+      // ── Cek Catatan General Portfolio (bisa lebih dari satu) ──
+      this.generalNotes.forEach(note => {
+        const noteText = this.stripHtml(note.content).trim();
+        const hay = ((note.title || '') + ' ' + noteText).toLowerCase();
+        if (hay.includes(q)) {
+          results.push({ type: 'generalNote', expKey: null, expLabel: 'Catatan General Portfolio', noteId: note.id, noteTitle: note.title, noteText });
+        }
+      });
 
       this.experiences.forEach(exp => {
         const expLabel = exp.role + (exp.company ? ' — ' + exp.company : '') + (exp.period ? ' (' + exp.period + ')' : '');
 
-        // ── Cek Catatan Pengalaman untuk exp ini ──
-        const noteHtml = this.experienceNotes[exp.key] || '';
-        const noteText = noteHtml.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-        if (noteText.toLowerCase().includes(q)) {
-          results.push({ type: 'note', expKey: exp.key, expLabel, noteText });
-        }
+        // ── Cek Catatan Pengalaman untuk exp ini (bisa lebih dari satu) ──
+        const notes = this.experienceNotes[exp.key] || [];
+        notes.forEach(note => {
+          const noteText = this.stripHtml(note.content).trim();
+          const hay = ((note.title || '') + ' ' + noteText).toLowerCase();
+          if (hay.includes(q)) {
+            results.push({ type: 'note', expKey: exp.key, expLabel, noteId: note.id, noteTitle: note.title, noteText });
+          }
+        });
 
         // ── Cek tiap task ──
         const list = this.portfolioTasks[exp.key] || [];
@@ -17915,19 +17949,17 @@ const MyPortfolio = {
     },
 
     // ── Catatan Pengalaman: otomatis ikut menyesuaikan filter Pengalaman Kerja yang dipilih ──
-    currentExperienceNote() {
-      if (!this.selectedExperience) return '';
-      return this.experienceNotes[this.selectedExperience.key] || '';
+    currentExperienceNotes() {
+      if (!this.selectedExperience) return [];
+      return this.experienceNotes[this.selectedExperience.key] || [];
     },
 
     hasExperienceNote() {
-      const stripped = this.currentExperienceNote.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-      return stripped.length > 0;
+      return this.currentExperienceNotes.length > 0;
     },
 
     hasGeneralNote() {
-      const stripped = this.generalNote.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-      return stripped.length > 0;
+      return this.generalNotes.length > 0;
     },
   },
 
@@ -17937,11 +17969,11 @@ const MyPortfolio = {
       this.portfolioGlobalSearch = '';
     },
 
-    openSearchResultNote(expKey) {
+    openSearchResultNote(expKey, noteId) {
       this.selectedExpKey = expKey;
       this.portfolioGlobalSearch = '';
       // Tunggu Vue update filter dulu, baru buka modal catatan
-      this.$nextTick(() => this.openNotesModal());
+      this.$nextTick(() => this.openNotesModal(noteId));
     },
 
     addTask() {
@@ -18228,13 +18260,23 @@ const MyPortfolio = {
       this.closeInsightModal();
     },
 
-    // ── Catatan Pengalaman (popup terpisah, ikut filter Pengalaman Kerja di atas) ──
-    openNotesModal() {
+    // ── Catatan Pengalaman (popup terpisah, ikut filter Pengalaman Kerja di atas, bisa lebih dari satu catatan) ──
+    openNotesModal(noteId) {
       if (!this.selectedExperience) return;
-      this.notesModalDraft = this.currentExperienceNote;
-      // Kalau sudah ada isinya, buka dalam mode tampilan (read-only) dulu.
-      // Kalau masih kosong, langsung ke mode edit supaya bisa langsung nulis.
-      this.notesModalMode = this.hasExperienceNote ? 'view' : 'edit';
+      if (noteId) {
+        const note = this.currentExperienceNotes.find(n => n.id === noteId);
+        if (!note) return;
+        this.notesModalDraftId = note.id;
+        this.notesModalDraftTitle = note.title || '';
+        this.notesModalDraft = note.content || '';
+        this.notesModalMode = 'view';
+      } else {
+        // Catatan baru — langsung ke mode edit supaya bisa langsung nulis.
+        this.notesModalDraftId = null;
+        this.notesModalDraftTitle = '';
+        this.notesModalDraft = '';
+        this.notesModalMode = 'edit';
+      }
       this.notesModalOpen = true;
       if (this.notesModalMode === 'edit') {
         this.$nextTick(() => { if (this.$refs.notesEditor) this.$refs.notesEditor.innerHTML = this.notesModalDraft; });
@@ -18243,6 +18285,8 @@ const MyPortfolio = {
 
     closeNotesModal() {
       this.notesModalOpen = false;
+      this.notesModalDraftId = null;
+      this.notesModalDraftTitle = '';
       this.notesModalDraft = '';
       this.notesModalMode = 'view';
     },
@@ -18253,13 +18297,18 @@ const MyPortfolio = {
     },
 
     cancelEditNotesModal() {
-      if (this.hasExperienceNote) {
-        // Batalkan perubahan, balik ke tampilan isi yang tersimpan sebelumnya.
-        this.notesModalDraft = this.currentExperienceNote;
-        this.notesModalMode = 'view';
-      } else {
-        this.closeNotesModal();
+      if (this.notesModalDraftId) {
+        // Editing catatan yang sudah ada — batalkan perubahan, balik ke tampilan tersimpan.
+        const note = this.currentExperienceNotes.find(n => n.id === this.notesModalDraftId);
+        if (note) {
+          this.notesModalDraftTitle = note.title || '';
+          this.notesModalDraft = note.content || '';
+          this.notesModalMode = 'view';
+          return;
+        }
       }
+      // Catatan baru dibatalkan — tutup saja.
+      this.closeNotesModal();
     },
 
     saveNotesModal() {
@@ -18267,20 +18316,38 @@ const MyPortfolio = {
       // Ambil HTML dari editor jika ada
       if (this.$refs.notesEditor) this.notesModalDraft = this.$refs.notesEditor.innerHTML;
       const key = this.selectedExperience.key;
-      this.experienceNotes = { ...this.experienceNotes, [key]: this.notesModalDraft };
-      this.saveExperienceNotes();
-      if (this.notesModalDraft.replace(/<[^>]*>/g,'').trim()) {
-        this.notesModalMode = 'view';
-      } else {
+      const title = this.notesModalDraftTitle.trim();
+      const content = this.notesModalDraft;
+      const list = this.experienceNotes[key] ? [...this.experienceNotes[key]] : [];
+      const isEmpty = !content.replace(/<[^>]*>/g, '').trim() && !title;
+      if (isEmpty) {
+        if (this.notesModalDraftId) {
+          this.experienceNotes = { ...this.experienceNotes, [key]: list.filter(n => n.id !== this.notesModalDraftId) };
+          this.saveExperienceNotes();
+        }
         this.closeNotesModal();
+        return;
       }
+      if (this.notesModalDraftId) {
+        this.experienceNotes = {
+          ...this.experienceNotes,
+          [key]: list.map(n => n.id === this.notesModalDraftId ? { ...n, title, content, updatedAt: new Date().toISOString() } : n),
+        };
+      } else {
+        const id = 'exn_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        this.experienceNotes = { ...this.experienceNotes, [key]: [...list, { id, title, content, updatedAt: new Date().toISOString() }] };
+        this.notesModalDraftId = id;
+      }
+      this.saveExperienceNotes();
+      this.notesModalMode = 'view';
     },
 
     deleteNotesModal() {
-      if (!confirm('Hapus catatan pengalaman ini?')) return;
+      if (!confirm('Hapus catatan ini?')) return;
       if (!this.selectedExperience) return;
       const key = this.selectedExperience.key;
-      this.experienceNotes = { ...this.experienceNotes, [key]: '' };
+      const list = this.experienceNotes[key] ? [...this.experienceNotes[key]] : [];
+      this.experienceNotes = { ...this.experienceNotes, [key]: list.filter(n => n.id !== this.notesModalDraftId) };
       this.saveExperienceNotes();
       this.closeNotesModal();
     },
@@ -18329,10 +18396,21 @@ const MyPortfolio = {
       return `hsl(${Math.abs(hash) % 360}, 65%, 45%)`;
     },
 
-    // ── Catatan General Portfolio (tidak terikat Pengalaman Kerja tertentu) ──
-    openGeneralNoteModal() {
-      this.generalNoteModalDraft = this.generalNote;
-      this.generalNoteModalMode = this.hasGeneralNote ? 'view' : 'edit';
+    // ── Catatan General Portfolio (tidak terikat Pengalaman Kerja tertentu, bisa lebih dari satu catatan) ──
+    openGeneralNoteModal(noteId) {
+      if (noteId) {
+        const note = this.generalNotes.find(n => n.id === noteId);
+        if (!note) return;
+        this.generalNoteModalDraftId = note.id;
+        this.generalNoteModalDraftTitle = note.title || '';
+        this.generalNoteModalDraft = note.content || '';
+        this.generalNoteModalMode = 'view';
+      } else {
+        this.generalNoteModalDraftId = null;
+        this.generalNoteModalDraftTitle = '';
+        this.generalNoteModalDraft = '';
+        this.generalNoteModalMode = 'edit';
+      }
       this.generalNoteModalOpen = true;
       if (this.generalNoteModalMode === 'edit') {
         this.$nextTick(() => { if (this.$refs.generalNoteEditor) this.$refs.generalNoteEditor.innerHTML = this.generalNoteModalDraft; });
@@ -18341,6 +18419,8 @@ const MyPortfolio = {
 
     closeGeneralNoteModal() {
       this.generalNoteModalOpen = false;
+      this.generalNoteModalDraftId = null;
+      this.generalNoteModalDraftTitle = '';
       this.generalNoteModalDraft = '';
       this.generalNoteModalMode = 'view';
     },
@@ -18351,34 +18431,51 @@ const MyPortfolio = {
     },
 
     cancelEditGeneralNoteModal() {
-      if (this.hasGeneralNote) {
-        this.generalNoteModalDraft = this.generalNote;
-        this.generalNoteModalMode = 'view';
-      } else {
-        this.closeGeneralNoteModal();
+      if (this.generalNoteModalDraftId) {
+        const note = this.generalNotes.find(n => n.id === this.generalNoteModalDraftId);
+        if (note) {
+          this.generalNoteModalDraftTitle = note.title || '';
+          this.generalNoteModalDraft = note.content || '';
+          this.generalNoteModalMode = 'view';
+          return;
+        }
       }
+      this.closeGeneralNoteModal();
     },
 
     saveGeneralNoteModal() {
       if (this.$refs.generalNoteEditor) this.generalNoteModalDraft = this.$refs.generalNoteEditor.innerHTML;
-      this.generalNote = this.generalNoteModalDraft;
-      this.saveGeneralNote();
-      if (this.generalNoteModalDraft.replace(/<[^>]*>/g,'').trim()) {
-        this.generalNoteModalMode = 'view';
-      } else {
+      const title = this.generalNoteModalDraftTitle.trim();
+      const content = this.generalNoteModalDraft;
+      const isEmpty = !content.replace(/<[^>]*>/g, '').trim() && !title;
+      if (isEmpty) {
+        if (this.generalNoteModalDraftId) {
+          this.generalNotes = this.generalNotes.filter(n => n.id !== this.generalNoteModalDraftId);
+          this.saveGeneralNote();
+        }
         this.closeGeneralNoteModal();
+        return;
       }
+      if (this.generalNoteModalDraftId) {
+        this.generalNotes = this.generalNotes.map(n => n.id === this.generalNoteModalDraftId ? { ...n, title, content, updatedAt: new Date().toISOString() } : n);
+      } else {
+        const id = 'gn_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        this.generalNotes = [...this.generalNotes, { id, title, content, updatedAt: new Date().toISOString() }];
+        this.generalNoteModalDraftId = id;
+      }
+      this.saveGeneralNote();
+      this.generalNoteModalMode = 'view';
     },
 
     deleteGeneralNoteModal() {
-      if (!confirm('Hapus catatan general portfolio ini?')) return;
-      this.generalNote = '';
+      if (!confirm('Hapus catatan ini?')) return;
+      this.generalNotes = this.generalNotes.filter(n => n.id !== this.generalNoteModalDraftId);
       this.saveGeneralNote();
       this.closeGeneralNoteModal();
     },
 
     saveGeneralNote() {
-      try { WorkspaceStorage.setItem('portfolio_general_note', this.generalNote); } catch(_e) {}
+      try { WorkspaceStorage.setItem('portfolio_general_note', JSON.stringify(this.generalNotes)); } catch(_e) {}
     },
 
     goToCareer() {
@@ -18420,11 +18517,35 @@ const MyPortfolio = {
     } catch(_e) {}
     try {
       const en = WorkspaceStorage.getItem('portfolio_experience_notes');
-      if (en) this.experienceNotes = JSON.parse(en);
+      if (en) {
+        const parsed = JSON.parse(en);
+        const migrated = {};
+        Object.keys(parsed || {}).forEach(key => {
+          const val = parsed[key];
+          if (Array.isArray(val)) {
+            migrated[key] = val;
+          } else if (typeof val === 'string' && val.trim()) {
+            // Migrasi format lama (satu string per pengalaman) → array satu catatan
+            migrated[key] = [{ id: 'exn_migrated_' + key.slice(0, 8) + '_' + Math.random().toString(36).slice(2, 6), title: '', content: val, updatedAt: new Date().toISOString() }];
+          } else {
+            migrated[key] = [];
+          }
+        });
+        this.experienceNotes = migrated;
+      }
     } catch(_e) {}
     try {
       const gn = WorkspaceStorage.getItem('portfolio_general_note');
-      if (gn) this.generalNote = gn;
+      if (gn) {
+        let parsed;
+        try { parsed = JSON.parse(gn); } catch(_e2) { parsed = gn; } // format lama: raw HTML string, bukan JSON
+        if (Array.isArray(parsed)) {
+          this.generalNotes = parsed;
+        } else if (typeof parsed === 'string' && parsed.trim()) {
+          // Migrasi format lama (satu string) → array satu catatan
+          this.generalNotes = [{ id: 'gn_migrated_' + Date.now().toString(36), title: '', content: parsed, updatedAt: new Date().toISOString() }];
+        }
+      }
     } catch(_e) {}
     this.loadKeywordBank();
     this.loadJobLogs();
