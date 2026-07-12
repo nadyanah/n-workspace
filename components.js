@@ -2331,8 +2331,8 @@ const CalendarMoment = {
                   :disabled="isSpinning || wheelMoments.length === 0"
                   style="height:36px; font-weight:700; font-size:12px; border-radius:8px; display:inline-flex; align-items:center; gap:5px; background:var(--color-terracotta); border:none; color:#fff; padding:0 16px; flex-shrink:0; box-shadow:0 4px 10px rgba(214,123,82,0.2); cursor:pointer;"
                   :style="isSpinning ? {opacity:0.7,cursor:'not-allowed'} : {}">
-            <span v-if="isSpinning" style="display:inline-block; animation:spin 1s linear infinite;">🔄</span>
-            <span v-else>🎡</span>
+            <svg v-if="isSpinning" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="display:inline-block; animation:spin 1s linear infinite;"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
+            <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="12" cy="12" r="2"></circle><path d="M12 2v4"></path><path d="m6.8 15-3.5 2"></path><path d="m20.7 7-3.5 2"></path><path d="M6.8 9 3.3 7"></path><path d="m20.7 17-3.5-2"></path><path d="m9 22 3-8 3 8"></path><path d="M8 22h8"></path><path d="M18 18.7a9 9 0 1 0-12 0"></path></svg>
             {{ isSpinning ? 'Berputar...' : 'Putar Roda' }}
           </button>
 
@@ -2400,19 +2400,19 @@ const CalendarMoment = {
                         <button class="photo-reset-handle" 
                                 @click.stop="resetPhotoPosition(cell.dateString, m)" 
                                 title="Reset posisi">
-                          ↺
+                          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
                         </button>
                         <div class="photo-rotate-handle" 
                              @mousedown.stop.prevent="startRotatePhoto($event, cell.dateString, m)"
                              @touchstart.stop.prevent="startRotatePhoto($event, cell.dateString, m)"
                              title="Geser arah gerak untuk putar">
-                          ↻
+                          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>
                         </div>
                         <div class="photo-scale-handle" 
                              @mousedown.stop.prevent="startScalePhoto($event, cell.dateString, m)"
                              @touchstart.stop.prevent="startScalePhoto($event, cell.dateString, m)"
                              title="Tarik untuk ubah ukuran">
-                          ⤨
+                          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M19 13v6h-6"></path><path d="M5 11V5h6"></path><path d="m5 5 14 14"></path></svg>
                         </div>
                       </div>
                     </div>
@@ -2550,7 +2550,7 @@ const CalendarMoment = {
           
           <!-- Empty View inside the Wheel layout -->
           <div v-if="wheelMoments.length === 0" style="padding: 100px 24px; text-align: center; background-color: #FFFFFF; border: 2.5px dashed var(--color-sand); border-radius: 24px; color: var(--text-muted); width: 100%;">
-            <span style="font-size: 36px; display: block; margin-bottom: 12px;">🎡</span>
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="display: block; margin: 0 auto 12px; color: #8F8175;"><circle cx="12" cy="12" r="2"></circle><path d="M12 2v4"></path><path d="m6.8 15-3.5 2"></path><path d="m20.7 7-3.5 2"></path><path d="M6.8 9 3.3 7"></path><path d="m20.7 17-3.5-2"></path><path d="m9 22 3-8 3 8"></path><path d="M8 22h8"></path><path d="M18 18.7a9 9 0 1 0-12 0"></path></svg>
             <p style="font-size: 15px; font-weight: 800; margin: 0; color: #8F8175;">Belum menemukan cerita kenangan dalam lingkaran filter ini.</p>
             <p style="font-size: 12px; margin-top: 6px; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.5;">Gunakan tombol "Reset Filter" di atas atau ubah filter Tahun / Rentang Tanggal di kemudi untuk melihat lingkaran memori Anda!</p>
           </div>
@@ -2596,7 +2596,7 @@ const CalendarMoment = {
                        referrerPolicy="no-referrer" />
                   <div v-else 
                        style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #FFFDF9 0%, #FAF0EC 100%); text-align: center; padding: 4px; box-sizing: border-box; gap: 4px;">
-                    <span style="font-size: 24px;">{{ item.sticker || '🌸' }}</span>
+                    <span style="width: 24px; height: 24px; color: var(--color-terracotta); display: inline-flex; align-items: center; justify-content: center;" v-html="getStickerIcon(item.sticker)"></span>
                     <span style="font-family: 'Outfit', sans-serif; font-size: 8px; font-weight: 850; color: var(--color-terracotta); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; padding: 0 4px;">
                       {{ item.title || 'Cerita' }}
                     </span>
@@ -2612,8 +2612,9 @@ const CalendarMoment = {
               
               <!-- Metadata Indicators: Tanggal & Kategori -->
               <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; pointer-events: auto;">
-                <span style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 11px; color: var(--color-terracotta); text-transform: uppercase;">
-                  📅 {{ formatTimelineDate(wheelMoments[wheelActiveIndex].dateString) }}
+                <span style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 11px; color: var(--color-terracotta); text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                  {{ formatTimelineDate(wheelMoments[wheelActiveIndex].dateString) }}
                 </span>
                 
                 <span v-if="wheelMoments[wheelActiveIndex].category" 
@@ -2653,7 +2654,7 @@ const CalendarMoment = {
 
         <div class="nutrition-container">
           <div v-if="logEntries.length === 0" style="padding: 60px 20px; text-align: center; color: var(--text-muted); background: var(--bg-cream); border-radius: 12px; border: 1.5px dashed var(--color-sand);">
-            <p style="font-size: 32px; margin-bottom: 10px;">🌱</p>
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="display: block; margin: 0 auto 10px; color: var(--color-sage, #8CA987);"><path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3"></path><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4"></path><path d="M5 21h14"></path></svg>
             <p style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">Belum ada log pertumbuhan yang cocok</p>
             <p style="font-size: 12.5px;">Coba ubah filter, atau klik "Tambah Log" di atas</p>
           </div>
@@ -2671,7 +2672,7 @@ const CalendarMoment = {
                           :style="{ background: getWashiColor(item.entry.category) + '22', color: getWashiColor(item.entry.category), border: '1.5px solid ' + getWashiColor(item.entry.category) + '55' }">
                       {{ item.entry.category }}
                     </span>
-                    <span style="font-size: 14px;" :title="getStickerLabel(item.entry.sticker)">{{ item.entry.sticker || '✨' }}</span>
+                    <span style="width: 14px; height: 14px; color: var(--color-terracotta); display: inline-flex; align-items: center; justify-content: center;" :title="getStickerLabel(item.entry.sticker)" v-html="getStickerIcon(item.entry.sticker)"></span>
                   </div>
 
                   <div style="display: inline-flex; gap: 6px; flex-shrink: 0;">
@@ -2706,26 +2707,20 @@ const CalendarMoment = {
               <span>Kelola Momen Kenangan</span>
               <span style="font-size: 13.5px; font-weight: 600; color: var(--color-terracotta);">— {{ formatTimelineDate(selectedCell ? selectedCell.dateString : '') }}</span>
             </h3>
-            <button class="close-btn" @click="showModal = false" style="font-size: 26px; border: none; background: none; cursor: pointer; color: var(--text-muted);">&times;</button>
-          </div>
-          
-          <!-- Add Button at Top -->
-          <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; background: #FAF8F5; border: 1.5px dashed var(--color-sand); padding: 12px 16px; border-radius: 12px;">
-            <span style="font-size: 13px; font-weight: 600; color: var(--text-muted);">
-              Tulis catatan mading momen harian Anda:
-            </span>
-            <button type="button" 
-                    class="btn btn-primary" 
-                    style="padding: 6px 12px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 4px; border-radius: 8px; height: 32px;" 
-                    @click="addNewMomentBlock">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              + Momen Baru
-            </button>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <button type="button" 
+                      class="btn btn-primary" 
+                      style="padding: 6px 12px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 4px; border-radius: 8px; height: 32px;" 
+                      @click="addNewMomentBlock">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Momen Baru
+              </button>
+              <button class="close-btn" @click="showModal = false" style="font-size: 26px; border: none; background: none; cursor: pointer; color: var(--text-muted);">&times;</button>
+            </div>
           </div>
 
           <!-- List of Active Moment Forms -->
           <form @submit.prevent="saveAllMoments" style="display: flex; flex-direction: column; gap: 18px;">
-            
             <div v-if="modalMoments.length === 0" style="color: var(--text-muted); text-align: center; padding: 40px 10px; background: #FAF8F5; border-radius: 16px; border: 1.5px solid var(--color-sand);">
               <p style="font-size: 13.5px; font-weight: 600; margin: 0; color: #7A6F66;">Belum ada momen tercatat pada tanggal ini.</p>
               <p style="font-size: 11.5px; margin-top: 4px; margin-bottom: 14px; opacity: 0.85;">Klik tombol di bawah untuk menyusun memori indahmu!</p>
@@ -2743,7 +2738,7 @@ const CalendarMoment = {
                 <!-- Card Inner Header -->
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.2px solid var(--color-sand); padding-bottom: 10px; margin-bottom: 4px;">
                   <span style="font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 800; color: var(--text-dark); display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 16px;">✨</span>
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" style="color: var(--color-terracotta);"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"></path><path d="M20 2v4"></path><path d="M22 4h-4"></path><circle cx="4" cy="20" r="2"></circle></svg>
                     <span>Momen #{{ index + 1 }}</span>
                   </span>
                   <button type="button" 
@@ -2884,7 +2879,7 @@ const CalendarMoment = {
       activeMoodFilter: 'Semua',
       showCategoryFilterDropdown: false,
       scrollRotation: 0,
-      stickerOptions: ['😊', '🥰', '🥳', '😎', '😢', '😭', '😡', '😱', '😴', '🧠'],
+      stickerOptions: ['happy', 'love', 'excited', 'cool', 'sad', 'crying', 'angry', 'shocked', 'sleepy', 'thoughtful'],
       draggingPhoto: null,
       timelineStartDate: '',
       timelineEndDate: '',
@@ -3171,8 +3166,8 @@ const CalendarMoment = {
           {
             id: 'm-1',
             title: 'Matahari Terbenam di Pantai',
-            sticker: '🥰',
-            category: '🌸 Cinta',
+            sticker: 'love',
+            category: 'Cinta',
             notes: 'Melihat senja jingga keemasan yang memantul indah di air laut bersama dia. Angin sepoi-sepoi menemani obrolan hangat kami tentang masa depan.',
             importantNote: 'Mengakui rasa kagum di bawah sinar mentari terbenam',
             isImportant: true,
@@ -3187,8 +3182,8 @@ const CalendarMoment = {
           {
             id: 'm-2',
             title: 'Berhasil Push Code Pertama',
-            sticker: '🥳',
-            category: '🌿 Pertumbuhan',
+            sticker: 'excited',
+            category: 'Pertumbuhan',
             notes: 'Setelah bergadang 2 malam akhirnya website portofolio interaktif ini berhasil live tanpa error sama sekali. Sangat bangga!',
             importantNote: 'Launch workspace visual interaktif di production',
             isImportant: true,
@@ -3203,8 +3198,8 @@ const CalendarMoment = {
           {
             id: 'm-3',
             title: 'Mendaki Bukit Paralayang',
-            sticker: '😎',
-            category: '🍃 Petualangan',
+            sticker: 'cool',
+            category: 'Petualangan',
             notes: 'Menjelajahi jalur pendakian bebatuan di pagi buta untuk mengejar matahari terbit. Udara yang sangat dingin terbayar lunas dengan gradasi langit ungu pink.',
             importantNote: 'Mengejar sunrise kabut pagi di bukit paralayang',
             isImportant: true,
@@ -3324,18 +3319,34 @@ const CalendarMoment = {
     },
     getStickerLabel(stk) {
       const labels = {
-        '😊': 'Happy',
-        '🥰': 'Love',
-        '🥳': 'Excited',
-        '😎': 'Cool',
-        '😢': 'Sad',
-        '😭': 'Crying',
-        '😡': 'Angry',
-        '😱': 'Shocked',
-        '😴': 'Sleepy',
-        '🧠': 'Thoughtful'
+        happy: 'Happy',
+        love: 'Love',
+        excited: 'Excited',
+        cool: 'Cool',
+        sad: 'Sad',
+        crying: 'Crying',
+        angry: 'Angry',
+        shocked: 'Shocked',
+        sleepy: 'Sleepy',
+        thoughtful: 'Thoughtful'
       };
       return labels[stk] || 'Mood';
+    },
+    getStickerIcon(stk) {
+      const icons = {
+        happy: '<circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line>',
+        love: '<path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"></path>',
+        excited: '<path d="M5.8 11.3 2 22l10.7-3.79"></path><path d="M4 3h.01"></path><path d="M22 8h.01"></path><path d="M15 2h.01"></path><path d="M22 20h.01"></path><path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"></path><path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11c-.11.7-.72 1.22-1.43 1.22H17"></path><path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V7"></path><path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z"></path>',
+        cool: '<circle cx="6" cy="15" r="4"></circle><circle cx="18" cy="15" r="4"></circle><path d="M14 15a2 2 0 0 0-2-2 2 2 0 0 0-2 2"></path><path d="M2.5 13 5 7c.7-1.3 1.4-2 3-2"></path><path d="M21.5 13 19 7c-.7-1.3-1.5-2-3-2"></path>',
+        sad: '<circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line>',
+        crying: '<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M16 14v6"></path><path d="M8 14v6"></path><path d="M12 16v6"></path>',
+        angry: '<circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><path d="M7.5 8 10 9"></path><path d="m14 9 2.5-1"></path><path d="M9 10h.01"></path><path d="M15 10h.01"></path>',
+        shocked: '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path>',
+        sleepy: '<path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"></path>',
+        thoughtful: '<path d="M12 18V5"></path><path d="M15 13a4.17 4.17 0 0 1-3-4 4.17 4.17 0 0 1-3 4"></path><path d="M17.598 6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5"></path><path d="M17.997 5.125a4 4 0 0 1 2.526 5.77"></path><path d="M18 18a4 4 0 0 0 2-7.464"></path><path d="M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517"></path><path d="M6 18a4 4 0 0 1-2-7.464"></path><path d="M6.003 5.125a4 4 0 0 0-2.526 5.77"></path>'
+      };
+      const inner = icons[stk] || '<path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"></path><path d="M20 2v4"></path><path d="M22 4h-4"></path><circle cx="4" cy="20" r="2"></circle>';
+      return '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>';
     },
     openAddMoment(cell) {
       this.selectedCell = cell;
@@ -3357,7 +3368,7 @@ const CalendarMoment = {
       this.modalMoments.push({
         id: 'm-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
         title: '',
-        sticker: '✨',
+        sticker: '',
         category: '',
         notes: '',
         importantNote: '',
@@ -3504,7 +3515,7 @@ const CalendarMoment = {
       if (cat === 'Semua') {
         return allMoments.length;
       }
-      const cleanCat = cat.substring(2).trim(); // Skip emoticon (e.g., '🌸 Cinta' -> 'Cinta')
+      const cleanCat = cat.substring(2).trim(); // Legacy: skip old emoji-prefix format if present
       return allMoments.filter(m => m.category && m.category.trim().includes(cleanCat)).length;
     },
     deleteSpecificMomentFromTimeline(item) {
