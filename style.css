@@ -1191,6 +1191,15 @@ h1, h2, h3, h4 {
   border-color: rgba(214,123,82,0.35);
 }
 
+.timeline-compact-row {
+  transition: var(--transition-fast);
+}
+
+.timeline-compact-row:hover {
+  border-color: rgba(214,123,82,0.35) !important;
+  box-shadow: var(--shadow-sm);
+}
+
 .timeline-title {
   font-size: 15.5px;
   font-weight: 800;

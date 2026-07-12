@@ -2673,36 +2673,33 @@ const CalendarMoment = {
                 </button>
               </div>
 
-              <div v-if="isLogDateExpanded(group.dateString)" style="display: flex; flex-direction: column; gap: 10px;">
+              <div v-if="isLogDateExpanded(group.dateString)" style="display: flex; flex-direction: column; gap: 6px;">
                 <div v-for="item in group.items" 
                      :key="item.entry.id" 
-                     class="timeline-card">
+                     class="timeline-compact-row"
+                     style="display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid var(--color-sand); border-radius: 9px; background-color: var(--bg-card);">
 
-                  <!-- Header: kategori pill + mood (read-only) + aksi edit/hapus -->
-                  <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px;">
-                    <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0;">
-                      <span v-if="item.entry.category" class="timeline-category"
-                            :style="{ background: getWashiColor(item.entry.category) + '22', color: getWashiColor(item.entry.category), border: '1.5px solid ' + getWashiColor(item.entry.category) + '55' }">
-                        {{ item.entry.category }}
-                      </span>
-                      <span style="width: 14px; height: 14px; color: var(--color-terracotta); display: inline-flex; align-items: center; justify-content: center;" :title="getStickerLabel(item.entry.sticker)" v-html="getStickerIcon(item.entry.sticker)"></span>
-                    </div>
+                  <span style="width: 13px; height: 13px; color: var(--color-terracotta); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;" :title="getStickerLabel(item.entry.sticker)" v-html="getStickerIcon(item.entry.sticker)"></span>
 
-                    <div style="display: inline-flex; gap: 6px; flex-shrink: 0;">
-                      <button class="card-nav-btn" @click="openEditFromTimeline({ dateString: item.dateString, id: item.entry.id })" title="Edit / Kelola Momen Kenangan"
-                              style="background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
-                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                      </button>
-                      <button class="card-nav-btn" @click="deleteLogEntry(item.dateString, item.entry.id)" title="Hapus log"
-                              style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
-                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                      </button>
-                    </div>
+                  <span v-if="item.entry.category" class="timeline-category" style="flex-shrink: 0;"
+                        :style="{ background: getWashiColor(item.entry.category) + '22', color: getWashiColor(item.entry.category), border: '1.5px solid ' + getWashiColor(item.entry.category) + '55' }">
+                    {{ item.entry.category }}
+                  </span>
+
+                  <span style="color: var(--color-sand); flex-shrink: 0;">–</span>
+
+                  <span style="font-size: 13px; font-weight: 700; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0;">{{ item.entry.title || 'Momen Tanpa Judul' }}</span>
+
+                  <div class="timeline-compact-actions" style="display: inline-flex; gap: 5px; flex-shrink: 0;">
+                    <button class="card-nav-btn" @click="openEditFromTimeline({ dateString: item.dateString, id: item.entry.id })" title="Edit / Kelola Momen Kenangan"
+                            style="background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 6px; padding: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                      <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <button class="card-nav-btn" @click="deleteLogEntry(item.dateString, item.entry.id)" title="Hapus log"
+                            style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                      <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                    </button>
                   </div>
-
-                  <!-- Judul saja -->
-                  <h3 class="timeline-title" style="margin: 0;">{{ item.entry.title || 'Momen Tanpa Judul' }}</h3>
-
                 </div>
               </div>
             </div>
