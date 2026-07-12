@@ -4967,50 +4967,6 @@ const InterviewPractice = {
             </button>
           </div>
         </div>
-        <div style="overflow-x:auto; background:var(--bg-card,#fff); border:1.5px solid var(--color-sand); border-radius:12px;">
-          <table class="questions-manage-table">
-            <thead>
-              <tr>
-                <th style="width:16%;">Kategori</th>
-                <th style="width:11%; text-align:center;">Framework</th>
-                <th style="width:39%;">Pertanyaan</th>
-                <th style="width:14%; text-align:center;">Detail</th>
-                <th style="width:20%; text-align:center;">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="q in questions" :key="q.id">
-                <td><span class="framework-step-pill" style="margin:0; font-size:10px;">{{ q.category }}</span></td>
-                <td style="text-align:center;">
-                  <span v-if="q.framework" class="ip-fw-badge" :class="'ip-fw-badge--' + q.framework.toLowerCase()">{{ q.framework }}</span>
-                  <span v-else class="ip-fw-badge ip-fw-badge--none">Bebas</span>
-                </td>
-                <td style="font-weight:600; color:var(--color-forest,#1C3B34);">{{ q.text }}</td>
-                <td style="text-align:center;">
-                  <button class="card-nav-btn" @click="viewingQuestion = q" title="Lihat Hints & Note" style="background:var(--bg-cream); border:1px solid var(--color-sand); padding:6px 10px; display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; color:var(--color-forest,#1C3B34); border-radius:8px;">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                    Lihat
-                  </button>
-                </td>
-                <td style="text-align:center;">
-                  <div style="display:flex; gap:6px; justify-content:center;">
-                    <button class="card-nav-btn" @click="startEdit(q)" style="background:var(--bg-cream); border:1px solid var(--color-sand); width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center;">
-                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-                    </button>
-                    <button class="card-nav-btn" @click="deleteCustomQuestion(q.id)" style="background:var(--bg-cream); border:1px solid var(--color-sand); color:var(--color-terracotta); width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center;">
-                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <div style="padding:12px; background:var(--bg-cream); text-align:right; border-top:1px solid var(--color-sand);">
-            <button class="btn btn-secondary" @click="resetDefaultQuestions" style="font-size:12px; padding:6px 12px; border:1.5px dashed var(--color-sand); background:var(--bg-card); display:inline-flex; align-items:center; gap:4px;">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg> Reset ke Default
-            </button>
-          </div>
-        </div>
       </div>
       </div>
       </transition>
@@ -5335,6 +5291,64 @@ const InterviewPractice = {
 
         </div><!-- end ip-content-col -->
       </div><!-- end ip-main-grid -->
+
+      <!-- ═══ DATABASE SOAL: Tabel daftar seluruh pertanyaan (dipindah keluar dari modal Kelola) ═══ -->
+      <div class="ip-question-db-section" style="margin-top:32px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+          <h3 style="font-size:16px; font-weight:800; color:var(--color-forest,#1C3B34); margin:0; display:flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-terracotta);"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            Database Soal
+            <span style="font-size:11px; font-weight:700; color:var(--text-muted); background:var(--bg-cream); padding:2px 9px; border-radius:20px;">{{ questions.length }} soal</span>
+          </h3>
+          <button class="btn btn-secondary" @click="resetDefaultQuestions" style="font-size:12px; padding:8px 14px; border:1.5px dashed var(--color-sand); background:var(--bg-card); display:inline-flex; align-items:center; gap:4px;">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg> Reset ke Default
+          </button>
+        </div>
+        <div style="overflow-x:auto; background:var(--bg-card,#fff); border:1.5px solid var(--color-sand); border-radius:12px;">
+          <table class="questions-manage-table">
+            <thead>
+              <tr>
+                <th style="width:16%;">Kategori</th>
+                <th style="width:11%; text-align:center;">Framework</th>
+                <th style="width:39%;">Pertanyaan</th>
+                <th style="width:14%; text-align:center;">Detail</th>
+                <th style="width:20%; text-align:center;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="q in questions" :key="q.id">
+                <td><span class="framework-step-pill" style="margin:0; font-size:10px;">{{ q.category }}</span></td>
+                <td style="text-align:center;">
+                  <span v-if="q.framework" class="ip-fw-badge" :class="'ip-fw-badge--' + q.framework.toLowerCase()">{{ q.framework }}</span>
+                  <span v-else class="ip-fw-badge ip-fw-badge--none">Bebas</span>
+                </td>
+                <td style="font-weight:600; color:var(--color-forest,#1C3B34);">{{ q.text }}</td>
+                <td style="text-align:center;">
+                  <button class="card-nav-btn" @click="viewingQuestion = q" title="Lihat Hints & Note" style="background:var(--bg-cream); border:1px solid var(--color-sand); padding:6px 10px; display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; color:var(--color-forest,#1C3B34); border-radius:8px;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    Lihat
+                  </button>
+                </td>
+                <td style="text-align:center;">
+                  <div style="display:flex; gap:6px; justify-content:center;">
+                    <button class="card-nav-btn" @click="startEdit(q); showManagePanel = true" style="background:var(--bg-cream); border:1px solid var(--color-sand); width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center;">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                    </button>
+                    <button class="card-nav-btn" @click="deleteCustomQuestion(q.id)" style="background:var(--bg-cream); border:1px solid var(--color-sand); color:var(--color-terracotta); width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center;">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr v-if="questions.length === 0">
+                <td colspan="5" style="text-align:center; padding:24px; color:var(--text-muted); font-size:13px;">Belum ada soal. Tambahkan lewat tombol "Kelola Soal" di atas.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- end ip-question-db-section -->
+
     </div>
   `,
   data() {
