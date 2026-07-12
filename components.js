@@ -2660,36 +2660,50 @@ const CalendarMoment = {
           </div>
 
           <div v-else class="timeline">
-            <div v-for="item in logEntries" :key="item.entry.id" class="timeline-item">
+            <div v-for="group in groupedLogEntries" :key="group.dateString" class="timeline-item">
               <div class="timeline-dot"></div>
-              <div class="timeline-date">{{ formatTimelineDate(item.dateString) }}</div>
-              <div class="timeline-card">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                <div class="timeline-date" style="margin-bottom: 0;">{{ formatTimelineDate(group.dateString) }}</div>
+                <button type="button" 
+                        @click="toggleLogDateExpand(group.dateString)" 
+                        :title="isLogDateExpanded(group.dateString) ? 'Sembunyikan log' : ('Lihat ' + group.items.length + ' log')"
+                        style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700; color: var(--color-terracotta); padding: 2px 8px 2px 7px; line-height: 1.6;">
+                  {{ group.items.length }}
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" :style="{ transform: isLogDateExpanded(group.dateString) ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+              </div>
 
-                <!-- Header: kategori pill + mood (read-only) + aksi edit/hapus -->
-                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px;">
-                  <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0;">
-                    <span v-if="item.entry.category" class="timeline-category"
-                          :style="{ background: getWashiColor(item.entry.category) + '22', color: getWashiColor(item.entry.category), border: '1.5px solid ' + getWashiColor(item.entry.category) + '55' }">
-                      {{ item.entry.category }}
-                    </span>
-                    <span style="width: 14px; height: 14px; color: var(--color-terracotta); display: inline-flex; align-items: center; justify-content: center;" :title="getStickerLabel(item.entry.sticker)" v-html="getStickerIcon(item.entry.sticker)"></span>
+              <div v-if="isLogDateExpanded(group.dateString)" style="display: flex; flex-direction: column; gap: 10px;">
+                <div v-for="item in group.items" 
+                     :key="item.entry.id" 
+                     class="timeline-card">
+
+                  <!-- Header: kategori pill + mood (read-only) + aksi edit/hapus -->
+                  <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0;">
+                      <span v-if="item.entry.category" class="timeline-category"
+                            :style="{ background: getWashiColor(item.entry.category) + '22', color: getWashiColor(item.entry.category), border: '1.5px solid ' + getWashiColor(item.entry.category) + '55' }">
+                        {{ item.entry.category }}
+                      </span>
+                      <span style="width: 14px; height: 14px; color: var(--color-terracotta); display: inline-flex; align-items: center; justify-content: center;" :title="getStickerLabel(item.entry.sticker)" v-html="getStickerIcon(item.entry.sticker)"></span>
+                    </div>
+
+                    <div style="display: inline-flex; gap: 6px; flex-shrink: 0;">
+                      <button class="card-nav-btn" @click="openEditFromTimeline({ dateString: item.dateString, id: item.entry.id })" title="Edit / Kelola Momen Kenangan"
+                              style="background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                      </button>
+                      <button class="card-nav-btn" @click="deleteLogEntry(item.dateString, item.entry.id)" title="Hapus log"
+                              style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                      </button>
+                    </div>
                   </div>
 
-                  <div style="display: inline-flex; gap: 6px; flex-shrink: 0;">
-                    <button class="card-nav-btn" @click="openEditFromTimeline({ dateString: item.dateString, id: item.entry.id })" title="Edit / Kelola Momen Kenangan"
-                            style="background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
-                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    </button>
-                    <button class="card-nav-btn" @click="deleteLogEntry(item.dateString, item.entry.id)" title="Hapus log"
-                            style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
-                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                    </button>
-                  </div>
+                  <!-- Judul saja -->
+                  <h3 class="timeline-title" style="margin: 0;">{{ item.entry.title || 'Momen Tanpa Judul' }}</h3>
+
                 </div>
-
-                <!-- Judul saja -->
-                <h3 class="timeline-title" style="margin: 0;">{{ item.entry.title || 'Momen Tanpa Judul' }}</h3>
-
               </div>
             </div>
           </div>
@@ -2877,6 +2891,7 @@ const CalendarMoment = {
       searchQuery: '',
       activeCategoryFilter: 'Semua',
       activeMoodFilter: 'Semua',
+      expandedLogDates: {},
       showCategoryFilterDropdown: false,
       scrollRotation: 0,
       stickerOptions: ['happy', 'love', 'excited', 'cool', 'sad', 'crying', 'angry', 'shocked', 'sleepy', 'thoughtful'],
@@ -3104,6 +3119,18 @@ const CalendarMoment = {
         }
         return true;
       });
+    },
+    groupedLogEntries() {
+      const groups = [];
+      const map = {};
+      this.logEntries.forEach(item => {
+        if (!map[item.dateString]) {
+          map[item.dateString] = { dateString: item.dateString, items: [] };
+          groups.push(map[item.dateString]);
+        }
+        map[item.dateString].items.push(item);
+      });
+      return groups;
     },
     memoryJarBubbles() {
       const list = [];
@@ -3347,6 +3374,12 @@ const CalendarMoment = {
       };
       const inner = icons[stk] || '<path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"></path><path d="M20 2v4"></path><path d="M22 4h-4"></path><circle cx="4" cy="20" r="2"></circle>';
       return '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>';
+    },
+    toggleLogDateExpand(dateStr) {
+      this.expandedLogDates = { ...this.expandedLogDates, [dateStr]: !this.expandedLogDates[dateStr] };
+    },
+    isLogDateExpanded(dateStr) {
+      return !!this.expandedLogDates[dateStr];
     },
     openAddMoment(cell) {
       this.selectedCell = cell;
