@@ -2170,12 +2170,22 @@ const CalendarMoment = {
     <div class="calendar-moment animate-fade-in" style="width: 100%; padding: 0;">
       
       <!-- ═══ HEADER + FILTER UNIFIED ═══ -->
-      <div style="margin-bottom: 28px;">
+      <div style="margin-bottom: 28px; padding-bottom: 20px; border-bottom: 2px solid var(--color-sand);">
 
         <!-- Judul -->
-        <div style="margin-bottom: 16px;">
-          <h2 style="font-size: 24px; font-weight: 800; color: #3E352F; margin: 0 0 4px 0; line-height: 1.2;">My Memories & Growth</h2>
-          <p style="color: var(--text-muted); font-size: 13px; margin: 0; line-height: 1.5;">Abadikan jejak perkembangan dirimu, susun peristiwa indah, dan tata kenangan foto harian.</p>
+        <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+          <div>
+            <h2 style="font-size: 24px; font-weight: 800; color: #3E352F; margin: 0 0 4px 0; line-height: 1.2;">My Memories & Growth</h2>
+            <p style="color: var(--text-muted); font-size: 13px; margin: 0; max-width: 520px; line-height: 1.5;">Abadikan jejak perkembangan dirimu, susun peristiwa indah, dan tata kenangan foto harian.</p>
+          </div>
+          <!-- Actions -->
+          <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap;">
+            <button class="btn text-mono" @click="showManageMomentCategories = true"
+                    style="background-color: #FFF4ED; border: 1.5px solid #D67B52; color: #8C4B2D; font-weight: bold; cursor: pointer; padding: 7px 14px; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="13.5" cy="6.5" r=".5"></circle><circle cx="17.5" cy="10.5" r=".5"></circle><circle cx="8.5" cy="7.5" r=".5"></circle><circle cx="6.5" cy="12.5" r=".5"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg>
+              Kelola Kategori
+            </button>
+          </div>
         </div>
 
         <!-- Filter Bar -->
@@ -2251,7 +2261,10 @@ const CalendarMoment = {
                    style="cursor:pointer; padding:7px 11px; border-radius:7px; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:space-between; margin-top:2px;"
                    :style="activeCategoryFilter===cat ? {background:'#FAF0EC',color:'var(--color-terracotta)'} : {color:'#3E352F'}"
                    onmouseover="this.style.background='#FAF8F5'" onmouseout="this.style.background=''">
-                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">{{ cat }}</span>
+                <span style="display:inline-flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">
+                  <span :style="{ backgroundColor: getCategoryColorHex(cat) }" style="width:8px; height:8px; border-radius:50%; flex-shrink:0; display:inline-block;"></span>
+                  {{ cat }}
+                </span>
                 <span style="font-size:10px; background:rgba(0,0,0,0.05); padding:1px 6px; border-radius:5px; font-weight:700;">{{ getCategoryCount(cat) }}</span>
               </div>
             </div>
@@ -2504,7 +2517,7 @@ const CalendarMoment = {
 
                       <!-- Badge Category & Mood inline list -->
                       <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                        <span v-if="item.category" style="background: #FAF0EC; border: 1px solid #F3E2DB; border-radius: 8px; padding: 4px 10px; font-size: 11px; font-weight: 800; color: var(--color-terracotta); display: inline-flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <span v-if="item.category" :style="{ background: getCategoryColorHex(item.category) + '18', borderColor: getCategoryColorHex(item.category) + '55', color: getCategoryColorHex(item.category) }" style="border: 1px solid; border-radius: 8px; padding: 4px 10px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
                           <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" class="lucide-inline"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
                           {{ item.category }}
                         </span>
@@ -2618,7 +2631,8 @@ const CalendarMoment = {
                 </span>
                 
                 <span v-if="wheelMoments[wheelActiveIndex].category" 
-                      style="background: #FAF0EC; border: 1px solid #F3E2DB; border-radius: 6px; padding: 2px 8px; font-size: 9.5px; font-weight: 850; color: var(--color-terracotta); text-transform: uppercase;">
+                      :style="{ background: getCategoryColorHex(wheelMoments[wheelActiveIndex].category) + '18', borderColor: getCategoryColorHex(wheelMoments[wheelActiveIndex].category) + '55', color: getCategoryColorHex(wheelMoments[wheelActiveIndex].category) }"
+                      style="border: 1px solid; border-radius: 6px; padding: 2px 8px; font-size: 9.5px; font-weight: 850; text-transform: uppercase;">
                   {{ wheelMoments[wheelActiveIndex].category }}
                 </span>
               </div>
@@ -2708,6 +2722,53 @@ const CalendarMoment = {
 
       </div>
 
+      <!-- ── Modal Kelola Kategori Momen ── -->
+      <div v-if="showManageMomentCategories" class="modal-backdrop" style="z-index: 99999;" @click.self="showManageMomentCategories = false">
+        <div style="background: #FFFFFF; max-width: 460px; width: 90%; padding: 28px; border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,0.18); max-height: 82vh; overflow-y: auto;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; color: #3E352F;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #D67B52;"><circle cx="13.5" cy="6.5" r=".5"></circle><circle cx="17.5" cy="10.5" r=".5"></circle><circle cx="8.5" cy="7.5" r=".5"></circle><circle cx="6.5" cy="12.5" r=".5"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg>
+              Kelola Kategori Momen
+            </h3>
+            <button @click="showManageMomentCategories = false" style="background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 22px; line-height: 1;">✕</button>
+          </div>
+          <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 14px 0;">Ubah warna tiap kategori sesuka hatimu, atau buat kategori baru sebelum dipakai di momen.</p>
+
+          <div v-if="dynamicCategories.length === 0" style="padding: 18px; text-align:center; color: var(--text-muted); font-size: 12.5px; background: #FAF6F0; border-radius: 10px; border: 1.5px dashed var(--color-sand); margin-bottom: 16px;">
+            Belum ada kategori. Tambahkan di bawah ini.
+          </div>
+          <div v-else style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; padding: 12px; background: #FAF6F0; border-radius: 10px; border: 1px solid var(--color-sand);">
+            <div v-for="cat in dynamicCategories" :key="'mgmt-' + cat"
+                 style="display:flex; align-items:center; gap: 10px; background:#fff; border: 1.5px solid var(--color-sand); border-radius: 10px; padding: 8px 10px;">
+              <label style="width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; cursor: pointer; position: relative; overflow: hidden; border: 1.5px solid rgba(0,0,0,0.1);" :style="{ backgroundColor: getCategoryColorHex(cat) }" title="Klik untuk ganti warna">
+                <input type="color" :value="getCategoryColorHex(cat)" @input="updateMomentCategoryColor(cat, $event.target.value)"
+                       style="position:absolute; top:-4px; left:-4px; width: 40px; height: 40px; border: none; padding: 0; cursor: pointer; opacity: 0;" />
+              </label>
+              <span style="flex:1; font-size: 12.5px; font-weight: 700; color: #3E352F; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ cat }}</span>
+              <button type="button" @click="deleteMomentCategory(cat)"
+                      style="background: none; border: none; cursor: pointer; font-size: 13px; line-height: 1; color: #DC2626; opacity: 0.6; padding: 4px; display: inline-flex; transition: opacity 0.15s;"
+                      onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'"
+                      title="Hapus kategori">✕</button>
+            </div>
+          </div>
+
+          <div style="border-top: 1.5px solid var(--color-sand); padding-top: 16px;">
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em;">Tambah Kategori Baru</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <label style="width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; cursor: pointer; position: relative; overflow: hidden; border: 1.5px solid var(--color-sand);" :style="{ backgroundColor: newMomentCatColor }" title="Pilih warna">
+                <input type="color" v-model="newMomentCatColor"
+                       style="position:absolute; top:-4px; left:-4px; width: 50px; height: 50px; border: none; padding: 0; cursor: pointer; opacity: 0;" />
+              </label>
+              <input type="text" class="form-input" v-model="newMomentCatInput" placeholder="Nama kategori baru..."
+                     @keydown.enter="addMomentCategory" style="flex: 1; height: 40px;" />
+              <button class="btn btn-primary" @click="addMomentCategory" style="height: 40px; padding: 0 20px; cursor: pointer; white-space: nowrap; font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 600;">
+                + Tambah
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ADD / EDIT DETAIL MOMENT MODAL -->
       <div v-if="showModal" class="modal-backdrop" @click.self="showModal = false">
         <div class="moment-modal animate-fade-in" style="max-height: 90vh; overflow-y: auto; padding: 24px; border-radius: var(--border-radius-md); box-shadow: var(--shadow-lg); background-color: #FFFFFF;">
@@ -2793,8 +2854,9 @@ const CalendarMoment = {
                       <div v-for="cat in dynamicCategories" 
                            :key="cat"
                            @mousedown="selectBlockCategory(m, cat)"
-                           style="cursor: pointer; padding: 8px 10px; border-radius: 6px; font-size: 12.5px; font-weight: 600; color: #3E352F; transition: background 0.15s; text-align: left;"
+                           style="cursor: pointer; padding: 8px 10px; border-radius: 6px; font-size: 12.5px; font-weight: 600; color: #3E352F; transition: background 0.15s; text-align: left; display: flex; align-items: center; gap: 8px;"
                            onmouseover="this.style.background='#FAF6F0'" onmouseout="this.style.background=''">
+                        <span :style="{ backgroundColor: getCategoryColorHex(cat) }" style="width:8px; height:8px; border-radius:50%; flex-shrink:0; display:inline-block;"></span>
                         {{ cat }}
                       </div>
                     </div>
@@ -2905,7 +2967,12 @@ const CalendarMoment = {
       backupStartDate: '',
       backupEndDate: '',
       miniCalendarDate: new Date(),
-      logNewEntryDate: ''
+      logNewEntryDate: '',
+      showManageMomentCategories: false,
+      customMomentCategories: [],
+      categoryColors: {},
+      newMomentCatInput: '',
+      newMomentCatColor: '#D67B52'
     };
   },
   computed: {
@@ -2976,6 +3043,7 @@ const CalendarMoment = {
           }
         });
       });
+      (this.customMomentCategories || []).forEach(c => cats.add(c));
       return Array.from(cats).sort();
     },
     filteredTimelineMoments() {
@@ -3237,6 +3305,16 @@ const CalendarMoment = {
       };
       this.saveToStorage();
     }
+
+    const savedMomentCats = WorkspaceStorage.getItem('personal_workspace_calendar_custom_categories');
+    if (savedMomentCats) {
+      try { this.customMomentCategories = JSON.parse(savedMomentCats) || []; } catch (_e) { this.customMomentCategories = []; }
+    }
+    const savedMomentCatColors = WorkspaceStorage.getItem('personal_workspace_calendar_category_colors');
+    if (savedMomentCatColors) {
+      try { this.categoryColors = JSON.parse(savedMomentCatColors) || {}; } catch (_e) { this.categoryColors = {}; }
+    }
+
     globalThis.addEventListener('mousemove', this.handleDragPhotoMove);
     globalThis.addEventListener('mouseup', this.handleDragPhotoEnd);
     globalThis.addEventListener('touchmove', this.handleDragPhotoMove, { passive: false });
@@ -3485,60 +3563,80 @@ const CalendarMoment = {
       this.saveToStorage();
       this.showModal = false;
     },
+    getCategoryColorHex(category) {
+      const clean = (category || '').trim();
+      if (!clean) return '#8D6E63';
+      if (this.categoryColors && this.categoryColors[clean]) return this.categoryColors[clean];
+      // Warna bawaan untuk kategori default lama (bisa ditimpa lewat Kelola Kategori)
+      const defaults = {
+        'Cinta': '#FF8DA1',
+        'Pertumbuhan': '#4CAF50',
+        'Petualangan': '#00ACC1',
+        'Kebahagiaan': '#9C27B0',
+        'Nostalgia': '#FFB300',
+        'Kedamaian': '#2196F3'
+      };
+      if (defaults[clean]) return defaults[clean];
+      // Kategori custom tanpa warna tersimpan: hasilkan warna konsisten dari nama
+      return this.hashToHexColor(clean);
+    },
+    hashToHexColor(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      const hue = Math.abs(hash) % 360;
+      return this.hslToHex(hue, 55, 55);
+    },
+    hslToHex(h, s, l) {
+      s /= 100; l /= 100;
+      const k = n => (n + h / 30) % 12;
+      const a = s * Math.min(l, 1 - l);
+      const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+      const toHex = x => Math.round(255 * x).toString(16).padStart(2, '0');
+      return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+    },
     getCategoryStyle(category) {
       const clean = (category || '').trim();
-      if (clean.includes('Cinta')) {
-        return {
-          backgroundColor: '#FFF5F6',
-          borderColor: '#FFC8D2',
-          borderLeft: '5px solid #FF8DA1'
-        };
-      } else if (clean.includes('Pertumbuhan')) {
-        return {
-          backgroundColor: '#F3FCF5',
-          borderColor: '#C6EED5',
-          borderLeft: '5px solid #4CAF50'
-        };
-      } else if (clean.includes('Petualangan')) {
-        return {
-          backgroundColor: '#F0FDFD',
-          borderColor: '#BEECEF',
-          borderLeft: '5px solid #00ACC1'
-        };
-      } else if (clean.includes('Kebahagiaan')) {
-        return {
-          backgroundColor: '#F9F5FC',
-          borderColor: '#E7D8F9',
-          borderLeft: '5px solid #9C27B0'
-        };
-      } else if (clean.includes('Nostalgia')) {
-        return {
-          backgroundColor: '#FFFDF0',
-          borderColor: '#FCECB6',
-          borderLeft: '5px solid #FFB300'
-        };
-      } else if (clean.includes('Kedamaian')) {
-        return {
-          backgroundColor: '#F4FAFF',
-          borderColor: '#CEE6FF',
-          borderLeft: '5px solid #2196F3'
-        };
+      if (!clean) {
+        return { backgroundColor: '#FFFDF9', borderColor: '#E6DFD5', borderLeft: '5px solid #8D6E63' };
       }
+      const hex = this.getCategoryColorHex(clean);
       return {
-        backgroundColor: '#FFFDF9',
-        borderColor: '#E6DFD5',
-        borderLeft: '5px solid #8D6E63'
+        backgroundColor: hex + '14',
+        borderColor: hex + '45',
+        borderLeft: '5px solid ' + hex
       };
     },
     getWashiColor(category) {
       const clean = (category || '').trim();
-      if (clean.includes('Cinta')) return '#FFB2C1';
-      if (clean.includes('Pertumbuhan')) return '#A5D6A7';
-      if (clean.includes('Petualangan')) return '#80DEEA';
-      if (clean.includes('Kebahagiaan')) return '#CE93D8';
-      if (clean.includes('Nostalgia')) return '#FFE082';
-      if (clean.includes('Kedamaian')) return '#90CAF9';
-      return '#BCAAA4';
+      if (!clean) return '#BCAAA4';
+      return this.getCategoryColorHex(clean);
+    },
+    updateMomentCategoryColor(cat, color) {
+      this.categoryColors = { ...this.categoryColors, [cat]: color };
+      WorkspaceStorage.setItem('personal_workspace_calendar_category_colors', JSON.stringify(this.categoryColors));
+    },
+    addMomentCategory() {
+      const name = this.newMomentCatInput.trim();
+      if (!name) return;
+      if (this.dynamicCategories.includes(name)) { alert('Kategori sudah ada!'); return; }
+      this.customMomentCategories.push(name);
+      this.categoryColors = { ...this.categoryColors, [name]: this.newMomentCatColor };
+      WorkspaceStorage.setItem('personal_workspace_calendar_custom_categories', JSON.stringify(this.customMomentCategories));
+      WorkspaceStorage.setItem('personal_workspace_calendar_category_colors', JSON.stringify(this.categoryColors));
+      this.newMomentCatInput = '';
+      this.newMomentCatColor = '#D67B52';
+    },
+    deleteMomentCategory(cat) {
+      const inUse = Object.values(this.moments).flat().some(m => m && m.category && m.category.trim() === cat);
+      if (inUse) { alert(`Kategori "${cat}" masih dipakai di beberapa momen. Ganti dulu kategorinya sebelum menghapus.`); return; }
+      if (!confirm(`Hapus kategori "${cat}"?`)) return;
+      this.customMomentCategories = this.customMomentCategories.filter(c => c !== cat);
+      const colors = { ...this.categoryColors };
+      delete colors[cat];
+      this.categoryColors = colors;
+      WorkspaceStorage.setItem('personal_workspace_calendar_custom_categories', JSON.stringify(this.customMomentCategories));
+      WorkspaceStorage.setItem('personal_workspace_calendar_category_colors', JSON.stringify(this.categoryColors));
+      if (this.activeCategoryFilter === cat) this.activeCategoryFilter = 'Semua';
     },
     getCategoryCount(cat) {
       const allMoments = Object.values(this.moments).flat().filter(m => m);
