@@ -2212,6 +2212,12 @@ const CalendarMoment = {
               <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m16.2 7.8 2.2-2.2"></path><path d="m12 12 4.2-4.2"></path></svg>
               Roda
             </button>
+            <button type="button" @click="currentView = 'log'"
+                    :style="currentView==='log' ? {background:'var(--color-terracotta)',color:'#fff'} : {background:'transparent',color:'#5D4F43'}"
+                    style="border:none; font-size:11.5px; padding:0 10px; border-radius:6px; font-weight:700; height:30px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; transition:all 0.15s; white-space:nowrap;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+              Log Harian
+            </button>
           </div>
 
           <!-- Separator -->
@@ -2264,8 +2270,8 @@ const CalendarMoment = {
             </div>
           </div>
 
-          <!-- Rentang tanggal (timeline & wheel) -->
-          <div v-if="currentView === 'timeline' || currentView === 'wheel'" style="position:relative; flex-shrink:0;">
+          <!-- Rentang tanggal (timeline, wheel & log) -->
+          <div v-if="currentView === 'timeline' || currentView === 'wheel' || currentView === 'log'" style="position:relative; flex-shrink:0;">
             <div @click.stop="toggleMiniCalendar"
                  style="display:inline-flex; align-items:center; gap:6px; background:#fff; border:1.5px solid var(--color-sand); border-radius:8px; padding:0 10px; height:36px; cursor:pointer; user-select:none; white-space:nowrap;">
               <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -2633,6 +2639,63 @@ const CalendarMoment = {
 
       </div>
 
+      <!-- VIEW D: LOG HARIAN (GROWTH TRACKER, GAYA DAILY NUTRITION) -->
+      <div v-else-if="currentView === 'log'" class="log-wrapper animate-fade-in" style="width: 100%;">
+
+        <!-- Bar tambah entri (senada tombol "+ Tambah Insight" di Daily Nutrition) -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;">
+          <input type="date" v-model="logNewEntryDate" class="form-input" style="height: 38px; max-width: 170px;" />
+          <button type="button" class="btn btn-primary" @click="addLogEntry(logNewEntryDate || todayDateString)" style="display: inline-flex; align-items: center; gap: 7px;">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Tambah Log
+          </button>
+        </div>
+
+        <div class="nutrition-container">
+          <div v-if="logEntries.length === 0" style="padding: 60px 20px; text-align: center; color: var(--text-muted); background: var(--bg-cream); border-radius: 12px; border: 1.5px dashed var(--color-sand);">
+            <p style="font-size: 32px; margin-bottom: 10px;">🌱</p>
+            <p style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">Belum ada log pertumbuhan yang cocok</p>
+            <p style="font-size: 12.5px;">Coba ubah filter, atau klik "Tambah Log" di atas</p>
+          </div>
+
+          <div v-else class="timeline">
+            <div v-for="item in logEntries" :key="item.entry.id" class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-date">{{ formatTimelineDate(item.dateString) }}</div>
+              <div class="timeline-card">
+
+                <!-- Header: kategori pill + mood (read-only) + aksi edit/hapus -->
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px;">
+                  <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0;">
+                    <span v-if="item.entry.category" class="timeline-category"
+                          :style="{ background: getWashiColor(item.entry.category) + '22', color: getWashiColor(item.entry.category), border: '1.5px solid ' + getWashiColor(item.entry.category) + '55' }">
+                      {{ item.entry.category }}
+                    </span>
+                    <span style="font-size: 14px;" :title="getStickerLabel(item.entry.sticker)">{{ item.entry.sticker || '✨' }}</span>
+                  </div>
+
+                  <div style="display: inline-flex; gap: 6px; flex-shrink: 0;">
+                    <button class="card-nav-btn" @click="openEditFromTimeline({ dateString: item.dateString, id: item.entry.id })" title="Edit / Kelola Momen Kenangan"
+                            style="background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <button class="card-nav-btn" @click="deleteLogEntry(item.dateString, item.entry.id)" title="Hapus log"
+                            style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 5px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Judul saja -->
+                <h3 class="timeline-title" style="margin: 0;">{{ item.entry.title || 'Momen Tanpa Judul' }}</h3>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
       <!-- ADD / EDIT DETAIL MOMENT MODAL -->
       <div v-if="showModal" class="modal-backdrop" @click.self="showModal = false">
         <div class="moment-modal animate-fade-in" style="max-height: 90vh; overflow-y: auto; padding: 24px; border-radius: var(--border-radius-md); box-shadow: var(--shadow-lg); background-color: #FFFFFF;">
@@ -2834,7 +2897,8 @@ const CalendarMoment = {
       showMiniCalendar: false,
       backupStartDate: '',
       backupEndDate: '',
-      miniCalendarDate: new Date()
+      miniCalendarDate: new Date(),
+      logNewEntryDate: ''
     };
   },
   computed: {
@@ -3015,6 +3079,37 @@ const CalendarMoment = {
       });
       return Array.from(yearsSet).sort().reverse();
     },
+    todayDateString() {
+      const today = new Date();
+      return this.formatDateString(today.getFullYear(), today.getMonth(), today.getDate());
+    },
+    logEntries() {
+      const list = [];
+      Object.keys(this.moments).forEach(dateStr => {
+        const dayMoments = this.getMomentsForDate(dateStr);
+        dayMoments.forEach(m => {
+          if (m) list.push({ entry: m, dateString: dateStr });
+        });
+      });
+      list.sort((a, b) => b.dateString.localeCompare(a.dateString));
+
+      return list.filter(item => {
+        const m = item.entry;
+        if (this.wheelStartDate && item.dateString < this.wheelStartDate) return false;
+        if (this.wheelEndDate && item.dateString > this.wheelEndDate) return false;
+        if (this.activeCategoryFilter !== 'Semua') {
+          if (!m.category || m.category.trim().toLowerCase() !== this.activeCategoryFilter.trim().toLowerCase()) return false;
+        }
+        if (this.searchQuery.trim() !== '') {
+          const q = this.searchQuery.toLowerCase();
+          const titleMatch = (m.title || '').toLowerCase().includes(q);
+          const notesMatch = (m.notes || '').toLowerCase().includes(q);
+          const categoryMatch = (m.category || '').toLowerCase().includes(q);
+          if (!(titleMatch || notesMatch || categoryMatch)) return false;
+        }
+        return true;
+      });
+    },
     memoryJarBubbles() {
       const list = [];
       let idx = 0;
@@ -3045,6 +3140,9 @@ const CalendarMoment = {
   async created() {
     // ✅ FIX: Tunggu Supabase storage siap sebelum baca data
     await globalThis._workspaceStorageReady;
+
+    const today = new Date();
+    this.logNewEntryDate = this.formatDateString(today.getFullYear(), today.getMonth(), today.getDate());
 
     const saved = WorkspaceStorage.getItem('personal_workspace_calendar_moments');
     if (saved) {
@@ -3454,6 +3552,25 @@ const CalendarMoment = {
     },
     saveToStorage() {
       WorkspaceStorage.setItem('personal_workspace_calendar_moments', JSON.stringify(this.moments));
+    },
+    addLogEntry(dateStr) {
+      const cell = {
+        dateString: dateStr,
+        dayNumber: parseInt(dateStr.split('-')[2], 10),
+        moments: this.getMomentsForDate(dateStr)
+      };
+      this.openAddMoment(cell);
+    },
+    deleteLogEntry(dateStr, entryId) {
+      if (!confirm('Hapus entri log ini?')) return;
+      let entries = this.getMomentsForDate(dateStr);
+      entries = entries.filter(m => m.id !== entryId);
+      if (entries.length === 0) {
+        delete this.moments[dateStr];
+      } else {
+        this.moments[dateStr] = entries;
+      }
+      this.saveToStorage();
     },
     isDraggingThisPhoto(id) {
       return this.draggingPhoto && this.draggingPhoto.momentId === id;
