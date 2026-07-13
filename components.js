@@ -17770,7 +17770,11 @@ const MyPortfolio = {
           <table class="mp-table">
             <thead>
               <tr>
-                <th>Judul Task Pengalaman</th>
+                <th class="mp-th-resizable" :style="{ width: taskEngColWidth + 'px', minWidth: taskEngColWidth + 'px' }">
+                  Judul Task (Eng)
+                  <div class="mp-th-resize-handle" @mousedown="startColResize($event, 'taskEngColWidth')" title="Tarik untuk mengubah lebar kolom"></div>
+                </th>
+                <th style="width: 180px;">Judul Task (Idn)</th>
                 <th style="width: 200px;">Kata Kunci</th>
                 <th style="width: 240px;">Bukti Kerja</th>
                 <th style="width: 160px;">Rangkuman Insight</th>
@@ -17780,8 +17784,11 @@ const MyPortfolio = {
             </thead>
             <tbody>
               <tr v-for="task in tableTasks" :key="task.id">
-                <td>
+                <td :style="{ width: taskEngColWidth + 'px', maxWidth: taskEngColWidth + 'px' }" style="overflow-wrap: break-word;">
                   <span>{{ task.title }}</span>
+                </td>
+                <td>
+                  <span>{{ task.titleIdn || '—' }}</span>
                 </td>
                 <td>
                   <div class="mp-bukti-cell">
@@ -17871,9 +17878,16 @@ const MyPortfolio = {
           </div>
           <div class="cf-modal-body" v-if="editingTask">
             <div>
-              <label class="cf-field-label">Judul Task Pengalaman</label>
+              <label class="cf-field-label">Judul Task (Eng)</label>
               <input type="text" class="cf-input" v-model="editingTaskTitle" ref="editTaskInput"
-                placeholder="Judul task"
+                placeholder="Judul task (Bahasa Inggris)"
+                @keyup.enter="saveEditTask" @keyup.esc="cancelEditTask" />
+            </div>
+
+            <div style="margin-top:16px;">
+              <label class="cf-field-label">Judul Task (Idn)</label>
+              <input type="text" class="cf-input" v-model="editingTaskTitleIdn"
+                placeholder="Judul task (Bahasa Indonesia)"
                 @keyup.enter="saveEditTask" @keyup.esc="cancelEditTask" />
             </div>
 
@@ -18264,7 +18278,9 @@ const MyPortfolio = {
       experienceNotes: {}, // { [expKey]: [{ id, title, content, updatedAt }] } — bisa lebih dari satu catatan per pengalaman kerja
       newTaskTitle: '',
       editingTaskId: null,    // id task yang sedang dibuka di popup Edit Task
-      editingTaskTitle: '',   // draft judul yang sedang diedit di popup Edit Task
+      editingTaskTitle: '',   // draft judul (Eng) yang sedang diedit di popup Edit Task
+      editingTaskTitleIdn: '',   // draft judul (Idn) yang sedang diedit di popup Edit Task
+      taskEngColWidth: 220,   // lebar kolom "Judul Task (Eng)" pada tabel, bisa ditarik/digedein manual
       jobLogs: [], // dari Riwayat Kegiatan Kerja (Job Logbook)
       buktiModalTaskId: null,
       buktiModalSearch: '',
@@ -18379,6 +18395,7 @@ const MyPortfolio = {
           }).join(' ');
           const haystacks = [
             task.title || '',
+            task.titleIdn || '',
             (task.keywords || []).join(' '),
             insightText,
             task.status === 'fix' ? 'fix' : 'draft',
@@ -18454,7 +18471,7 @@ const MyPortfolio = {
       if (!title || !this.selectedExperience) return;
       const key = this.selectedExperience.key;
       const list = this.portfolioTasks[key] ? [...this.portfolioTasks[key]] : [];
-      list.push({ id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title, status: 'draft', buktiKerja: [], insightSummary: '', keywords: [] });
+      list.push({ id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title, titleIdn: '', status: 'draft', buktiKerja: [], insightSummary: '', keywords: [] });
       this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
       this.newTaskTitle = '';
       this.saveTasks();
@@ -18557,6 +18574,7 @@ const MyPortfolio = {
     startEditTask(task) {
       this.editingTaskId = task.id;
       this.editingTaskTitle = task.title;
+      this.editingTaskTitleIdn = task.titleIdn || '';
       this.$nextTick(() => {
         if (this.$refs.editTaskInput) this.$refs.editTaskInput.focus();
       });
@@ -18564,20 +18582,40 @@ const MyPortfolio = {
 
     saveEditTask() {
       const title = this.editingTaskTitle.trim();
+      const titleIdn = this.editingTaskTitleIdn.trim();
       if (!title || !this.selectedExperience || !this.editingTaskId) { this.cancelEditTask(); return; }
       const key = this.selectedExperience.key;
       const list = (this.portfolioTasks[key] || []).map(t =>
-        t.id === this.editingTaskId ? { ...t, title } : t
+        t.id === this.editingTaskId ? { ...t, title, titleIdn } : t
       );
       this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
       this.saveTasks();
       this.editingTaskId = null;
       this.editingTaskTitle = '';
+      this.editingTaskTitleIdn = '';
     },
 
     cancelEditTask() {
       this.editingTaskId = null;
       this.editingTaskTitle = '';
+      this.editingTaskTitleIdn = '';
+    },
+
+    // ── Resize kolom "Judul Task (Eng)" pada tabel Daftar Task (drag handle di sisi kanan header) ──
+    startColResize(e, propName) {
+      e.preventDefault();
+      const startX = e.clientX;
+      const startWidth = this[propName];
+      const onMove = (ev) => {
+        const delta = ev.clientX - startX;
+        this[propName] = Math.max(120, Math.min(600, startWidth + delta));
+      };
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
     },
 
     deleteTaskFromEditModal() {
