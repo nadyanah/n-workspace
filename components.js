@@ -2172,10 +2172,10 @@ const CalendarMoment = {
       <!-- ═══ HEADER + FILTER UNIFIED ═══ -->
       <div style="margin-bottom: 28px; padding-bottom: 20px; border-bottom: 2px solid var(--color-sand);">
 
-        <!-- Judul -->
-        <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+        <!-- Title row -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
           <div>
-            <h2 style="font-size: 24px; font-weight: 800; color: #3E352F; margin: 0 0 4px 0; line-height: 1.2;">My Memories & Growth</h2>
+            <h2 style="font-size: 24px; font-weight: 800; color: var(--text-dark); margin: 0 0 4px 0; line-height: 1.2;">My Memories & Growth</h2>
             <p style="color: var(--text-muted); font-size: 13px; margin: 0; max-width: 520px; line-height: 1.5;">Abadikan jejak perkembangan dirimu, susun peristiwa indah, dan tata kenangan foto harian.</p>
           </div>
           <!-- Actions -->
@@ -2188,94 +2188,98 @@ const CalendarMoment = {
           </div>
         </div>
 
-        <!-- Filter Bar -->
-        <div style="background: #FAF6F0; border: 1.5px solid var(--color-sand); border-radius: 14px; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+        <!-- Filter row: always visible below the title row -->
+        <div style="margin-top: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
 
           <!-- Search -->
-          <div style="position: relative; flex: 1; min-width: 160px;">
+          <div style="position: relative; flex-shrink: 0;">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
             <input type="text" v-model="searchQuery" class="g-form-input"
                    placeholder="Cari judul, catatan..."
-                   style="padding-left: 30px; background: #FFFFFF; border-radius: 8px; border: 1.5px solid var(--color-sand); font-size: 12.5px; height: 36px; width: 100%; box-shadow: var(--shadow-xs); box-sizing: border-box;" />
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" style="position: absolute; left: 10px; top: 12px; color: var(--text-muted);"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                   style="width: 200px; height: 34px; padding: 0 10px 0 28px; border: 1.5px solid var(--color-sand); border-radius: 8px; font-size: 12.5px; font-family: 'Outfit', sans-serif; color: var(--text-dark); background: var(--bg-cream); box-sizing: border-box; outline: none; transition: border-color 0.15s;"
+                   @focus="$event.target.style.borderColor='var(--color-terracotta)'" @blur="$event.target.style.borderColor='var(--color-sand)'" />
           </div>
 
-          <!-- Separator -->
-          <div style="width: 1px; height: 24px; background: var(--color-sand); flex-shrink: 0;"></div>
-
           <!-- View switcher -->
-          <div style="display: flex; gap: 2px; background: #fff; border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 2px; flex-shrink: 0;">
+          <div style="display: flex; gap: 2px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 8px; padding: 2px; height: 34px; flex-shrink: 0;">
             <button type="button" @click="currentView = 'calendar'"
                     :style="currentView==='calendar' ? {background:'var(--color-terracotta)',color:'#fff'} : {background:'transparent',color:'#5D4F43'}"
-                    style="border:none; font-size:11.5px; padding:0 10px; border-radius:6px; font-weight:700; height:30px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; transition:all 0.15s; white-space:nowrap;">
+                    style="border:none; font-size:11.5px; padding:0 10px; border-radius:6px; font-weight:700; height:100%; display:inline-flex; align-items:center; gap:4px; cursor:pointer; transition:all 0.15s; white-space:nowrap;">
               <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
               Kalender
             </button>
             <button type="button" @click="currentView = 'timeline'"
                     :style="currentView==='timeline' ? {background:'var(--color-terracotta)',color:'#fff'} : {background:'transparent',color:'#5D4F43'}"
-                    style="border:none; font-size:11.5px; padding:0 10px; border-radius:6px; font-weight:700; height:30px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; transition:all 0.15s; white-space:nowrap;">
+                    style="border:none; font-size:11.5px; padding:0 10px; border-radius:6px; font-weight:700; height:100%; display:inline-flex; align-items:center; gap:4px; cursor:pointer; transition:all 0.15s; white-space:nowrap;">
               <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
               Kenangan
             </button>
             <button type="button" @click="currentView = 'wheel'"
                     :style="currentView==='wheel' ? {background:'var(--color-terracotta)',color:'#fff'} : {background:'transparent',color:'#5D4F43'}"
-                    style="border:none; font-size:11.5px; padding:0 10px; border-radius:6px; font-weight:700; height:30px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; transition:all 0.15s; white-space:nowrap;">
+                    style="border:none; font-size:11.5px; padding:0 10px; border-radius:6px; font-weight:700; height:100%; display:inline-flex; align-items:center; gap:4px; cursor:pointer; transition:all 0.15s; white-space:nowrap;">
               <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m16.2 7.8 2.2-2.2"></path><path d="m12 12 4.2-4.2"></path></svg>
               Roda
             </button>
             <button type="button" @click="currentView = 'log'"
                     :style="currentView==='log' ? {background:'var(--color-terracotta)',color:'#fff'} : {background:'transparent',color:'#5D4F43'}"
-                    style="border:none; font-size:11.5px; padding:0 10px; border-radius:6px; font-weight:700; height:30px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; transition:all 0.15s; white-space:nowrap;">
+                    style="border:none; font-size:11.5px; padding:0 10px; border-radius:6px; font-weight:700; height:100%; display:inline-flex; align-items:center; gap:4px; cursor:pointer; transition:all 0.15s; white-space:nowrap;">
               <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
               Log Harian
             </button>
           </div>
 
-          <!-- Separator -->
-          <div style="width: 1px; height: 24px; background: var(--color-sand); flex-shrink: 0;"></div>
-
           <!-- Navigasi bulan (calendar view) -->
-          <div v-if="currentView === 'calendar'" style="display:inline-flex; align-items:center; gap:2px; background:#fff; border:1.5px solid var(--color-sand); border-radius:8px; padding:2px 4px; flex-shrink:0;">
+          <div v-if="currentView === 'calendar'" style="display:inline-flex; align-items:center; gap:2px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:8px; padding:2px 4px; height:34px; flex-shrink:0;">
             <button @click="prevMonth" type="button" style="background:none; border:none; font-size:13px; font-weight:800; color:#5D4F43; cursor:pointer; padding:3px 9px; border-radius:6px;" onmouseover="this.style.background='#FAF6F0'" onmouseout="this.style.background='none'">&lt;</button>
-            <span style="font-size:13px; font-weight:800; color:#3E352F; min-width:115px; text-align:center; user-select:none;">{{ currentMonthName }}</span>
+            <span style="font-size:12.5px; font-weight:700; color:var(--text-dark); min-width:110px; text-align:center; user-select:none;">{{ currentMonthName }}</span>
             <button @click="nextMonth" type="button" style="background:none; border:none; font-size:13px; font-weight:800; color:#5D4F43; cursor:pointer; padding:3px 9px; border-radius:6px;" onmouseover="this.style.background='#FAF6F0'" onmouseout="this.style.background='none'">&gt;</button>
           </div>
 
           <!-- Kategori dropdown -->
-          <div v-if="currentView !== 'calendar'" style="position:relative; flex-shrink:0;">
-            <div @click.stop="toggleCategoryFilterDropdown"
-                 style="background:#fff; border:1.5px solid var(--color-sand); border-radius:8px; height:36px; padding:0 10px; display:flex; align-items:center; gap:7px; cursor:pointer; user-select:none; white-space:nowrap; min-width:140px;">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="var(--text-muted)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54Z"></path></svg>
-              <span style="font-size:12.5px; font-weight:600; color:#5D4F43; flex:1;">{{ activeCategoryFilter === 'Semua' ? 'Semua Kategori' : activeCategoryFilter }}</span>
-              <span style="font-size:9px; color:var(--text-muted);">▼</span>
-            </div>
-            <div v-if="showCategoryFilterDropdown"
-                 style="position:absolute; top:calc(100% + 4px); left:0; min-width:100%; background:#fff; border:1.5px solid var(--color-sand); border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.12); z-index:1000; padding:5px; max-height:200px; overflow-y:auto;">
-              <div @click="selectCategoryFilter('Semua')"
-                   style="cursor:pointer; padding:7px 11px; border-radius:7px; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:space-between;"
-                   :style="activeCategoryFilter==='Semua' ? {background:'#FAF0EC',color:'var(--color-terracotta)'} : {color:'#3E352F'}"
-                   onmouseover="this.style.background='#FAF8F5'" onmouseout="this.style.background=''">
-                <span>Semua Kategori</span>
-                <span style="font-size:10px; background:rgba(0,0,0,0.05); padding:1px 6px; border-radius:5px; font-weight:700;">{{ getCategoryCount('Semua') }}</span>
-              </div>
-              <div v-for="cat in dynamicCategories" :key="cat" @click="selectCategoryFilter(cat)"
-                   style="cursor:pointer; padding:7px 11px; border-radius:7px; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:space-between; margin-top:2px;"
-                   :style="activeCategoryFilter===cat ? {background:'#FAF0EC',color:'var(--color-terracotta)'} : {color:'#3E352F'}"
-                   onmouseover="this.style.background='#FAF8F5'" onmouseout="this.style.background=''">
-                <span style="display:inline-flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">
-                  <span :style="{ backgroundColor: getCategoryColorHex(cat) }" style="width:8px; height:8px; border-radius:50%; flex-shrink:0; display:inline-block;"></span>
-                  {{ cat }}
-                </span>
-                <span style="font-size:10px; background:rgba(0,0,0,0.05); padding:1px 6px; border-radius:5px; font-weight:700;">{{ getCategoryCount(cat) }}</span>
-              </div>
+          <div v-if="currentView !== 'calendar'" style="position:relative; flex-shrink:0;" @click.stop>
+            <button type="button" @click.stop="toggleCategoryFilterDropdown"
+              :style="(activeCategoryFilter && activeCategoryFilter !== 'Semua') ? { borderColor: 'var(--color-terracotta)', background: '#FFF4ED', color: 'var(--color-terracotta)' } : { borderColor: 'var(--color-sand)', background: 'var(--bg-cream)', color: 'var(--text-dark)' }"
+              style="height: 34px; padding: 0 28px 0 10px; border: 1.5px solid; border-radius: 8px; font-size: 12.5px; font-family: 'Outfit', sans-serif; font-weight: 600; cursor: pointer; min-width: 140px; outline: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; white-space: nowrap; position: relative;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54Z"></path></svg>
+              {{ activeCategoryFilter === 'Semua' ? 'Semua Kategori' : activeCategoryFilter }}
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                style="position: absolute; right: 8px;"
+                :style="{ transform: showCategoryFilterDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s' }">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div v-if="showCategoryFilterDropdown" @click.stop
+                 style="position:absolute; top:calc(100% + 5px); left:0; z-index:99999;
+                        background: var(--color-paper, #FAF7F2);
+                        border: 1.5px solid var(--color-sand-light, #EDE8E1);
+                        border-radius: 14px;
+                        box-shadow: 0 8px 32px rgba(61,46,34,0.16), 0 2px 8px rgba(61,46,34,0.08);
+                        padding: 6px; min-width: 190px; max-height: 240px; overflow-y: auto;">
+              <button @click="selectCategoryFilter('Semua')" type="button"
+                   :style="activeCategoryFilter==='Semua' ? { background: 'var(--color-sand-light,#EDE8E1)' } : {}"
+                   style="width:100%; display:flex; align-items:center; gap:9px; padding:8px 10px; border:none; border-radius:9px; cursor:pointer; font-family:inherit; text-align:left; background:transparent; transition:background 0.13s;"
+                   onmouseover="this.style.background='var(--color-cream,#FDF5EB)'" onmouseout="this.style.background=''">
+                <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-secondary,#7A6F66);">Semua Kategori</span>
+                <span style="font-size:10px; background:rgba(0,0,0,0.05); padding:1px 6px; border-radius:5px; font-weight:700; color:var(--text-muted);">{{ getCategoryCount('Semua') }}</span>
+              </button>
+              <div style="height: 1px; background: var(--color-sand-light,#EDE8E1); margin: 3px 6px;"></div>
+              <button v-for="cat in dynamicCategories" :key="cat" @click="selectCategoryFilter(cat)" type="button"
+                   :style="activeCategoryFilter===cat ? { background: 'rgba(214,123,82,0.08)' } : {}"
+                   style="width:100%; display:flex; align-items:center; gap:9px; padding:8px 10px; border:none; border-radius:9px; cursor:pointer; font-family:inherit; text-align:left; background:transparent; transition:background 0.13s;"
+                   onmouseover="this.style.background='rgba(214,123,82,0.07)'" onmouseout="this.style.background=''">
+                <span :style="{ backgroundColor: getCategoryColorHex(cat) }" style="width:8px; height:8px; border-radius:50%; flex-shrink:0; display:inline-block;"></span>
+                <span style="flex: 1; font-size: 12.5px; font-weight: 600; color: var(--text-dark,#3D2E22); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ cat }}</span>
+                <span style="font-size:10px; background:rgba(0,0,0,0.05); padding:1px 6px; border-radius:5px; font-weight:700; color:var(--text-muted);">{{ getCategoryCount(cat) }}</span>
+              </button>
             </div>
           </div>
 
           <!-- Tahun (wheel only) -->
-          <div v-if="currentView === 'wheel'" style="display:inline-flex; align-items:center; gap:6px; background:#fff; border:1.5px solid var(--color-sand); border-radius:8px; padding:0 10px; height:36px; flex-shrink:0;">
+          <div v-if="currentView === 'wheel'" style="display:inline-flex; align-items:center; gap:6px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:8px; padding:0 10px; height:34px; flex-shrink:0;">
             <span style="font-size:11.5px; font-weight:700; color:var(--text-muted);">Tahun:</span>
             <div style="position:relative;">
               <select v-model="wheelYearFilter" @change="wheelActiveIndex = 0"
-                      style="font-size:12.5px; font-weight:700; color:#3E352F; background:transparent; border:none; outline:none; cursor:pointer; padding-right:14px; appearance:none;">
+                      style="font-size:12.5px; font-weight:700; color:var(--text-dark); background:transparent; border:none; outline:none; cursor:pointer; padding-right:14px; appearance:none;">
                 <option value="">Semua</option>
                 <option v-for="yr in availableYears" :key="yr" :value="yr">{{ yr }}</option>
               </select>
@@ -2285,23 +2289,22 @@ const CalendarMoment = {
 
           <!-- Rentang tanggal (timeline, wheel & log) -->
           <div v-if="currentView === 'timeline' || currentView === 'wheel' || currentView === 'log'" style="position:relative; flex-shrink:0;">
-            <div @click.stop="toggleMiniCalendar"
-                 style="display:inline-flex; align-items:center; gap:6px; background:#fff; border:1.5px solid var(--color-sand); border-radius:8px; padding:0 10px; height:36px; cursor:pointer; user-select:none; white-space:nowrap;">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              <span style="font-size:12.5px; font-weight:600; color:#5D4F43;">
-                <template v-if="wheelStartDate && wheelEndDate">{{ wheelStartDate.substring(8,10) }}/{{ wheelStartDate.substring(5,7) }} – {{ wheelEndDate.substring(8,10) }}/{{ wheelEndDate.substring(5,7) }}</template>
-                <template v-else-if="wheelStartDate">Sejak {{ wheelStartDate.substring(8,10) }}/{{ wheelStartDate.substring(5,7) }}</template>
-                <template v-else>Semua Tanggal</template>
-              </span>
-              <button v-if="wheelStartDate || wheelEndDate" @click.stop="clearMiniCalendar" type="button"
-                      style="background:#FAF0EC; border:1px solid #F3E2DB; border-radius:50%; width:15px; height:15px; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:bold; color:var(--color-terracotta); cursor:pointer; flex-shrink:0;">×</button>
-            </div>
+            <button type="button" @click.stop="toggleMiniCalendar"
+              :style="(wheelStartDate || wheelEndDate) ? { borderColor: 'var(--color-terracotta)', background: '#FFF4ED', color: 'var(--color-terracotta)' } : { borderColor: 'var(--color-sand)', background: 'var(--bg-cream)', color: 'var(--text-muted)' }"
+              style="height: 34px; padding: 0 12px; border: 1.5px solid; border-radius: 8px; font-size: 12px; font-family: 'Outfit', sans-serif; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: all 0.15s;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <template v-if="wheelStartDate && wheelEndDate">{{ wheelStartDate.substring(8,10) }}/{{ wheelStartDate.substring(5,7) }} – {{ wheelEndDate.substring(8,10) }}/{{ wheelEndDate.substring(5,7) }}</template>
+              <template v-else-if="wheelStartDate">Sejak {{ wheelStartDate.substring(8,10) }}/{{ wheelStartDate.substring(5,7) }}</template>
+              <template v-else>Rentang Tanggal</template>
+              <span v-if="wheelStartDate || wheelEndDate" @click.stop="clearMiniCalendar"
+                      style="background:rgba(255,255,255,0.6); border:1px solid rgba(214,123,82,0.3); border-radius:50%; width:15px; height:15px; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:bold; color:var(--color-terracotta); cursor:pointer; flex-shrink:0;">×</span>
+            </button>
             <!-- Mini calendar popover -->
             <div v-if="showMiniCalendar" @click.stop
                  style="position:absolute; top:calc(100% + 6px); right:0; background:#fff; border:1.5px solid var(--color-sand); border-radius:14px; box-shadow:0 8px 32px rgba(0,0,0,0.13); z-index:1010; padding:14px; width:252px; cursor:default;">
               <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #FAF6F0; padding-bottom:8px;">
                 <button type="button" @click="prevMiniCalendarMonth" style="background:none; border:none; font-weight:bold; color:#5D4F43; cursor:pointer; padding:2px 8px; border-radius:6px;" onmouseover="this.style.background='#FAF6F0'" onmouseout="this.style.background=''">&lt;</button>
-                <span style="font-size:12.5px; font-weight:800; color:#3E352F;">{{ ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][miniCalendarDate.getMonth()] }} {{ miniCalendarDate.getFullYear() }}</span>
+                <span style="font-size:12.5px; font-weight:800; color:var(--text-dark);">{{ ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][miniCalendarDate.getMonth()] }} {{ miniCalendarDate.getFullYear() }}</span>
                 <button type="button" @click="nextMiniCalendarMonth" style="background:none; border:none; font-weight:bold; color:#5D4F43; cursor:pointer; padding:2px 8px; border-radius:6px;" onmouseover="this.style.background='#FAF6F0'" onmouseout="this.style.background=''">&gt;</button>
               </div>
               <div style="display:flex; gap:4px; margin-bottom:10px;">
@@ -2318,10 +2321,10 @@ const CalendarMoment = {
                      :style="[cell.isOtherMonth?{opacity:0.3}:{}, (cell.dateString===wheelStartDate||cell.dateString===wheelEndDate)?{background:'var(--color-terracotta)',color:'#fff'}:(wheelStartDate&&wheelEndDate&&cell.dateString>=wheelStartDate&&cell.dateString<=wheelEndDate)?{background:'#FAF0EC',color:'var(--color-terracotta)'}:{color:'#3E352F'}]"
                      onmouseover="if(this.style.background!=='var(--color-terracotta)')this.style.background='#FAF8F5'"
                      onmouseout="if(!this.style.color.includes('rgb(214')&&this.style.background!=='var(--color-terracotta)')this.style.background=''">
-                  {{ cell.dayNumber }}
+                  {{ cell.label }}
                 </div>
               </div>
-              <div style="display:flex; gap:6px; margin-top:10px; padding-top:10px; border-top:1px solid #FAF6F0;">
+              <div style="display:flex; gap:6px; margin-top:10px;">
                 <button type="button" @click="clearMiniCalendar" style="font-size:10px; font-weight:700; background:#FAF0EC; color:var(--color-terracotta); border:1px solid #F3E2DB; padding:4px 10px; border-radius:6px; cursor:pointer; margin-right:auto;">Hapus</button>
                 <button type="button" @click="cancelMiniCalendar" style="font-size:10px; font-weight:700; background:#FAF8F5; color:#5D4F43; border:1px solid var(--color-sand); padding:4px 10px; border-radius:6px; cursor:pointer;">Batal</button>
                 <button type="button" @click="applyMiniCalendar" style="font-size:10px; font-weight:700; background:var(--color-terracotta); color:#fff; border:none; padding:4px 12px; border-radius:6px; cursor:pointer;">Setel</button>
@@ -2329,15 +2332,20 @@ const CalendarMoment = {
             </div>
           </div>
 
-          <!-- Spacer -->
-          <div style="flex:1; min-width:0;"></div>
-
-          <!-- Reset -->
-          <button @click="resetFilters" type="button"
-                  style="height:36px; font-size:12px; font-weight:700; border-radius:8px; border:1.5px solid var(--color-sand); padding:0 14px; background:#fff; display:inline-flex; align-items:center; gap:5px; flex-shrink:0; cursor:pointer; color:#5D4F43;">
-            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 10 10 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+          <!-- Active badge + Reset (only when filters active) -->
+          <span v-if="searchQuery || (activeCategoryFilter && activeCategoryFilter !== 'Semua') || wheelStartDate || wheelEndDate"
+            style="background: var(--color-terracotta); color: #fff; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap;">
+            {{ [searchQuery, (activeCategoryFilter && activeCategoryFilter !== 'Semua') ? 1 : 0, (wheelStartDate || wheelEndDate) ? 1 : 0].filter(Boolean).length }} aktif
+          </span>
+          <button v-if="searchQuery || (activeCategoryFilter && activeCategoryFilter !== 'Semua') || wheelStartDate || wheelEndDate"
+            class="btn btn-secondary" @click="resetFilters" type="button"
+            style="height: 34px; padding: 0 12px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; border-color: var(--color-terracotta); color: var(--color-terracotta); font-family: 'Outfit', sans-serif; display: inline-flex; align-items: center; gap: 5px; border-radius: 8px;">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
             Reset
           </button>
+
+          <!-- Spacer -->
+          <div style="flex:1; min-width:0;"></div>
 
           <!-- Putar Roda (wheel only) -->
           <button v-if="currentView === 'wheel'" @click="spinWheel" type="button"
@@ -4350,6 +4358,9 @@ const ContentTracker = {
                 <label>Target Tanggal Rilis</label>
                 <input type="date" class="form-input" v-model="form.dueDate"
                        style="height: 38px;" />
+                <span style="font-size: 11px; color: #9A8F85; margin-top: 4px; display: block;">
+                  Boleh dikosongkan dulu. Konten tanpa tanggal tidak akan muncul di Daily / notifikasi sampai tanggalnya diisi.
+                </span>
               </div>
             </div>
 
