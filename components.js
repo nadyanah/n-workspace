@@ -15360,6 +15360,10 @@ const CareerFoundation = {
           <span class="cf-hero-stat-num">{{ docsByType('linkedin_note').length }}</span>
           <span>connect note</span>
         </div>
+        <div class="cf-hero-stat">
+          <span class="cf-hero-stat-num">{{ docsByType('linkedin_about').length }}</span>
+          <span>about linkedin</span>
+        </div>
       </div>
     </div>
 
@@ -15949,6 +15953,60 @@ const CareerFoundation = {
     </div>
     </transition>
 
+    <!-- ══ TAB: LINKEDIN ABOUT (tampilan tunggal: input langsung + hasil langsung terlihat) ══ -->
+    <transition name="cf-fade">
+    <div v-if="activeTab === 'linkedin_about'" key="linkedin_about">
+      <div class="cf-section-bar">
+        <span class="cf-section-label">LinkedIn: About</span>
+        <span v-if="linkedinAboutEntry && linkedinAboutEntry.updatedAt" style="font-size:11px;color:#C8BDB5;font-family:'Hack',monospace;">Tersimpan · {{ formatLastUpdated(linkedinAboutEntry.updatedAt) }}</span>
+      </div>
+      <div class="cf-tip">
+        <button class="cf-tip-edit-btn" title="Edit tip" @click="openTipEdit('linkedin_about')">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <p class="cf-tip-title">{{ cfTips.linkedin_about.title }}</p>
+        <p class="cf-tip-text">{{ cfTips.linkedin_about.text }}</p>
+      </div>
+
+      <template v-if="linkedinAboutEntry">
+        <div v-for="lang in ['id','en']" :key="lang" class="cf-lang-card">
+          <div class="cf-lang-card-header">
+            <span class="cf-lang-card-flag" :style="lang === 'id' ? { background:'#FEF3E7', color:'#C4673E' } : { background:'#EFF6FF', color:'#1D4ED8' }">{{ langFlag(lang) }} {{ lang === 'id' ? 'Bahasa Indonesia' : 'English' }}</span>
+            <div style="display:flex; gap:6px;">
+              <button type="button" class="cf-btn-ghost" style="padding:4px 10px; font-size:11px;" @click="useLinkedinAboutTemplate(lang)">
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                Gunakan Template {{ langLabel(lang) }}
+              </button>
+              <button class="cf-btn-ghost" style="padding:4px 10px; font-size:11px;" @click="copyDocContent(lang === 'id' ? linkedinAboutEntry.content_id : linkedinAboutEntry.content_en, lang)">{{ copySuccess === lang ? 'Tersalin!' : 'Salin teks' }}</button>
+            </div>
+          </div>
+          <div class="cf-lang-card-body">
+            <textarea class="cf-textarea" rows="8"
+              :value="lang === 'id' ? linkedinAboutEntry.content_id : linkedinAboutEntry.content_en"
+              @input="lang === 'id' ? (linkedinAboutEntry.content_id = $event.target.value) : (linkedinAboutEntry.content_en = $event.target.value); saveLinkedinAbout()"
+              :placeholder="lang === 'id' ? 'Tulis bagian About LinkedIn kamu (Bahasa Indonesia)...' : 'Write your LinkedIn About section (English)...'"></textarea>
+            <p class="cf-lang-card-charcount" :style="{ color: ((lang === 'id' ? linkedinAboutEntry.content_id : linkedinAboutEntry.content_en)||'').length > 2600 ? '#DC2626' : 'var(--text-muted,#A09690)' }">
+              {{ ((lang === 'id' ? linkedinAboutEntry.content_id : linkedinAboutEntry.content_en)||'').length }}/2600 karakter {{ ((lang === 'id' ? linkedinAboutEntry.content_id : linkedinAboutEntry.content_en)||'').length > 2600 ? '— melebihi batas LinkedIn' : '' }}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <label class="cf-field-label" style="display:flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Catatan / versi About ini
+          </label>
+          <textarea class="cf-textarea"
+            :value="linkedinAboutEntry.note"
+            @input="linkedinAboutEntry.note = $event.target.value; saveLinkedinAbout()"
+            rows="3"
+            placeholder="mis. Versi ini menekankan pengalaman leadership, dipakai saat apply posisi manajerial..."
+            style="font-size:12.5px; color:var(--text-secondary, #7A6F66); background: #FFFBF5; border-color: #E8D9C4;"></textarea>
+        </div>
+      </template>
+    </div>
+    </transition>
+
     <!-- ══ TAB: BODY EMAIL ══ -->
     <transition name="cf-fade">
     <div v-if="activeTab === 'body_email'" key="body_email">
@@ -16183,6 +16241,9 @@ const CareerFoundation = {
               <p v-if="docForm.type === 'linkedin_note'" style="margin:5px 2px 0; font-size:11.5px; font-family:'Hack',monospace;" :style="{ color: docForm.content_id.length > 300 ? '#DC2626' : 'var(--text-muted,#A09690)' }">
                 {{ docForm.content_id.length }}/300 karakter {{ docForm.content_id.length > 300 ? '— melebihi batas LinkedIn' : '' }}
               </p>
+              <p v-if="docForm.type === 'linkedin_about'" style="margin:5px 2px 0; font-size:11.5px; font-family:'Hack',monospace;" :style="{ color: docForm.content_id.length > 2600 ? '#DC2626' : 'var(--text-muted,#A09690)' }">
+                {{ docForm.content_id.length }}/2600 karakter {{ docForm.content_id.length > 2600 ? '— melebihi batas LinkedIn' : '' }}
+              </p>
             </div>
             <div v-if="docForm.type !== 'cv'">
               <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
@@ -16196,18 +16257,22 @@ const CareerFoundation = {
               <p v-if="docForm.type === 'linkedin_note'" style="margin:5px 2px 0; font-size:11.5px; font-family:'Hack',monospace;" :style="{ color: docForm.content_en.length > 300 ? '#DC2626' : 'var(--text-muted,#A09690)' }">
                 {{ docForm.content_en.length }}/300 karakter {{ docForm.content_en.length > 300 ? '— melebihi batas LinkedIn' : '' }}
               </p>
+              <p v-if="docForm.type === 'linkedin_about'" style="margin:5px 2px 0; font-size:11.5px; font-family:'Hack',monospace;" :style="{ color: docForm.content_en.length > 2600 ? '#DC2626' : 'var(--text-muted,#A09690)' }">
+                {{ docForm.content_en.length }}/2600 karakter {{ docForm.content_en.length > 2600 ? '— melebihi batas LinkedIn' : '' }}
+              </p>
             </div>
             <div v-if="docForm.type === 'cv'">
               <label class="cf-field-label">Isi Dokumen</label>
               <textarea class="cf-textarea" v-model="docForm.content_id" placeholder="Ringkasan poin-poin CV kamu — pengalaman, keahlian, pendidikan..." rows="10"></textarea>
             </div>
-            <div v-if="docForm.type === 'body_email' || docForm.type === 'cover_letter' || docForm.type === 'surat_lamaran' || docForm.type === 'linkedin_note'">
+            <div v-if="docForm.type === 'body_email' || docForm.type === 'cover_letter' || docForm.type === 'surat_lamaran' || docForm.type === 'linkedin_note' || docForm.type === 'linkedin_about'">
               <label class="cf-field-label" style="display:flex; align-items:center; gap:6px;">
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 <span v-if="docForm.type === 'body_email'">Catatan / Tips Body Email ini</span>
                 <span v-else-if="docForm.type === 'cover_letter'">Catatan / Tips Cover Letter ini</span>
                 <span v-else-if="docForm.type === 'surat_lamaran'">Catatan / Tips Surat Lamaran ini</span>
                 <span v-else-if="docForm.type === 'linkedin_note'">Catatan / Tips Connect Note ini</span>
+                <span v-else-if="docForm.type === 'linkedin_about'">Catatan / Tips About LinkedIn ini</span>
               </label>
               <textarea class="cf-textarea"
                 v-model="docForm.note"
@@ -16217,7 +16282,9 @@ const CareerFoundation = {
                     ? 'mis. Versi ini untuk startup tech, tekankan skill adaptasi dan kolaborasi...'
                     : docForm.type === 'surat_lamaran'
                       ? 'mis. Versi formal, gunakan untuk BUMN atau perusahaan konvensional...'
-                      : 'mis. Dipakai untuk connect dengan recruiter tech startup, tone santai tapi sopan...'"
+                      : docForm.type === 'linkedin_about'
+                        ? 'mis. Versi ini menekankan pengalaman leadership, dipakai saat apply posisi manajerial...'
+                        : 'mis. Dipakai untuk connect dengan recruiter tech startup, tone santai tapi sopan...'"
                 rows="3"
                 style="font-size:12.5px; color:var(--text-secondary, #7A6F66); background: #FFFBF5; border-color: #E8D9C4;"></textarea>
             </div>
@@ -16323,10 +16390,13 @@ const CareerFoundation = {
                   <p v-if="viewingDoc.type === 'linkedin_note'" class="cf-lang-card-charcount" :style="{ color: ((lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en)||'').length > 300 ? '#DC2626' : 'var(--text-muted,#A09690)' }">
                     {{ ((lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en)||'').length }}/300 karakter
                   </p>
+                  <p v-if="viewingDoc.type === 'linkedin_about'" class="cf-lang-card-charcount" :style="{ color: ((lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en)||'').length > 2600 ? '#DC2626' : 'var(--text-muted,#A09690)' }">
+                    {{ ((lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en)||'').length }}/2600 karakter
+                  </p>
                   <p class="cf-view-content">{{ (lang === 'id' ? viewingDoc.content_id : viewingDoc.content_en) || '(Belum ada isi)' }}</p>
                 </div>
               </div>
-              <div v-if="viewingDoc.note && (viewingDoc.type === 'cover_letter' || viewingDoc.type === 'surat_lamaran' || viewingDoc.type === 'linkedin_note')" class="cf-doc-note-view">
+              <div v-if="viewingDoc.note && (viewingDoc.type === 'cover_letter' || viewingDoc.type === 'surat_lamaran' || viewingDoc.type === 'linkedin_note' || viewingDoc.type === 'linkedin_about')" class="cf-doc-note-view">
                 <div class="cf-doc-note-view-label">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   Catatan
@@ -16522,6 +16592,7 @@ const CareerFoundation = {
         { key: 'cover_letter',  label: 'Cover Letter',     emoji: '✉️',  color: '#D67B52',                 shadowColor: 'rgba(214,123,82,0.3)' },
         { key: 'surat_lamaran', label: 'Surat Lamaran',    emoji: '📝', color: '#059669',                 shadowColor: 'rgba(5,150,105,0.3)' },
         { key: 'linkedin_note', label: 'Connect Note LinkedIn', emoji: '🔗', color: '#0A66C2',            shadowColor: 'rgba(10,102,194,0.3)' },
+        { key: 'linkedin_about', label: 'LinkedIn: About',  emoji: '🪪', color: '#004182',                 shadowColor: 'rgba(0,65,130,0.3)' },
         { key: 'body_email',    label: 'Body Email',       emoji: '📧', color: '#0369A1',                 shadowColor: 'rgba(3,105,161,0.3)' },
         { key: 'all',           label: 'Semua Dokumen',    emoji: '📂', color: 'var(--color-forest)',      shadowColor: 'rgba(40,54,24,0.3)' },
       ],
@@ -16542,6 +16613,7 @@ const CareerFoundation = {
       docForm: { type: 'cover_letter', title: '', target: '', content_id: '', content_en: '', note: '' },
       editingDocId: null,
       showDocModal: false,
+      _linkedinAboutSaveTimer: null,
 
       // Tip box per tab (cf-tip) — bisa diedit user
       cfTips: {
@@ -16556,6 +16628,10 @@ const CareerFoundation = {
         linkedin_note: {
           title: 'Connect Note LinkedIn Singkat & Personal',
           text: 'Maksimal 300 karakter. Sebut nama, konteks kenapa connect (alumni/event/posting), dan maksud singkat — hindari langsung minta kerjaan di pesan pertama.',
+        },
+        linkedin_about: {
+          title: 'Struktur Bagian "About" LinkedIn',
+          text: 'Maksimal 2.600 karakter. Hook di 2-3 baris pertama (yang muncul sebelum "lihat selengkapnya"), lanjutkan dengan value/keahlian utama, pencapaian singkat, lalu closing/CTA (terbuka untuk peluang, kontak, dll).',
         },
         body_email: {
           title: 'Formula Email yang Dilirik HRD',
@@ -16584,6 +16660,10 @@ const CareerFoundation = {
           id: 'Hai [Nama], senang bisa terhubung! Saya [Nama Kamu], tertarik dengan [konteks/posisi] di [Perusahaan]. Semoga bisa saling sharing ya 🙌',
           en: 'Hi [Name], great to connect! I\'m [Your Name], interested in [context/role] at [Company]. Looking forward to staying in touch!',
         },
+        linkedin_about: {
+          id: '[1-2 kalimat hook — siapa kamu & value utama yang kamu bawa]\n\nSaya [Nama Kamu], [peran/latar belakang singkat] dengan fokus di [bidang/keahlian utama]. Selama [durasi] terakhir, saya telah [pencapaian/pengalaman relevan singkat].\n\nBeberapa hal yang saya kuasai:\n• [Keahlian 1]\n• [Keahlian 2]\n• [Keahlian 3]\n\nSaat ini saya terbuka untuk [peluang/kolaborasi yang dicari]. Jangan ragu untuk terhubung atau kirim pesan jika ingin berdiskusi lebih lanjut!',
+          en: '[1-2 sentence hook — who you are & the main value you bring]\n\nI\'m [Your Name], a [role/short background] focused on [main field/expertise]. Over the past [duration], I\'ve [brief relevant achievement/experience].\n\nSome things I bring to the table:\n• [Skill 1]\n• [Skill 2]\n• [Skill 3]\n\nI\'m currently open to [opportunities/collaboration you\'re looking for]. Feel free to connect or message me if you\'d like to chat!',
+        },
       },
 
       // View
@@ -16600,6 +16680,7 @@ const CareerFoundation = {
         { key: 'cover_letter',  label: 'Cover Letter',    emoji: '✉️',  color: '#D67B52' },
         { key: 'surat_lamaran', label: 'Surat Lamaran',   emoji: '📝', color: '#059669' },
         { key: 'linkedin_note', label: 'Connect Note LinkedIn', emoji: '🔗', color: '#0A66C2' },
+        { key: 'linkedin_about', label: 'LinkedIn: About', emoji: '🪪', color: '#004182' },
         { key: 'body_email',    label: 'Body Email',      emoji: '📧', color: '#0369A1' },
       ],
 
@@ -16781,6 +16862,11 @@ const CareerFoundation = {
       return this.atsCV.certifications.split('\n').map(s => s.trim()).filter(Boolean);
     },
 
+    // ── Single-entry About LinkedIn (tampilan langsung, bukan daftar dokumen) ──
+    linkedinAboutEntry() {
+      return this.docs.find(d => d.type === 'linkedin_about') || null;
+    },
+
     // ── Cek duplikat saat rename kata kunci lewat popup edit ──
     keywordEditIsDuplicate() {
       const text = this.keywordEditForm.text.trim().toLowerCase();
@@ -16901,6 +16987,40 @@ const CareerFoundation = {
     docsByType(type) {
       return this.docs.filter(d => d.type === type);
     },
+
+    // ── LinkedIn About: satu entri tunggal, edit langsung tanpa modal ──
+    ensureLinkedinAboutDoc() {
+      if (!this.docs.some(d => d.type === 'linkedin_about')) {
+        this.docs.push({
+          id: Date.now().toString(),
+          type: 'linkedin_about',
+          title: 'About LinkedIn',
+          target: '',
+          content_id: '',
+          content_en: '',
+          note: '',
+          updatedAt: null,
+        });
+      }
+    },
+    useLinkedinAboutTemplate(lang) {
+      const entry = this.linkedinAboutEntry;
+      const tpl = this.docTemplates.linkedin_about;
+      if (!entry || !tpl) return;
+      const field = lang === 'en' ? 'content_en' : 'content_id';
+      if (entry[field] && entry[field].trim() && !confirm('Isi About LinkedIn ' + this.langLabel(lang) + ' saat ini akan ditimpa dengan template. Lanjutkan?')) return;
+      entry[field] = tpl[lang];
+      this.saveLinkedinAbout();
+    },
+    saveLinkedinAbout() {
+      const entry = this.linkedinAboutEntry;
+      if (!entry) return;
+      const now = new Date().toISOString();
+      entry.updatedAt = now;
+      this.lastUpdated = now;
+      clearTimeout(this._linkedinAboutSaveTimer);
+      this._linkedinAboutSaveTimer = setTimeout(() => { this.saveAll(); }, 400);
+    },
     openAddDoc() {
       this.editingDocId = null;
       this.docForm = { type: 'cover_letter', title: '', target: '', content_id: '', content_en: '', note: '' };
@@ -16948,6 +17068,10 @@ const CareerFoundation = {
           delete merged.language;
           this.docs[idx] = merged;
         }
+      } else if (this.docForm.type === 'linkedin_about' && this.docs.some(d => d.type === 'linkedin_about')) {
+        // LinkedIn About cuma satu entri — timpa yang sudah ada, jangan duplikat
+        const idx = this.docs.findIndex(d => d.type === 'linkedin_about');
+        this.docs[idx] = { ...this.docs[idx], ...this.docForm, updatedAt: now };
       } else {
         this.docs.push({
           id: Date.now().toString(),
@@ -17001,6 +17125,7 @@ const CareerFoundation = {
         cover_letter: '#C4673E',
         surat_lamaran: '#047857',
         linkedin_note: '#084E8A',
+        linkedin_about: '#002E5A',
         body_email: '#0284C7',
       };
       return map[type] || '#555';
@@ -17354,6 +17479,7 @@ const CareerFoundation = {
       const d = WorkspaceStorage.getItem('career_docs');
       if (d) this.docs = JSON.parse(d);
     } catch(_e) {}
+    this.ensureLinkedinAboutDoc();
     try {
       const lu = WorkspaceStorage.getItem('career_last_updated');
       if (lu) this.lastUpdated = lu;
