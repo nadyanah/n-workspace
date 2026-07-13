@@ -17781,26 +17781,7 @@ const MyPortfolio = {
             <tbody>
               <tr v-for="task in tableTasks" :key="task.id">
                 <td>
-                  <template v-if="editingTaskId === task.id">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                      <input type="text" class="form-input" v-model="editingTaskTitle"
-                        style="flex: 1; height: 32px; font-size: 13px; padding: 0 9px; border-radius: 7px;"
-                        @keyup.enter="saveEditTask"
-                        @keyup.esc="cancelEditTask"
-                        ref="editTaskInput" />
-                      <button @click="saveEditTask" title="Simpan"
-                        style="height: 32px; padding: 0 10px; background: var(--color-terracotta); color: #fff; border: none; border-radius: 7px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap;">
-                        Simpan
-                      </button>
-                      <button @click="cancelEditTask" title="Batal"
-                        style="height: 32px; padding: 0 10px; background: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); border-radius: 7px; font-size: 11.5px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap;">
-                        Batal
-                      </button>
-                    </div>
-                  </template>
-                  <template v-else>
-                    <span>{{ task.title }}</span>
-                  </template>
+                  <span>{{ task.title }}</span>
                 </td>
                 <td>
                   <div class="mp-bukti-cell">
@@ -17854,7 +17835,7 @@ const MyPortfolio = {
                 </td>
                 <td>
                   <div style="display: flex; align-items: center; gap: 5px; justify-content: center;">
-                    <button class="mp-task-edit-btn" title="Edit judul task" @click="startEditTask(task)"
+                    <button class="mp-task-edit-btn" title="Edit task" @click="startEditTask(task)"
                       style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--color-sand); border-radius: 7px; background: var(--bg-cream); color: var(--text-muted); cursor: pointer; transition: border-color 0.15s, color 0.15s;"
                       onmouseover="this.style.borderColor='var(--color-terracotta)';this.style.color='var(--color-terracotta)'" onmouseout="this.style.borderColor='var(--color-sand)';this.style.color='var(--text-muted)'">
                       <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -17876,6 +17857,94 @@ const MyPortfolio = {
       </template>
       </template>
     </template>
+
+    <!-- ══ MODAL: Tambah Task Baru ══ -->
+    <!-- ══ MODAL: Edit Task (seluruh isian: Judul, Kata Kunci, Bukti Kerja, Rangkuman Insight, Status) ══ -->
+    <transition name="cf-fade">
+      <div v-if="editingTaskId" class="cf-modal-overlay" @click.self="cancelEditTask">
+        <div class="cf-modal cf-modal-wide">
+          <div class="cf-modal-header">
+            <h3 class="cf-modal-title">Edit Task</h3>
+            <button class="cf-modal-close" @click="cancelEditTask">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="cf-modal-body" v-if="editingTask">
+            <div>
+              <label class="cf-field-label">Judul Task Pengalaman</label>
+              <input type="text" class="cf-input" v-model="editingTaskTitle" ref="editTaskInput"
+                placeholder="Judul task"
+                @keyup.enter="saveEditTask" @keyup.esc="cancelEditTask" />
+            </div>
+
+            <div style="margin-top:16px;">
+              <label class="cf-field-label">Kata Kunci</label>
+              <div class="mp-bukti-cell">
+                <div v-if="(editingTask.keywords || []).length" class="mp-bukti-chips">
+                  <span v-for="kw in editingTask.keywords" :key="kw" class="mp-bukti-chip">
+                    <span class="mp-bukti-chip-text">{{ kw }}</span>
+                    <button class="mp-bukti-chip-remove" title="Hapus kata kunci ini" @click="removeTaskKeyword(editingTask, kw)">
+                      <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </span>
+                </div>
+                <button class="mp-bukti-add-btn" @click="openKeywordModal(editingTask.id)">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Pilih Kata Kunci
+                </button>
+              </div>
+            </div>
+
+            <div style="margin-top:16px;">
+              <label class="cf-field-label">Bukti Kerja</label>
+              <div class="mp-bukti-cell">
+                <div v-if="getSelectedBuktiLogs(editingTask).length" class="mp-bukti-chips">
+                  <span v-for="log in getSelectedBuktiLogs(editingTask)" :key="log.id" class="mp-bukti-chip" :title="log.tasks">
+                    <span class="mp-bukti-chip-date">{{ formatDate(log.date) }}</span>
+                    <span class="mp-bukti-chip-text">{{ truncate(log.tasks, 26) }}</span>
+                    <button class="mp-bukti-chip-remove" title="Hapus bukti ini" @click="removeBukti(editingTask, log.id)">
+                      <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </span>
+                </div>
+                <button class="mp-bukti-add-btn" @click="openBuktiModal(editingTask.id)">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Pilih Bukti
+                </button>
+              </div>
+            </div>
+
+            <div style="margin-top:16px;">
+              <label class="cf-field-label">Rangkuman Insight</label>
+              <div>
+                <button class="mp-insight-btn" :class="{ 'mp-insight-filled': hasInsightSummary(editingTask) }"
+                  @click="openInsightModal(editingTask.id)"
+                  :title="hasInsightSummary(editingTask) ? truncate(stripHtml(editingTask.insightSummary), 90) : 'Belum ada rangkuman insight'">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>
+                  {{ hasInsightSummary(editingTask) ? 'Lihat Insight' : 'Tulis Insight' }}
+                </button>
+              </div>
+            </div>
+
+            <div style="margin-top:16px;">
+              <label class="cf-field-label">Status</label>
+              <select class="form-input mp-status-select"
+                :class="editingTask.status === 'fix' ? 'mp-status-fix' : 'mp-status-draft'"
+                :value="editingTask.status"
+                @change="setTaskStatus(editingTask.id, $event.target.value)">
+                <option value="draft">Draft</option>
+                <option value="fix">Fix</option>
+              </select>
+            </div>
+          </div>
+          <div class="cf-modal-footer">
+            <button class="cf-btn-danger" style="margin-right:auto" @click="deleteTaskFromEditModal">Hapus Task</button>
+            <button class="cf-btn-ghost" @click="cancelEditTask">Batal</button>
+            <button class="cf-btn-primary" :disabled="!editingTaskTitle.trim()" @click="saveEditTask">Simpan</button>
+          </div>
+        </div>
+      </div>
+    </transition>
 
     <!-- ══ MODAL: Pilih Bukti Kerja (multiselect dari Riwayat Kegiatan Kerja / Job Logbook) ══ -->
     <transition name="cf-fade">
@@ -18194,8 +18263,8 @@ const MyPortfolio = {
       portfolioTasks: {}, // { [expKey]: [{ id, title, status, buktiKerja: [logId, ...], insightSummary }] }
       experienceNotes: {}, // { [expKey]: [{ id, title, content, updatedAt }] } — bisa lebih dari satu catatan per pengalaman kerja
       newTaskTitle: '',
-      editingTaskId: null,    // id task yang sedang diedit judulnya
-      editingTaskTitle: '',   // draft judul yang sedang diedit
+      editingTaskId: null,    // id task yang sedang dibuka di popup Edit Task
+      editingTaskTitle: '',   // draft judul yang sedang diedit di popup Edit Task
       jobLogs: [], // dari Riwayat Kegiatan Kerja (Job Logbook)
       buktiModalTaskId: null,
       buktiModalSearch: '',
@@ -18260,6 +18329,11 @@ const MyPortfolio = {
     tableTasks() {
       if (!this.selectedExperience) return [];
       return this.portfolioTasks[this.selectedExperience.key] || [];
+    },
+
+    // ── Task yang sedang dibuka di popup "Edit Task" ──
+    editingTask() {
+      return this.getTaskById(this.editingTaskId);
     },
 
     // ── Search bar global: cari semua data task (judul, kata kunci, insight, status, pengalaman, bukti kerja, catatan general) di SEMUA pengalaman kerja ──
@@ -18484,8 +18558,7 @@ const MyPortfolio = {
       this.editingTaskId = task.id;
       this.editingTaskTitle = task.title;
       this.$nextTick(() => {
-        const el = this.$el.querySelector('[ref="editTaskInput"], input[type="text"][style*="flex: 1"]');
-        if (el) el.focus();
+        if (this.$refs.editTaskInput) this.$refs.editTaskInput.focus();
       });
     },
 
@@ -18505,6 +18578,18 @@ const MyPortfolio = {
     cancelEditTask() {
       this.editingTaskId = null;
       this.editingTaskTitle = '';
+    },
+
+    deleteTaskFromEditModal() {
+      if (!this.editingTaskId) return;
+      const taskId = this.editingTaskId;
+      if (!confirm('Hapus task ini?')) return;
+      if (!this.selectedExperience) return;
+      const key = this.selectedExperience.key;
+      const list = (this.portfolioTasks[key] || []).filter(t => t.id !== taskId);
+      this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
+      this.saveTasks();
+      this.cancelEditTask();
     },
 
     saveTasks() {
