@@ -4347,13 +4347,9 @@ const ContentTracker = {
                        required />
               </div>
               <div class="form-group">
-                <label>Target Tanggal Rilis<span v-if="(form.status || columns[0]) !== (columns[0] || 'Idea')"> *</span></label>
+                <label>Target Tanggal Rilis</label>
                 <input type="date" class="form-input" v-model="form.dueDate"
-                       :required="(form.status || columns[0]) !== (columns[0] || 'Idea')"
                        style="height: 38px;" />
-                <span v-if="(form.status || columns[0]) === (columns[0] || 'Idea')" style="font-size: 11px; color: #9A8F85; margin-top: 4px; display: block;">
-                  Boleh dikosongkan dulu selama masih tahap Ide
-                </span>
               </div>
             </div>
 
@@ -4928,12 +4924,8 @@ const ContentTracker = {
         finalUsername = customUser;
       }
 
-      // Target Tanggal Rilis wajib diisi kecuali kontennya masih di tahap Ide (kolom pertama)
-      const isIdeaStage = (this.form.status || this.columns[0]) === (this.columns[0] || 'Idea');
-      if (!isIdeaStage && !this.form.dueDate) {
-        alert('Target Tanggal Rilis wajib diisi untuk konten yang sudah lewat tahap Ide.');
-        return;
-      }
+      // Target Tanggal Rilis boleh dikosongkan kapan pun (di tahap manapun).
+      // Selama kosong, konten ini otomatis tidak akan muncul di Daily/notifikasi (lihat getDueDateAlert & filter dueDate).
 
       if (this.isEditing && this.editingItemId !== null) {
         const existing = this.items.find(i => i.id === this.editingItemId);
