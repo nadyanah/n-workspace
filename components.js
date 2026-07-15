@@ -1356,7 +1356,7 @@ const JobLogbook = {
       showJadwalDD: false,
       showTampilkanDD: false,
       planFilterPriority: '',
-      planFilterSchedule: '',
+      planFilterSchedule: 'today',
       planForm: {
         date: localDateStr(),
         time: '',
@@ -10782,7 +10782,7 @@ const GoogleCalendar = {
         { key: 'content', label: 'Content Plan (Content Tracker)', color: '#8E7CC3' },
       ];
       const custom = this.customReminderCategories.map(cat => ({
-        key: cat.key, label: cat.label + ' (Kategori Custom)', color: cat.color || '#9CA3AF'
+        key: cat.key, label: cat.label, color: cat.color || '#9CA3AF'
       }));
       return [...base, ...custom];
     },
