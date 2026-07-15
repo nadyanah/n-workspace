@@ -5338,6 +5338,43 @@ input:checked + .switch-slider:before {
   box-shadow: var(--shadow-lg);
 }
 
+/* ── Floating Manage-Category Button — Daily N (Google Calendar) Page ── */
+.gcal-category-float {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 300;
+}
+
+.gcal-category-float-btn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  background-color: var(--bg-card);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-terracotta);
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition-fast);
+}
+
+.gcal-category-float-btn:hover {
+  transform: scale(1.08) rotate(-12deg);
+  border-color: var(--color-terracotta);
+  box-shadow: var(--shadow-lg);
+}
+
+@media (max-width: 640px) {
+  .gcal-category-float {
+    bottom: 20px;
+    right: 16px;
+  }
+}
+
 .desk-notif-float-badge {
   position: absolute;
   top: 3px;

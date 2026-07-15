@@ -1356,7 +1356,7 @@ const JobLogbook = {
       showJadwalDD: false,
       showTampilkanDD: false,
       planFilterPriority: '',
-      planFilterSchedule: 'today',
+      planFilterSchedule: '',
       planForm: {
         date: localDateStr(),
         time: '',
@@ -9535,6 +9535,13 @@ const PomodoroTimer = {
 const GoogleCalendar = {
   template: `
     <div class="google-calendar-screen">
+
+      <!-- Floating Manage Category button (mirip Floating Bell Notif di Main Desk) -->
+      <div class="gcal-category-float" @click.stop>
+        <button class="gcal-category-float-btn" @click="showManageCategoryModal = true" title="Kelola Kategori Pengingat">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
       
       <!-- Top Screen Banner / Header -->
       <div class="flex-between" style="border-bottom: 2px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 24px; align-items: center; flex-wrap: wrap; gap: 12px;">
@@ -9566,9 +9573,6 @@ const GoogleCalendar = {
                 <span v-if="agendaActiveFilterCount < 3" class="gcal-filter-active-badge">{{ agendaActiveFilterCount }}/3</span>
               </div>
               <div style="display:flex; align-items:center; gap:6px;">
-                <button type="button" class="gcal-filter-manage-cat-btn" @click.stop="showManageCategoryModal = true" title="Kelola Kategori Pengingat">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                </button>
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
                      :style="{ transition:'transform 0.2s', transform: agendaFilterOpen ? 'rotate(180deg)' : 'rotate(0deg)', color:'var(--text-muted)' }">
                   <polyline points="6 9 12 15 18 9"/>
