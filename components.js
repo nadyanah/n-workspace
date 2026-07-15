@@ -9536,11 +9536,90 @@ const GoogleCalendar = {
   template: `
     <div class="google-calendar-screen">
 
-      <!-- Floating Manage Category button (mirip Floating Bell Notif di Main Desk) -->
-      <div class="gcal-category-float" @click.stop>
-        <button class="gcal-category-float-btn" @click="showManageCategoryModal = true" title="Kelola Kategori Pengingat">
-          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <!-- Floating "Tampilkan di Agenda" button (checklist kategori + kelola kategori, popup mirip Daily Question float) -->
+      <div class="gcal-filter-float" @click.stop>
+        <button class="gcal-filter-float-btn" :class="{ 'gcal-filter-float-btn--open': agendaFilterOpen }" @click="agendaFilterOpen = !agendaFilterOpen" title="Kelola Kategori">
+          <svg v-if="!agendaFilterOpen" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          <svg v-else viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span v-if="agendaActiveFilterCount < 3" class="gcal-filter-float-badge">{{ agendaActiveFilterCount }}</span>
         </button>
+
+        <transition name="dqf-pop">
+          <div v-if="agendaFilterOpen" class="gcal-filter-float-popup">
+            <div class="gcal-filter-float-popup-header">
+              <div class="gcal-filter-float-header-icon">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <div class="gcal-filter-float-title">Kelola Kategori</div>
+                <div class="gcal-filter-float-subtitle">filter kategori ✦</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span v-if="agendaActiveFilterCount < 3" class="gcal-filter-float-header-badge">{{ agendaActiveFilterCount }}/3</span>
+                <button class="gcal-filter-float-close-btn" @click="showAddCategoryInput = !showAddCategoryInput" title="Tambah kategori baru">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+                <button class="gcal-filter-float-close-btn" @click.stop="localResetFilterColors()" title="Kembalikan warna default">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></svg>
+                </button>
+                <button class="gcal-filter-float-close-btn" @click="agendaFilterOpen = false" title="Tutup">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Inline: Tambah Kategori Baru -->
+            <transition name="agenda-filter-expand">
+              <div v-if="showAddCategoryInput" class="gcal-filter-add-row">
+                <input type="text" class="gcal-input" v-model="newCustomCategoryInput" placeholder="Nama kategori baru..."
+                  maxlength="24" @keydown.enter="addCustomReminderCategory(); showAddCategoryInput = false" style="flex:1; height:32px; font-size:12px;" />
+                <button type="button" class="gcal-filter-add-confirm-btn" @click="addCustomReminderCategory(); showAddCategoryInput = false" :disabled="!newCustomCategoryInput.trim()" title="Tambah">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </button>
+              </div>
+            </transition>
+
+            <div class="gcal-filter-float-popup-body">
+              <label v-for="f in agendaFilterOptions" :key="f.key" class="gcal-agenda-filter-item" :class="{ checked: agendaFilters[f.key] }">
+                <template v-if="editingCategoryKey === f.key">
+                  <span class="gcal-filter-dot" :style="{ background: agendaFilterColors[f.key] }"></span>
+                  <input type="text" class="gcal-input" v-model="editCategoryLabelInput" maxlength="24"
+                    @click.stop @keydown.enter="saveEditCategory(f.key)" @keydown.esc="cancelEditCategory"
+                    style="flex:1; height:28px; font-size:12px; padding:0 8px;" />
+                  <button type="button" class="gcal-filter-row-icon-btn" @click.stop.prevent="saveEditCategory(f.key)" title="Simpan">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </button>
+                  <button type="button" class="gcal-filter-row-icon-btn" @click.stop.prevent="cancelEditCategory" title="Batal">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </template>
+                <template v-else>
+                  <span class="gcal-filter-checkbox" :style="{ borderColor: agendaFilterColors[f.key], background: agendaFilters[f.key] ? agendaFilterColors[f.key] : 'transparent' }" @click.prevent="agendaFilters[f.key] = !agendaFilters[f.key]">
+                    <svg v-if="agendaFilters[f.key]" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <span class="gcal-filter-dot" :style="{ background: agendaFilterColors[f.key] }"></span>
+                  <span class="gcal-filter-label">{{ f.label }}</span>
+                  <template v-if="customReminderCategories.some(c => c.key === f.key)">
+                    <button type="button" class="gcal-filter-row-icon-btn" @click.stop.prevent="startEditCategory(f.key)" title="Edit kategori">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                    </button>
+                    <button type="button" class="gcal-filter-row-icon-btn gcal-filter-row-icon-btn--danger" @click.stop.prevent="deleteCustomReminderCategory(f.key)" title="Hapus kategori">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                  </template>
+                  <span class="gcal-filter-color-picker" @click.stop title="Pilih warna kategori ini">
+                    <input
+                      type="color"
+                      class="gcal-filter-color-input"
+                      :value="agendaFilterColors[f.key]"
+                      @input="localUpdateFilterColor(f.key, $event.target.value)"
+                    />
+                  </span>
+                </template>
+              </label>
+            </div>
+          </div>
+        </transition>
       </div>
       
       <!-- Top Screen Banner / Header -->
@@ -9563,87 +9642,6 @@ const GoogleCalendar = {
           </button>
         </div>
 
-        <!-- ========== AGENDA FILTER (custom color per kategori) ========== -->
-        <transition name="agenda-filter-slide">
-          <div v-if="localView==='agenda'" class="gcal-agenda-filter-bar" style="flex: 1 0 100%; width: 100%;">
-            <div class="gcal-agenda-filter-header" @click="agendaFilterOpen = !agendaFilterOpen">
-              <div style="display:flex; align-items:center; gap:7px;">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-terracotta);"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                <span style="font-size:11.5px; font-weight:700; color:var(--text-dark);">Tampilkan di agenda</span>
-                <span v-if="agendaActiveFilterCount < 3" class="gcal-filter-active-badge">{{ agendaActiveFilterCount }}/3</span>
-              </div>
-              <div style="display:flex; align-items:center; gap:6px;">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                     :style="{ transition:'transform 0.2s', transform: agendaFilterOpen ? 'rotate(180deg)' : 'rotate(0deg)', color:'var(--text-muted)' }">
-                  <polyline points="6 9 12 15 18 9"/>
-                </svg>
-              </div>
-            </div>
-            <transition name="agenda-filter-expand">
-              <div v-if="agendaFilterOpen" class="gcal-agenda-filter-list">
-                <label v-for="f in agendaFilterOptions" :key="f.key" class="gcal-agenda-filter-item" :class="{ checked: agendaFilters[f.key] }">
-                  <span class="gcal-filter-checkbox" :style="{ borderColor: agendaFilterColors[f.key], background: agendaFilters[f.key] ? agendaFilterColors[f.key] : 'transparent' }" @click.prevent="agendaFilters[f.key] = !agendaFilters[f.key]">
-                    <svg v-if="agendaFilters[f.key]" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  </span>
-                  <span class="gcal-filter-dot" :style="{ background: agendaFilterColors[f.key] }"></span>
-                  <span class="gcal-filter-label">{{ f.label }}</span>
-                  <span class="gcal-filter-color-picker" @click.stop title="Pilih warna kategori ini">
-                    <input
-                      type="color"
-                      class="gcal-filter-color-input"
-                      :value="agendaFilterColors[f.key]"
-                      @input="localUpdateFilterColor(f.key, $event.target.value)"
-                    />
-                  </span>
-                </label>
-                <button type="button" class="gcal-filter-reset-btn" @click.stop="localResetFilterColors()" title="Kembalikan warna default">
-                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></svg>
-                  Reset warna
-                </button>
-              </div>
-            </transition>
-          </div>
-        </transition>
-
-        <!-- ========== MODAL: KELOLA KATEGORI PENGINGAT ========== -->
-        <div v-if="showManageCategoryModal" class="gcal-modal-overlay" @click.self="showManageCategoryModal=false">
-          <div class="gcal-modal">
-            <div class="gcal-modal-header">
-              <span style="font-size:16px;font-weight:700;color:#3c4043;">Kelola Kategori Pengingat</span>
-              <button @click="showManageCategoryModal=false" class="gcal-modal-close">&#215;</button>
-            </div>
-            <div class="gcal-modal-body">
-              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Kategori custom dipakai saat membuat Pengingat Manual & filter agenda. Kategori default "Pengingat" tidak bisa dihapus.</p>
-
-              <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;">
-                <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:14px; font-size:12px; font-weight:600;"
-                  :style="{ backgroundColor: agendaFilterColors.manual + '18', color: agendaFilterColors.manual, border: '1px solid ' + agendaFilterColors.manual + '50' }">
-                  Pengingat (Default)
-                </span>
-                <span v-for="cat in customReminderCategories" :key="cat.key"
-                  style="display:inline-flex; align-items:center; gap:6px; padding:5px 8px 5px 12px; border-radius:14px; font-size:12px; font-weight:600;"
-                  :style="{ backgroundColor: cat.color + '18', color: cat.color, border: '1px solid ' + cat.color + '50' }">
-                  {{ cat.label }}
-                  <button type="button" @click="deleteCustomReminderCategory(cat.key)"
-                    title="Hapus kategori ini"
-                    style="background:none; border:none; cursor:pointer; padding:0; display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; border-radius:50%; color:inherit; opacity:0.7;">
-                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  </button>
-                </span>
-                <span v-if="!customReminderCategories.length" style="font-size:12px; color:var(--text-muted);">Belum ada kategori custom.</span>
-              </div>
-
-              <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em;">Tambah Kategori Baru</label>
-              <div style="display:flex; gap:8px;">
-                <input type="text" class="gcal-input" v-model="newCustomCategoryInput" placeholder="Nama kategori baru..."
-                  maxlength="24" @keydown.enter="addCustomReminderCategory" style="flex:1;" />
-                <button class="btn btn-primary" @click="addCustomReminderCategory" style="height:40px; padding: 0 20px; cursor: pointer; white-space: nowrap; font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 600;" :disabled="!newCustomCategoryInput.trim()">
-                  Tambah
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- LOCAL CALENDAR VIEW (always shown, no auth needed) -->
@@ -10620,7 +10618,9 @@ const GoogleCalendar = {
       customRecurrenceForm: { interval: 1, unit: 'week', days: [], endType: 'never', endDate: '', count: 13 },
       customRecurrenceSaved: null, // hasil akhir custom recurrence yang sudah disimpan
       newCustomCategoryInput: '',
-      showManageCategoryModal: false,
+      showAddCategoryInput: false,
+      editingCategoryKey: null,
+      editCategoryLabelInput: '',
       customReminderCategories: (() => {
         try {
           const raw = WorkspaceStorage.getItem('gcal_custom_reminder_categories');
@@ -11973,6 +11973,27 @@ const GoogleCalendar = {
       // Jika form sedang memakai kategori ini, kembalikan ke default
       if (this.localNewReminder.category === key) this.localNewReminder.category = 'manual';
       this.localStorageTick++;
+    },
+    startEditCategory(key) {
+      const cat = this.customReminderCategories.find(c => c.key === key);
+      if (!cat) return;
+      this.editingCategoryKey = key;
+      this.editCategoryLabelInput = cat.label;
+    },
+    saveEditCategory(key) {
+      const label = this.editCategoryLabelInput.trim();
+      if (!label) { this.cancelEditCategory(); return; }
+      const cat = this.customReminderCategories.find(c => c.key === key);
+      if (cat) {
+        cat.label = label;
+        try { WorkspaceStorage.setItem('gcal_custom_reminder_categories', JSON.stringify(this.customReminderCategories)); } catch(_e) { /* ignore */ }
+      }
+      this.editingCategoryKey = null;
+      this.editCategoryLabelInput = '';
+    },
+    cancelEditCategory() {
+      this.editingCategoryKey = null;
+      this.editCategoryLabelInput = '';
     },
     localAddEvent() {
       if (!this.localNewEv.title.trim()) { this.localError = 'Judul acara tidak boleh kosong!'; return; }

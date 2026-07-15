@@ -5338,15 +5338,20 @@ input:checked + .switch-slider:before {
   box-shadow: var(--shadow-lg);
 }
 
-/* ── Floating Manage-Category Button — Daily N (Google Calendar) Page ── */
-.gcal-category-float {
+/* ── Floating "Tampilkan di Agenda" Button + Popup — Daily N Page ── */
+/* (Kelola Kategori Pengingat sudah digabung ke sini — tombol manage terpisah dihapus) */
+.gcal-filter-float {
   position: fixed;
   bottom: 28px;
   right: 28px;
   z-index: 300;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 10px;
 }
 
-.gcal-category-float-btn {
+.gcal-filter-float-btn {
   position: relative;
   width: 44px;
   height: 44px;
@@ -5361,18 +5366,174 @@ input:checked + .switch-slider:before {
   box-shadow: var(--shadow-md);
   transition: var(--transition-fast);
 }
-
-.gcal-category-float-btn:hover {
+.gcal-filter-float-btn:hover {
   transform: scale(1.08) rotate(-12deg);
   border-color: var(--color-terracotta);
   box-shadow: var(--shadow-lg);
 }
+.gcal-filter-float-btn--open {
+  background: var(--text-dark, #2C2621);
+  color: #fff;
+  border-color: var(--text-dark, #2C2621);
+}
+
+.gcal-filter-float-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: var(--color-terracotta);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: 'Space Mono', monospace;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  pointer-events: none;
+  border: 1.5px solid #fff;
+}
 
 @media (max-width: 640px) {
-  .gcal-category-float {
+  .gcal-filter-float {
     bottom: 20px;
     right: 16px;
   }
+}
+
+.gcal-filter-float-popup {
+  background: var(--bg-card, #fff);
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  border-radius: 18px;
+  box-shadow: 0 20px 56px rgba(44, 38, 33, 0.18), 0 4px 12px rgba(0,0,0,0.08);
+  width: min(360px, calc(100vw - 48px));
+  max-height: min(280px, 55vh);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: 'Outfit', sans-serif;
+}
+
+/* ── Inline "Tambah Kategori" row (dipicu tombol + di header popup) ── */
+.gcal-filter-add-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-sand, #E8DDD0);
+  flex-shrink: 0;
+  background: rgba(232, 221, 208, 0.25);
+}
+.gcal-filter-add-confirm-btn {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: none;
+  background: var(--color-terracotta, #D67B52);
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.12s;
+}
+.gcal-filter-add-confirm-btn:hover { transform: scale(1.06); }
+.gcal-filter-add-confirm-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* ── Per-row edit/delete icon buttons (kategori custom) ── */
+.gcal-filter-row-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted, #A09080);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.13s, color 0.13s;
+}
+.gcal-filter-row-icon-btn:hover {
+  background: rgba(214, 123, 82, 0.12);
+  color: var(--color-terracotta, #D67B52);
+}
+.gcal-filter-row-icon-btn--danger:hover {
+  background: rgba(185, 28, 28, 0.10);
+  color: #B91C1C;
+}
+
+.gcal-filter-float-popup-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px 12px;
+  background: var(--color-terracotta, #D67B52);
+  color: #fff;
+  flex-shrink: 0;
+}
+.gcal-filter-float-header-icon {
+  width: 34px;
+  height: 34px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.gcal-filter-float-title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  color: #fff;
+  line-height: 1.25;
+}
+.gcal-filter-float-subtitle {
+  font-size: 11px;
+  opacity: 0.82;
+  margin-top: 1px;
+}
+.gcal-filter-float-header-badge {
+  background: rgba(255,255,255,0.22);
+  border-radius: 20px;
+  padding: 3px 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  font-family: 'Space Mono', monospace;
+}
+.gcal-filter-float-close-btn {
+  background: rgba(255,255,255,0.18);
+  border: none;
+  border-radius: 9px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.gcal-filter-float-close-btn:hover {
+  background: rgba(255,255,255,0.32);
+}
+
+.gcal-filter-float-popup-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px 12px 12px;
+  overflow-y: auto;
 }
 
 .desk-notif-float-badge {
