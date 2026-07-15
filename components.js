@@ -1356,7 +1356,7 @@ const JobLogbook = {
       showJadwalDD: false,
       showTampilkanDD: false,
       planFilterPriority: '',
-      planFilterSchedule: '',
+      planFilterSchedule: 'today',
       planForm: {
         date: localDateStr(),
         time: '',
