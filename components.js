@@ -9748,9 +9748,9 @@ const GoogleCalendar = {
                 :key="item.id"
                 class="gcal-week-list-pill"
                 :style="{
-                  background: localTintColor(item.color, 0.16),
-                  borderColor: localTintColor(item.color, 0.45),
-                  color: item.color,
+                  background: localTintColor(item.color, 0.26),
+                  borderColor: localTintColor(item.color, 0.55),
+                  color: localBlockTextColor(item.color),
                   opacity: item.done ? 0.5 : 1
                 }"
                 :title="item.title + (item.startMin !== null ? ' · ' + localFmtMin(item.startMin) : '')"
@@ -9784,7 +9784,7 @@ const GoogleCalendar = {
               <div v-for="item in group.allDayItems" :key="item.id"
                 class="gcal-agenda-allday-item"
                 :class="{ 'gcal-agenda-item-done': item.done }"
-                :style="{ background: localTintColor(item.color, 0.16), borderColor: localTintColor(item.color, 0.45), color: item.color, cursor: 'pointer' }"
+                :style="{ background: localTintColor(item.color, 0.26), borderColor: localTintColor(item.color, 0.55), color: localBlockTextColor(item.color), cursor: 'pointer' }"
                 @click.stop="localShowAgendaDetail(item)"
                 title="Lihat detail">
                 <span class="gcal-agenda-check-icon" style="pointer-events:none; flex-shrink:0;">
@@ -9822,9 +9822,9 @@ const GoogleCalendar = {
                   :style="{
                     top: (agendaDrag.blockId === block.id ? agendaDrag.currentTop : block.top) + 'px',
                     height: block.height + 'px',
-                    background: localTintColor(block.color, 0.14),
-                    borderColor: agendaDrag.blockId === block.id ? block.color : localTintColor(block.color, 0.5),
-                    color: block.color,
+                    background: localTintColor(block.color, 0.26),
+                    borderColor: agendaDrag.blockId === block.id ? block.color : localTintColor(block.color, 0.55),
+                    color: localBlockTextColor(block.color),
                     left: 'calc(' + (block.col * (100/block.totalCols)) + '% + 2px)',
                     width: 'calc(' + (100/block.totalCols) + '% - 4px)',
                     cursor: (block.type === 'manual' || block.type === 'task') ? (agendaDrag.blockId === block.id ? 'grabbing' : 'grab') : 'pointer',
@@ -11167,6 +11167,21 @@ const GoogleCalendar = {
       const g = parseInt(h.substring(2,4), 16);
       const b = parseInt(h.substring(4,6), 16);
       return `rgba(${r},${g},${b},${alpha})`;
+    },
+    // ── Helper: warna teks untuk block agenda/weekly — coklat tua sebagai basis,
+    // dicampur sedikit dengan warna kategori supaya tetap terasa "ke arah item"
+    // tapi tidak terlalu jenuh/item banget. ratio = porsi coklat (default 0.68).
+    localBlockTextColor(hex, ratio = 0.68) {
+      const brown = { r: 0x3D, g: 0x2B, b: 0x1F }; // coklat kopi tua, senada --text-dark
+      if (!hex) return `rgb(${brown.r},${brown.g},${brown.b})`;
+      const h = hex.replace('#', '');
+      const r = parseInt(h.substring(0,2), 16);
+      const g = parseInt(h.substring(2,4), 16);
+      const b = parseInt(h.substring(4,6), 16);
+      const mixedR = Math.round(brown.r * ratio + r * (1 - ratio));
+      const mixedG = Math.round(brown.g * ratio + g * (1 - ratio));
+      const mixedB = Math.round(brown.b * ratio + b * (1 - ratio));
+      return `rgb(${mixedR},${mixedG},${mixedB})`;
     },
     // ── HELPER: ambil semua habit untuk SATU tanggal (hari ini ATAU masa lalu) ──
     // Hari ini  → pakai ws_habit_notifs (sudah include jadwal jam) + status dari ws_notif_action_status
