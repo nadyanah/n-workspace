@@ -8439,21 +8439,25 @@ const HabitTracker = {
           if (Array.isArray(h.skipDays) && h.skipDays.includes(todayStr)) return false;
           return true;
         })
-        .map(h => ({
-          id: 'habit_' + h.id,
-          title: h.name,
-          subtitle: h.category + ' · Habit harian',
-          time: h.timeSchedule,
-          timeVal: (() => {
-            const [hh, mm] = h.timeSchedule.split(':').map(Number);
-            return hh * 60 + (mm || 0);
-          })(),
-          habitId: h.id,
-          color: h.customColor || '#10b981',
-          page: 'habitTracker',
-          category: h.category || '',
-          isDzikirWaktu: h.category === 'Dzikir Waktu',
-        }));
+        .map(h => {
+          const overrideTime = h.timeOverrides && h.timeOverrides[todayStr];
+          const effTime = overrideTime || h.timeSchedule;
+          return {
+            id: 'habit_' + h.id,
+            title: h.name,
+            subtitle: h.category + ' · Habit harian',
+            time: effTime,
+            timeVal: (() => {
+              const [hh, mm] = effTime.split(':').map(Number);
+              return hh * 60 + (mm || 0);
+            })(),
+            habitId: h.id,
+            color: h.customColor || '#10b981',
+            page: 'habitTracker',
+            category: h.category || '',
+            isDzikirWaktu: h.category === 'Dzikir Waktu',
+          };
+        });
       WorkspaceStorage.setItem('ws_habit_notifs', JSON.stringify(habitsWithTime));
     },
     prevMonth() {
@@ -9816,7 +9820,7 @@ const GoogleCalendar = {
                   :class="[
                     'gcal-agenda-block-' + block.type,
                     block.done && 'gcal-agenda-item-done',
-                    (block.type === 'manual' || block.type === 'task') && 'gcal-agenda-block-draggable',
+                    (block.type === 'manual' || block.type === 'task' || (block.type === 'habit' && block.actionable)) && 'gcal-agenda-block-draggable',
                     agendaDrag.blockId === block.id && 'gcal-agenda-block-dragging'
                   ]"
                   :style="{
@@ -9827,17 +9831,17 @@ const GoogleCalendar = {
                     color: localBlockTextColor(block.color),
                     left: 'calc(' + (block.col * (100/block.totalCols)) + '% + 2px)',
                     width: 'calc(' + (100/block.totalCols) + '% - 4px)',
-                    cursor: (block.type === 'manual' || block.type === 'task') ? (agendaDrag.blockId === block.id ? 'grabbing' : 'grab') : 'pointer',
+                    cursor: (block.type === 'manual' || block.type === 'task' || (block.type === 'habit' && block.actionable)) ? (agendaDrag.blockId === block.id ? 'grabbing' : 'grab') : 'pointer',
                     userSelect: 'none',
                     zIndex: agendaDrag.blockId === block.id ? 10 : 2,
                     transition: agendaDrag.blockId === block.id ? 'none' : 'top 0.08s ease'
                   }"
-                  :title="(block.type === 'manual' || block.type === 'task') ? 'Tap untuk detail · Tahan ⠿ untuk geser jam' : 'Lihat detail'"
-                  @mousedown.stop="(block.type === 'manual' || block.type === 'task') ? localStartBlockDrag($event, block) : null"
+                  :title="(block.type === 'manual' || block.type === 'task' || (block.type === 'habit' && block.actionable)) ? 'Tap untuk detail · Tahan ⠿ untuk geser jam' : 'Lihat detail'"
+                  @mousedown.stop="(block.type === 'manual' || block.type === 'task' || (block.type === 'habit' && block.actionable)) ? localStartBlockDrag($event, block) : null"
                   @click.stop="agendaDrag.didDrag ? null : localShowAgendaDetail(block)"
                 >
                   <span
-                    v-if="block.type === 'manual' || block.type === 'task'"
+                    v-if="block.type === 'manual' || block.type === 'task' || (block.type === 'habit' && block.actionable)"
                     class="gcal-agenda-block-drag-handle"
                     @touchstart.stop.prevent="localHandleDragHandleTouchStart($event, block)"
                     title="Tahan untuk geser jam"
@@ -10063,26 +10067,38 @@ const GoogleCalendar = {
         <transition name="agenda-detail-pop">
           <div v-if="recurActionPopup" class="agenda-detail-overlay" @click.self="recurActionPopup = null">
             <div class="recur-action-card">
-              <div class="recur-action-title">{{ recurActionPopup.mode === 'delete' ? 'Hapus acara rutin' : recurActionPopup.mode === 'reschedule' ? 'Pindah jam acara rutin' : 'Edit acara rutin' }}</div>
+              <div class="recur-action-title">{{ recurActionPopup.mode === 'delete' ? 'Hapus acara rutin' : recurActionPopup.mode === 'reschedule' ? 'Pindah jam acara rutin' : recurActionPopup.mode === 'reschedule-habit' ? 'Pindah jam habit' : 'Edit acara rutin' }}</div>
 
-              <!-- Preview jam baru (hanya untuk mode reschedule) -->
-              <div v-if="recurActionPopup.mode === 'reschedule'" style="margin: 0 0 14px; padding: 9px 14px; background: var(--color-cream, #FDF5EB); border-radius: 9px; border-left: 3px solid var(--color-terracotta, #D67B52); font-size: 12.5px;">
+              <!-- Preview jam baru (mode reschedule acara & habit) -->
+              <div v-if="recurActionPopup.mode === 'reschedule' || recurActionPopup.mode === 'reschedule-habit'" style="margin: 0 0 14px; padding: 9px 14px; background: var(--color-cream, #FDF5EB); border-radius: 9px; border-left: 3px solid var(--color-terracotta, #D67B52); font-size: 12.5px;">
                 <span style="color: var(--text-muted); font-size: 11px; display: block; margin-bottom: 2px;">Jam baru</span>
                 <span style="font-weight: 700; color: var(--color-terracotta, #D67B52); font-family: 'Hack', monospace;">{{ recurActionPopup.newTime }} – {{ recurActionPopup.newEndTime }}</span>
               </div>
 
-              <label class="recur-action-opt">
-                <input type="radio" v-model="recurActionChoice" value="this" class="recur-action-radio" />
-                <span>Acara ini</span>
-              </label>
-              <label class="recur-action-opt">
-                <input type="radio" v-model="recurActionChoice" value="following" class="recur-action-radio" />
-                <span>Acara ini dan acara berikutnya</span>
-              </label>
-              <label class="recur-action-opt">
-                <input type="radio" v-model="recurActionChoice" value="all" class="recur-action-radio" />
-                <span>Semua acara</span>
-              </label>
+              <template v-if="recurActionPopup.mode === 'reschedule-habit'">
+                <label class="recur-action-opt">
+                  <input type="radio" v-model="recurActionChoice" value="this" class="recur-action-radio" />
+                  <span>Hari ini saja</span>
+                </label>
+                <label class="recur-action-opt">
+                  <input type="radio" v-model="recurActionChoice" value="following" class="recur-action-radio" />
+                  <span>Hari ini dan seterusnya</span>
+                </label>
+              </template>
+              <template v-else>
+                <label class="recur-action-opt">
+                  <input type="radio" v-model="recurActionChoice" value="this" class="recur-action-radio" />
+                  <span>Acara ini</span>
+                </label>
+                <label class="recur-action-opt">
+                  <input type="radio" v-model="recurActionChoice" value="following" class="recur-action-radio" />
+                  <span>Acara ini dan acara berikutnya</span>
+                </label>
+                <label class="recur-action-opt">
+                  <input type="radio" v-model="recurActionChoice" value="all" class="recur-action-radio" />
+                  <span>Semua acara</span>
+                </label>
+              </template>
 
               <div class="recur-action-footer">
                 <button class="recur-action-btn-cancel" @click="recurActionPopup = null">Batal</button>
@@ -11230,10 +11246,12 @@ const GoogleCalendar = {
           }
           const checkedDays = (h.history && h.history[yearMonthKey]) || [];
           const done = checkedDays.includes(dayNum);
+          const overrideTime = h.timeOverrides && h.timeOverrides[dateStr];
           result.push({
             id: 'habit-' + h.id,
+            habitId: h.id,
             title: h.name,
-            time: h.timeSchedule || null,
+            time: overrideTime || h.timeSchedule || null,
             done,
             actionable: false // histori: tidak bisa di-toggle dari Google Calendar
           });
@@ -11483,6 +11501,9 @@ const GoogleCalendar = {
       } else if (mode === 'reschedule') {
         const { newTime, newEndTime } = this.recurActionPopup;
         this.localApplyDragReschedule(block, scope, newTime, newEndTime);
+      } else if (mode === 'reschedule-habit') {
+        const { newTime, newEndTime } = this.recurActionPopup;
+        this.localApplyHabitDragReschedule(block, scope, newTime, newEndTime);
       } else {
         this.localOpenEditForm(block, scope);
       }
@@ -12060,7 +12081,7 @@ const GoogleCalendar = {
       return this._dragFmtMin(startMin) + ' – ' + this._dragFmtMin(endMin);
     },
     localStartBlockDrag(e, block) {
-      if (block.type !== 'manual' && block.type !== 'task') return;
+      if (block.type !== 'manual' && block.type !== 'task' && !(block.type === 'habit' && block.actionable)) return;
       this.agendaDrag = {
         blockId: block.id,
         block: block,
@@ -12080,7 +12101,7 @@ const GoogleCalendar = {
     // Tap block → buka detail langsung (tidak ada delay)
     // Touchstart pada icon ⠿ → aktifkan drag, geser untuk ubah jam
     localHandleDragHandleTouchStart(e, block) {
-      if (block.type !== 'manual' && block.type !== 'task') return;
+      if (block.type !== 'manual' && block.type !== 'task' && !(block.type === 'habit' && block.actionable)) return;
       if (this.agendaDrag.blockId) return;
 
       const touch = e.touches[0];
@@ -12111,7 +12132,7 @@ const GoogleCalendar = {
     },
     // Kept for compatibility
     localStartBlockDragTouch(e, block) {
-      if (block.type !== 'manual' && block.type !== 'task') return;
+      if (block.type !== 'manual' && block.type !== 'task' && !(block.type === 'habit' && block.actionable)) return;
       const touch = e.touches[0];
       this.agendaDrag = {
         blockId: block.id,
@@ -12168,6 +12189,19 @@ const GoogleCalendar = {
       // Kalau task plan → langsung simpan ke personal_workspace_job_plans
       if (block.type === 'task') {
         this.localApplyTaskDragReschedule(block, newTime, newEndTime);
+        return;
+      }
+
+      // Kalau habit → habit selalu berulang tiap hari, tanya dulu lingkupnya
+      // (hari ini saja / hari ini dan seterusnya) — mirip acara rutin
+      if (block.type === 'habit') {
+        this.recurActionChoice = 'this';
+        this.recurActionPopup = {
+          mode: 'reschedule-habit',
+          block,
+          newTime,
+          newEndTime,
+        };
         return;
       }
 
@@ -12292,6 +12326,55 @@ const GoogleCalendar = {
         this.localSuccess = `Task "${plans[idx].tasks.slice(0, 32)}${plans[idx].tasks.length > 32 ? '…' : ''}" dipindah ke ${newTime} – ${safeEndTime}`;
         setTimeout(() => { this.localSuccess = null; }, 2800);
       } catch(_e) { /* ignore */ }
+    },
+    // ── Simpan waktu baru hasil drag untuk Habit (aesthetic_habit_tracker_habits) ──
+    // scope: 'this' (hanya hari ini → simpan override per-tanggal), 'following' (ubah jadwal default mulai sekarang)
+    localApplyHabitDragReschedule(block, scope, newTime, newEndTime) {
+      const habitId = (block.raw && block.raw.habitId) || (block.raw && block.raw.id && String(block.raw.id).replace(/^habit-/, ''));
+      if (!habitId) return;
+      const occurDate = block.dateStr || this.localSelectedDate || this.localFmtDate(new Date());
+      const todayStr = this.localFmtDate(new Date());
+
+      try {
+        const raw = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+        const habits = raw ? JSON.parse(raw) : [];
+        const idx = habits.findIndex(h => String(h.id) === String(habitId));
+        if (idx === -1) return;
+
+        const habit = habits[idx];
+        if (scope === 'following') {
+          // Hari ini dan seterusnya: ubah jadwal default habit
+          habits[idx] = { ...habit, timeSchedule: newTime };
+        } else {
+          // Hari ini saja: simpan sebagai override khusus tanggal ini, jadwal default tidak berubah
+          const timeOverrides = { ...(habit.timeOverrides || {}), [occurDate]: newTime };
+          habits[idx] = { ...habit, timeOverrides };
+        }
+        WorkspaceStorage.setItem('aesthetic_habit_tracker_habits', JSON.stringify(habits));
+
+        // Kalau tanggal yang digeser adalah hari ini, patch juga ws_habit_notifs supaya
+        // langsung nyambung ke panel notif & re-render tanpa perlu buka Habit Tracker dulu
+        if (occurDate === todayStr) {
+          try {
+            const notifRaw = WorkspaceStorage.getItem('ws_habit_notifs');
+            const notifs = notifRaw ? JSON.parse(notifRaw) : [];
+            const nIdx = notifs.findIndex(n => String(n.habitId) === String(habitId));
+            if (nIdx !== -1) {
+              const [hh, mm] = newTime.split(':').map(Number);
+              notifs[nIdx] = { ...notifs[nIdx], time: newTime, timeVal: hh * 60 + (mm || 0) };
+              WorkspaceStorage.setItem('ws_habit_notifs', JSON.stringify(notifs));
+            }
+          } catch(_e) { /* ignore */ }
+        }
+
+        this.localStorageTick++;
+        globalThis.dispatchEvent(new CustomEvent('ws-habit-time-updated'));
+        const scopeLabel = scope === 'following' ? ' (hari ini & seterusnya)' : ' (hari ini)';
+        this.localSuccess = `"${habit.name}" dipindah ke ${newTime}${scopeLabel}`;
+        setTimeout(() => { this.localSuccess = null; }, 2500);
+      } catch(_e) { /* ignore */ }
+
+      this.recurActionPopup = null;
     },
     addHour(timeStr) {
       const [h, m] = timeStr.split(':').map(Number);
