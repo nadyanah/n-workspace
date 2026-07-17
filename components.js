@@ -1013,6 +1013,20 @@ const JobLogbook = {
             </div>
           </div>
         </div>
+
+        <!-- ── Floating Buttons: Catat Hari Baru & Tambah Task Plan ── -->
+        <div class="joblog-fab-group">
+          <button class="crossnav-fab crossnav-fab--primary" title="Catat Hari Baru" @click="showAddLog = true">
+            <span class="crossnav-fab-icon">
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="19"/><line x1="9.5" y1="16.5" x2="14.5" y2="16.5"/></svg>
+            </span>
+          </button>
+          <button class="crossnav-fab" title="Tambah Task Plan" @click="openAddPlan">
+            <span class="crossnav-fab-icon">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1" ry="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="13" y2="15"/></svg>
+            </span>
+          </button>
+        </div>
       </div>
 
       <div v-show="showFullNotesPage" class="animate-fade-in" style="animation: popIn 0.3s ease;">

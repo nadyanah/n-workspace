@@ -11576,10 +11576,46 @@ input:checked + .switch-slider:before {
   align-items: center;
   justify-content: center;
 }
+/* Varian solid — dipakai untuk membedakan tombol satu sama lain saat berdampingan (mis. Job Logbook) */
+.crossnav-fab--primary {
+  background-color: var(--color-terracotta);
+  border-color: var(--color-terracotta);
+  color: #fff;
+}
+.crossnav-fab--primary:hover {
+  background-color: var(--color-terracotta-dark, #B8663F);
+  border-color: var(--color-terracotta-dark, #B8663F);
+}
 @media (max-width: 640px) {
   .crossnav-fab {
     bottom: 20px;
     right: 16px;
+  }
+}
+
+/* ── Job Logbook Floating Buttons: Catat Hari Baru & Tambah Task Plan ── */
+.joblog-fab-group {
+  position: fixed;
+  bottom: 28px;
+  right: 24px;
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+/* Tombol .crossnav-fab di dalam grup ini jangan fixed sendiri-sendiri,
+   supaya tidak numpuk di titik yang sama — biarkan flex column wrapper yang atur posisi */
+.joblog-fab-group .crossnav-fab {
+  position: static;
+  bottom: auto;
+  right: auto;
+}
+@media (max-width: 640px) {
+  .joblog-fab-group {
+    bottom: 20px;
+    right: 16px;
+    gap: 10px;
   }
 }
 
