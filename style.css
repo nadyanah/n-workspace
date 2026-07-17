@@ -11542,6 +11542,47 @@ input:checked + .switch-slider:before {
   letter-spacing: 0.04em;
 }
 
+/* ── Cross-nav Floating Button: Career Foundation ↔ My Portfolio ── */
+/* Icon-only, bulat — mengikuti gaya desk-config-floating-btn / Daily Question circle */
+.crossnav-fab {
+  position: fixed;
+  bottom: 28px;
+  right: 24px;
+  z-index: 400;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-card);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 50%;
+  color: var(--color-terracotta);
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition-fast);
+}
+.crossnav-fab:hover {
+  transform: scale(1.08) rotate(-15deg);
+  border-color: var(--color-terracotta);
+  box-shadow: var(--shadow-lg);
+}
+.crossnav-fab:active {
+  transform: scale(0.96);
+}
+.crossnav-fab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+@media (max-width: 640px) {
+  .crossnav-fab {
+    bottom: 20px;
+    right: 16px;
+  }
+}
+
 /* ── Popup Panel ── */
 .dqf-popup {
   background: var(--bg-card, #fff);
