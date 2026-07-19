@@ -18495,7 +18495,13 @@ const MyPortfolio = {
 
     tableTasks() {
       if (!this.selectedExperience) return [];
-      return this.portfolioTasks[this.selectedExperience.key] || [];
+      const list = this.portfolioTasks[this.selectedExperience.key] || [];
+      // Task berstatus 'fix' otomatis naik ke atas; urutan asli di dalam masing-masing grup (fix/draft) tetap dipertahankan.
+      return [...list].sort((a, b) => {
+        const aFix = a.status === 'fix' ? 0 : 1;
+        const bFix = b.status === 'fix' ? 0 : 1;
+        return aFix - bFix;
+      });
     },
 
     // ── Task yang sedang dibuka di popup "Edit Task" ──
