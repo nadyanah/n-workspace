@@ -17970,7 +17970,7 @@ const MyPortfolio = {
                 <td>
                   <button class="mp-insight-btn" :class="{ 'mp-insight-filled': hasInsightSummary(task) }"
                     @click="openInsightModal(task.id)"
-                    :title="hasInsightSummary(task) ? truncate(stripHtml(task.insightSummary), 90) : 'Belum ada rangkuman insight'">
+                    :title="hasInsightSummary(task) ? truncate(insightPreviewText(task), 90) : 'Belum ada rangkuman insight'">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>
                     {{ hasInsightSummary(task) ? 'Lihat Insight' : 'Tulis Insight' }}
                   </button>
@@ -18077,7 +18077,7 @@ const MyPortfolio = {
               <div>
                 <button class="mp-insight-btn" :class="{ 'mp-insight-filled': hasInsightSummary(editingTask) }"
                   @click="openInsightModal(editingTask.id)"
-                  :title="hasInsightSummary(editingTask) ? truncate(stripHtml(editingTask.insightSummary), 90) : 'Belum ada rangkuman insight'">
+                  :title="hasInsightSummary(editingTask) ? truncate(insightPreviewText(editingTask), 90) : 'Belum ada rangkuman insight'">
                   <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>
                   {{ hasInsightSummary(editingTask) ? 'Lihat Insight' : 'Tulis Insight' }}
                 </button>
@@ -18187,9 +18187,9 @@ const MyPortfolio = {
       </div>
     </transition>
 
-    <!-- ══ MODAL: Rangkuman Insight per Task ══ -->
+    <!-- ══ MODAL: Rangkuman Insight per Task (bisa tambah beberapa kolom catatan, tiap kolom rich-text editor) ══ -->
     <transition name="cf-fade">
-      <div v-if="insightModalTaskId" class="cf-modal-overlay" @click.self="insightModalMode === 'edit' ? null : closeInsightModal()">
+      <div v-if="insightModalTaskId" class="cf-modal-overlay" @click.self="closeInsightModal">
         <div class="cf-modal cf-modal-xl">
           <div class="cf-modal-header">
             <div>
@@ -18201,59 +18201,73 @@ const MyPortfolio = {
             </button>
           </div>
 
-          <!-- ── Mode VIEW: tampilkan insight yang sudah tersimpan, read-only ── -->
-          <template v-if="insightModalMode === 'view'">
-            <div class="cf-modal-body">
-              <div class="mp-insight-view-box insight-rich-content" v-html="insightModalDraft"></div>
-            </div>
-            <div class="cf-modal-footer">
-              <button class="cf-btn-danger" style="margin-right:auto" @click="deleteInsightModal">Hapus</button>
-              <button class="cf-btn-ghost" @click="closeInsightModal">Tutup</button>
-              <button class="cf-btn-primary" @click="startEditInsightModal">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-                Edit
+          <div class="cf-modal-body">
+            <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 12px; line-height:1.6;">Tambahkan kolom catatan sebanyak yang kamu butuhkan. Di dalam tiap kolom, blok satu kalimat lalu klik tombol "Kalimat Chat" di toolbar buat kasih gaya beda (miring &amp; font beda) — cocok buat nandain kutipan atau poin penting.</p>
+
+            <div class="mp-insight-columns-wrap">
+              <div v-if="!insightModalColumns.length" class="mp-empty-state" style="padding: 28px 20px;">
+                <p class="mp-empty-title">Belum ada kolom catatan</p>
+                <p class="mp-empty-sub">Klik "Tambah Kolom" untuk mulai menulis rangkuman.</p>
+              </div>
+
+              <div v-for="col in insightModalColumns" :key="col.id" class="mp-insight-column">
+                <div class="mp-insight-column-header">
+                  <input type="text" class="mp-insight-column-title-input"
+                    :value="col.title"
+                    placeholder="Judul kolom..."
+                    @change="renameInsightColumn(col.id, $event.target.value)" />
+                  <button class="mp-insight-column-delete" title="Hapus kolom ini" @click="removeInsightColumn(col.id)">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                  </button>
+                </div>
+
+                <!-- Toolbar -->
+                <div class="mp-rte-toolbar">
+                  <button type="button" @click="mpInsightExec(col.id, 'bold')" title="Bold (Ctrl+B)" class="mp-rte-btn"><b>B</b></button>
+                  <button type="button" @click="mpInsightExec(col.id, 'italic')" title="Italic (Ctrl+I)" class="mp-rte-btn"><i>I</i></button>
+                  <button type="button" @click="mpInsightExec(col.id, 'underline')" title="Underline" class="mp-rte-btn"><u>U</u></button>
+                  <div class="mp-rte-sep"></div>
+                  <button type="button" @click="mpInsightExec(col.id, 'formatBlock', 'h1')" title="Heading 1" class="mp-rte-btn mp-rte-btn-text">H1</button>
+                  <button type="button" @click="mpInsightExec(col.id, 'formatBlock', 'h2')" title="Heading 2" class="mp-rte-btn mp-rte-btn-text">H2</button>
+                  <button type="button" @click="mpInsightExec(col.id, 'formatBlock', 'p')" title="Paragraf Normal" class="mp-rte-btn mp-rte-btn-text" style="color:var(--text-muted);">¶</button>
+                  <div class="mp-rte-sep"></div>
+                  <button type="button" @click="mpInsightExec(col.id, 'insertUnorderedList')" title="Bullet List" class="mp-rte-btn">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
+                  </button>
+                  <button type="button" @click="mpInsightExec(col.id, 'insertOrderedList')" title="Numbered List" class="mp-rte-btn">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 10h2" stroke-linecap="round"/><path d="M4 14c0-1 2-1 2-2s-2-1-2 0" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18h2l-2 2h2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                  <div class="mp-rte-sep"></div>
+                  <button type="button" @click="mpInsightExec(col.id, 'strikeThrough')" title="Strikethrough" class="mp-rte-btn"><s style="font-size:12px;">S</s></button>
+                  <div class="mp-rte-sep"></div>
+                  <button type="button" @click="formatInsightChatSentence(col.id)" title="Blok kalimat dulu, lalu klik ini untuk kasih gaya kalimat chat (miring &amp; font beda)" class="mp-rte-btn mp-rte-btn-text mp-rte-btn-chat">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Kalimat Chat
+                  </button>
+                </div>
+                <!-- Editor Area -->
+                <div
+                  :ref="colRefName(col.id)"
+                  contenteditable="true"
+                  class="mp-rte-editor insight-rich-content"
+                  @input="onInsightColumnInput(col.id)"
+                  @paste="onInsightPaste(col.id)"
+                  @blur="flushInsightColumn(col.id)"
+                  data-placeholder="cth., Dari task ini aku belajar..."
+                ></div>
+              </div>
+
+              <button class="cf-btn-ghost mp-insight-add-column-btn" @click="addInsightColumn">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Tambah Kolom
               </button>
             </div>
-          </template>
+          </div>
 
-          <!-- ── Mode EDIT: Rich Text Editor untuk menulis / mengubah insight ── -->
-          <template v-else>
-            <div class="cf-modal-body">
-              <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 10px; line-height:1.6;">Tulis rangkuman insight / pembelajaran dari task ini — bisa jadi catatan refleksi, hasil belajar, atau poin penting untuk portofolio kamu.</p>
-              <!-- Toolbar -->
-              <div class="mp-rte-toolbar">
-                <button type="button" @click="mpRteExec('insightEditor', 'bold')" title="Bold (Ctrl+B)" class="mp-rte-btn"><b>B</b></button>
-                <button type="button" @click="mpRteExec('insightEditor', 'italic')" title="Italic (Ctrl+I)" class="mp-rte-btn"><i>I</i></button>
-                <button type="button" @click="mpRteExec('insightEditor', 'underline')" title="Underline" class="mp-rte-btn"><u>U</u></button>
-                <div class="mp-rte-sep"></div>
-                <button type="button" @click="mpRteExec('insightEditor', 'formatBlock', 'h1')" title="Heading 1" class="mp-rte-btn mp-rte-btn-text">H1</button>
-                <button type="button" @click="mpRteExec('insightEditor', 'formatBlock', 'h2')" title="Heading 2" class="mp-rte-btn mp-rte-btn-text">H2</button>
-                <button type="button" @click="mpRteExec('insightEditor', 'formatBlock', 'p')" title="Paragraf Normal" class="mp-rte-btn mp-rte-btn-text" style="color:var(--text-muted);">¶</button>
-                <div class="mp-rte-sep"></div>
-                <button type="button" @click="mpRteExec('insightEditor', 'insertUnorderedList')" title="Bullet List" class="mp-rte-btn">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
-                </button>
-                <button type="button" @click="mpRteExec('insightEditor', 'insertOrderedList')" title="Numbered List" class="mp-rte-btn">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 10h2" stroke-linecap="round"/><path d="M4 14c0-1 2-1 2-2s-2-1-2 0" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18h2l-2 2h2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </button>
-                <div class="mp-rte-sep"></div>
-                <button type="button" @click="mpRteExec('insightEditor', 'strikeThrough')" title="Strikethrough" class="mp-rte-btn"><s style="font-size:12px;">S</s></button>
-              </div>
-              <!-- Editor Area -->
-              <div
-                ref="insightEditor"
-                contenteditable="true"
-                class="mp-rte-editor"
-                @input="onMpRteInput('insightModalDraft', 'insightEditor')"
-                @paste="onMpRtePaste('insightEditor')"
-                data-placeholder="cth., Dari task ini aku belajar..."
-              ></div>
-            </div>
-            <div class="cf-modal-footer">
-              <button class="cf-btn-ghost" @click="cancelEditInsightModal">Batal</button>
-              <button class="cf-btn-primary" @click="saveInsightModal">Simpan</button>
-            </div>
-          </template>
+          <div class="cf-modal-footer">
+            <button v-if="hasInsightSummary(insightModalTask)" class="cf-btn-danger" style="margin-right:auto" @click="deleteInsightModal">Hapus Semua</button>
+            <button class="cf-btn-primary" @click="closeInsightModal">Selesai</button>
+          </div>
         </div>
       </div>
     </transition>
@@ -18441,8 +18455,6 @@ const MyPortfolio = {
       keywordModalSearch: '',
       newKeywordModalInput: '', // input "tambah kata kunci baru" langsung dari dalam popup
       insightModalTaskId: null,
-      insightModalDraft: '',
-      insightModalMode: 'view', // 'view' (read-only) | 'edit' (textarea)
       notesModalOpen: false,
       notesModalDraftId: null, // null = catatan baru, terisi = sedang edit catatan yang sudah ada
       notesModalDraftTitle: '',
@@ -18543,7 +18555,9 @@ const MyPortfolio = {
         // ── Cek tiap task ──
         const list = this.portfolioTasks[exp.key] || [];
         list.forEach(task => {
-          const insightText = (task.insightSummary || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
+          const insightText = (task.insightColumns && task.insightColumns.length)
+            ? task.insightColumns.map(c => (c.title || '') + ' ' + this.columnTextOf(c)).join(' ')
+            : (task.insightSummary || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
           // ── Cek isi Bukti Kerja (log teks dari Job Logbook yang dilink ke task ini) ──
           const buktiText = (task.buktiKerja || []).map(logId => {
             const log = this.jobLogs.find(l => l.id === logId);
@@ -18595,6 +18609,11 @@ const MyPortfolio = {
       return this.getTaskById(this.insightModalTaskId);
     },
 
+    insightModalColumns() {
+      const task = this.insightModalTask;
+      return (task && task.insightColumns) || [];
+    },
+
     // ── Catatan Pengalaman: otomatis ikut menyesuaikan filter Pengalaman Kerja yang dipilih ──
     currentExperienceNotes() {
       if (!this.selectedExperience) return [];
@@ -18630,7 +18649,7 @@ const MyPortfolio = {
       if (!title || !this.selectedExperience) return;
       const key = this.selectedExperience.key;
       const list = this.portfolioTasks[key] ? [...this.portfolioTasks[key]] : [];
-      list.push({ id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title, titleIdn: '', status: 'draft', buktiKerja: [], insightSummary: '', keywords: [] });
+      list.push({ id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title, titleIdn: '', status: 'draft', buktiKerja: [], insightSummary: '', insightColumns: [], keywords: [] });
       this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
       this.newTaskTitle = '';
       this.saveTasks();
@@ -18874,71 +18893,220 @@ const MyPortfolio = {
       }, 0);
     },
 
-    // ── Rangkuman Insight per task (popup) ──
+    // ── Rangkuman Insight per task (popup, bisa tambah beberapa kolom, tiap kolom rich-text editor) ──
+    colRefName(colId) {
+      return 'insightColEditor_' + colId;
+    },
+
+    columnTextOf(col) {
+      if (typeof col.content === 'string') return this.stripHtml(col.content);
+      if (col.items) return (col.items || []).map(i => i.text).join(' ');
+      return '';
+    },
+
     hasInsightSummary(task) {
+      if (!task) return false;
+      if (task.insightColumns) {
+        return task.insightColumns.some(c => this.columnTextOf(c).trim().length > 0);
+      }
+      // Data lama (format rich-text tunggal) yang belum dimigrasi
       if (!task.insightSummary) return false;
-      // Cek apakah ada konten text di dalamnya (bukan cuma tag HTML kosong)
       const stripped = task.insightSummary.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
       return stripped.length > 0;
     },
 
-    openInsightModal(taskId) {
-      const task = this.getTaskById(taskId);
-      this.insightModalTaskId = taskId;
-      this.insightModalDraft = (task && task.insightSummary) || '';
-      // Kalau sudah ada isinya, buka dalam mode tampilan (read-only) dulu.
-      // Kalau masih kosong, langsung ke mode edit supaya bisa langsung nulis.
-      this.insightModalMode = (task && this.hasInsightSummary(task)) ? 'view' : 'edit';
-      if (this.insightModalMode === 'edit') {
-        this.$nextTick(() => { if (this.$refs.insightEditor) this.$refs.insightEditor.innerHTML = this.insightModalDraft; });
+    // Ringkasan singkat untuk tooltip tombol "Lihat Insight"
+    insightPreviewText(task) {
+      if (!task) return '';
+      if (task.insightColumns && task.insightColumns.length) {
+        const withText = task.insightColumns.map(c => ({ title: c.title, text: this.columnTextOf(c).trim() })).filter(c => c.text.length);
+        if (!withText.length) return '';
+        const preview = withText[0].text;
+        return (task.insightColumns.length > 1 || withText.length > 1)
+          ? `${task.insightColumns.length} kolom — ${preview}`
+          : preview;
       }
+      return task.insightSummary ? this.stripHtml(task.insightSummary) : '';
+    },
+
+    escapeInsightText(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    },
+
+    // Pastikan bentuk data task.insightColumns selalu { id, title, content(html) } — migrasi dari format lama kalau perlu
+    ensureInsightColumnsShape(taskId, task) {
+      if (!task) return;
+      const needsNormalize = !task.insightColumns || task.insightColumns.some(c => typeof c.content !== 'string');
+      if (!needsNormalize) return;
+      if (!this.selectedExperience) return;
+      const key = this.selectedExperience.key;
+      const list = (this.portfolioTasks[key] || []).map(t => {
+        if (t.id !== taskId) return t;
+        let columns;
+        if (t.insightColumns && t.insightColumns.length) {
+          // Kalau cuma ada 1 kolom hasil migrasi otomatis sebelumnya (items yang sempat diratakan
+          // jadi 1 baris) DAN insightSummary asli masih utuh, pulihkan dari insightSummary supaya
+          // susunan paragraf aslinya balik seperti semula — bukan dari teks yang sudah diratakan.
+          const isSingleAutoMigratedItemsColumn =
+            t.insightColumns.length === 1 &&
+            t.insightColumns[0].items &&
+            typeof t.insightColumns[0].content !== 'string' &&
+            t.insightSummary && t.insightSummary.replace(/<[^>]*>/g, '').trim();
+          if (isSingleAutoMigratedItemsColumn) {
+            columns = [{ id: t.insightColumns[0].id, title: t.insightColumns[0].title || 'Catatan', content: t.insightSummary }];
+          } else {
+            columns = t.insightColumns.map(c => {
+              if (typeof c.content === 'string') return c;
+              if (c.items) {
+                const html = (c.items || []).map(i => `<p>${this.escapeInsightText(i.text)}</p>`).join('');
+                return { id: c.id, title: c.title || 'Catatan', content: html };
+              }
+              return { id: c.id, title: c.title || 'Catatan', content: '' };
+            });
+          }
+        } else if (t.insightSummary) {
+          columns = [{ id: 'ic' + Date.now().toString(36), title: 'Catatan', content: t.insightSummary }];
+        } else {
+          columns = [];
+        }
+        return { ...t, insightColumns: columns };
+      });
+      this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
+      this.saveTasks();
+    },
+
+    // Isi ulang innerHTML tiap editor kolom dari data tersimpan (dipanggil saat modal dibuka / kolom baru ditambah)
+    initInsightColumnEditors() {
+      this.$nextTick(() => {
+        (this.insightModalColumns || []).forEach(col => {
+          const el = this.$refs[this.colRefName(col.id)];
+          const el0 = Array.isArray(el) ? el[0] : el;
+          if (el0 && el0.innerHTML !== (col.content || '')) el0.innerHTML = col.content || '';
+        });
+      });
+    },
+
+    openInsightModal(taskId) {
+      this.insightModalTaskId = taskId;
+      const task = this.getTaskById(taskId);
+      this.ensureInsightColumnsShape(taskId, task);
+      this.initInsightColumnEditors();
     },
 
     closeInsightModal() {
+      (this.insightModalColumns || []).forEach(col => this.flushInsightColumn(col.id));
       this.insightModalTaskId = null;
-      this.insightModalDraft = '';
-      this.insightModalMode = 'view';
     },
 
-    startEditInsightModal() {
-      this.insightModalMode = 'edit';
-      this.$nextTick(() => { if (this.$refs.insightEditor) this.$refs.insightEditor.innerHTML = this.insightModalDraft; });
-    },
-
-    cancelEditInsightModal() {
-      const task = this.insightModalTask;
-      if (task && this.hasInsightSummary(task)) {
-        // Batalkan perubahan, balik ke tampilan isi yang tersimpan sebelumnya.
-        this.insightModalDraft = task.insightSummary;
-        this.insightModalMode = 'view';
-      } else {
-        this.closeInsightModal();
-      }
-    },
-
-    saveInsightModal() {
+    addInsightColumn() {
       if (!this.selectedExperience || !this.insightModalTaskId) return;
-      // Ambil HTML dari editor jika ada
-      if (this.$refs.insightEditor) this.insightModalDraft = this.$refs.insightEditor.innerHTML;
       const key = this.selectedExperience.key;
-      const list = (this.portfolioTasks[key] || []).map(t => t.id === this.insightModalTaskId ? { ...t, insightSummary: this.insightModalDraft } : t);
+      const newCol = { id: 'ic' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), title: 'Kolom Baru', content: '' };
+      const list = (this.portfolioTasks[key] || []).map(t => t.id === this.insightModalTaskId ? { ...t, insightColumns: [...(t.insightColumns || []), newCol] } : t);
       this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
       this.saveTasks();
-      if (this.insightModalDraft.replace(/<[^>]*>/g,'').trim()) {
-        this.insightModalMode = 'view';
-      } else {
-        this.closeInsightModal();
+      this.initInsightColumnEditors();
+    },
+
+    removeInsightColumn(colId) {
+      if (!confirm('Hapus kolom ini beserta isinya?')) return;
+      if (!this.selectedExperience || !this.insightModalTaskId) return;
+      const key = this.selectedExperience.key;
+      const list = (this.portfolioTasks[key] || []).map(t => t.id === this.insightModalTaskId ? { ...t, insightColumns: (t.insightColumns || []).filter(c => c.id !== colId) } : t);
+      this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
+      this.saveTasks();
+      if (this._insightSaveTimers && this._insightSaveTimers[colId]) {
+        clearTimeout(this._insightSaveTimers[colId]);
+        delete this._insightSaveTimers[colId];
       }
+    },
+
+    renameInsightColumn(colId, title) {
+      const trimmed = (title || '').trim() || 'Kolom Baru';
+      if (!this.selectedExperience || !this.insightModalTaskId) return;
+      const key = this.selectedExperience.key;
+      const list = (this.portfolioTasks[key] || []).map(t => t.id === this.insightModalTaskId ? { ...t, insightColumns: (t.insightColumns || []).map(c => c.id === colId ? { ...c, title: trimmed } : c) } : t);
+      this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
+      this.saveTasks();
+    },
+
+    // ── Toolbar rich-text per kolom ──
+    mpInsightExec(colId, cmd, val) {
+      const el = this.$refs[this.colRefName(colId)];
+      const el0 = Array.isArray(el) ? el[0] : el;
+      if (el0) el0.focus();
+      document.execCommand(cmd, false, val || null);
+      this.onInsightColumnInput(colId);
+    },
+
+    // Blok 1 kalimat, lalu bungkus jadi gaya "kalimat chat" (miring + font beda)
+    formatInsightChatSentence(colId) {
+      const el = this.$refs[this.colRefName(colId)];
+      const el0 = Array.isArray(el) ? el[0] : el;
+      if (!el0) return;
+      el0.focus();
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+      const range = sel.getRangeAt(0);
+      if (!el0.contains(range.commonAncestorContainer)) return;
+      const span = document.createElement('span');
+      span.className = 'insight-chat-sentence';
+      try {
+        range.surroundContents(span);
+      } catch (e) {
+        const frag = range.extractContents();
+        span.appendChild(frag);
+        range.insertNode(span);
+      }
+      sel.removeAllRanges();
+      this.onInsightColumnInput(colId);
+    },
+
+    onInsightColumnInput(colId) {
+      const el = this.$refs[this.colRefName(colId)];
+      const el0 = Array.isArray(el) ? el[0] : el;
+      if (!el0) return;
+      const html = el0.innerHTML;
+      if (!this._insightSaveTimers) this._insightSaveTimers = {};
+      clearTimeout(this._insightSaveTimers[colId]);
+      this._insightSaveTimers[colId] = setTimeout(() => {
+        this.commitInsightColumnContent(colId, html);
+      }, 300);
+    },
+
+    onInsightPaste(colId) {
+      this.onMpRtePaste(this.colRefName(colId));
+      setTimeout(() => this.onInsightColumnInput(colId), 60);
+    },
+
+    flushInsightColumn(colId) {
+      const el = this.$refs[this.colRefName(colId)];
+      const el0 = Array.isArray(el) ? el[0] : el;
+      if (!el0) return;
+      if (this._insightSaveTimers && this._insightSaveTimers[colId]) {
+        clearTimeout(this._insightSaveTimers[colId]);
+        delete this._insightSaveTimers[colId];
+      }
+      this.commitInsightColumnContent(colId, el0.innerHTML);
+    },
+
+    commitInsightColumnContent(colId, html) {
+      if (!this.selectedExperience || !this.insightModalTaskId) return;
+      const key = this.selectedExperience.key;
+      const list = (this.portfolioTasks[key] || []).map(t => t.id === this.insightModalTaskId ? { ...t, insightColumns: (t.insightColumns || []).map(c => c.id === colId ? { ...c, content: html } : c) } : t);
+      this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
+      this.saveTasks();
     },
 
     deleteInsightModal() {
-      if (!confirm('Hapus rangkuman insight ini?')) return;
+      if (!confirm('Hapus semua kolom & isi rangkuman insight untuk task ini?')) return;
       if (!this.selectedExperience || !this.insightModalTaskId) return;
       const key = this.selectedExperience.key;
-      const list = (this.portfolioTasks[key] || []).map(t => t.id === this.insightModalTaskId ? { ...t, insightSummary: '' } : t);
+      const list = (this.portfolioTasks[key] || []).map(t => t.id === this.insightModalTaskId ? { ...t, insightColumns: [], insightSummary: '' } : t);
       this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
       this.saveTasks();
-      this.closeInsightModal();
     },
 
     // ── Catatan Pengalaman (popup terpisah, ikut filter Pengalaman Kerja di atas, bisa lebih dari satu catatan) ──
