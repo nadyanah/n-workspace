@@ -17851,7 +17851,7 @@ const MyPortfolio = {
               <span class="mp-status-select" :class="r.task.status === 'fix' ? 'mp-status-fix' : 'mp-status-draft'" style="cursor:default;">
                 {{ r.task.status === 'fix' ? 'Fix' : 'Draft' }}
               </span>
-              <button class="cf-btn-ghost" @click="openSearchResult(r.expKey)">Buka</button>
+              <button class="cf-btn-ghost" @click="openSearchResult(r.expKey, r.task)">Buka</button>
             </div>
           </template>
         </div>
@@ -18611,9 +18611,11 @@ const MyPortfolio = {
   },
 
   methods: {
-    openSearchResult(expKey) {
+    openSearchResult(expKey, task) {
       this.selectedExpKey = expKey;
       this.portfolioGlobalSearch = '';
+      // Tunggu Vue update filter/tabel dulu, baru buka modal Edit Task-nya
+      if (task) this.$nextTick(() => this.startEditTask(task));
     },
 
     openSearchResultNote(expKey, noteId) {
