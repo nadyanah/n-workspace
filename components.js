@@ -15606,15 +15606,15 @@ const CareerFoundation = {
             <!-- ── SUMMARY ── -->
             <div v-if="skey === 'summary'" class="cv2-section"
               :class="{ 'cv2-section-drag-over': dragOverIdx === si }"
-              draggable="true"
-              @dragstart="onSectionDragStart(si, $event)"
               @dragover.prevent="onSectionDragOver(si, $event)"
               @dragleave="onSectionDragLeave"
-              @drop.prevent="onSectionDrop(si)"
-              @dragend="onSectionDragEnd">
+              @drop.prevent="onSectionDrop(si)">
               <div class="cv2-section-head">
                 <div class="cv2-section-head-left">
-                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan">
+                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan"
+                    draggable="true"
+                    @dragstart="onSectionDragStart(si, $event)"
+                    @dragend="onSectionDragEnd">
                     <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><circle cx="7" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="7" cy="10" r="1.5"/><circle cx="13" cy="10" r="1.5"/><circle cx="7" cy="15" r="1.5"/><circle cx="13" cy="15" r="1.5"/></svg>
                   </span>
                   <p class="cv2-section-title">Summary</p>
@@ -15637,15 +15637,15 @@ const CareerFoundation = {
             <!-- ── PROFESSIONAL EXPERIENCE ── -->
             <div v-if="skey === 'experience'" class="cv2-section"
               :class="{ 'cv2-section-drag-over': dragOverIdx === si }"
-              draggable="true"
-              @dragstart="onSectionDragStart(si, $event)"
               @dragover.prevent="onSectionDragOver(si, $event)"
               @dragleave="onSectionDragLeave"
-              @drop.prevent="onSectionDrop(si)"
-              @dragend="onSectionDragEnd">
+              @drop.prevent="onSectionDrop(si)">
               <div class="cv2-section-head">
                 <div class="cv2-section-head-left">
-                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan">
+                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan"
+                    draggable="true"
+                    @dragstart="onSectionDragStart(si, $event)"
+                    @dragend="onSectionDragEnd">
                     <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><circle cx="7" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="7" cy="10" r="1.5"/><circle cx="13" cy="10" r="1.5"/><circle cx="7" cy="15" r="1.5"/><circle cx="13" cy="15" r="1.5"/></svg>
                   </span>
                   <p class="cv2-section-title">Professional Experience</p>
@@ -15684,15 +15684,15 @@ const CareerFoundation = {
             <!-- ── PROJECTS ── -->
             <div v-if="skey === 'projects'" class="cv2-section"
               :class="{ 'cv2-section-drag-over': dragOverIdx === si }"
-              draggable="true"
-              @dragstart="onSectionDragStart(si, $event)"
               @dragover.prevent="onSectionDragOver(si, $event)"
               @dragleave="onSectionDragLeave"
-              @drop.prevent="onSectionDrop(si)"
-              @dragend="onSectionDragEnd">
+              @drop.prevent="onSectionDrop(si)">
               <div class="cv2-section-head">
                 <div class="cv2-section-head-left">
-                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan">
+                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan"
+                    draggable="true"
+                    @dragstart="onSectionDragStart(si, $event)"
+                    @dragend="onSectionDragEnd">
                     <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><circle cx="7" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="7" cy="10" r="1.5"/><circle cx="13" cy="10" r="1.5"/><circle cx="7" cy="15" r="1.5"/><circle cx="13" cy="15" r="1.5"/></svg>
                   </span>
                   <p class="cv2-section-title">Projects</p>
@@ -15726,15 +15726,15 @@ const CareerFoundation = {
             <!-- ── SKILLS ── -->
             <div v-if="skey === 'skills'" class="cv2-section"
               :class="{ 'cv2-section-drag-over': dragOverIdx === si }"
-              draggable="true"
-              @dragstart="onSectionDragStart(si, $event)"
               @dragover.prevent="onSectionDragOver(si, $event)"
               @dragleave="onSectionDragLeave"
-              @drop.prevent="onSectionDrop(si)"
-              @dragend="onSectionDragEnd">
+              @drop.prevent="onSectionDrop(si)">
               <div class="cv2-section-head">
                 <div class="cv2-section-head-left">
-                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan">
+                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan"
+                    draggable="true"
+                    @dragstart="onSectionDragStart(si, $event)"
+                    @dragend="onSectionDragEnd">
                     <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><circle cx="7" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="7" cy="10" r="1.5"/><circle cx="13" cy="10" r="1.5"/><circle cx="7" cy="15" r="1.5"/><circle cx="13" cy="15" r="1.5"/></svg>
                   </span>
                   <p class="cv2-section-title">Skills</p>
@@ -15759,15 +15759,15 @@ const CareerFoundation = {
             <!-- ── EDUCATION ── -->
             <div v-if="skey === 'education'" class="cv2-section"
               :class="{ 'cv2-section-drag-over': dragOverIdx === si }"
-              draggable="true"
-              @dragstart="onSectionDragStart(si, $event)"
               @dragover.prevent="onSectionDragOver(si, $event)"
               @dragleave="onSectionDragLeave"
-              @drop.prevent="onSectionDrop(si)"
-              @dragend="onSectionDragEnd">
+              @drop.prevent="onSectionDrop(si)">
               <div class="cv2-section-head">
                 <div class="cv2-section-head-left">
-                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan">
+                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan"
+                    draggable="true"
+                    @dragstart="onSectionDragStart(si, $event)"
+                    @dragend="onSectionDragEnd">
                     <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><circle cx="7" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="7" cy="10" r="1.5"/><circle cx="13" cy="10" r="1.5"/><circle cx="7" cy="15" r="1.5"/><circle cx="13" cy="15" r="1.5"/></svg>
                   </span>
                   <p class="cv2-section-title">Education</p>
@@ -15799,15 +15799,15 @@ const CareerFoundation = {
             <!-- ── ADDITIONAL INFORMATION ── -->
             <div v-if="skey === 'additional'" class="cv2-section"
               :class="{ 'cv2-section-drag-over': dragOverIdx === si }"
-              draggable="true"
-              @dragstart="onSectionDragStart(si, $event)"
               @dragover.prevent="onSectionDragOver(si, $event)"
               @dragleave="onSectionDragLeave"
-              @drop.prevent="onSectionDrop(si)"
-              @dragend="onSectionDragEnd">
+              @drop.prevent="onSectionDrop(si)">
               <div class="cv2-section-head">
                 <div class="cv2-section-head-left">
-                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan">
+                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan"
+                    draggable="true"
+                    @dragstart="onSectionDragStart(si, $event)"
+                    @dragend="onSectionDragEnd">
                     <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><circle cx="7" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="7" cy="10" r="1.5"/><circle cx="13" cy="10" r="1.5"/><circle cx="7" cy="15" r="1.5"/><circle cx="13" cy="15" r="1.5"/></svg>
                   </span>
                   <p class="cv2-section-title">Additional Information</p>
@@ -15835,15 +15835,15 @@ const CareerFoundation = {
             <!-- ── ORGANIZATION ── -->
             <div v-if="skey === 'organization'" class="cv2-section"
               :class="{ 'cv2-section-drag-over': dragOverIdx === si }"
-              draggable="true"
-              @dragstart="onSectionDragStart(si, $event)"
               @dragover.prevent="onSectionDragOver(si, $event)"
               @dragleave="onSectionDragLeave"
-              @drop.prevent="onSectionDrop(si)"
-              @dragend="onSectionDragEnd">
+              @drop.prevent="onSectionDrop(si)">
               <div class="cv2-section-head">
                 <div class="cv2-section-head-left">
-                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan">
+                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan"
+                    draggable="true"
+                    @dragstart="onSectionDragStart(si, $event)"
+                    @dragend="onSectionDragEnd">
                     <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><circle cx="7" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="7" cy="10" r="1.5"/><circle cx="13" cy="10" r="1.5"/><circle cx="7" cy="15" r="1.5"/><circle cx="13" cy="15" r="1.5"/></svg>
                   </span>
                   <p class="cv2-section-title">Organization & Activities</p>
@@ -15877,15 +15877,15 @@ const CareerFoundation = {
             <div v-if="skey.startsWith('custom:') && getCustomSection(skey)"
               class="cv2-section"
               :class="{ 'cv2-section-drag-over': dragOverIdx === si }"
-              draggable="true"
-              @dragstart="onSectionDragStart(si, $event)"
               @dragover.prevent="onSectionDragOver(si, $event)"
               @dragleave="onSectionDragLeave"
-              @drop.prevent="onSectionDrop(si)"
-              @dragend="onSectionDragEnd">
+              @drop.prevent="onSectionDrop(si)">
               <div class="cv2-section-head">
                 <div class="cv2-section-head-left">
-                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan">
+                  <span class="cv2-drag-handle" title="Geser untuk pindah urutan"
+                    draggable="true"
+                    @dragstart="onSectionDragStart(si, $event)"
+                    @dragend="onSectionDragEnd">
                     <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><circle cx="7" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="7" cy="10" r="1.5"/><circle cx="13" cy="10" r="1.5"/><circle cx="7" cy="15" r="1.5"/><circle cx="13" cy="15" r="1.5"/></svg>
                   </span>
                   <p class="cv2-section-title">{{ getCustomSection(skey).sec.title }}</p>
@@ -16942,29 +16942,45 @@ const CareerFoundation = {
     parsedExperience() {
       // New format: array of { id, role, company, period }
       const entries = this.atsCV.experienceEntries;
+      let list;
       if (entries && entries.length) {
-        return entries.map(entry => {
+        list = entries.map((entry, idx) => {
           const key = `${entry.role}|${entry.company}|${entry.period}`;
           const tasks = this.portfolioTasks[key] || [];
           const points = tasks.filter(t => t.status === 'fix').map(t => t.title);
-          return { id: entry.id, role: entry.role, company: entry.company, period: entry.period, points, key };
+          return { id: entry.id, role: entry.role, company: entry.company, period: entry.period, points, key, _origIdx: idx };
         }).filter(e => e.role);
+      } else if (this.atsCV.experience) {
+        // Legacy fallback: parse from old plain-text string
+        const blocks = this.atsCV.experience.split(/\n\n+/);
+        list = blocks.map((block, idx) => {
+          const lines = block.trim().split('\n');
+          const header = lines[0] || '';
+          const parts = header.split('|').map(s => s.trim());
+          const role = parts[0] || '';
+          const company = parts[1] || '';
+          const period = parts[2] || '';
+          const key = `${role}|${company}|${period}`;
+          const tasks = this.portfolioTasks[key] || [];
+          const points = tasks.filter(t => t.status === 'fix').map(t => t.title);
+          return { id: `legacy-${idx}`, role, company, period, points, key, _origIdx: idx };
+        }).filter(e => e.role);
+      } else {
+        return [];
       }
-      // Legacy fallback: parse from old plain-text string
-      if (!this.atsCV.experience) return [];
-      const blocks = this.atsCV.experience.split(/\n\n+/);
-      return blocks.map((block, idx) => {
-        const lines = block.trim().split('\n');
-        const header = lines[0] || '';
-        const parts = header.split('|').map(s => s.trim());
-        const role = parts[0] || '';
-        const company = parts[1] || '';
-        const period = parts[2] || '';
-        const key = `${role}|${company}|${period}`;
-        const tasks = this.portfolioTasks[key] || [];
-        const points = tasks.filter(t => t.status === 'fix').map(t => t.title);
-        return { id: `legacy-${idx}`, role, company, period, points, key };
-      }).filter(e => e.role);
+
+      // Urutkan sesuai kaidah CV ATS: reverse-chronological — pengalaman yang masih
+      // berjalan ("kini"/"sekarang"/"present") paling atas, lalu makin baru makin atas.
+      // Jika tanggal di teks periode tidak terbaca, urutan aslinya dipertahankan
+      // (fallback ke _origIdx) supaya tidak ada data yang "hilang" urutannya.
+      return list
+        .map(e => ({ ...e, _sortKey: this._experienceSortKey(e.period) }))
+        .sort((a, b) => {
+          if (b._sortKey.end !== a._sortKey.end) return b._sortKey.end - a._sortKey.end;
+          if (b._sortKey.start !== a._sortKey.start) return b._sortKey.start - a._sortKey.start;
+          return a._origIdx - b._origIdx;
+        })
+        .map(({ _sortKey, _origIdx, ...rest }) => rest);
     },
 
     parsedEducation() {
@@ -17346,6 +17362,46 @@ const CareerFoundation = {
         this.atsCopySuccess = true;
         setTimeout(() => { this.atsCopySuccess = false; }, 2000);
       });
+    },
+
+    // ── Sorting pengalaman kerja (ATS: reverse-chronological) ──
+    // Mengubah satu sisi tanggal ("2023", "Jan 2022", "Des 2023", "kini", dst) jadi
+    // angka bulan absolut (year*12 + month) supaya bisa dibandingkan/di-sort.
+    _parsePeriodBoundary(raw) {
+      if (!raw) return null;
+      const str = raw.trim();
+      if (!str) return null;
+      if (/^(kini|sekarang|present|now|current|ongoing|saat ini)$/i.test(str)) {
+        return { ongoing: true, value: Infinity };
+      }
+      const months = {
+        jan: 0, feb: 1, mar: 2, apr: 3, mei: 4, may: 4, jun: 5, jul: 6,
+        agt: 7, agu: 7, aug: 7, sep: 8, okt: 9, oct: 9, nov: 10, des: 11, dec: 11,
+      };
+      const yearMatch = str.match(/(19|20)\d{2}/);
+      if (!yearMatch) return null;
+      const year = parseInt(yearMatch[0], 10);
+      let month = 0; // default Januari kalau bulan tidak disebut
+      const monthMatch = str.match(/[A-Za-z]{3,}/);
+      if (monthMatch) {
+        const key = monthMatch[0].slice(0, 3).toLowerCase();
+        if (months[key] !== undefined) month = months[key];
+      }
+      return { ongoing: false, value: year * 12 + month };
+    },
+    // Mem-parsing string periode ("Jan 2022 – kini", "2020-2021", dst) jadi { start, end }
+    // dalam bentuk angka bulan absolut, untuk dipakai sebagai kunci sort.
+    _experienceSortKey(period) {
+      if (!period) return { start: -Infinity, end: -Infinity };
+      const parts = period.split(/\s*(?:–|—|-|s\/d|sampai dengan|sampai|to)\s*/i).filter(Boolean);
+      const startRaw = parts[0];
+      const endRaw = parts.length > 1 ? parts[parts.length - 1] : parts[0];
+      const start = this._parsePeriodBoundary(startRaw);
+      const end = this._parsePeriodBoundary(endRaw);
+      return {
+        start: start ? start.value : -Infinity,
+        end: end ? end.value : (start ? start.value : -Infinity),
+      };
     },
 
     // ── Experience card editor (new, inside ATS CV modal) ──

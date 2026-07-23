@@ -9394,6 +9394,13 @@ input:checked + .switch-slider:before {
 }
 .cv2-sec-btn:hover { background: #faf0ea; color: var(--color-terracotta, #D67B52); border-color: #f0d9cc; }
 .cv2-sec-btn.danger:hover { background: #fff0f0; color: #c0392b; border-color: #fcc; }
+.cv2-section p,
+.cv2-section span:not(.cv2-drag-handle),
+.cv2-section li,
+.cv2-section div[style*="white-space:pre-wrap"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
 .cv2-summary {
   font-size: 12.5px;
   color: #333;
