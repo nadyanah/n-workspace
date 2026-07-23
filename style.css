@@ -11729,6 +11729,30 @@ input:checked + .switch-slider:before {
   }
 }
 
+/* ── Interview Practice Floating Buttons: Kelola Soal & Kelola Kategori ── */
+.ip-fab-group {
+  position: fixed;
+  bottom: 28px;
+  right: 24px;
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.ip-fab-group .crossnav-fab {
+  position: static;
+  bottom: auto;
+  right: auto;
+}
+@media (max-width: 640px) {
+  .ip-fab-group {
+    bottom: 20px;
+    right: 16px;
+    gap: 10px;
+  }
+}
+
 /* ── Popup Panel ── */
 .dqf-popup {
   background: var(--bg-card, #fff);

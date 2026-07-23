@@ -5120,19 +5120,6 @@ const InterviewPractice = {
               Interview with AI
             </button>
           </div>
-          <!-- Kelola Button -->
-          <button class="ip-manage-btn" @click="toggleManagePanel"
-                  :disabled="activeMode === 'ai'"
-                  :style="activeMode==='ai' ? {opacity:'0.38',cursor:'not-allowed'} : {}">
-            <template v-if="showManagePanel && activeMode==='manual'">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              Sembunyikan
-            </template>
-            <template v-else>
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-              Kelola Soal
-            </template>
-          </button>
         </div>
       </div>
 
@@ -5167,11 +5154,7 @@ const InterviewPractice = {
             <div>
               <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:4px;">Kategori</label>
               <select class="form-input" v-model="formCategory" style="padding:10px; font-size:13px; border:1.5px solid var(--color-sand); height:42px;">
-                <option value="General HR">General HR</option>
-                <option value="Technical Speciality">Technical Speciality</option>
-                <option value="General Technical">General Technical</option>
-                <option value="Performance Tuning">Performance Tuning</option>
-                <option value="Behavioral &amp; Teamwork">Behavioral &amp; Teamwork</option>
+                <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
               </select>
             </div>
             <div>
@@ -5239,6 +5222,56 @@ const InterviewPractice = {
               {{ editingId !== null ? 'Update Pertanyaan' : 'Tambah Pertanyaan' }}
             </button>
           </div>
+        </div>
+      </div>
+      </div>
+      </transition>
+
+      <!-- ═══ MANUAL MODE: Category Manager Popup ═══ -->
+      <transition name="modal-fade">
+      <div v-if="showCategoryManagerModal" class="modal-backdrop" @click.self="toggleCategoryManager">
+      <div class="questions-manage-drawer questions-manage-modal-card animate-fade-in">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+          <h3 style="font-size:15px; font-weight:800; color:var(--color-forest,#1C3B34); margin:0; display:flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-terracotta);"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+            Kelola Kategori
+          </h3>
+          <button class="card-nav-btn" @click="toggleCategoryManager" title="Tutup" style="background:var(--bg-cream); border:1px solid var(--color-sand); width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+        <div style="background:var(--bg-card,#fff); border:1.5px solid var(--color-sand,#E8DFD8); border-radius:12px; padding:16px; display:grid; gap:10px; margin-bottom:16px;">
+          <div v-for="cat in categories" :key="cat" style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1.5px solid var(--color-sand,#EAE5DD); border-radius:9px; background:var(--bg-cream,#FDFCFA);">
+            <template v-if="editingCategoryOld === cat">
+              <input class="form-input" v-model="editCategoryName" style="flex:1; padding:7px 10px; font-size:13px; border:1.5px solid var(--color-sand); height:36px;" @keyup.enter="saveEditCategory" @keyup.esc="cancelEditCategory" />
+              <button class="card-nav-btn" @click="saveEditCategory" title="Simpan" style="background:var(--color-terracotta); border-color:var(--color-terracotta); color:#fff; width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </button>
+              <button class="card-nav-btn" @click="cancelEditCategory" title="Batal" style="background:var(--bg-cream); border:1px solid var(--color-sand); width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </template>
+            <template v-else>
+              <span style="flex:1; font-size:13px; font-weight:600; color:var(--color-forest,#1C3B34);">{{ cat }}</span>
+              <span style="font-size:10.5px; font-weight:700; color:var(--text-muted); background:var(--bg-card,#fff); border:1px solid var(--color-sand); padding:2px 8px; border-radius:20px; flex-shrink:0;">{{ questionCountForCategory(cat) }} soal</span>
+              <button class="card-nav-btn" @click="startEditCategory(cat)" title="Edit nama kategori" style="background:var(--bg-card,#fff); border:1px solid var(--color-sand); width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+              </button>
+              <button class="card-nav-btn" @click="deleteCategory(cat)" title="Hapus kategori" style="background:var(--bg-card,#fff); border:1px solid var(--color-sand); color:var(--color-terracotta); width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+              </button>
+            </template>
+          </div>
+          <div v-if="categories.length === 0" style="text-align:center; padding:12px; color:var(--text-muted); font-size:13px;">Belum ada kategori.</div>
+
+          <!-- Tambah kategori baru -->
+          <div style="display:flex; gap:8px; margin-top:4px; padding-top:12px; border-top:1.5px dashed var(--color-sand,#E8DFD8);">
+            <input class="form-input" v-model="newCategoryName" placeholder="Nama kategori baru, mis. Leadership" style="flex:1; padding:8px 10px; font-size:13px; border:1.5px solid var(--color-sand); height:38px;" @keyup.enter="addCategory" />
+            <button class="spin-btn-teal" @click="addCategory" style="font-size:12.5px; padding:8px 18px; box-shadow:none; white-space:nowrap;">
+              + Tambah
+            </button>
+          </div>
+          <p style="font-size:11px; color:var(--text-muted); margin:2px 0 0; line-height:1.6;">Mengubah nama kategori otomatis memperbarui semua soal yang memakainya. Menghapus kategori yang masih dipakai akan memindahkan soal-soal tersebut ke kategori lain.</p>
         </div>
       </div>
       </div>
@@ -5430,11 +5463,7 @@ const InterviewPractice = {
             </div>
             <div v-show="showCategoryDropdown" class="pomo-category-dropdown animate-fade-in">
               <button class="pomo-category-option" :class="{ active: selectedCategory==='All Categories' }" @click="selectCategory('All Categories')">All Categories</button>
-              <button class="pomo-category-option" :class="{ active: selectedCategory==='General HR' }" @click="selectCategory('General HR')">General HR</button>
-              <button class="pomo-category-option" :class="{ active: selectedCategory==='Technical Speciality' }" @click="selectCategory('Technical Speciality')">Technical Speciality</button>
-              <button class="pomo-category-option" :class="{ active: selectedCategory==='General Technical' }" @click="selectCategory('General Technical')">General Technical</button>
-              <button class="pomo-category-option" :class="{ active: selectedCategory==='Performance Tuning' }" @click="selectCategory('Performance Tuning')">Performance Tuning</button>
-              <button class="pomo-category-option" :class="{ active: selectedCategory==='Behavioral &amp; Teamwork' }" @click="selectCategory('Behavioral &amp; Teamwork')">Behavioral &amp; Teamwork</button>
+              <button class="pomo-category-option" v-for="cat in categories" :key="cat" :class="{ active: selectedCategory===cat }" @click="selectCategory(cat)">{{ cat }}</button>
             </div>
           </div>
           <div v-if="activeMode==='ai'" style="font-size:13px; font-weight:700; color:var(--text-muted); display:flex; align-items:center; gap:8px; margin-bottom:4px;">
@@ -5622,6 +5651,21 @@ const InterviewPractice = {
       </div>
       <!-- end ip-question-db-section -->
 
+      <!-- ── Floating Buttons: Kelola Soal & Kelola Kategori ── -->
+      <div class="ip-fab-group" v-if="activeMode === 'manual'">
+        <button class="crossnav-fab crossnav-fab--primary" :title="showManagePanel ? 'Sembunyikan Kelola Soal' : 'Kelola Soal'" @click="toggleManagePanel">
+          <span class="crossnav-fab-icon">
+            <svg v-if="showManagePanel" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </span>
+        </button>
+        <button class="crossnav-fab" title="Kelola Kategori" @click="toggleCategoryManager">
+          <span class="crossnav-fab-icon">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+          </span>
+        </button>
+      </div>
+
     </div>
   `,
   data() {
@@ -5658,6 +5702,11 @@ const InterviewPractice = {
       // ── Reel spinner ──
       selectedCategory: 'All Categories',
       showCategoryDropdown: false,
+      categories: ['General HR', 'Technical Speciality', 'General Technical', 'Performance Tuning', 'Behavioral & Teamwork'],
+      showCategoryManagerModal: false,
+      newCategoryName: '',
+      editingCategoryOld: null,
+      editCategoryName: '',
       isSpinning: false,
       leverTopValue: 8,
       chosenAfterLever: false,
@@ -5705,6 +5754,9 @@ const InterviewPractice = {
     const savedQ = WorkspaceStorage.getItem('personal_workspace_interview_questions');
     if (savedQ) this.questions = JSON.parse(savedQ);
     else WorkspaceStorage.setItem('personal_workspace_interview_questions', JSON.stringify(this.questions));
+    const savedCat = WorkspaceStorage.getItem('personal_workspace_interview_categories');
+    if (savedCat) this.categories = JSON.parse(savedCat);
+    else WorkspaceStorage.setItem('personal_workspace_interview_categories', JSON.stringify(this.categories));
     const savedN = WorkspaceStorage.getItem('personal_workspace_interview_notes');
     if (savedN) this.savedNotes = JSON.parse(savedN);
   },
@@ -5720,6 +5772,63 @@ const InterviewPractice = {
     toggleCategoryDropdown() { this.showCategoryDropdown = !this.showCategoryDropdown; },
     selectCategory(cat) { this.selectedCategory = cat; this.showCategoryDropdown = false; this.resetToReSpin(); },
     toggleManagePanel() { if (this.activeMode === 'ai') return; this.showManagePanel = !this.showManagePanel; this.cancelEdit(); this.viewingQuestion = null; },
+
+    // ── Category manager (tambah / edit / hapus kategori) ──
+    saveCategoriesToLocalStorage() { WorkspaceStorage.setItem('personal_workspace_interview_categories', JSON.stringify(this.categories)); },
+    toggleCategoryManager() {
+      if (this.activeMode === 'ai') return;
+      this.showCategoryManagerModal = !this.showCategoryManagerModal;
+      this.newCategoryName = '';
+      this.editingCategoryOld = null;
+      this.editCategoryName = '';
+    },
+    questionCountForCategory(cat) { return this.questions.filter(q => q.category === cat).length; },
+    addCategory() {
+      const name = this.newCategoryName.trim();
+      if (!name) { alert('Nama kategori tidak boleh kosong!'); return; }
+      if (this.categories.some(c => c.toLowerCase() === name.toLowerCase())) { alert('Kategori ini sudah ada!'); return; }
+      this.categories.push(name);
+      this.saveCategoriesToLocalStorage();
+      this.newCategoryName = '';
+    },
+    startEditCategory(cat) { this.editingCategoryOld = cat; this.editCategoryName = cat; },
+    cancelEditCategory() { this.editingCategoryOld = null; this.editCategoryName = ''; },
+    saveEditCategory() {
+      const newName = this.editCategoryName.trim();
+      if (!newName) { alert('Nama kategori tidak boleh kosong!'); return; }
+      const oldName = this.editingCategoryOld;
+      if (newName !== oldName && this.categories.some(c => c.toLowerCase() === newName.toLowerCase())) {
+        alert('Kategori dengan nama ini sudah ada!');
+        return;
+      }
+      const idx = this.categories.indexOf(oldName);
+      if (idx !== -1) this.categories[idx] = newName;
+      // Perbarui semua referensi nama kategori lama ke nama baru
+      this.questions.forEach(q => { if (q.category === oldName) q.category = newName; });
+      if (this.selectedCategory === oldName) this.selectedCategory = newName;
+      if (this.formCategory === oldName) this.formCategory = newName;
+      this.saveCategoriesToLocalStorage();
+      this.saveQuestionsToLocalStorage();
+      this.editingCategoryOld = null;
+      this.editCategoryName = '';
+    },
+    deleteCategory(cat) {
+      if (this.categories.length <= 1) { alert('Minimal harus ada 1 kategori!'); return; }
+      const usedCount = this.questionCountForCategory(cat);
+      const fallback = this.categories.find(c => c !== cat);
+      const msg = usedCount > 0
+        ? `Kategori "${cat}" masih dipakai ${usedCount} soal. Soal-soal itu akan dipindah ke kategori "${fallback}". Lanjutkan hapus?`
+        : `Hapus kategori "${cat}"?`;
+      if (!confirm(msg)) return;
+      if (usedCount > 0) {
+        this.questions.forEach(q => { if (q.category === cat) q.category = fallback; });
+        this.saveQuestionsToLocalStorage();
+      }
+      this.categories = this.categories.filter(c => c !== cat);
+      if (this.selectedCategory === cat) this.selectedCategory = 'All Categories';
+      if (this.formCategory === cat) this.formCategory = this.categories[0];
+      this.saveCategoriesToLocalStorage();
+    },
 
     // ── Reset ──
     resetToReSpin() {
@@ -5838,6 +5947,10 @@ const InterviewPractice = {
           { id: 4, category: 'Performance Tuning', text: 'Apa pendekatan andalan Anda saat mengoptimasi loading aplikasi web yang lambat?', hints: 'Audit performa, kompresi aset, lazy loading.', framework: 'PREP' },
           { id: 5, category: 'Behavioral & Teamwork', text: 'Bagaimana tindakan Anda ketika ada perbedaan keputusan arsitektur di tim?', hints: 'Komunikasi objektif berbasis data, cari konsensus.', framework: 'STAR' }
         ];
+        // Pastikan kategori default ikut tersedia lagi (kalau sebelumnya sempat diedit/dihapus user)
+        const defaultCats = ['General HR', 'Technical Speciality', 'General Technical', 'Performance Tuning', 'Behavioral & Teamwork'];
+        defaultCats.forEach(c => { if (!this.categories.includes(c)) this.categories.push(c); });
+        this.saveCategoriesToLocalStorage();
         this.saveQuestionsToLocalStorage(); this.resetToReSpin();
       }
     },
