@@ -4429,9 +4429,6 @@ const ContentTracker = {
                 <label>Target Tanggal Rilis</label>
                 <input type="date" class="form-input" v-model="form.dueDate"
                        style="height: 38px;" />
-                <span style="font-size: 11px; color: #9A8F85; margin-top: 4px; display: block;">
-                  Boleh dikosongkan dulu. Konten tanpa tanggal tidak akan muncul di Daily / notifikasi sampai tanggalnya diisi.
-                </span>
               </div>
             </div>
 
