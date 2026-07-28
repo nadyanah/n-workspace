@@ -4116,6 +4116,16 @@ const ContentTracker = {
       <div class="flex-between">
         <h2 style="font-size: 24px; font-weight: 800; color: var(--text-dark);">Content Plan & Tracker</h2>
         <div style="display: flex; gap: 8px; align-items: center;">
+          <div class="gcal-view-toggle">
+            <button type="button" class="gcal-view-btn" :class="{ active: viewMode === 'kanban' }" @click="viewMode = 'kanban'" title="Tampilan Kanban" style="display: inline-flex; align-items: center; gap: 5px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><rect x="3" y="3" width="6" height="18" rx="1"></rect><rect x="10" y="3" width="6" height="10" rx="1"></rect><rect x="17" y="3" width="4" height="14" rx="1"></rect></svg>
+              Kanban
+            </button>
+            <button type="button" class="gcal-view-btn" :class="{ active: viewMode === 'table' }" @click="viewMode = 'table'" title="Tampilan Tabel" style="display: inline-flex; align-items: center; gap: 5px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="12" y1="3" x2="12" y2="21"></line></svg>
+              Tabel
+            </button>
+          </div>
           <button class="btn btn-secondary" style="padding: 10px; display: inline-flex; align-items: center; justify-content: center; height: 38px; border: 1.5px solid #EAE5DD; background-color: #FFFFFF;" @click="showSettingsModal = true" title="Pengaturan Board">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
           </button>
@@ -4171,7 +4181,7 @@ const ContentTracker = {
       </div>
 
       <!-- Kanban Board Wrapper with Scroll -->
-      <div style="overflow-x: auto; padding-bottom: 12px; margin-top: 16px;">
+      <div v-if="viewMode === 'kanban'" style="overflow-x: auto; padding-bottom: 12px; margin-top: 16px;">
         <div class="board-container" :style="{ gridTemplateColumns: 'repeat(' + columns.length + ', minmax(220px, 1fr))', minWidth: (columns.length * 240) + 'px' }">
           <div v-for="col in columns" 
                :key="col" 
@@ -4306,9 +4316,56 @@ const ContentTracker = {
         </div>
       </div>
 
+      <!-- Table View -->
+      <div v-if="viewMode === 'table'" style="margin-top: 16px; overflow-x: auto; border: 1.5px solid #EAE5DD; border-radius: 12px; background: #FFFFFF;">
+        <table style="width: 100%; border-collapse: collapse; min-width: 700px;">
+          <thead>
+            <tr style="background-color: #FCFAF7; border-bottom: 1.5px solid #EAE5DD;">
+              <th style="text-align: left; padding: 10px 14px; font-size: 11.5px; font-weight: 700; color: #7A6F66; text-transform: uppercase; letter-spacing: 0.4px;">Judul</th>
+              <th v-if="visibility.platform" style="text-align: left; padding: 10px 14px; font-size: 11.5px; font-weight: 700; color: #7A6F66; text-transform: uppercase; letter-spacing: 0.4px;">Platform</th>
+              <th style="text-align: left; padding: 10px 14px; font-size: 11.5px; font-weight: 700; color: #7A6F66; text-transform: uppercase; letter-spacing: 0.4px;">Status</th>
+              <th v-if="visibility.username" style="text-align: left; padding: 10px 14px; font-size: 11.5px; font-weight: 700; color: #7A6F66; text-transform: uppercase; letter-spacing: 0.4px;">Kreator</th>
+              <th v-if="visibility.dueDate" style="text-align: left; padding: 10px 14px; font-size: 11.5px; font-weight: 700; color: #7A6F66; text-transform: uppercase; letter-spacing: 0.4px;">Target Tanggal Rilis</th>
+              <th style="text-align: right; padding: 10px 14px; font-size: 11.5px; font-weight: 700; color: #7A6F66; text-transform: uppercase; letter-spacing: 0.4px;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in getAllFilteredItems()" :key="item.id" style="border-bottom: 1px solid #F5F2EB;">
+              <td style="padding: 10px 14px; font-size: 13px; font-weight: 600; color: #2C2621; vertical-align: top; max-width: 260px; word-break: break-word;">
+                {{ item.title }}
+              </td>
+              <td v-if="visibility.platform" style="padding: 10px 14px; vertical-align: top;">
+                <span class="pill" :class="getPlatformClass(item.platform)" style="font-size: 10px; padding: 2px 6px;">{{ item.platform }}</span>
+              </td>
+              <td style="padding: 10px 14px; vertical-align: top;">
+                <select class="form-input" :value="item.status" @change="changeItemStatus(item, $event.target.value)" style="height: 30px; padding: 2px 8px; font-size: 11.5px; border-radius: 6px; border: 1.5px solid #EAE5DD; background-color: #FFF;">
+                  <option v-for="col in columns" :key="col" :value="col">{{ col }}</option>
+                </select>
+              </td>
+              <td v-if="visibility.username" style="padding: 10px 14px; font-size: 12px; color: #7A6F66; vertical-align: top; font-family: 'Space Mono', monospace;">{{ item.username }}</td>
+              <td v-if="visibility.dueDate" style="padding: 10px 14px; font-size: 12px; color: #2C2621; vertical-align: top;" class="text-mono">
+                <span v-if="item.dueDate">{{ item.dueDate }}<span v-if="item.dueTime"> · {{ item.dueTime }}</span></span>
+                <span v-else style="color: #9A8F85;">—</span>
+              </td>
+              <td style="padding: 10px 14px; vertical-align: top; text-align: right; white-space: nowrap;">
+                <button class="card-nav-btn" @click="startEdit(item)" title="Ubah Konten" style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; color: #000000; background: #F5F2EB; border: 1.5px solid #EAE5DD; border-radius: 4px; margin-right: 4px;">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </button>
+                <button class="card-nav-btn" @click="deleteItem(item)" title="Hapus" style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; color: #000000; background: #F5F2EB; border: 1.5px solid #EAE5DD; border-radius: 4px;">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                </button>
+              </td>
+            </tr>
+            <tr v-if="getAllFilteredItems().length === 0">
+              <td colspan="6" style="padding: 32px 14px; text-align: center; color: #9A8F85; font-size: 12.5px;">Tidak ada konten yang cocok dengan filter saat ini.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
       <!-- Add/Edit Content Modal -->
       <div v-if="showAddModal" class="modal-backdrop" @click.self="showAddModal = false">
-        <div class="moment-modal" style="max-height: 90vh; overflow-y: auto; max-width: 500px; width: 100%;">
+        <div class="moment-modal" style="max-height: 90vh; overflow-y: auto; max-width: 700px; width: 100%;">
           <div class="flex-between" style="margin-bottom: 18px;">
             <h3 style="font-size: 18px; font-weight: 700; color: var(--text-dark);">
               {{ isEditing ? 'Ubah Konten Planning' : 'Buat Konten Planning Baru' }}
@@ -4382,6 +4439,21 @@ const ContentTracker = {
               <div class="form-group">
                 <label>Target Jam Rilis</label>
                 <input type="time" class="form-input" v-model="form.dueTime" style="height: 38px;" />
+              </div>
+              <div class="form-group">
+                <label>Hashtag</label>
+                <input type="text" class="form-input" v-model="form.hashtag" placeholder="cth., #contentplanning #vuejs" style="height: 38px;" />
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label>Konsep</label>
+                <textarea class="form-input" v-model="form.concept" rows="4" placeholder="Konsep besar / angle konten..." style="min-height: 100px; resize: vertical;"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Hook</label>
+                <textarea class="form-input" v-model="form.hook" rows="4" placeholder="Kalimat pembuka / hook untuk menarik perhatian..." style="min-height: 100px; resize: vertical;"></textarea>
               </div>
             </div>
 
@@ -4603,6 +4675,7 @@ const ContentTracker = {
       editingItemId: null,
       draggedOverCol: null,
       draggedItem: null,
+      viewMode: 'kanban',
       newColumnName: '',
       customPlatformName: '',
       customUsernameVal: '',
@@ -4640,6 +4713,9 @@ const ContentTracker = {
         platform: 'Instagram',
         dueDate: localDateStr(),
         dueTime: '',
+        concept: '',
+        hook: '',
+        hashtag: '',
         notes: '',
         username: '@nadya',
         status: ''
@@ -4733,42 +4809,59 @@ const ContentTracker = {
       }
       this.expandedCards = next;
     },
+    matchesFilters(item) {
+      if (this.filterPlatform !== 'Semua') {
+        if (item.platform !== this.filterPlatform) return false;
+      }
+      if (this.filterUsername !== 'Semua') {
+        if (item.username !== this.filterUsername) return false;
+      }
+      if (this.filterUrgency !== 'Semua') {
+        const alert = this.getDueDateAlert(item.dueDate);
+        if (this.filterUrgency === 'Lewat Batas') {
+          if (alert.label !== 'Lewat Batas Rilis!') return false;
+        } else if (this.filterUrgency === 'Hari Ini') {
+          if (alert.label !== 'Rilis Hari Ini!') return false;
+        } else if (this.filterUrgency === 'H-1') {
+          if (alert.label !== 'Mendekati Rilis (H-1)') return false;
+        } else if (this.filterUrgency === 'H-2') {
+          if (alert.label !== 'Mendekati Rilis (H-2)') return false;
+        } else if (this.filterUrgency === 'Urgen') {
+          if (!alert.isUrgent) return false;
+        } else if (this.filterUrgency === 'Aman') {
+          if (alert.isUrgent) return false;
+        }
+      }
+      if (this.filterSearch.trim()) {
+        const s = this.filterSearch.toLowerCase();
+        const titleMatch = (item.title || '').toLowerCase().includes(s);
+        const notesMatch = (item.notes || '').toLowerCase().includes(s);
+        const userMatch = (item.username || '').toLowerCase().includes(s);
+        if (!titleMatch && !notesMatch && !userMatch) return false;
+      }
+      return true;
+    },
     getItemsInCol(col) {
-      const filtered = this.items.filter(item => {
-        if (item.status !== col) return false;
-        if (this.filterPlatform !== 'Semua') {
-          if (item.platform !== this.filterPlatform) return false;
-        }
-        if (this.filterUsername !== 'Semua') {
-          if (item.username !== this.filterUsername) return false;
-        }
-        if (this.filterUrgency !== 'Semua') {
-          const alert = this.getDueDateAlert(item.dueDate);
-          if (this.filterUrgency === 'Lewat Batas') {
-            if (alert.label !== 'Lewat Batas Rilis!') return false;
-          } else if (this.filterUrgency === 'Hari Ini') {
-            if (alert.label !== 'Rilis Hari Ini!') return false;
-          } else if (this.filterUrgency === 'H-1') {
-            if (alert.label !== 'Mendekati Rilis (H-1)') return false;
-          } else if (this.filterUrgency === 'H-2') {
-            if (alert.label !== 'Mendekati Rilis (H-2)') return false;
-          } else if (this.filterUrgency === 'Urgen') {
-            if (!alert.isUrgent) return false;
-          } else if (this.filterUrgency === 'Aman') {
-            if (alert.isUrgent) return false;
-          }
-        }
-        if (this.filterSearch.trim()) {
-          const s = this.filterSearch.toLowerCase();
-          const titleMatch = (item.title || '').toLowerCase().includes(s);
-          const notesMatch = (item.notes || '').toLowerCase().includes(s);
-          const userMatch = (item.username || '').toLowerCase().includes(s);
-          if (!titleMatch && !notesMatch && !userMatch) return false;
-        }
-        return true;
+      return this.items.filter(item => item.status === col && this.matchesFilters(item));
+    },
+    getAllFilteredItems() {
+      const filtered = this.items.filter(item => this.matchesFilters(item));
+      // Urutkan berdasarkan tanggal rilis (yang belum diisi tanggal diletakkan di akhir)
+      return filtered.slice().sort((a, b) => {
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        const dateCompare = a.dueDate.localeCompare(b.dueDate);
+        if (dateCompare !== 0) return dateCompare;
+        return (a.dueTime || '').localeCompare(b.dueTime || '');
       });
-
-      return filtered;
+    },
+    changeItemStatus(item, newStatus) {
+      const found = this.items.find(i => i.id === item.id);
+      if (found) {
+        found.status = newStatus;
+        this.saveToStorage();
+      }
     },
     hexToRgba(hex, opacity) {
       if (!hex) return 'rgba(0,0,0,' + opacity + ')';
@@ -4877,6 +4970,9 @@ const ContentTracker = {
       this.form.notes = '';
       this.form.dueDate = '';
       this.form.dueTime = '';
+      this.form.concept = '';
+      this.form.hook = '';
+      this.form.hashtag = '';
       this.form.platform = this.platforms[0] || 'Instagram';
       this.form.username = this.usernames[0] || '@nadya';
       this.form.status = this.columns[0] || 'Idea';
@@ -4891,6 +4987,9 @@ const ContentTracker = {
       this.editingItemId = item.id;
       this.form.title = item.title;
       this.form.notes = item.notes || '';
+      this.form.concept = item.concept || '';
+      this.form.hook = item.hook || '';
+      this.form.hashtag = item.hashtag || '';
       this.form.status = item.status;
       this.showPlatDropdown = false;
       this.showUserDropdown = false;
@@ -4959,6 +5058,9 @@ const ContentTracker = {
           existing.platform = finalPlatform;
           existing.dueDate = this.form.dueDate;
           existing.dueTime = this.form.dueTime;
+          existing.concept = this.form.concept;
+          existing.hook = this.form.hook;
+          existing.hashtag = this.form.hashtag;
           existing.notes = this.form.notes;
           existing.username = finalUsername;
         }
@@ -4970,6 +5072,9 @@ const ContentTracker = {
           platform: finalPlatform,
           dueDate: this.form.dueDate,
           dueTime: this.form.dueTime,
+          concept: this.form.concept,
+          hook: this.form.hook,
+          hashtag: this.form.hashtag,
           notes: this.form.notes,
           username: finalUsername
         };
@@ -4984,6 +5089,9 @@ const ContentTracker = {
       this.form.title = '';
       this.form.notes = '';
       this.form.dueTime = '';
+      this.form.concept = '';
+      this.form.hook = '';
+      this.form.hashtag = '';
       this.form.platform = this.platforms[0] || 'Instagram';
       this.form.username = this.usernames[0] || '@nadya';
       this.customPlatformName = '';
