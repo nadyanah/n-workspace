@@ -158,6 +158,10 @@ const ReminderPopup = {
               <svg v-if="mode === 'missed'" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
+              <!-- mode streak-alert: icon jadwal ulang -->
+              <svg v-else-if="mode === 'streak-alert'" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/>
+              </svg>
               <!-- mode live / open: icon bell -->
               <svg v-else viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -168,9 +172,12 @@ const ReminderPopup = {
               <div class="reminder-popup-title">{{ headerTitle }}</div>
               <div class="reminder-popup-date">{{ todayLabel }}</div>
             </div>
-            <!-- Counter slide (mode missed, >1 item) -->
+            <!-- Counter slide (mode missed / streak-alert, >1 item) -->
             <div v-if="mode === 'missed' && queue.length > 1" class="reminder-popup-counter">
               {{ currentIdx + 1 }} / {{ queue.length }}
+            </div>
+            <div v-if="mode === 'streak-alert' && streakQueue.length > 1" class="reminder-popup-counter">
+              {{ streakIdx + 1 }} / {{ streakQueue.length }}
             </div>
           </div>
 
@@ -344,6 +351,64 @@ const ReminderPopup = {
 
           </template>
 
+          <!-- ══════════════════════════════════════════════════
+               MODE: streak-alert  —  pengingat kelewat 3 (kelipatan) hari
+               berturut-turut, mengajak user mikir ulang jadwalnya
+          ══════════════════════════════════════════════════ -->
+          <template v-else-if="mode === 'streak-alert'">
+            <transition :name="slideDir === 'next' ? 'rp-slide-left' : 'rp-slide-right'" mode="out-in">
+              <div :key="currentStreakItem.id" class="reminder-popup-body">
+                <p class="reminder-popup-intro">
+                  <strong>"{{ currentStreakItem.title }}"</strong> udah kelewat
+                  <strong>{{ currentStreakItem.streakCount }} hari berturut-turut</strong> —
+                  kayaknya jadwalnya perlu dipikirin ulang nih:
+                </p>
+                <div class="reminder-popup-item reminder-popup-item-missed">
+                  <div class="reminder-popup-item-info">
+                    <div class="reminder-popup-item-title">{{ currentStreakItem.title }}</div>
+                    <div v-if="currentStreakItem.subtitle" class="reminder-popup-item-sub" style="white-space:pre-wrap;">{{ currentStreakItem.subtitle }}</div>
+                  </div>
+                </div>
+
+                <!-- Per-item actions: Jadwal Ulang + Oke, Nanti -->
+                <div class="notif-missed-task-actions" style="padding:6px 2px 0;">
+                  <button class="notif-missed-action-btn notif-missed-action-reschedule" @click="openPopupReschedule(currentStreakItem)">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+                    Jadwal Ulang
+                  </button>
+                  <button class="notif-missed-action-btn notif-missed-action-missed" @click="dismissStreakAlertItem(currentStreakItem)">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Oke, Nanti
+                  </button>
+                </div>
+              </div>
+            </transition>
+
+            <!-- Progress dots (kalau > 1 reminder yang butuh direview) -->
+            <div v-if="streakQueue.length > 1" class="reminder-popup-dots">
+              <span
+                v-for="(_, i) in streakQueue"
+                :key="i"
+                class="reminder-popup-dot"
+                :class="{ 'reminder-popup-dot-active': i === streakIdx }"
+                @click="jumpToStreak(i)">
+              </span>
+            </div>
+
+            <div class="reminder-popup-footer">
+              <button v-if="streakIdx > 0" class="reminder-popup-btn-nav" @click="prevStreak">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                Sebelumnya
+              </button>
+              <div style="flex:1"></div>
+              <button v-if="streakIdx < streakQueue.length - 1" class="reminder-popup-btn-open reminder-popup-btn-amber" @click="nextStreak">
+                Berikutnya
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+              <button v-else class="reminder-popup-btn-dismiss" @click="dismiss">Tutup</button>
+            </div>
+          </template>
+
         </div>
       </div>
     </transition>
@@ -404,7 +469,7 @@ const ReminderPopup = {
   data() {
     return {
       visible: false,
-      mode: 'open',       // 'open' | 'live' | 'missed'
+      mode: 'open',       // 'open' | 'live' | 'missed' | 'streak-alert'
       todayStr: '',
       // mode open — Section 2 (actionable pending)
       pendingNotifs: [],
@@ -414,6 +479,9 @@ const ReminderPopup = {
       queue: [],
       currentIdx: 0,
       slideDir: 'next',
+      // mode streak-alert — reminder yang kelewat 3 (kelipatan 3) hari berturut-turut
+      streakQueue: [],
+      streakIdx: 0,
       _checkInterval: null,
       _bellInterval: null,
       _pendingOpenAfterMissed: null,
@@ -431,8 +499,12 @@ const ReminderPopup = {
     currentItem() {
       return this.queue[this.currentIdx] || {};
     },
+    currentStreakItem() {
+      return this.streakQueue[this.streakIdx] || {};
+    },
     headerTitle() {
       if (this.mode === 'missed') return 'Notifikasi Kelewat';
+      if (this.mode === 'streak-alert') return 'Perlu Dijadwal Ulang';
       if (this.mode === 'live') {
         return this.currentItem && this.currentItem.isTaskPlan
           ? '⏰ Task Plan Dimulai!'
@@ -441,7 +513,7 @@ const ReminderPopup = {
       return 'Pengingat Hari Ini';
     },
     headerClass() {
-      return this.mode === 'missed' ? 'reminder-popup-header-amber' : '';
+      return (this.mode === 'missed' || this.mode === 'streak-alert') ? 'reminder-popup-header-amber' : '';
     },
     todayLabel() {
       const now = new Date();
@@ -613,7 +685,11 @@ const ReminderPopup = {
       const nowMin = this._nowMinutes();
 
       const pendingItems  = all.filter(a => !this._isDone(a.id));
-      if (pendingItems.length === 0) return; // semua sudah selesai hari ini, skip
+      if (pendingItems.length === 0) {
+        // Semua sudah selesai hari ini → tetap cek kalau ada reminder yang butuh dijadwal ulang
+        this._maybeShowStreakAlerts();
+        return;
+      }
 
       // Item tanpa waktu (timeVal -1 / allDay) tidak pernah "missed" — selalu upcoming
       // Gunakan > (bukan >=) agar item yang waktunya TEPAT saat ini masuk upcoming,
@@ -648,6 +724,20 @@ const ReminderPopup = {
         this._triggerBellShake();
         NotifSound.playNotifSafe();
       }
+    },
+
+    // ── Cek antrian reminder yang kelewat 3 (kelipatan) hari berturut-turut ──
+    // Dipanggil setelah mode open/missed selesai, atau langsung saat semua sudah selesai hari ini.
+    _maybeShowStreakAlerts() {
+      const alerts = _getRescheduleAlertQueue();
+      if (!alerts || alerts.length === 0) return false;
+      this.mode        = 'streak-alert';
+      this.streakQueue = alerts;
+      this.streakIdx   = 0;
+      this.visible     = true;
+      this._triggerBellShake();
+      NotifSound.playNotifSafe();
+      return true;
     },
 
     // ── Load Section 1 items (Task Plan + Content urgen) untuk mode open ──
@@ -765,6 +855,24 @@ const ReminderPopup = {
       this.currentIdx = i;
     },
 
+    // ── Carousel navigation (mode streak-alert) ───────────────────────────
+    nextStreak() {
+      if (this.streakIdx < this.streakQueue.length - 1) {
+        this.slideDir = 'next';
+        this.streakIdx++;
+      }
+    },
+    prevStreak() {
+      if (this.streakIdx > 0) {
+        this.slideDir = 'prev';
+        this.streakIdx--;
+      }
+    },
+    jumpToStreak(i) {
+      this.slideDir  = i > this.streakIdx ? 'next' : 'prev';
+      this.streakIdx = i;
+    },
+
     // ── Actions ──────────────────────────────────────────────────────────
     openNotifPanel() {
       this.dismiss();
@@ -785,6 +893,7 @@ const ReminderPopup = {
 
     dismiss() {
       const wasMissed = this.mode === 'missed';
+      const wasOpen   = this.mode === 'open';
       this.visible = false;
 
       // Kalau setelah missed → selalu cek ulang upcoming secara langsung,
@@ -807,8 +916,14 @@ const ReminderPopup = {
             this.infoItems     = this._loadInfoItems();
             this.visible       = true;
             NotifSound.playNotifSafe();
+          } else {
+            // Tidak ada lagi yang perlu ditampilkan → cek reminder yang butuh dijadwal ulang
+            this._maybeShowStreakAlerts();
           }
         }, 600);
+      } else if (wasOpen) {
+        // Setelah mode open ditutup user → cek reminder yang butuh dijadwal ulang
+        setTimeout(() => { this._maybeShowStreakAlerts(); }, 400);
       }
 
       this.$emit('dismiss');
@@ -914,12 +1029,40 @@ const ReminderPopup = {
 
         // Tandai item asli hari ini sebagai sudah ditangani supaya tidak nyangkut di daftar kelewat
         this._markPopupStatusHandled(item.id);
+        // Reminder sudah dijadwal ulang → putus rentetan kelewatnya & hapus dari antrian alert
+        try { _resetReminderMissStreak(item.id); } catch(e) {}
         this.showPopupToast(`Dijadwalkan ulang ke ${this._formatPopupDate(this.popupRescheduleDate)} pukul ${this.popupRescheduleTime}`);
       } catch(e) {}
       this.showPopupReschedule = false;
       const rescheduledId = item.id;
       this.popupRescheduleItem = null;
-      this._removePopupQueueItem(rescheduledId);
+      if (this.mode === 'streak-alert') {
+        this._removeStreakQueueItem(rescheduledId);
+      } else {
+        this._removePopupQueueItem(rescheduledId);
+      }
+    },
+
+    // Hapus item dari antrian streak-alert (setelah reschedule/dismiss), rapikan streakIdx
+    _removeStreakQueueItem(id) {
+      _dequeueRescheduleAlert(id);
+      const idx = this.streakQueue.findIndex(q => q.id === id);
+      if (idx === -1) return;
+      this.streakQueue = this.streakQueue.filter(q => q.id !== id);
+      if (this.streakQueue.length === 0) {
+        this.dismiss();
+        return;
+      }
+      if (this.streakIdx >= this.streakQueue.length) {
+        this.streakIdx = this.streakQueue.length - 1;
+      }
+    },
+
+    // Tombol "Oke, Nanti" di popup streak-alert: akui dulu, tapi rentetan tetap jalan
+    // (kalau kelewat lagi sampai kelipatan 3 berikutnya, bakal diingatkan lagi).
+    dismissStreakAlertItem(item) {
+      this.showPopupToast(`Oke, "${item.title}" diingat lagi nanti`);
+      this._removeStreakQueueItem(item.id);
     },
 
     // Tombol "Missed": akui item ini terlewat, hilangkan dari daftar tanpa jadwal ulang.
@@ -927,6 +1070,8 @@ const ReminderPopup = {
     // bukan coret abu-abu seperti item yang sudah benar-benar dikerjakan.
     markPopupItemMissed(item) {
       this._markPopupStatusMissed(item.id);
+      // Ditandai missed = tetap dihitung kelewat buat rentetan berturut-turut
+      try { _bumpReminderMissStreak(item.id, this.todayStr, { title: item.title, subtitle: item.subtitle }); } catch(e) {}
       this.showPopupToast(`"${item.title}" ditandai missed`);
       this._removePopupQueueItem(item.id);
     },
@@ -1071,44 +1216,147 @@ if (typeof isDzikirReadyForHabit === 'undefined') {
 }
 
 
+// ── Helper: kumpulkan semua reminder (habit + manual + task plan) yang aktif pada tanggal tertentu ──
+function _collectReminderBaseForDate(dateStr) {
+  const base = [];
+  try {
+    const raw = WorkspaceStorage.getItem('ws_habit_notifs');
+    if (raw) JSON.parse(raw).forEach(h => {
+      if (!base.find(b => b.id === h.id))
+        base.push({ id: h.id, title: h.title, subtitle: h.subtitle || 'Habit harian', time: h.time, type: 'habit', color: h.color });
+    });
+  } catch(e) {}
+  try {
+    const raw = WorkspaceStorage.getItem('ws_manual_notifs');
+    if (raw) JSON.parse(raw).filter(m => reminderOccursOnDate(m, dateStr)).forEach(m => {
+      if (!base.find(b => b.id === m.id))
+        base.push({ id: m.id, title: m.title, subtitle: m.subtitle || 'Pengingat manual', time: m.time, endTime: m.endTime || null, type: 'manual' });
+    });
+  } catch(e) {}
+  // Task Plan hari itu yang punya waktu -> ikut dihitung
+  try {
+    const raw = WorkspaceStorage.getItem('personal_workspace_job_plans');
+    if (raw) JSON.parse(raw).filter(p => p.date === dateStr && p.time).forEach(p => {
+      const id = 'taskplan-' + p.id;
+      if (base.find(b => b.id === id)) return;
+      const timeLabel = p.timeEnd ? p.time + ' – ' + p.timeEnd : p.time;
+      base.push({ id, title: p.tasks, subtitle: 'Task Plan · ' + (p.category || 'Umum'), time: timeLabel, type: 'taskplan' });
+    });
+  } catch(e) {}
+  return base;
+}
+
 // ── Helper: ambil notif belum dikerjakan dari hari tertentu ──
 function _snapshotMissedForDate(dateStr) {
   try {
     const statusRaw = WorkspaceStorage.getItem('ws_notif_action_status');
     const actionStatus = statusRaw ? JSON.parse(statusRaw) : {};
     const status = actionStatus[dateStr] || {};
-
-    const base = [];
-    try {
-      const raw = WorkspaceStorage.getItem('ws_habit_notifs');
-      if (raw) JSON.parse(raw).forEach(h => {
-        if (!base.find(b => b.id === h.id))
-          base.push({ id: h.id, title: h.title, subtitle: h.subtitle || 'Habit harian', time: h.time, type: 'habit', color: h.color });
-      });
-    } catch(e) {}
-    try {
-      const raw = WorkspaceStorage.getItem('ws_manual_notifs');
-      if (raw) JSON.parse(raw).filter(m => reminderOccursOnDate(m, dateStr)).forEach(m => {
-        if (!base.find(b => b.id === m.id))
-          base.push({ id: m.id, title: m.title, subtitle: m.subtitle || 'Pengingat manual', time: m.time, endTime: m.endTime || null, type: 'manual' });
-      });
-    } catch(e) {}
-    // Task Plan hari itu yang punya waktu -> snapshot juga sebagai missed
-    try {
-      const raw = WorkspaceStorage.getItem('personal_workspace_job_plans');
-      if (raw) JSON.parse(raw).filter(p => p.date === dateStr && p.time).forEach(p => {
-        const id = 'taskplan-' + p.id;
-        if (base.find(b => b.id === id)) return;
-        const timeLabel = p.timeEnd ? p.time + ' – ' + p.timeEnd : p.time;
-        base.push({ id, title: p.tasks, subtitle: 'Task Plan · ' + (p.category || 'Umum'), time: timeLabel, type: 'taskplan' });
-      });
-    } catch(e) {}
+    const base = _collectReminderBaseForDate(dateStr);
     return base.filter(n => !status[n.id]);
   } catch(e) { return []; }
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// ── Rentetan hari berturut-turut satu pengingat kelewat (didiemin ATAU
+//    ditandai missed sama-sama dihitung) — kalau sampai 3 hari (lalu kelipatan
+//    3 berikutnya) → antre popup "perlu dijadwal ulang".
+// ══════════════════════════════════════════════════════════════════════════
+function _getMissStreakStore() {
+  try {
+    const raw = WorkspaceStorage.getItem('ws_reminder_miss_streak');
+    return raw ? JSON.parse(raw) : {};
+  } catch(e) { return {}; }
+}
+function _saveMissStreakStore(store) {
+  try { WorkspaceStorage.setItem('ws_reminder_miss_streak', JSON.stringify(store)); } catch(e) {}
+}
+function _prevDateStr(dateStr) {
+  try {
+    const d = new Date(dateStr + 'T00:00:00');
+    d.setDate(d.getDate() - 1);
+    return d.toISOString().slice(0, 10);
+  } catch(e) { return dateStr; }
+}
+function _getRescheduleAlertQueue() {
+  try {
+    const raw = WorkspaceStorage.getItem('ws_reminder_reschedule_alerts');
+    return raw ? JSON.parse(raw) : [];
+  } catch(e) { return []; }
+}
+function _saveRescheduleAlertQueue(q) {
+  try { WorkspaceStorage.setItem('ws_reminder_reschedule_alerts', JSON.stringify(q)); } catch(e) {}
+}
+function _queueRescheduleAlert(id, entry) {
+  const q = _getRescheduleAlertQueue();
+  const idx = q.findIndex(a => a.id === id);
+  const item = { id, title: entry.title, subtitle: entry.subtitle, streakCount: entry.count };
+  if (idx !== -1) q[idx] = item; else q.push(item);
+  _saveRescheduleAlertQueue(q);
+}
+function _dequeueRescheduleAlert(id) {
+  const q = _getRescheduleAlertQueue().filter(a => a.id !== id);
+  _saveRescheduleAlertQueue(q);
+}
+// Tambah 1 hari "kelewat" (dipanggil dari tombol Missed / snapshot rollover harian).
+// Konsisten dipanggil berkali-kali untuk tanggal yang sama tanpa dobel hitung.
+function _bumpReminderMissStreak(id, dateStr, meta) {
+  const store = _getMissStreakStore();
+  const prevEntry = store[id];
+  let count;
+  if (prevEntry && prevEntry.lastMissDate === dateStr) {
+    count = prevEntry.count; // sudah dihitung buat tanggal ini, jangan dobel
+  } else if (prevEntry && prevEntry.lastMissDate === _prevDateStr(dateStr)) {
+    count = prevEntry.count + 1; // masih berturut-turut dari hari sebelumnya
+  } else {
+    count = 1; // rentetan baru mulai
+  }
+  const justHitMultipleOf3 = count >= 3 && count % 3 === 0 &&
+    !(prevEntry && prevEntry.lastAlertedCount === count);
+  const nextEntry = {
+    count,
+    lastMissDate: dateStr,
+    title: (meta && meta.title) || (prevEntry && prevEntry.title) || '',
+    subtitle: (meta && meta.subtitle) || (prevEntry && prevEntry.subtitle) || '',
+    lastAlertedCount: justHitMultipleOf3 ? count : (prevEntry ? prevEntry.lastAlertedCount : undefined)
+  };
+  store[id] = nextEntry;
+  _saveMissStreakStore(store);
+  if (justHitMultipleOf3) _queueRescheduleAlert(id, nextEntry);
+  return nextEntry;
+}
+// Putus rentetan (dipanggil saat reminder akhirnya dikerjakan / dijadwal ulang)
+function _resetReminderMissStreak(id) {
+  const store = _getMissStreakStore();
+  if (store[id]) {
+    delete store[id];
+    _saveMissStreakStore(store);
+  }
+  _dequeueRescheduleAlert(id);
+}
+// Update rentetan buat semua reminder yang aktif di tanggal tertentu (dipanggil saat rollover hari)
+function _updateMissStreaksForDate(dateStr) {
+  try {
+    const statusRaw = WorkspaceStorage.getItem('ws_notif_action_status');
+    const actionStatus = statusRaw ? JSON.parse(statusRaw) : {};
+    const status = actionStatus[dateStr] || {};
+    const base = _collectReminderBaseForDate(dateStr);
+    base.forEach(n => {
+      if (status[n.id] === true) {
+        // Sudah dikerjakan hari itu → putus rentetan
+        _resetReminderMissStreak(n.id);
+      } else {
+        // Tidak dikerjakan sama sekali (didiemin) ATAU ditandai missed → tetap dihitung kelewat
+        _bumpReminderMissStreak(n.id, dateStr, { title: n.title, subtitle: n.subtitle });
+      }
+    });
+  } catch(e) {}
+}
+
 // ── Simpan snapshot missed tasks untuk satu hari tertentu ──
 function saveMissedTasksSnapshot(yesterdayStr) {
+  // Update rentetan kelewat berturut-turut lebih dulu, sebelum snapshot log missed biasa
+  _updateMissStreaksForDate(yesterdayStr);
   const missed = _snapshotMissedForDate(yesterdayStr);
   if (missed.length === 0) return;
   try {
@@ -2370,6 +2618,8 @@ const NotificationPanel = {
       }
       this.actionStatus[this.todayStr][notif.id] = true;
       WorkspaceStorage.setItem('ws_notif_action_status', JSON.stringify(this.actionStatus));
+      // Akhirnya dikerjakan → putus rentetan kelewat berturut-turut (kalau ada)
+      try { _resetReminderMissStreak(notif.id); } catch(e) {}
 
       // Kalau ini adalah habit → centang juga di habit tracker
       if (notif.isHabit) {
