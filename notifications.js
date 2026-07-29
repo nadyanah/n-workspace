@@ -638,7 +638,7 @@ const ReminderPopup = {
         const raw = WorkspaceStorage.getItem('personal_workspace_job_plans');
         if (raw) {
           const plans = JSON.parse(raw);
-          plans.filter(p => p.date === this.todayStr && p.time).forEach(p => {
+          plans.filter(p => p.date === this.todayStr && p.time && p.phase !== 'Completed').forEach(p => {
             const id = 'taskplan-' + p.id;
             const [hh, mm] = p.time.split(':').map(Number);
             const timeVal  = hh * 60 + mm;
@@ -685,7 +685,14 @@ const ReminderPopup = {
       const nowMin = this._nowMinutes();
 
       const pendingItems  = all.filter(a => !this._isDone(a.id));
-      if (pendingItems.length === 0) {
+
+      // Task Plan hari ini yang jamnya sudah lewat & belum ditandai selesai/dijadwal ulang.
+      // Digabung ke deteksi "missed" supaya SEMUA kategori (habit, manual, task plan)
+      // ikut ke-detect kelewat — bukan cuma habit/manual saja.
+      const pendingTaskPlans = this._allTaskPlanActions().filter(a => !this._isDone(a.id));
+      const missedTaskPlans  = pendingTaskPlans.filter(a => a.timeVal >= 0 && nowMin > a.timeVal);
+
+      if (pendingItems.length === 0 && missedTaskPlans.length === 0) {
         // Semua sudah selesai hari ini → tetap cek kalau ada reminder yang butuh dijadwal ulang
         this._maybeShowStreakAlerts();
         return;
@@ -694,10 +701,12 @@ const ReminderPopup = {
       // Item tanpa waktu (timeVal -1 / allDay) tidak pernah "missed" — selalu upcoming
       // Gunakan > (bukan >=) agar item yang waktunya TEPAT saat ini masuk upcoming,
       // beri grace 1 menit sebelum dianggap missed.
-      const missedItems   = pendingItems.filter(a => a.timeVal >= 0 && nowMin > a.timeVal);
+      const missedItems   = pendingItems.filter(a => a.timeVal >= 0 && nowMin > a.timeVal)
+        .concat(missedTaskPlans)
+        .sort((a, b) => a.timeVal - b.timeVal);
       const upcomingItems = pendingItems.filter(a => a.timeVal < 0 || nowMin <= a.timeVal);
 
-      // PRIORITAS 1 — ada yang kelewat → muncul mode missed dulu
+      // PRIORITAS 1 — ada yang kelewat (kategori apapun: habit / manual / task plan) → muncul mode missed dulu
       if (missedItems.length > 0) {
         this.mode       = 'missed';
         this.queue      = missedItems;
