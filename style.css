@@ -8449,6 +8449,14 @@ input:checked + .switch-slider:before {
   background: var(--bg-cream, #FDFBF7);
   overflow: hidden;
   flex-shrink: 0;
+  transition: border-color 0.14s, box-shadow 0.14s, opacity 0.14s;
+}
+.mp-insight-column-dragging {
+  opacity: 0.45;
+}
+.mp-insight-column-dragover {
+  border-color: var(--color-terracotta, #D67B52);
+  box-shadow: 0 0 0 2px rgba(214, 123, 82, 0.25);
 }
 .mp-insight-column-header {
   display: flex;
@@ -8457,6 +8465,49 @@ input:checked + .switch-slider:before {
   padding: 8px 8px 8px 12px;
   background: #F5F0EB;
   border-bottom: 1.5px solid var(--color-sand, #E8DFD8);
+}
+.mp-insight-column-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  color: var(--text-muted, #8A7F74);
+  cursor: grab;
+  border-radius: 6px;
+  transition: background 0.14s, color 0.14s;
+}
+.mp-insight-column-drag-handle:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-dark, #2C2621);
+}
+.mp-insight-column-drag-handle:active {
+  cursor: grabbing;
+}
+.mp-insight-column-collapse {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  color: var(--text-muted, #8A7F74);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.14s;
+}
+.mp-insight-column-collapse:hover {
+  color: var(--text-dark, #2C2621);
+  background: rgba(0, 0, 0, 0.06);
+}
+.mp-insight-collapse-chevron {
+  transition: transform 0.16s ease;
+}
+.mp-insight-collapse-chevron.is-collapsed {
+  transform: rotate(-90deg);
 }
 .mp-insight-column-title-input {
   flex: 1;

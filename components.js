@@ -18495,17 +18495,33 @@ const MyPortfolio = {
                 <p class="mp-empty-sub">Klik "Tambah Kolom" untuk mulai menulis rangkuman.</p>
               </div>
 
-              <div v-for="col in insightModalColumns" :key="col.id" class="mp-insight-column">
+              <div v-for="col in insightModalColumns" :key="col.id" class="mp-insight-column"
+                :class="{ 'mp-insight-column-dragging': draggedInsightColId === col.id, 'mp-insight-column-dragover': dragOverInsightColId === col.id && draggedInsightColId !== col.id }"
+                @dragover.prevent="onInsightColumnDragOver(col.id)"
+                @dragleave="onInsightColumnDragLeave(col.id)"
+                @drop.prevent="onInsightColumnDrop(col.id)">
                 <div class="mp-insight-column-header">
+                  <span class="mp-insight-column-drag-handle" title="Tahan lalu geser untuk pindah urutan kolom"
+                    draggable="true"
+                    @dragstart="onInsightColumnDragStart($event, col.id)"
+                    @dragend="onInsightColumnDragEnd">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="8" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="8" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="8" cy="18" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="18" r="1.3" fill="currentColor" stroke="none"/></svg>
+                  </span>
                   <input type="text" class="mp-insight-column-title-input"
                     :value="col.title"
                     placeholder="Judul kolom..."
                     @change="renameInsightColumn(col.id, $event.target.value)" />
+                  <button class="mp-insight-column-collapse" type="button"
+                    :title="isInsightColumnCollapsed(col.id) ? 'Buka catatan ini' : 'Tutup catatan ini'"
+                    @click="toggleInsightColumnCollapse(col.id)">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" class="mp-insight-collapse-chevron" :class="{ 'is-collapsed': isInsightColumnCollapsed(col.id) }"><polyline points="6 9 12 15 18 9"/></svg>
+                  </button>
                   <button class="mp-insight-column-delete" title="Hapus kolom ini" @click="removeInsightColumn(col.id)">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
                   </button>
                 </div>
 
+                <div v-show="!isInsightColumnCollapsed(col.id)">
                 <!-- Toolbar -->
                 <div class="mp-rte-toolbar">
                   <button type="button" @click="mpInsightExec(col.id, 'bold')" title="Bold (Ctrl+B)" class="mp-rte-btn"><b>B</b></button>
@@ -18540,6 +18556,7 @@ const MyPortfolio = {
                   @blur="flushInsightColumn(col.id)"
                   data-placeholder="cth., Dari task ini aku belajar..."
                 ></div>
+                </div>
               </div>
 
               <button class="cf-btn-ghost mp-insight-add-column-btn" @click="addInsightColumn">
@@ -18740,6 +18757,9 @@ const MyPortfolio = {
       keywordModalSearch: '',
       newKeywordModalInput: '', // input "tambah kata kunci baru" langsung dari dalam popup
       insightModalTaskId: null,
+      draggedInsightColId: null, // drag-and-drop urutan kolom Rangkuman Insight
+      dragOverInsightColId: null,
+      insightCollapsedCols: {}, // { [colId]: true } kolom catatan yang lagi ditutup (collapsed)
       notesModalOpen: false,
       notesModalDraftId: null, // null = catatan baru, terisi = sedang edit catatan yang sudah ada
       notesModalDraftTitle: '',
@@ -19306,6 +19326,11 @@ const MyPortfolio = {
         clearTimeout(this._insightSaveTimers[colId]);
         delete this._insightSaveTimers[colId];
       }
+      if (this.insightCollapsedCols[colId]) {
+        const cleaned = { ...this.insightCollapsedCols };
+        delete cleaned[colId];
+        this.insightCollapsedCols = cleaned;
+      }
     },
 
     renameInsightColumn(colId, title) {
@@ -19315,6 +19340,64 @@ const MyPortfolio = {
       const list = (this.portfolioTasks[key] || []).map(t => t.id === this.insightModalTaskId ? { ...t, insightColumns: (t.insightColumns || []).map(c => c.id === colId ? { ...c, title: trimmed } : c) } : t);
       this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
       this.saveTasks();
+    },
+
+    // ── Tutup/buka (collapse) kolom catatan Rangkuman Insight ──
+    isInsightColumnCollapsed(colId) {
+      return !!this.insightCollapsedCols[colId];
+    },
+    toggleInsightColumnCollapse(colId) {
+      if (!this.isInsightColumnCollapsed(colId)) {
+        // Simpan dulu isi terakhir sebelum ditutup, jaga-jaga blur nggak sempat kepanggil
+        this.flushInsightColumn(colId);
+      }
+      const next = { ...this.insightCollapsedCols, [colId]: !this.insightCollapsedCols[colId] };
+      this.insightCollapsedCols = next;
+    },
+
+    // ── Drag & drop: urutan kolom Rangkuman Insight bisa dipindah manual ──
+    onInsightColumnDragStart(e, colId) {
+      this.draggedInsightColId = colId;
+      this.dragOverInsightColId = null;
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', colId); } catch(_e) {}
+        const colEl = e.target.closest('.mp-insight-column');
+        if (colEl && e.dataTransfer.setDragImage) {
+          e.dataTransfer.setDragImage(colEl, 20, 20);
+        }
+      }
+    },
+    onInsightColumnDragOver(colId) {
+      if (!this.draggedInsightColId || this.draggedInsightColId === colId) return;
+      this.dragOverInsightColId = colId;
+    },
+    onInsightColumnDragLeave(colId) {
+      if (this.dragOverInsightColId === colId) this.dragOverInsightColId = null;
+    },
+    onInsightColumnDrop(targetColId) {
+      const draggedId = this.draggedInsightColId;
+      this.dragOverInsightColId = null;
+      this.draggedInsightColId = null;
+      if (!draggedId || draggedId === targetColId) return;
+      if (!this.selectedExperience || !this.insightModalTaskId) return;
+      const key = this.selectedExperience.key;
+      const list = (this.portfolioTasks[key] || []).map(t => {
+        if (t.id !== this.insightModalTaskId) return t;
+        const cols = [...(t.insightColumns || [])];
+        const fromIdx = cols.findIndex(c => c.id === draggedId);
+        const toIdx = cols.findIndex(c => c.id === targetColId);
+        if (fromIdx === -1 || toIdx === -1) return t;
+        const [moved] = cols.splice(fromIdx, 1);
+        cols.splice(toIdx, 0, moved);
+        return { ...t, insightColumns: cols };
+      });
+      this.portfolioTasks = { ...this.portfolioTasks, [key]: list };
+      this.saveTasks();
+    },
+    onInsightColumnDragEnd() {
+      this.draggedInsightColId = null;
+      this.dragOverInsightColId = null;
     },
 
     // ── Toolbar rich-text per kolom ──
