@@ -9957,7 +9957,7 @@ const GoogleCalendar = {
                     class="gcal-cell-tooltip-item"
                   >
                     <span class="gcal-cell-tooltip-dot" :style="{ background: item.color }"></span>
-                    <span class="gcal-cell-tooltip-title" :style="item.done ? 'text-decoration:line-through;opacity:0.5;' : ''">{{ item.title }}</span>
+                    <span class="gcal-cell-tooltip-title" :style="item.missed ? 'text-decoration:line-through; text-decoration-color:#EF4444; color:#B91C1C; opacity:0.75;' : (item.done ? 'text-decoration:line-through;opacity:0.5;' : '')">{{ item.title }}</span>
                     <span v-if="item.startMin !== null" class="gcal-cell-tooltip-time">{{ localFmtMin(item.startMin) }}</span>
                   </div>
                 </div>
@@ -9984,16 +9984,16 @@ const GoogleCalendar = {
                 :key="item.id"
                 class="gcal-week-list-pill"
                 :style="{
-                  background: localTintColor(item.color, 0.26),
-                  borderColor: localTintColor(item.color, 0.55),
-                  color: localBlockTextColor(item.color),
-                  opacity: item.done ? 0.5 : 1
+                  background: item.missed ? '#FEF2F2' : localTintColor(item.color, 0.26),
+                  borderColor: item.missed ? '#FCA5A5' : localTintColor(item.color, 0.55),
+                  color: item.missed ? '#B91C1C' : localBlockTextColor(item.color),
+                  opacity: item.done ? 0.5 : (item.missed ? 0.85 : 1)
                 }"
                 :title="item.title + (item.startMin !== null ? ' · ' + localFmtMin(item.startMin) : '')"
                 @click.stop="localSelectedDate=d.dateStr; localView='agenda'"
               >
                 <span v-if="item.startMin !== null" class="gcal-week-list-pill-time">{{ localFmtMin(item.startMin) }}</span>
-                <span class="gcal-week-list-pill-title" :style="item.done ? 'text-decoration:line-through;' : ''">{{ item.title }}</span>
+                <span class="gcal-week-list-pill-title" :style="item.missed ? 'text-decoration:line-through; text-decoration-color:#EF4444;' : (item.done ? 'text-decoration:line-through;' : '')">{{ item.title }}</span>
               </div>
             </div>
           </div>
@@ -10019,18 +10019,19 @@ const GoogleCalendar = {
             <div v-if="group.allDayItems.length > 0" class="gcal-agenda-allday">
               <div v-for="item in group.allDayItems" :key="item.id"
                 class="gcal-agenda-allday-item"
-                :class="{ 'gcal-agenda-item-done': item.done }"
-                :style="{ background: localTintColor(item.color, 0.26), borderColor: localTintColor(item.color, 0.55), color: localBlockTextColor(item.color), cursor: 'pointer' }"
+                :class="{ 'gcal-agenda-item-done': item.done, 'gcal-agenda-item-missed': item.missed }"
+                :style="{ background: item.missed ? '#FEF2F2' : localTintColor(item.color, 0.26), borderColor: item.missed ? '#FCA5A5' : localTintColor(item.color, 0.55), color: item.missed ? '#B91C1C' : localBlockTextColor(item.color), cursor: 'pointer' }"
                 @click.stop="localShowAgendaDetail(item)"
                 title="Lihat detail">
                 <span class="gcal-agenda-check-icon" style="pointer-events:none; flex-shrink:0;">
-                  <svg v-if="item.done" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>
+                  <svg v-if="item.missed" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <svg v-else-if="item.done" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>
                   <svg v-else-if="item.type==='task'" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
                   <svg v-else-if="item.type==='habit'" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                   <svg v-else-if="item.type==='content'" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
                   <svg v-else viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 </span>
-                <span class="gcal-agenda-allday-item-title" :style="item.done ? 'text-decoration:line-through; opacity:0.55;' : ''">{{ item.title }}</span>
+                <span class="gcal-agenda-allday-item-title" :style="item.missed ? 'text-decoration:line-through; text-decoration-color:#EF4444; text-decoration-thickness:2px; opacity:0.8;' : (item.done ? 'text-decoration:line-through; opacity:0.55;' : '')">{{ item.title }}</span>
               </div>
             </div>
 
@@ -10052,15 +10053,16 @@ const GoogleCalendar = {
                   :class="[
                     'gcal-agenda-block-' + block.type,
                     block.done && 'gcal-agenda-item-done',
+                    block.missed && 'gcal-agenda-item-missed',
                     (block.type === 'manual' || block.type === 'task' || (block.type === 'habit' && block.actionable)) && 'gcal-agenda-block-draggable',
                     agendaDrag.blockId === block.id && 'gcal-agenda-block-dragging'
                   ]"
                   :style="{
                     top: (agendaDrag.blockId === block.id ? agendaDrag.currentTop : block.top) + 'px',
                     height: block.height + 'px',
-                    background: localTintColor(block.color, 0.26),
-                    borderColor: agendaDrag.blockId === block.id ? block.color : localTintColor(block.color, 0.55),
-                    color: localBlockTextColor(block.color),
+                    background: block.missed ? '#FEF2F2' : localTintColor(block.color, 0.26),
+                    borderColor: block.missed ? '#FCA5A5' : (agendaDrag.blockId === block.id ? block.color : localTintColor(block.color, 0.55)),
+                    color: block.missed ? '#B91C1C' : localBlockTextColor(block.color),
                     left: 'calc(' + (block.col * (100/block.totalCols)) + '% + 2px)',
                     width: 'calc(' + (100/block.totalCols) + '% - 4px)',
                     cursor: (block.type === 'manual' || block.type === 'task' || (block.type === 'habit' && block.actionable)) ? (agendaDrag.blockId === block.id ? 'grabbing' : 'grab') : 'pointer',
@@ -10084,7 +10086,7 @@ const GoogleCalendar = {
                       <circle cx="2" cy="12" r="1.3"/><circle cx="6" cy="12" r="1.3"/>
                     </svg>
                   </span>
-                  <span class="gcal-agenda-block-title" :style="block.done ? 'text-decoration:line-through; opacity:0.55;' : ''">{{ block.title }}</span>
+                  <span class="gcal-agenda-block-title" :style="block.missed ? 'text-decoration:line-through; text-decoration-color:#EF4444; text-decoration-thickness:2px; opacity:0.8;' : (block.done ? 'text-decoration:line-through; opacity:0.55;' : '')">{{ block.title }}</span>
                   <span class="gcal-agenda-block-time">
                     {{ agendaDrag.blockId === block.id ? agendaDrag.previewLabel : (block.endLabel ? block.startLabel + ' – ' + block.endLabel : block.startLabel) }}
                   </span>
@@ -10126,9 +10128,10 @@ const GoogleCalendar = {
               <div class="agenda-detail-title-row">
                 <span class="agenda-detail-color-dot" :style="{ background: agendaDetailItem.color || '#D67B52' }"></span>
                 <div>
-                  <div class="agenda-detail-title" :style="agendaDetailItem.done ? 'text-decoration:line-through; opacity:0.5;' : ''">{{ agendaDetailItem.title }}</div>
+                  <div class="agenda-detail-title" :style="agendaDetailItem.missed ? 'text-decoration:line-through; text-decoration-color:#EF4444; color:#B91C1C; opacity:0.85;' : (agendaDetailItem.done ? 'text-decoration:line-through; opacity:0.5;' : '')">{{ agendaDetailItem.title }}</div>
                   <div class="agenda-detail-badge-row">
-                    <span v-if="agendaDetailItem.done" class="agenda-detail-badge agenda-detail-badge-done">✓ Selesai</span>
+                    <span v-if="agendaDetailItem.missed" class="agenda-detail-badge agenda-detail-badge-missed">✕ Missed</span>
+                    <span v-else-if="agendaDetailItem.done" class="agenda-detail-badge agenda-detail-badge-done">✓ Selesai</span>
                     <span v-else-if="agendaDetailItem.type === 'manual'" class="agenda-detail-badge agenda-detail-badge-manual">Pengingat<template v-if="agendaDetailItem.raw && agendaDetailItem.raw.category && agendaDetailItem.raw.category !== 'manual'"> - {{ localCategoryLabel(agendaDetailItem.raw.category) }}</template></span>
                     <span v-else-if="agendaDetailItem.type === 'habit'" class="agenda-detail-badge agenda-detail-badge-habit">Habit</span>
                     <span v-else-if="agendaDetailItem.type === 'task'" class="agenda-detail-badge agenda-detail-badge-task">Task Plan</span>
@@ -11199,7 +11202,8 @@ const GoogleCalendar = {
         const s = JSON.parse(raw || '{}');
         actionStatus = s[ds] || {};
       } catch(_e) { /* ignore */ }
-      const isActionDone = (rawId) => !!actionStatus[rawId];
+      const isActionDone = (rawId) => actionStatus[rawId] === true;
+      const isActionMissed = (rawId) => actionStatus[rawId] === 'missed';
 
       const allDayItems = [];
       const timed = []; // { id, title, type, color, startMin, endMin, raw }
@@ -11250,12 +11254,13 @@ const GoogleCalendar = {
         try {
           this.localHabitItemsForDate(ds).forEach(h => {
             const done = h.done;
+            const missed = !!h.missed;
             if (h.time) {
               const [sh, sm] = h.time.split(':').map(Number);
               const startMin = sh * 60 + (sm || 0);
-              timed.push({ id: h.id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, startMin, endMin: startMin + 30, raw: h, done, actionable: h.actionable });
+              timed.push({ id: h.id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, startMin, endMin: startMin + 30, raw: h, done, missed, actionable: h.actionable });
             } else {
-              allDayItems.push({ id: h.id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, raw: h, done, actionable: h.actionable });
+              allDayItems.push({ id: h.id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, raw: h, done, missed, actionable: h.actionable });
             }
           });
         } catch(_e) { /* ignore */ }
@@ -11269,6 +11274,7 @@ const GoogleCalendar = {
           if (this.agendaFilters[cat] === false) return;
           const id = 'manual-' + m.id;
           const done = isActionDone(m.id);
+          const missed = isActionMissed(m.id);
           const color = TYPE_COLORS[cat] || TYPE_COLORS.manual;
           if (m.time) {
             const [sh, sm] = m.time.split(':').map(Number);
@@ -11280,9 +11286,9 @@ const GoogleCalendar = {
               const ev = eh * 60 + (em || 0);
               if (ev > startMin) endMin = ev;
             }
-            timed.push({ id, title: m.title, type: 'manual', category: cat, color, startMin, endMin, raw: m, done, actionable: true });
+            timed.push({ id, title: m.title, type: 'manual', category: cat, color, startMin, endMin, raw: m, done, missed, actionable: true });
           } else {
-            allDayItems.push({ id, title: m.title, type: 'manual', category: cat, color, raw: m, done, actionable: true });
+            allDayItems.push({ id, title: m.title, type: 'manual', category: cat, color, raw: m, done, missed, actionable: true });
           }
         });
       } catch(_e) { /* ignore */ }
@@ -11342,6 +11348,7 @@ const GoogleCalendar = {
         startLabel: fmt(item.startMin),
         endLabel: fmt(item.endMin),
         done: !!item.done,
+        missed: !!item.missed,
         actionable: !!item.actionable
       }));
 
@@ -11457,7 +11464,8 @@ const GoogleCalendar = {
               habitId: h.habitId || h.id.replace(/^habit_/, ''),
               title: h.title,
               time: h.time || null,
-              done: !!actionStatus[h.id],
+              done: actionStatus[h.id] === true,
+              missed: actionStatus[h.id] === 'missed',
               actionable: true
             });
           });
@@ -11541,7 +11549,8 @@ const GoogleCalendar = {
         const raw = WorkspaceStorage.getItem('ws_notif_action_status');
         const s = raw ? JSON.parse(raw) : {};
         if (!s[ds]) s[ds] = {};
-        nowDone = !s[ds][storageKey];
+        const wasDone = s[ds][storageKey] === true;
+        nowDone = !wasDone;
         if (nowDone) { s[ds][storageKey] = true; } else { delete s[ds][storageKey]; }
         WorkspaceStorage.setItem('ws_notif_action_status', JSON.stringify(s));
         this.localStorageTick++;
@@ -11703,8 +11712,8 @@ const GoogleCalendar = {
       try {
         const raw = WorkspaceStorage.getItem('ws_notif_action_status');
         const s = raw ? JSON.parse(raw) : {};
-        const nowDone = !!(s[ds] && s[ds][storageKey]);
-        this.agendaDetailItem = { ...this.agendaDetailItem, done: nowDone };
+        const nowDone = s[ds] && s[ds][storageKey] === true;
+        this.agendaDetailItem = { ...this.agendaDetailItem, done: nowDone, missed: false };
       } catch(_e) { /* ignore */ }
     },
 
@@ -11885,7 +11894,8 @@ const GoogleCalendar = {
         const s = JSON.parse(raw || '{}');
         actionStatus = s[dateStr] || {};
       } catch(_e) { /* ignore */ }
-      const isActionDone = (id) => !!actionStatus[id];
+      const isActionDone = (id) => actionStatus[id] === true;
+      const isActionMissed = (id) => actionStatus[id] === 'missed';
       const items = [];
 
       // Events (always shown, not filterable)
@@ -11922,7 +11932,7 @@ const GoogleCalendar = {
           this.localHabitItemsForDate(dateStr).forEach(h => {
             let startMin = null, endMin = null;
             if (h.time) { const [sh, sm] = h.time.split(':').map(Number); startMin = sh * 60 + (sm || 0); endMin = startMin + 30; }
-            items.push({ id: h.id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, startMin, endMin, done: h.done, allDay: !h.time });
+            items.push({ id: h.id, title: h.title, type: 'habit', color: TYPE_COLORS.habit, startMin, endMin, done: h.done, missed: !!h.missed, allDay: !h.time });
           });
         } catch(_e) { /* ignore */ }
       }
@@ -11935,6 +11945,7 @@ const GoogleCalendar = {
           // skip jika kategori (default atau custom) sedang dinonaktifkan di filter agenda
           if (this.agendaFilters[cat] === false) return;
           const done = isActionDone(m.id);
+          const missed = isActionMissed(m.id);
           let startMin = null, endMin = null;
           if (m.time) {
             const [sh, sm] = m.time.split(':').map(Number);
@@ -11948,7 +11959,7 @@ const GoogleCalendar = {
             }
           }
           const color = TYPE_COLORS[cat] || TYPE_COLORS.manual;
-          items.push({ id: 'manual-' + m.id, title: m.title, type: 'manual', category: cat, color, startMin, endMin, done, allDay: !m.time });
+          items.push({ id: 'manual-' + m.id, title: m.title, type: 'manual', category: cat, color, startMin, endMin, done, missed, allDay: !m.time });
         });
       } catch(_e) { /* ignore */ }
 

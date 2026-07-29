@@ -5188,6 +5188,15 @@ input:checked + .switch-slider:before {
 .notif-item-done:hover {
   background: #F8F8F8 !important;
 }
+.notif-item-missed {
+  background: #FEF2F2 !important;
+  border-color: #FCA5A5 !important;
+  cursor: pointer !important;
+}
+.notif-item-missed:hover {
+  background: #FEE2E2 !important;
+  border-color: #F87171 !important;
+}
 .notif-item-locked {
   background: #FEF6F2 !important;
   border-color: #FCD8C5 !important;
@@ -5213,6 +5222,7 @@ input:checked + .switch-slider:before {
 .notif-icon-time    { background: #EEF5EB; color: var(--color-sage); border: 1px solid #C9DECA; }
 .notif-icon-action  { background: #EEF5EB; color: #5F8575; border: 1px solid #C9DECA; }
 .notif-icon-done    { background: #E8F5E9; color: #4CAF50; border: 1px solid #C8E6C9; }
+.notif-icon-missed  { background: #FEE2E2; color: #EF4444; border: 1px solid #FCA5A5; }
 
 /* ── Item Content ── */
 .notif-item-content { flex: 1; min-width: 0; }
@@ -6229,6 +6239,25 @@ input:checked + .switch-slider:before {
 }
 .gcal-agenda-allday-item.gcal-agenda-item-done {
   opacity: 0.6;
+}
+
+/* ── Item yang ditandai "missed" (kelewat, diakui): judul dicoret MERAH, beda dari done ── */
+.gcal-agenda-item-missed .gcal-agenda-block-title,
+.gcal-agenda-item-missed .gcal-agenda-allday-item-title {
+  text-decoration: line-through;
+  text-decoration-color: #EF4444;
+  text-decoration-thickness: 2px;
+  opacity: 0.8;
+}
+.gcal-agenda-block.gcal-agenda-item-missed {
+  opacity: 0.85;
+}
+.gcal-agenda-allday-item.gcal-agenda-item-missed {
+  opacity: 0.85;
+}
+.gcal-agenda-block.gcal-agenda-item-missed .gcal-agenda-check-icon,
+.gcal-agenda-allday-item.gcal-agenda-item-missed .gcal-agenda-check-icon {
+  color: #EF4444;
 }
 
 .gcal-agenda-timeline-wrap {
