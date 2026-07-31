@@ -5771,17 +5771,18 @@ input:checked + .switch-slider:before {
 .notif-missed-icon-habit    { background: #f0fdf4; border: 1.5px solid #86efac; }
 .notif-missed-icon-manual   { background: #eff6ff; border: 1.5px solid #bfdbfe; color: #1d4ed8; }
 
-/* Per-task quick actions: Jadwal Ulang + Missed */
+/* Per-task quick actions: Selesai + Jadwal Ulang + Missed */
 .notif-missed-task-actions {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   padding: 4px 4px 2px 37px; /* align past the icon column */
+  flex-wrap: wrap;
 }
 .notif-missed-action-btn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 9px;
+  padding: 4px 8px;
   border-radius: 7px;
   font-size: 10.5px;
   font-weight: 700;
@@ -5790,6 +5791,15 @@ input:checked + .switch-slider:before {
   white-space: nowrap;
 }
 .notif-missed-action-btn:active { transform: scale(0.96); }
+
+.notif-missed-action-done {
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.35);
+  color: #10b981;
+}
+.notif-missed-action-done:hover {
+  background: rgba(16,185,129,0.18);
+}
 
 .notif-missed-action-reschedule {
   background: rgba(214,123,82,0.1);

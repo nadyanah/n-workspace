@@ -2110,8 +2110,12 @@ const NotificationPanel = {
                         </div>
                       </div>
 
-                      <!-- Per-task actions: Jadwal Ulang + Missed -->
+                      <!-- Per-task actions: Selesai + Jadwal Ulang + Missed -->
                       <div class="notif-missed-task-actions">
+                        <button class="notif-missed-action-btn notif-missed-action-done" @click.stop="markMissedTaskAsDone(entry, task)">
+                          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          Selesai
+                        </button>
                         <button class="notif-missed-action-btn notif-missed-action-reschedule" @click.stop="openMissedReschedule(task, entry.date)">
                           <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
                           Jadwal Ulang
@@ -2535,6 +2539,9 @@ const NotificationPanel = {
     this._onNotifStatusUpdated = (e) => {
       if (e && e.detail && e.detail.source === 'notifPanel') return; // hindari refresh diri sendiri
       this.loadData();
+      // Refresh juga tab Terlewat, siapa tahu item barusan ditandai selesai dari
+      // Habit Tracker / Agenda View untuk tanggal lampau → harus langsung hilang di sini.
+      this.loadMissedLog();
     };
     window.addEventListener('ws-notif-status-updated', this._onNotifStatusUpdated);
 
@@ -2873,6 +2880,66 @@ const NotificationPanel = {
       this.showMissedToast(`"${task.title}" ditandai missed`);
     },
 
+    // Tombol "Selesai": akui task yang kelewat itu sebenarnya sudah dikerjakan.
+    // Sync penuh ke: actionStatus (biar tidak muncul lagi di snapshot missed),
+    // histori Habit Tracker (kalau type habit, dicentang di tanggal aslinya —
+    // bukan hari ini), Agenda/Google Calendar view (event ws-notif-status-updated),
+    // dan rentetan kelewat berturut-turut (direset karena akhirnya dikerjakan).
+    markMissedTaskAsDone(entry, task) {
+      try { NotifSound.playCheck(); } catch(e) {}
+
+      // 1) Tandai selesai di actionStatus untuk TANGGAL asli task tsb (entry.date)
+      try {
+        const raw = WorkspaceStorage.getItem('ws_notif_action_status');
+        const status = raw ? JSON.parse(raw) : {};
+        if (!status[entry.date]) status[entry.date] = {};
+        status[entry.date][task.id] = true;
+        WorkspaceStorage.setItem('ws_notif_action_status', JSON.stringify(status));
+        this.actionStatus = { ...status };
+      } catch(e) {}
+
+      // 2) Putus rentetan kelewat berturut-turut karena akhirnya dikerjakan
+      try { _resetReminderMissStreak(task.id); } catch(e) {}
+
+      // 3) Kalau habit → centang juga di Habit Tracker, pada tanggal task itu terlewat
+      if (task.type === 'habit') {
+        try {
+          const habitId = task.id.replace(/^habit_/, '');
+          const raw = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+          if (raw) {
+            const habits = JSON.parse(raw);
+            const d = new Date(entry.date + 'T00:00:00');
+            const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            const day = d.getDate();
+            const updated = habits.map(h => {
+              if (h.id !== habitId) return h;
+              const hist = { ...h.history };
+              const arr = hist[ym] ? [...hist[ym]] : [];
+              if (!arr.includes(day)) arr.push(day);
+              hist[ym] = arr.sort((a, b) => a - b);
+              return { ...h, history: hist };
+            });
+            WorkspaceStorage.setItem('aesthetic_habit_tracker_habits', JSON.stringify(updated));
+            window.dispatchEvent(new CustomEvent('ws-plans-updated'));
+          }
+        } catch(e) {}
+      }
+
+      // 4) Beri tahu Agenda View / Google Calendar supaya blok event ikut terupdate
+      window.dispatchEvent(new CustomEvent('ws-notif-status-updated', {
+        detail: { date: entry.date, id: task.id, done: true, source: 'notifPanelMissed' }
+      }));
+
+      // 5) Hilangkan dari daftar terlewat (sudah beres, tidak perlu nongkrong di sini lagi)
+      this.removeTaskFromMissedLog(entry.date, task.id);
+      this.showMissedToast(`"${task.title}" ditandai selesai ✓`);
+
+      // Emit count terbaru supaya badge unread ikut update
+      this.$nextTick(() => {
+        this.$emit('unread-count-changed', this.totalUnread);
+      });
+    },
+
     showMissedToast(msg) {
       this.missedToastMsg = msg;
       if (this._missedToastTimer) clearTimeout(this._missedToastTimer);
@@ -3103,8 +3170,14 @@ const MissedTasksPage = {
                 </div>
               </div>
 
-              <!-- Per-task actions: Jadwal Ulang + Missed -->
+              <!-- Per-task actions: Selesai + Jadwal Ulang + Missed -->
               <div class="notif-missed-task-actions">
+                <button class="notif-missed-action-btn notif-missed-action-done" @click.stop="markAsDone(entry, task)">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Selesai
+                </button>
                 <button class="notif-missed-action-btn notif-missed-action-reschedule" @click.stop="openReschedule(task, entry.date)">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/>
@@ -3239,10 +3312,18 @@ const MissedTasksPage = {
     this.loadData();
     // Refresh saat ada snapshot baru dari NotificationPanel
     window.addEventListener('snapshot-missed-tasks', this.loadData);
+    // Refresh kalau ada item yang ditandai selesai dari tempat lain
+    // (Habit Tracker / Agenda View), supaya langsung hilang dari sini juga.
+    this._onNotifStatusUpdated = (e) => {
+      if (e && e.detail && e.detail.source === 'missedTasksPage') return;
+      this.loadData();
+    };
+    window.addEventListener('ws-notif-status-updated', this._onNotifStatusUpdated);
   },
 
   beforeUnmount() {
     window.removeEventListener('snapshot-missed-tasks', this.loadData);
+    window.removeEventListener('ws-notif-status-updated', this._onNotifStatusUpdated);
     if (this._toastTimer) clearTimeout(this._toastTimer);
   },
 
@@ -3327,6 +3408,54 @@ const MissedTasksPage = {
     markAsMissed(entry, task) {
       this.removeTaskFromLog(entry.date, task.id);
       this.showToast(`"${task.title}" ditandai missed`);
+    },
+
+    // Tombol "Selesai": akui task yang kelewat itu sebenarnya sudah dikerjakan.
+    // Sync ke actionStatus (tanggal asli task), histori Habit Tracker (kalau habit),
+    // Agenda/Google Calendar view, dan putus rentetan kelewat berturut-turut.
+    // Sama persis mekanismenya dengan panel notifikasi, supaya kedua tempat konsisten.
+    markAsDone(entry, task) {
+      try { NotifSound.playCheck(); } catch(e) {}
+
+      try {
+        const raw = WorkspaceStorage.getItem('ws_notif_action_status');
+        const status = raw ? JSON.parse(raw) : {};
+        if (!status[entry.date]) status[entry.date] = {};
+        status[entry.date][task.id] = true;
+        WorkspaceStorage.setItem('ws_notif_action_status', JSON.stringify(status));
+      } catch(e) {}
+
+      try { _resetReminderMissStreak(task.id); } catch(e) {}
+
+      if (task.type === 'habit') {
+        try {
+          const habitId = task.id.replace(/^habit_/, '');
+          const raw = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+          if (raw) {
+            const habits = JSON.parse(raw);
+            const d = new Date(entry.date + 'T00:00:00');
+            const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            const day = d.getDate();
+            const updated = habits.map(h => {
+              if (h.id !== habitId) return h;
+              const hist = { ...h.history };
+              const arr = hist[ym] ? [...hist[ym]] : [];
+              if (!arr.includes(day)) arr.push(day);
+              hist[ym] = arr.sort((a, b) => a - b);
+              return { ...h, history: hist };
+            });
+            WorkspaceStorage.setItem('aesthetic_habit_tracker_habits', JSON.stringify(updated));
+            window.dispatchEvent(new CustomEvent('ws-plans-updated'));
+          }
+        } catch(e) {}
+      }
+
+      window.dispatchEvent(new CustomEvent('ws-notif-status-updated', {
+        detail: { date: entry.date, id: task.id, done: true, source: 'missedTasksPage' }
+      }));
+
+      this.removeTaskFromLog(entry.date, task.id);
+      this.showToast(`"${task.title}" ditandai selesai ✓`);
     },
 
     showToast(msg) {

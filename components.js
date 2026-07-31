@@ -8508,33 +8508,56 @@ const HabitTracker = {
       // ws_notif_action_status supaya Panel Notifikasi & Agenda View (Google Calendar) ikut update.
       this.syncTodayStatusToNotif(habitId, day, nowChecked);
     },
-    // ── Sinkronisasi checklist hari-ini dari tabel Habit → ws_notif_action_status ──
+    // ── Sinkronisasi checklist tabel Habit → ws_notif_action_status ──
+    // Berlaku untuk SEMUA tanggal (hari ini maupun hari lampau), bukan cuma hari ini.
     // Memberi tahu Notification Panel & Agenda View (Google Calendar) via event,
-    // sehingga ketika trigger berasal dari tabel Habit, kedua tampilan tersebut ikut berubah.
+    // dan kalau ditandai selesai (checked=true) untuk tanggal yang sudah lewat →
+    // otomatis dihapus juga dari daftar "Terlewat" + putus rentetan kelewat berturut-turut.
     syncTodayStatusToNotif(habitId, day, checked) {
-      const now = new Date();
-      const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      // hanya sinkron kalau yang ditoggle adalah tanggal hari ini di bulan yang sedang aktif
-      if (day !== now.getDate() || this.currentYearMonth !== ym) return;
-
-      const todayStr = `${ym}-${String(now.getDate()).padStart(2, '0')}`;
+      const [yy, mm] = this.currentYearMonth.split('-').map(Number);
+      const dateStr = `${yy}-${String(mm).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const notifId = 'habit_' + habitId;
       try {
         const raw = WorkspaceStorage.getItem('ws_notif_action_status');
         const status = raw ? JSON.parse(raw) : {};
-        if (!status[todayStr]) status[todayStr] = {};
+        if (!status[dateStr]) status[dateStr] = {};
         if (checked) {
-          status[todayStr][notifId] = true;
+          status[dateStr][notifId] = true;
         } else {
-          delete status[todayStr][notifId];
+          delete status[dateStr][notifId];
         }
         WorkspaceStorage.setItem('ws_notif_action_status', JSON.stringify(status));
       } catch(_e) { /* ignore */ }
 
+      // Kalau ditandai SELESAI → hapus dari daftar Terlewat (kalau ada di sana) +
+      // putus rentetan kelewat berturut-turut untuk habit ini.
+      if (checked) {
+        this._removeFromMissedLog(dateStr, notifId);
+        try { if (typeof _resetReminderMissStreak === 'function') _resetReminderMissStreak(notifId); } catch(_e) {}
+      }
+
       // Beri tahu Panel Notifikasi & Agenda View (Google Calendar) untuk refresh status
       globalThis.dispatchEvent(new CustomEvent('ws-notif-status-updated', {
-        detail: { date: todayStr, id: notifId, habitId, done: checked, source: 'habitTracker' }
+        detail: { date: dateStr, id: notifId, habitId, done: checked, source: 'habitTracker' }
       }));
+    },
+
+    // ── Hapus 1 item dari log "Terlewat" (ws_missed_tasks) kalau ada ──
+    // Dipakai supaya centang habit di tanggal lampau langsung sinkron ke tab Terlewat.
+    _removeFromMissedLog(dateStr, taskId) {
+      try {
+        const raw = WorkspaceStorage.getItem('ws_missed_tasks');
+        let log = raw ? JSON.parse(raw) : [];
+        const idx = log.findIndex(e => e.date === dateStr);
+        if (idx === -1) return;
+        const tasks = log[idx].tasks.filter(t => t.id !== taskId);
+        if (tasks.length === 0) {
+          log.splice(idx, 1);
+        } else {
+          log[idx] = { ...log[idx], tasks };
+        }
+        WorkspaceStorage.setItem('ws_missed_tasks', JSON.stringify(log));
+      } catch(_e) { /* ignore */ }
     },
     createHabit() {
       if (!this.form.name.trim()) return;
@@ -11555,6 +11578,12 @@ const GoogleCalendar = {
         WorkspaceStorage.setItem('ws_notif_action_status', JSON.stringify(s));
         this.localStorageTick++;
         if (nowDone && typeof NotifSound !== 'undefined') NotifSound.playCheck && NotifSound.playCheck();
+        // Kalau ditandai selesai → hapus juga dari daftar Terlewat (kalau ada di sana)
+        // + putus rentetan kelewat berturut-turut, supaya semua tempat konsisten.
+        if (nowDone) {
+          this.localRemoveFromMissedLog(ds, storageKey);
+          try { if (typeof _resetReminderMissStreak === 'function') _resetReminderMissStreak(storageKey); } catch(_e) {}
+        }
         // Beri tahu Panel Notifikasi (dan komponen lain) bahwa status selesai berubah,
         // supaya badge & daftar di panel notif langsung ikut update.
         globalThis.dispatchEvent(new CustomEvent('ws-notif-status-updated', {
@@ -11566,6 +11595,22 @@ const GoogleCalendar = {
       if (block.type === 'habit' && block.raw && block.raw.habitId) {
         this.localSyncHabitHistory(block.raw.habitId, ds, nowDone);
       }
+    },
+    // ── Hapus 1 item dari log "Terlewat" (ws_missed_tasks) kalau ada ──
+    localRemoveFromMissedLog(dateStr, taskId) {
+      try {
+        const raw = WorkspaceStorage.getItem('ws_missed_tasks');
+        let log = raw ? JSON.parse(raw) : [];
+        const idx = log.findIndex(e => e.date === dateStr);
+        if (idx === -1) return;
+        const tasks = log[idx].tasks.filter(t => t.id !== taskId);
+        if (tasks.length === 0) {
+          log.splice(idx, 1);
+        } else {
+          log[idx] = { ...log[idx], tasks };
+        }
+        WorkspaceStorage.setItem('ws_missed_tasks', JSON.stringify(log));
+      } catch(_e) { /* ignore */ }
     },
     // ── Sinkronisasi checklist habit dari Agenda ke tabel Habit Tracker ──
     localSyncHabitHistory(habitId, dateStr, checked) {
