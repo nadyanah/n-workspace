@@ -273,15 +273,16 @@ const ReminderPopup = {
                   </div>
                 </div>
 
-                <!-- Per-item actions: Jadwal Ulang + Missed -->
-                <div class="notif-missed-task-actions" style="padding:6px 2px 0;">
-                  <button class="notif-missed-action-btn notif-missed-action-reschedule" @click="openPopupReschedule(queue[0])">
-                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
-                    Jadwal Ulang
+                <!-- Per-item actions: Jadwal Ulang + Libur (habit saja) + Missed (icon-only, ada tooltip) -->
+                <div class="notif-missed-task-actions" style="padding:6px 2px 0; justify-content:flex-end;">
+                  <button class="notif-missed-action-btn notif-missed-action-reschedule notif-missed-action-btn-icon" title="Jadwal Ulang" @click="openPopupReschedule(queue[0])">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
                   </button>
-                  <button class="notif-missed-action-btn notif-missed-action-missed" @click="markPopupItemMissed(queue[0])">
-                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                    Missed
+                  <button v-if="queue[0].isHabit" class="notif-missed-action-btn notif-missed-action-libur notif-missed-action-btn-icon" title="Libur" @click="markPopupItemLibur(queue[0])">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m14.5 14-5 4"/><path d="m9.5 14 5 4"/></svg>
+                  </button>
+                  <button class="notif-missed-action-btn notif-missed-action-missed notif-missed-action-btn-icon" title="Missed" @click="markPopupItemMissed(queue[0])">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                   </button>
                 </div>
               </div>
@@ -308,18 +309,6 @@ const ReminderPopup = {
                       <div class="reminder-popup-item-sub" style="white-space:pre-wrap;">{{ currentItem.subtitle }}</div>
                     </div>
                   </div>
-
-                  <!-- Per-item actions: Jadwal Ulang + Missed -->
-                  <div class="notif-missed-task-actions" style="padding:6px 2px 0;">
-                    <button class="notif-missed-action-btn notif-missed-action-reschedule" @click="openPopupReschedule(currentItem)">
-                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
-                      Jadwal Ulang
-                    </button>
-                    <button class="notif-missed-action-btn notif-missed-action-missed" @click="markPopupItemMissed(currentItem)">
-                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                      Missed
-                    </button>
-                  </div>
                 </div>
               </transition>
 
@@ -332,6 +321,19 @@ const ReminderPopup = {
                   :class="{ 'reminder-popup-dot-active': i === currentIdx }"
                   @click="jumpTo(i)">
                 </span>
+              </div>
+
+              <!-- Per-item actions: Jadwal Ulang + Libur (habit saja) + Missed (icon-only, ada tooltip) -->
+              <div class="notif-missed-task-actions" style="padding:2px 0 10px; justify-content:center;">
+                <button class="notif-missed-action-btn notif-missed-action-reschedule notif-missed-action-btn-icon" title="Jadwal Ulang" @click="openPopupReschedule(currentItem)">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+                </button>
+                <button v-if="currentItem.isHabit" class="notif-missed-action-btn notif-missed-action-libur notif-missed-action-btn-icon" title="Libur" @click="markPopupItemLibur(currentItem)">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m14.5 14-5 4"/><path d="m9.5 14 5 4"/></svg>
+                </button>
+                <button class="notif-missed-action-btn notif-missed-action-missed notif-missed-action-btn-icon" title="Missed" @click="markPopupItemMissed(currentItem)">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
               </div>
 
               <!-- Footer: slide nav, Oke di slide terakhir -->
@@ -1072,6 +1074,40 @@ const ReminderPopup = {
     dismissStreakAlertItem(item) {
       this.showPopupToast(`Oke, "${item.title}" diingat lagi nanti`);
       this._removeStreakQueueItem(item.id);
+    },
+
+    // Tombol "Libur": fungsinya sama seperti tombol "Libur Hari Ini" di Habit Tracker.
+    // Cuma muncul untuk item habit. Menandai habit itu libur hari ini (skipDays),
+    // lalu hilang dari antrian kelewat karena memang sengaja diliburkan, bukan lupa.
+    markPopupItemLibur(item) {
+      if (!item.isHabit) return;
+      try { NotifSound.playCheck(); } catch(e) {}
+
+      try {
+        const habitId = item.id.replace(/^habit_/, '');
+        const raw = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+        if (raw) {
+          const habits = JSON.parse(raw);
+          const updated = habits.map(h => {
+            if (h.id !== habitId) return h;
+            const skipDays = Array.isArray(h.skipDays) ? [...h.skipDays] : [];
+            if (!skipDays.includes(this.todayStr)) skipDays.push(this.todayStr);
+            return { ...h, skipDays };
+          });
+          WorkspaceStorage.setItem('aesthetic_habit_tracker_habits', JSON.stringify(updated));
+          // Sinkronisasi ke Habit Tracker & panel lain supaya langsung update
+          window.dispatchEvent(new CustomEvent('ws-habit-skip-changed', {
+            detail: { habitId, notifId: item.id, skipped: true, date: this.todayStr }
+          }));
+          window.dispatchEvent(new CustomEvent('ws-plans-updated'));
+        }
+      } catch(e) {}
+
+      // Putus rentetan kelewat berturut-turut karena sudah "resolved" (diliburkan, bukan lupa)
+      try { _resetReminderMissStreak(item.id); } catch(e) {}
+
+      this.showPopupToast(`"${item.title}" ditandai libur 🏖️`);
+      this._removePopupQueueItem(item.id);
     },
 
     // Tombol "Missed": akui item ini terlewat, hilangkan dari daftar tanpa jadwal ulang.
@@ -2110,19 +2146,19 @@ const NotificationPanel = {
                         </div>
                       </div>
 
-                      <!-- Per-task actions: Selesai + Jadwal Ulang + Missed -->
+                      <!-- Per-task actions: Selesai + Jadwal Ulang + Libur (habit saja) + Missed -->
                       <div class="notif-missed-task-actions">
-                        <button class="notif-missed-action-btn notif-missed-action-done" @click.stop="markMissedTaskAsDone(entry, task)">
-                          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                          Selesai
+                        <button class="notif-missed-action-btn notif-missed-action-done notif-missed-action-btn-icon" title="Selesai" @click.stop="markMissedTaskAsDone(entry, task)">
+                          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         </button>
-                        <button class="notif-missed-action-btn notif-missed-action-reschedule" @click.stop="openMissedReschedule(task, entry.date)">
-                          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
-                          Jadwal Ulang
+                        <button class="notif-missed-action-btn notif-missed-action-reschedule notif-missed-action-btn-icon" title="Jadwal Ulang" @click.stop="openMissedReschedule(task, entry.date)">
+                          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
                         </button>
-                        <button class="notif-missed-action-btn notif-missed-action-missed" @click.stop="markMissedTaskAsMissed(entry, task)">
-                          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                          Missed
+                        <button v-if="task.type === 'habit'" class="notif-missed-action-btn notif-missed-action-libur notif-missed-action-btn-icon" title="Libur" @click.stop="markMissedTaskAsLibur(entry, task)">
+                          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m14.5 14-5 4"/><path d="m9.5 14 5 4"/></svg>
+                        </button>
+                        <button class="notif-missed-action-btn notif-missed-action-missed notif-missed-action-btn-icon" title="Missed" @click.stop="markMissedTaskAsMissed(entry, task)">
+                          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                         </button>
                       </div>
                     </div>
@@ -2880,6 +2916,46 @@ const NotificationPanel = {
       this.showMissedToast(`"${task.title}" ditandai missed`);
     },
 
+    // Tombol "Libur": fungsinya sama seperti tombol "Libur Hari Ini" di Habit Tracker,
+    // bedanya ini dipakai untuk tanggal yang sudah terlewat (entry.date), bukan cuma hari ini.
+    // Menandai habit tsb libur pada tanggal itu (masuk ke skipDays), lalu hilang dari daftar
+    // Terlewat karena bukan lagi dianggap "kelewat" — memang sengaja diliburkan.
+    markMissedTaskAsLibur(entry, task) {
+      if (task.type !== 'habit') return;
+      try { NotifSound.playCheck(); } catch(e) {}
+
+      try {
+        const habitId = task.id.replace(/^habit_/, '');
+        const raw = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+        if (raw) {
+          const habits = JSON.parse(raw);
+          const updated = habits.map(h => {
+            if (h.id !== habitId) return h;
+            const skipDays = Array.isArray(h.skipDays) ? [...h.skipDays] : [];
+            if (!skipDays.includes(entry.date)) skipDays.push(entry.date);
+            return { ...h, skipDays };
+          });
+          WorkspaceStorage.setItem('aesthetic_habit_tracker_habits', JSON.stringify(updated));
+          // Sinkronisasi ke Habit Tracker & panel lain supaya langsung update
+          window.dispatchEvent(new CustomEvent('ws-habit-skip-changed', {
+            detail: { habitId, notifId: task.id, skipped: true, date: entry.date }
+          }));
+          window.dispatchEvent(new CustomEvent('ws-plans-updated'));
+        }
+      } catch(e) {}
+
+      // Putus rentetan kelewat berturut-turut karena sudah "resolved" (diliburkan, bukan lupa)
+      try { _resetReminderMissStreak(task.id); } catch(e) {}
+
+      // Hilangkan dari daftar terlewat
+      this.removeTaskFromMissedLog(entry.date, task.id);
+      this.showMissedToast(`"${task.title}" ditandai libur 🏖️`);
+
+      this.$nextTick(() => {
+        this.$emit('unread-count-changed', this.totalUnread);
+      });
+    },
+
     // Tombol "Selesai": akui task yang kelewat itu sebenarnya sudah dikerjakan.
     // Sync penuh ke: actionStatus (biar tidak muncul lagi di snapshot missed),
     // histori Habit Tracker (kalau type habit, dicentang di tanggal aslinya —
@@ -3170,25 +3246,27 @@ const MissedTasksPage = {
                 </div>
               </div>
 
-              <!-- Per-task actions: Selesai + Jadwal Ulang + Missed -->
+              <!-- Per-task actions: Selesai + Jadwal Ulang + Libur (habit saja) + Missed -->
               <div class="notif-missed-task-actions">
-                <button class="notif-missed-action-btn notif-missed-action-done" @click.stop="markAsDone(entry, task)">
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <button class="notif-missed-action-btn notif-missed-action-done notif-missed-action-btn-icon" title="Selesai" @click.stop="markAsDone(entry, task)">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
-                  Selesai
                 </button>
-                <button class="notif-missed-action-btn notif-missed-action-reschedule" @click.stop="openReschedule(task, entry.date)">
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <button class="notif-missed-action-btn notif-missed-action-reschedule notif-missed-action-btn-icon" title="Jadwal Ulang" @click.stop="openReschedule(task, entry.date)">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/>
                   </svg>
-                  Jadwal Ulang
                 </button>
-                <button class="notif-missed-action-btn notif-missed-action-missed" @click.stop="markAsMissed(entry, task)">
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <button v-if="task.type === 'habit'" class="notif-missed-action-btn notif-missed-action-libur notif-missed-action-btn-icon" title="Libur" @click.stop="markAsLibur(entry, task)">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m14.5 14-5 4"/><path d="m9.5 14 5 4"/>
+                  </svg>
+                </button>
+                <button class="notif-missed-action-btn notif-missed-action-missed notif-missed-action-btn-icon" title="Missed" @click.stop="markAsMissed(entry, task)">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
                   </svg>
-                  Missed
                 </button>
               </div>
             </div>
@@ -3408,6 +3486,41 @@ const MissedTasksPage = {
     markAsMissed(entry, task) {
       this.removeTaskFromLog(entry.date, task.id);
       this.showToast(`"${task.title}" ditandai missed`);
+    },
+
+    // Tombol "Libur": fungsinya sama seperti tombol "Libur Hari Ini" di Habit Tracker,
+    // bedanya ini dipakai untuk tanggal yang sudah terlewat (entry.date), bukan cuma hari ini.
+    // Menandai habit tsb libur pada tanggal itu (masuk ke skipDays), lalu hilang dari daftar
+    // Terlewat karena bukan lagi dianggap "kelewat" — memang sengaja diliburkan.
+    markAsLibur(entry, task) {
+      if (task.type !== 'habit') return;
+      try { NotifSound.playCheck(); } catch(e) {}
+
+      try {
+        const habitId = task.id.replace(/^habit_/, '');
+        const raw = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+        if (raw) {
+          const habits = JSON.parse(raw);
+          const updated = habits.map(h => {
+            if (h.id !== habitId) return h;
+            const skipDays = Array.isArray(h.skipDays) ? [...h.skipDays] : [];
+            if (!skipDays.includes(entry.date)) skipDays.push(entry.date);
+            return { ...h, skipDays };
+          });
+          WorkspaceStorage.setItem('aesthetic_habit_tracker_habits', JSON.stringify(updated));
+          // Sinkronisasi ke Habit Tracker & panel lain supaya langsung update
+          window.dispatchEvent(new CustomEvent('ws-habit-skip-changed', {
+            detail: { habitId, notifId: task.id, skipped: true, date: entry.date }
+          }));
+          window.dispatchEvent(new CustomEvent('ws-plans-updated'));
+        }
+      } catch(e) {}
+
+      // Putus rentetan kelewat berturut-turut karena sudah "resolved" (diliburkan, bukan lupa)
+      try { _resetReminderMissStreak(task.id); } catch(e) {}
+
+      this.removeTaskFromLog(entry.date, task.id);
+      this.showToast(`"${task.title}" ditandai libur 🏖️`);
     },
 
     // Tombol "Selesai": akui task yang kelewat itu sebenarnya sudah dikerjakan.

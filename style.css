@@ -5792,6 +5792,14 @@ input:checked + .switch-slider:before {
 }
 .notif-missed-action-btn:active { transform: scale(0.96); }
 
+/* Icon-only variant (Notifikasi Kelewat popup & panel/page Terlewat) — tooltip via title attr */
+.notif-missed-action-btn-icon {
+  padding: 6px;
+  width: 26px;
+  height: 26px;
+  justify-content: center;
+}
+
 .notif-missed-action-done {
   background: rgba(16,185,129,0.1);
   border: 1px solid rgba(16,185,129,0.35);
@@ -5807,6 +5815,15 @@ input:checked + .switch-slider:before {
   color: var(--color-terracotta, #D67B52);
 }
 .notif-missed-action-reschedule:hover { background: rgba(214,123,82,0.18); }
+
+.notif-missed-action-libur {
+  background: rgba(234,179,8,0.12);
+  border: 1px solid rgba(234,179,8,0.35);
+  color: #B45309;
+}
+.notif-missed-action-libur:hover {
+  background: rgba(234,179,8,0.2);
+}
 
 .notif-missed-action-missed {
   background: #f4f4f5;
