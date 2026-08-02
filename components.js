@@ -7833,12 +7833,21 @@ const HabitTracker = {
                       'habit-day-btn-checked': isDayChecked(habit, day),
                       'habit-day-btn-notif-pop': notifFlashHabitId === habit.id && day === new Date().getDate()
                     }"
-                    :style="isDayChecked(habit, day) ? { backgroundColor: 'transparent', borderColor: 'transparent', color: getHabitColor(habit) } : { color: 'var(--color-sand)' }"
+                    :style="isDayChecked(habit, day)
+                      ? { backgroundColor: 'transparent', borderColor: 'transparent', color: getHabitColor(habit) }
+                      : (isSkippedToday(habit) && day === new Date().getDate()
+                          ? { backgroundColor: 'transparent', borderColor: 'transparent', color: '#000000' }
+                          : { color: 'var(--color-sand)' })"
                     :title="'Tanggal ' + day"
                     style="background: none; border: none; padding: 1px;"
                   >
-                    <!-- Lucide tree-deciduous icon (checked = filled color, unchecked = muted outline) -->
-                    <svg viewBox="0 0 24 24" :width="isDayChecked(habit, day) ? 17 : 15" :height="isDayChecked(habit, day) ? 17 : 15" fill="none" stroke="currentColor" :stroke-width="isDayChecked(habit, day) ? 2 : 1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <!-- Lucide tree-deciduous icon (checked = filled color, libur hari ini = filled amber, unchecked = muted outline) -->
+                    <svg viewBox="0 0 24 24"
+                      :width="isDayChecked(habit, day) || (isSkippedToday(habit) && day === new Date().getDate()) ? 17 : 15"
+                      :height="isDayChecked(habit, day) || (isSkippedToday(habit) && day === new Date().getDate()) ? 17 : 15"
+                      fill="none" stroke="currentColor"
+                      :stroke-width="isDayChecked(habit, day) || (isSkippedToday(habit) && day === new Date().getDate()) ? 2 : 1.5"
+                      stroke-linecap="round" stroke-linejoin="round">
                       <path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/>
                       <path d="M12 19v3"/>
                     </svg>
