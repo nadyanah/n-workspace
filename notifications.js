@@ -273,8 +273,11 @@ const ReminderPopup = {
                   </div>
                 </div>
 
-                <!-- Per-item actions: Jadwal Ulang + Libur (habit saja) + Missed (icon-only, ada tooltip) -->
+                <!-- Per-item actions: Selesai + Jadwal Ulang + Libur (habit saja) + Missed (icon-only, ada tooltip) -->
                 <div class="notif-missed-task-actions" style="padding:6px 2px 0; justify-content:flex-end;">
+                  <button class="notif-missed-action-btn notif-missed-action-done notif-missed-action-btn-icon" title="Selesai" @click="markPopupItemDone(queue[0])">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </button>
                   <button class="notif-missed-action-btn notif-missed-action-reschedule notif-missed-action-btn-icon" title="Jadwal Ulang" @click="openPopupReschedule(queue[0])">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
                   </button>
@@ -323,8 +326,11 @@ const ReminderPopup = {
                 </span>
               </div>
 
-              <!-- Per-item actions: Jadwal Ulang + Libur (habit saja) + Missed (icon-only, ada tooltip) -->
+              <!-- Per-item actions: Selesai + Jadwal Ulang + Libur (habit saja) + Missed (icon-only, ada tooltip) -->
               <div class="notif-missed-task-actions" style="padding:2px 0 10px; justify-content:center;">
+                <button class="notif-missed-action-btn notif-missed-action-done notif-missed-action-btn-icon" title="Selesai" @click="markPopupItemDone(currentItem)">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </button>
                 <button class="notif-missed-action-btn notif-missed-action-reschedule notif-missed-action-btn-icon" title="Jadwal Ulang" @click="openPopupReschedule(currentItem)">
                   <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
                 </button>
@@ -757,9 +763,13 @@ const ReminderPopup = {
       const today = this.todayStr;
 
       // Task Plan hari ini
+      // Catatan: selain cek phase !== 'Completed', juga exclude task plan yang sudah
+      // ditandai selesai lewat tombol "Selesai" di popup Kelewat (ws_notif_action_status
+      // dengan id 'taskplan-{id}') — supaya begitu ditandai selesai, task itu langsung
+      // hilang dari popup "Pengingat Hari Ini" juga, walau field phase-nya belum diubah.
       try {
         const plans = JSON.parse(WorkspaceStorage.getItem('personal_workspace_job_plans') || '[]');
-        plans.filter(p => p.date === today && p.phase !== 'Completed').forEach(p => {
+        plans.filter(p => p.date === today && p.phase !== 'Completed' && !this._isDone('taskplan-' + p.id)).forEach(p => {
           const timeLabel = p.time ? (p.timeEnd ? p.time + ' – ' + p.timeEnd : p.time) : null;
           items.push({
             id: 'task-' + p.id,
@@ -918,8 +928,13 @@ const ReminderPopup = {
           const all    = this._allActions();
           const allPendingItems = all.filter(a => !this._isDone(a.id));
 
-          // Gunakan hasil re-check; fallback ke savedPending kalau re-check kosong
-          const pendingToShow = allPendingItems.length > 0 ? allPendingItems : (savedPending || []);
+          // Gunakan hasil re-check; fallback ke savedPending kalau re-check kosong.
+          // savedPending adalah snapshot LAMA (sebelum aksi Selesai/Missed/Libur di popup),
+          // jadi tetap difilter ulang via _isDone supaya item yang barusan ditandai selesai
+          // tidak nyangkut/muncul lagi di popup "Pengingat Hari Ini".
+          const pendingToShow = allPendingItems.length > 0
+            ? allPendingItems
+            : (savedPending || []).filter(a => !this._isDone(a.id));
 
           if (pendingToShow.length > 0) {
             this.mode          = 'open';
@@ -1074,6 +1089,47 @@ const ReminderPopup = {
     dismissStreakAlertItem(item) {
       this.showPopupToast(`Oke, "${item.title}" diingat lagi nanti`);
       this._removeStreakQueueItem(item.id);
+    },
+
+    // Tombol "Selesai": fungsinya sama seperti klik item di tab "Hari Ini" panel notifikasi
+    // (handleActionClick) — akui item kelewat ini sebenarnya sudah dikerjakan hari ini.
+    // Sync ke actionStatus, histori Habit Tracker (kalau habit), Agenda view, dan
+    // putus rentetan kelewat berturut-turut.
+    markPopupItemDone(item) {
+      try { NotifSound.playCheck(); } catch(e) {}
+
+      // Tandai selesai di notif status hari ini + dispatch ws-notif-status-updated
+      this._markPopupStatusHandled(item.id);
+
+      // Kalau habit → centang juga di Habit Tracker, pada tanggal hari ini
+      if (item.isHabit) {
+        try {
+          const habitId = item.id.replace(/^habit_/, '');
+          const raw = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+          if (raw) {
+            const habits = JSON.parse(raw);
+            const today = new Date();
+            const ym = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+            const day = today.getDate();
+            const updated = habits.map(h => {
+              if (h.id !== habitId) return h;
+              const hist = { ...h.history };
+              const arr = hist[ym] ? [...hist[ym]] : [];
+              if (!arr.includes(day)) arr.push(day);
+              hist[ym] = arr.sort((a, b) => a - b);
+              return { ...h, history: hist };
+            });
+            WorkspaceStorage.setItem('aesthetic_habit_tracker_habits', JSON.stringify(updated));
+            window.dispatchEvent(new CustomEvent('ws-plans-updated'));
+          }
+        } catch(e) {}
+      }
+
+      // Akhirnya dikerjakan → putus rentetan kelewat berturut-turut
+      try { _resetReminderMissStreak(item.id); } catch(e) {}
+
+      this.showPopupToast(`"${item.title}" ditandai selesai ✓`);
+      this._removePopupQueueItem(item.id);
     },
 
     // Tombol "Libur": fungsinya sama seperti tombol "Libur Hari Ini" di Habit Tracker.
