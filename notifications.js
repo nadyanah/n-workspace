@@ -193,22 +193,32 @@ const ReminderPopup = {
               </div>
               <template v-for="entry in mergedTodayItems" :key="entry.key">
                 <!-- Info item (task plan / content) -->
-                <div v-if="entry.kind === 'info'" class="reminder-popup-item reminder-popup-item-info">
+                <div v-if="entry.kind === 'info'"
+                     class="reminder-popup-item reminder-popup-item-info"
+                     :class="{ 'reminder-popup-item-clickable': !!entry.item.page }"
+                     :title="entry.item.page ? 'Klik untuk buka halaman terkait' : ''"
+                     @click="handleMergedItemClick(entry)">
                   <div v-if="entry.item.time" class="reminder-popup-item-time">{{ entry.item.time }}</div>
                   <div class="reminder-popup-item-icon">{{ entry.item.icon }}</div>
                   <div class="reminder-popup-item-info-text" style="flex:1; min-width:0;">
                     <div class="reminder-popup-item-title">{{ entry.item.title }}</div>
                     <div class="reminder-popup-item-sub">{{ entry.item.sub }}</div>
                   </div>
+                  <svg v-if="entry.item.page" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted); opacity:0.55; flex-shrink:0; align-self:center;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </div>
 
                 <!-- Pengingat item -->
-                <div v-else class="reminder-popup-item">
+                <div v-else
+                     class="reminder-popup-item"
+                     :class="{ 'reminder-popup-item-clickable': !!entry.item.page }"
+                     :title="entry.item.page ? 'Klik untuk buka halaman terkait' : ''"
+                     @click="handleMergedItemClick(entry)">
                   <div class="reminder-popup-item-time">{{ entry.item.time }}</div>
                   <div class="reminder-popup-item-info" style="flex:1; min-width:0;">
                     <div class="reminder-popup-item-title">{{ entry.item.title }}</div>
                     <div class="reminder-popup-item-sub" style="white-space:pre-wrap;">{{ entry.item.subtitle }}</div>
                   </div>
+                  <svg v-if="entry.item.page" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted); opacity:0.55; flex-shrink:0; align-self:center;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </div>
               </template>
 
@@ -472,7 +482,7 @@ const ReminderPopup = {
     </transition>
   `,
 
-  emits: ['open-notif', 'dismiss'],
+  emits: ['open-notif', 'dismiss', 'navigate', 'trigger-habit'],
 
   data() {
     return {
@@ -610,7 +620,7 @@ const ReminderPopup = {
           habits.forEach(h => {
             // Juga skip jika kebetulan masih ada di ws_habit_notifs (safety fallback)
             if (skippedHabitNotifIds.has(h.id)) return;
-            if (!base.find(b => b.id === h.id)) base.push({ ...h, isHabit: true });
+            if (!base.find(b => b.id === h.id)) base.push({ ...h, isHabit: true, page: 'habitTracker' });
           });
         }
       } catch(e) {}
@@ -776,7 +786,8 @@ const ReminderPopup = {
             icon: '📋',
             title: p.tasks,
             sub: `Task Plan · ${p.category || 'Umum'}`,
-            time: timeLabel
+            time: timeLabel,
+            page: 'jobLogbook'
           });
         });
       } catch(e) {}
@@ -795,7 +806,8 @@ const ReminderPopup = {
             icon: '🎬',
             title: item.title,
             sub: `Content · ${item.platform || ''} · ${label}`,
-            time: item.dueTime || null
+            time: item.dueTime || null,
+            page: 'contentTracker'
           });
         });
       } catch(e) {}
@@ -898,6 +910,22 @@ const ReminderPopup = {
     openNotifPanel() {
       this.dismiss();
       this.$emit('open-notif');
+    },
+
+    // ── Klik item di mode "open" (Pengingat Hari Ini) → langsung arahkan ke
+    // halaman/popup terkait (Habit Tracker, Job Logbook, Content Tracker, dst).
+    // Kalau item habit → ikut trigger animasi/highlight-nya di Habit Tracker,
+    // sama seperti klik item "Hari Ini" di Panel Notifikasi.
+    handleMergedItemClick(entry) {
+      const item = entry && entry.item;
+      if (!item || !item.page) return; // tidak ada tujuan → tidak melakukan apa-apa
+      NotifSound.flushPendingSound();
+      this.dismiss();
+      if (entry.kind === 'notif' && item.isHabit) {
+        const habitId = String(item.id).replace(/^habit_/, '');
+        this.$emit('trigger-habit', habitId);
+      }
+      this.$emit('navigate', item.page);
     },
 
     // Flush suara pending (akibat autoplay policy) sebelum dismiss/open panel
