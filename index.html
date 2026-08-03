@@ -500,6 +500,102 @@
     }
     .agenda-detail-icon-btn:hover { background: var(--color-sand-light, #EDE8E1); color: var(--text-dark, #3D2E22); }
     .agenda-detail-icon-btn-danger:hover { background: #fee2e2; color: #ef4444; }
+    .agenda-detail-icon-btn-active { background: var(--color-terracotta, #D67B52); color: #fff; }
+    .agenda-detail-icon-btn-active:hover { background: var(--color-terracotta, #D67B52); color: #fff; }
+
+    /* ── Panel Jam Pasir Pomodoro inline di Agenda Detail Popup ── */
+    .agenda-detail-pomo-section {
+      padding: 12px 16px 0;
+      border-bottom: 1px solid var(--color-sand-light, #EDE8E1);
+    }
+    .agenda-detail-pomo-fade-enter-active,
+    .agenda-detail-pomo-fade-leave-active {
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .agenda-detail-pomo-fade-enter-from,
+    .agenda-detail-pomo-fade-leave-to {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    .agenda-detail-pomo-picker {
+      background: var(--color-cream, #FDF5EB);
+      border: 1.5px solid var(--color-sand, #E8DFD8);
+      border-radius: 12px;
+      padding: 12px 14px 14px;
+      margin-bottom: 12px;
+    }
+    .agenda-detail-pomo-picker-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text-dark, #3D2E22);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .agenda-detail-pomo-picker-options {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .agenda-detail-pomo-min-btn {
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1.5px solid var(--color-sand, #E8DFD8);
+      background: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted, #7A6F66);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .agenda-detail-pomo-min-btn:hover { border-color: var(--color-terracotta, #D67B52); color: var(--color-terracotta, #D67B52); }
+    .agenda-detail-pomo-min-btn-active {
+      background: var(--color-terracotta, #D67B52);
+      border-color: var(--color-terracotta, #D67B52);
+      color: #fff;
+    }
+    .agenda-detail-pomo-min-input {
+      width: 68px;
+      padding: 6px 10px;
+      border-radius: 20px;
+      border: 1.5px solid var(--color-sand, #E8DFD8);
+      background: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-dark, #3D2E22);
+      outline: none;
+      text-align: center;
+    }
+    .agenda-detail-pomo-start-btn {
+      width: 100%;
+      padding: 9px;
+      border: none;
+      border-radius: 9px;
+      background: var(--color-terracotta, #D67B52);
+      color: #fff;
+      font-size: 12.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: opacity 0.15s ease;
+    }
+    .agenda-detail-pomo-start-btn:hover { opacity: 0.9; }
+    .agenda-detail-pomo-running.fct-wrapper {
+      position: static;
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 12px;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    .agenda-detail-pomo-running.fct-wrapper:hover {
+      transform: none;
+    }
     .agenda-detail-title-row {
       display: flex;
       align-items: flex-start;

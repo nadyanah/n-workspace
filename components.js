@@ -10143,6 +10143,14 @@ const GoogleCalendar = {
                     title="Edit pengingat">
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
+                  <!-- Jam Pasir Pomodoro (sync) — tersedia untuk semua tipe, popup TIDAK tertutup saat diklik -->
+                  <button
+                    @click="localTogglePomoPanelFromDetail(agendaDetailItem)"
+                    class="agenda-detail-icon-btn"
+                    :class="{ 'agenda-detail-icon-btn-active': agendaPomo.show }"
+                    title="Jam Pasir Pomodoro">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>
+                  </button>
                   <!-- Delete button (hanya untuk manual) -->
                   <button v-if="agendaDetailItem.type === 'manual'"
                     @click="localDeleteFromDetail(agendaDetailItem)"
@@ -10155,6 +10163,59 @@ const GoogleCalendar = {
                   <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               </div>
+
+              <!-- ═══ Panel Jam Pasir Pomodoro (sync) — muncul inline, popup TIDAK tertutup ═══ -->
+              <transition name="agenda-detail-pomo-fade">
+                <div v-if="agendaPomo.show" class="agenda-detail-pomo-section">
+                  <!-- Belum ada sesi aktif → pilih durasi lalu mulai -->
+                  <div v-if="!(agendaPomo.everStarted && agendaPomo.timeLeft > 0)" class="agenda-detail-pomo-picker">
+                    <div class="agenda-detail-pomo-picker-title">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-terracotta,#D67B52);"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>
+                      Mulai Jam Pasir Pomodoro
+                    </div>
+                    <div class="agenda-detail-pomo-picker-options">
+                      <button v-for="m in [5, 15, 25, 45]" :key="m" type="button"
+                        class="agenda-detail-pomo-min-btn"
+                        :class="{ 'agenda-detail-pomo-min-btn-active': agendaPomo.minutesInput === m }"
+                        @click="agendaPomo.minutesInput = m">{{ m }}m</button>
+                      <input type="number" min="1" max="180" v-model.number="agendaPomo.minutesInput"
+                        class="agenda-detail-pomo-min-input" placeholder="menit" />
+                    </div>
+                    <button type="button" class="agenda-detail-pomo-start-btn" @click="localStartPomoFromDetail">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+                      Mulai {{ agendaPomo.minutesInput || 25 }} Menit
+                    </button>
+                  </div>
+
+                  <!-- Sesi berjalan / pause — sync dengan floating widget & halaman Pomodoro Timer -->
+                  <div v-else class="fct-wrapper agenda-detail-pomo-running">
+                    <div class="fct-icon">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="fct-hg-icon" :style="{ animationPlayState: agendaPomo.isRunning ? 'running' : 'paused' }">
+                        <path d="M5 2h14"></path>
+                        <path d="M5 22h14"></path>
+                        <path d="M19 2v4c0 3-2.5 4.5-5 5.5c2.5 1 5 2.5 5 5.5v4"></path>
+                        <path d="M5 2v4c0 3 2.5 4.5 5 5.5c-2.5 1-5 2.5-5 5.5v4"></path>
+                      </svg>
+                    </div>
+                    <div class="fct-body">
+                      <span class="fct-label">{{ agendaPomo.isRunning ? 'WAKTU TERSISA' : 'DIJEDA' }}</span>
+                      <span class="fct-time" :style="{ opacity: agendaPomo.isRunning ? 1 : 0.55 }">{{ agendaPomoFormattedTime }}</span>
+                    </div>
+                    <svg class="fct-ring" viewBox="0 0 36 36" width="52" height="52">
+                      <circle class="fct-ring-bg" cx="18" cy="18" r="15.5" fill="none" stroke-width="2.5"/>
+                      <circle class="fct-ring-fill" cx="18" cy="18" r="15.5" fill="none" stroke-width="2.5"
+                        :stroke-dasharray="97.4" :stroke-dashoffset="agendaPomoRingOffset"
+                        stroke-linecap="round" transform="rotate(-90 18 18)"
+                        :style="{ opacity: agendaPomo.isRunning ? 1 : 0.45 }"/>
+                    </svg>
+                    <button class="fct-pause-btn" @click.stop="localTogglePausePomoFromDetail"
+                      :title="agendaPomo.isRunning ? 'Jeda timer' : 'Lanjutkan timer'">
+                      <svg v-if="agendaPomo.isRunning" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                      <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </transition>
 
               <!-- Title row with color dot -->
               <div class="agenda-detail-title-row">
@@ -10915,6 +10976,10 @@ const GoogleCalendar = {
       // ── Popup pilihan "acara ini / dan seterusnya / semua" untuk hapus & edit pengingat manual berulang ──
       recurActionPopup: null, // { mode: 'delete'|'edit', block }
       recurActionChoice: 'this', // pilihan radio aktif di popup tersebut
+      // ── Panel "Jam Pasir Pomodoro" (sync) — dipicu dari tombol jam pasir di Agenda Detail Popup ──
+      // State ini sinkron dengan localStorage 'pomo_floating_state' & event 'pomo-state-update',
+      // sama seperti FloatingCountdownTimer & halaman Pomodoro Timer.
+      agendaPomo: { show: false, minutesInput: 25, isRunning: false, timeLeft: 0, totalDuration: 0, currentMode: 'focus', deadline: null, everStarted: false },
       agendaFilterOpen: false,
       agendaFilters: { task: true, habit: true, manual: true, content: true },
       // agendaFilterOptions moved to computed (includes custom categories)
@@ -10952,6 +11017,17 @@ const GoogleCalendar = {
     };
   },
   computed: {
+    // ── Helper tampilan panel Jam Pasir Pomodoro inline di Agenda Detail Popup ──
+    agendaPomoFormattedTime() {
+      const t = Math.max(0, this.agendaPomo.timeLeft);
+      return `${String(Math.floor(t / 60)).padStart(2,'0')} : ${String(t % 60).padStart(2,'0')}`;
+    },
+    agendaPomoRingOffset() {
+      if (this.agendaPomo.totalDuration <= 0) return 97.4;
+      const fraction = Math.min(1, Math.max(0,
+        (this.agendaPomo.totalDuration - this.agendaPomo.timeLeft) / this.agendaPomo.totalDuration));
+      return (97.4 * fraction).toFixed(2);
+    },
     localIsCustomRecurrence() {
       return this.customRecurrenceSaved !== null && this.localNewReminder.recurrence === 'custom';
     },
@@ -11397,6 +11473,13 @@ const GoogleCalendar = {
         timedBlocks,
         nowLineTop
       }];
+    }
+  },
+  watch: {
+    // Pastikan ticker & listener panel Jam Pasir Pomodoro dibersihkan
+    // setiap kali popup Agenda Detail ditutup, dari jalur manapun.
+    agendaDetailItem(newVal) {
+      if (!newVal) this.localClosePomoPanel();
     }
   },
   mounted() {
@@ -11872,6 +11955,140 @@ const GoogleCalendar = {
         globalThis.dispatchEvent(new CustomEvent('ws-job-plans-updated'));
         this.agendaDetailItem = null;
       } catch(_e) { /* ignore */ }
+    },
+
+    // ── Panel "Jam Pasir Pomodoro" (sync) — tombol jam pasir di Agenda Detail Popup ──
+    // Tersedia untuk semua tipe item. Popup Agenda Detail TIDAK tertutup saat diklik;
+    // panel muncul inline di dalam card yang sama dan tetap sinkron dengan
+    // FloatingCountdownTimer & halaman Pomodoro Timer lewat localStorage 'pomo_floating_state'
+    // + event 'pomo-state-update'.
+    localTogglePomoPanelFromDetail(item) {
+      if (this.agendaPomo.show) {
+        this.localClosePomoPanel();
+        return;
+      }
+      this._loadAgendaPomoFromStorage();
+      this.agendaPomo.show = true;
+      this._agendaPomoListener = (e) => this._applyAgendaPomoState(e.detail);
+      globalThis.addEventListener('pomo-state-update', this._agendaPomoListener);
+      this._agendaPomoTicker = setInterval(() => this._tickAgendaPomo(), 1000);
+    },
+    localClosePomoPanel() {
+      this.agendaPomo.show = false;
+      if (this._agendaPomoTicker) { clearInterval(this._agendaPomoTicker); this._agendaPomoTicker = null; }
+      if (this._agendaPomoListener) { globalThis.removeEventListener('pomo-state-update', this._agendaPomoListener); this._agendaPomoListener = null; }
+    },
+    _loadAgendaPomoFromStorage() {
+      try {
+        const raw = localStorage.getItem('pomo_floating_state');
+        if (!raw) return;
+        const s = JSON.parse(raw);
+        if (!s.everStarted) return;
+        this._applyAgendaPomoState(s);
+      } catch(_e) { /* ignore */ }
+    },
+    _applyAgendaPomoState(s) {
+      if (!s || !s.everStarted) {
+        this.agendaPomo.everStarted = false;
+        this.agendaPomo.isRunning = false;
+        this.agendaPomo.timeLeft = 0;
+        this.agendaPomo.totalDuration = 0;
+        this.agendaPomo.deadline = null;
+        return;
+      }
+      this.agendaPomo.everStarted = true;
+      this.agendaPomo.isRunning = !!s.isRunning;
+      this.agendaPomo.totalDuration = s.totalDuration || 0;
+      this.agendaPomo.currentMode = s.currentMode || 'focus';
+      this.agendaPomo.deadline = s.deadline || null;
+      if (this.agendaPomo.isRunning && this.agendaPomo.deadline) {
+        this.agendaPomo.timeLeft = Math.max(0, Math.round((this.agendaPomo.deadline - Date.now()) / 1000));
+      } else {
+        this.agendaPomo.timeLeft = s.timeLeft || 0;
+      }
+    },
+    _tickAgendaPomo() {
+      if (!this.agendaPomo.isRunning) return;
+      if (!this.agendaPomo.deadline) return;
+      const remaining = Math.round((this.agendaPomo.deadline - Date.now()) / 1000);
+      if (remaining <= 0) {
+        this.agendaPomo.timeLeft = 0;
+        this.agendaPomo.isRunning = false;
+        this.agendaPomo.deadline = null;
+        this.agendaPomo.everStarted = false;
+        localStorage.removeItem('pomo_floating_state');
+        globalThis.dispatchEvent(new CustomEvent('pomo-state-update', { detail: {
+          isRunning: false, timeLeft: 0, totalDuration: 0, deadline: null, everStarted: false
+        }}));
+      } else {
+        this.agendaPomo.timeLeft = remaining;
+      }
+    },
+    // ── Mulai sesi baru dengan durasi pilihan (menit), sync ke seluruh app ──
+    localStartPomoFromDetail() {
+      const mins = Math.max(1, Math.min(180, parseInt(this.agendaPomo.minutesInput, 10) || 25));
+      const totalSec = mins * 60;
+      const deadline = Date.now() + totalSec * 1000;
+
+      this.agendaPomo.everStarted = true;
+      this.agendaPomo.isRunning = true;
+      this.agendaPomo.totalDuration = totalSec;
+      this.agendaPomo.timeLeft = totalSec;
+      this.agendaPomo.currentMode = 'focus';
+      this.agendaPomo.deadline = deadline;
+
+      const state = {
+        isRunning: true,
+        timeLeft: totalSec,
+        totalDuration: totalSec,
+        currentMode: 'focus',
+        deadline: deadline,
+        everStarted: true,
+        ts: Date.now()
+      };
+      localStorage.setItem('pomo_floating_state', JSON.stringify(state));
+      globalThis.dispatchEvent(new CustomEvent('pomo-state-update', { detail: state }));
+    },
+    // ── Pause / Resume sesi dari panel Agenda Detail (sync ke widget floating & halaman Pomodoro) ──
+    localTogglePausePomoFromDetail() {
+      if (this.agendaPomo.isRunning) {
+        const actualLeft = this.agendaPomo.deadline
+          ? Math.max(0, Math.round((this.agendaPomo.deadline - Date.now()) / 1000))
+          : this.agendaPomo.timeLeft;
+
+        this.agendaPomo.isRunning = false;
+        this.agendaPomo.deadline = null;
+        this.agendaPomo.timeLeft = actualLeft;
+
+        const state = {
+          isRunning: false,
+          timeLeft: actualLeft,
+          totalDuration: this.agendaPomo.totalDuration,
+          currentMode: this.agendaPomo.currentMode,
+          deadline: null,
+          everStarted: true,
+          ts: Date.now()
+        };
+        localStorage.setItem('pomo_floating_state', JSON.stringify(state));
+        globalThis.dispatchEvent(new CustomEvent('pomo-state-update', { detail: state }));
+      } else if (this.agendaPomo.timeLeft > 0) {
+        const newDeadline = Date.now() + (this.agendaPomo.timeLeft * 1000);
+
+        this.agendaPomo.isRunning = true;
+        this.agendaPomo.deadline = newDeadline;
+
+        const state = {
+          isRunning: true,
+          timeLeft: this.agendaPomo.timeLeft,
+          totalDuration: this.agendaPomo.totalDuration,
+          currentMode: this.agendaPomo.currentMode,
+          deadline: newDeadline,
+          everStarted: true,
+          ts: Date.now()
+        };
+        localStorage.setItem('pomo_floating_state', JSON.stringify(state));
+        globalThis.dispatchEvent(new CustomEvent('pomo-state-update', { detail: state }));
+      }
     },
 
     localEditFromDetail(block) {
