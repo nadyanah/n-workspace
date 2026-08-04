@@ -578,11 +578,22 @@ const ReminderPopup = {
     this._checkInterval = setInterval(() => this._checkLive(), 20000);
     // Bell reminder: goyang + bunyi setiap 8 menit kalau masih ada notif pending & popup tidak visible
     this._bellInterval  = setInterval(() => this._checkBellReminder(), 8 * 60 * 1000);
+
+    // Sinkron real-time: kalau item yang sedang tampil di popup ini ditandai
+    // selesai/missed dari tempat lain (panel notifikasi) atau diliburkan dari tempat
+    // lain (panel notifikasi / Habit Tracker) selagi popup masih terbuka, langsung
+    // hilangkan dari daftar yang tampil — konsisten dengan panel & daftar harian,
+    // tanpa perlu menunggu polling 20 detik.
+    this._onExternalItemChange = () => this._pruneVisibleItems();
+    window.addEventListener('ws-notif-status-updated', this._onExternalItemChange);
+    window.addEventListener('ws-habit-skip-changed', this._onExternalItemChange);
   },
 
   beforeUnmount() {
     clearInterval(this._checkInterval);
     clearInterval(this._bellInterval);
+    window.removeEventListener('ws-notif-status-updated', this._onExternalItemChange);
+    window.removeEventListener('ws-habit-skip-changed', this._onExternalItemChange);
     if (this._popupToastTimer) clearTimeout(this._popupToastTimer);
   },
 
@@ -855,6 +866,45 @@ const ReminderPopup = {
       if (pending.length === 0) return; // semua selesai, tidak perlu goyang
       this._triggerBellShake();
       NotifSound.playNotif();
+    },
+
+    // Cek apakah sebuah habit sedang diliburkan hari ini (dibaca langsung dari storage,
+    // supaya selalu dapat data terbaru walau perubahannya datang dari tempat lain).
+    _isSkippedToday(item) {
+      if (!item || !item.isHabit) return false;
+      try {
+        const raw = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+        if (!raw) return false;
+        const habitId = String(item.id).replace(/^habit_/, '');
+        const habits = JSON.parse(raw);
+        const h = habits.find(x => x.id === habitId);
+        return !!(h && Array.isArray(h.skipDays) && h.skipDays.includes(this.todayStr));
+      } catch(e) { return false; }
+    },
+
+    // Buang item dari daftar yang SEDANG tampil (queue mode missed, pendingNotifs mode open,
+    // streakQueue mode streak-alert) begitu item itu ditandai selesai/missed/libur dari tempat
+    // LAIN (panel notifikasi, Habit Tracker, dst) — supaya popup selalu konsisten dengan panel
+    // & daftar harian tanpa perlu menunggu polling 20 detik atau ditutup-buka ulang.
+    _pruneVisibleItems() {
+      if (!this.visible) return;
+      const stillRelevant = (item) => !this._isDone(item.id) && !this._isSkippedToday(item);
+
+      if (this.mode === 'missed') {
+        const before = this.queue.length;
+        this.queue = this.queue.filter(stillRelevant);
+        if (this.queue.length === 0 && before > 0) { this.dismiss(); return; }
+        if (this.currentIdx >= this.queue.length) this.currentIdx = Math.max(0, this.queue.length - 1);
+      } else if (this.mode === 'open') {
+        this.pendingNotifs = this.pendingNotifs.filter(stillRelevant);
+        // Mode "open" boleh kosong tanpa auto-dismiss — biar user tetap lihat ringkasan
+        // (Info items tetap relevan meski semua Pengingat sudah beres).
+      } else if (this.mode === 'streak-alert') {
+        const before = this.streakQueue.length;
+        this.streakQueue = this.streakQueue.filter(item => !this._isSkippedToday(item));
+        if (this.streakQueue.length === 0 && before > 0) { this.dismiss(); return; }
+        if (this.streakIdx >= this.streakQueue.length) this.streakIdx = Math.max(0, this.streakQueue.length - 1);
+      }
     },
 
     // ── Trigger bell shake on all bell buttons ────────────────────────────
@@ -2994,8 +3044,26 @@ const NotificationPanel = {
       WorkspaceStorage.setItem('ws_missed_tasks', JSON.stringify(this.missedLog));
     },
 
-    // Tombol "Missed": tandai sudah diakui, langsung hilang dari daftar terlewat
+    // Tombol "Missed": fungsinya disamakan dengan tombol "Missed" di popup (markPopupItemMissed) —
+    // ditandai 'missed' (bukan done) di ws_notif_action_status supaya konsisten di tab "Hari Ini"
+    // (tampil coret merah, bukan hilang begitu saja), dan tetap dihitung buat rentetan kelewat
+    // berturut-turut (supaya alert "perlu dijadwal ulang" tetap jalan walau ditandai dari sini).
     markMissedTaskAsMissed(entry, task) {
+      try {
+        const raw = WorkspaceStorage.getItem('ws_notif_action_status');
+        const status = raw ? JSON.parse(raw) : {};
+        if (!status[entry.date]) status[entry.date] = {};
+        status[entry.date][task.id] = 'missed';
+        WorkspaceStorage.setItem('ws_notif_action_status', JSON.stringify(status));
+        this.actionStatus = { ...status };
+        window.dispatchEvent(new CustomEvent('ws-notif-status-updated', {
+          detail: { date: entry.date, id: task.id, missed: true, source: 'notifPanelMissed' }
+        }));
+      } catch(e) {}
+
+      // Ditandai missed = tetap dihitung kelewat buat rentetan berturut-turut
+      try { _bumpReminderMissStreak(task.id, entry.date, { title: task.title, subtitle: task.subtitle }); } catch(e) {}
+
       this.removeTaskFromMissedLog(entry.date, task.id);
       this.showMissedToast(`"${task.title}" ditandai missed`);
     },
@@ -3132,6 +3200,11 @@ const NotificationPanel = {
         });
         WorkspaceStorage.setItem('ws_manual_notifs', JSON.stringify(manuals));
         window.dispatchEvent(new CustomEvent('ws-manual-notif-updated'));
+
+        // Reminder sudah dijadwal ulang → putus rentetan kelewatnya, sama seperti di popup
+        // (confirmPopupReschedule) supaya alert "perlu dijadwal ulang" tidak nyangkut.
+        try { _resetReminderMissStreak(this.missedRescheduleTask.id); } catch(e) {}
+
         if (this.missedRescheduleSourceDate) {
           this.removeTaskFromMissedLog(this.missedRescheduleSourceDate, this.missedRescheduleTask.id);
         }
@@ -3481,11 +3554,16 @@ const MissedTasksPage = {
       this.loadData();
     };
     window.addEventListener('ws-notif-status-updated', this._onNotifStatusUpdated);
+    // Refresh kalau ada item yang diliburkan dari tempat lain (panel notifikasi/popup),
+    // supaya langsung hilang dari sini juga — konsisten dengan panel & popup.
+    this._onHabitSkipChanged = () => { this.loadData(); };
+    window.addEventListener('ws-habit-skip-changed', this._onHabitSkipChanged);
   },
 
   beforeUnmount() {
     window.removeEventListener('snapshot-missed-tasks', this.loadData);
     window.removeEventListener('ws-notif-status-updated', this._onNotifStatusUpdated);
+    window.removeEventListener('ws-habit-skip-changed', this._onHabitSkipChanged);
     if (this._toastTimer) clearTimeout(this._toastTimer);
   },
 
@@ -3566,8 +3644,23 @@ const MissedTasksPage = {
       WorkspaceStorage.setItem('ws_missed_tasks', JSON.stringify(this.missedLog));
     },
 
-    // Tombol "Missed": tandai sudah dilihat/diakui, langsung hilang dari daftar kelewat (tidak muncul lagi)
+    // Tombol "Missed": fungsinya disamakan dengan popup & panel notifikasi (markPopupItemMissed /
+    // markMissedTaskAsMissed) — ditandai 'missed' di ws_notif_action_status supaya konsisten
+    // tampil coret merah di tempat lain, dan tetap dihitung buat rentetan kelewat berturut-turut.
     markAsMissed(entry, task) {
+      try {
+        const raw = WorkspaceStorage.getItem('ws_notif_action_status');
+        const status = raw ? JSON.parse(raw) : {};
+        if (!status[entry.date]) status[entry.date] = {};
+        status[entry.date][task.id] = 'missed';
+        WorkspaceStorage.setItem('ws_notif_action_status', JSON.stringify(status));
+        window.dispatchEvent(new CustomEvent('ws-notif-status-updated', {
+          detail: { date: entry.date, id: task.id, missed: true, source: 'missedTasksPage' }
+        }));
+      } catch(e) {}
+
+      try { _bumpReminderMissStreak(task.id, entry.date, { title: task.title, subtitle: task.subtitle }); } catch(e) {}
+
       this.removeTaskFromLog(entry.date, task.id);
       this.showToast(`"${task.title}" ditandai missed`);
     },
@@ -3691,6 +3784,10 @@ const MissedTasksPage = {
         WorkspaceStorage.setItem('ws_manual_notifs', JSON.stringify(manuals));
         // Dispatch event agar NotificationPanel reload
         window.dispatchEvent(new CustomEvent('ws-manual-notif-updated'));
+
+        // Reminder sudah dijadwal ulang → putus rentetan kelewatnya, sama seperti di popup & panel
+        try { _resetReminderMissStreak(this.rescheduleTask.id); } catch(e) {}
+
         // Hapus dari log kelewat supaya tidak numpuk lagi di daftar terlewat
         if (this.rescheduleSourceDate) {
           this.removeTaskFromLog(this.rescheduleSourceDate, this.rescheduleTask.id);

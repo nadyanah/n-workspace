@@ -4545,6 +4545,46 @@ input:checked + .switch-slider:before {
   transform: scale(0.96);
 }
 
+/* Wrapper untuk tombol pause + reset berdampingan */
+.fct-btn-group {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Reset button — kembar dengan pause-btn tapi sedikit lebih kecil & netral */
+.fct-reset-btn {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(200, 185, 170, 0.6);
+  background: rgba(255, 255, 255, 0.55);
+  color: #8C7C6D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 0;
+  outline: none;
+}
+
+.fct-reset-btn:hover {
+  background: #EF4444;
+  color: #FFFFFF;
+  border-color: #EF4444;
+  transform: scale(1.08) rotate(-45deg);
+  box-shadow: 0 3px 10px rgba(239, 68, 68, 0.3);
+}
+
+.fct-reset-btn:active {
+  transform: scale(0.96) rotate(-45deg);
+}
+
 /* Vue transition — slide in dari kanan bawah */
 .fct-slide-enter-active,
 .fct-slide-leave-active {

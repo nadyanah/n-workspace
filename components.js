@@ -7835,18 +7835,18 @@ const HabitTracker = {
                     }"
                     :style="isDayChecked(habit, day)
                       ? { backgroundColor: 'transparent', borderColor: 'transparent', color: getHabitColor(habit) }
-                      : (isSkippedToday(habit) && day === new Date().getDate()
+                      : (isDaySkipped(habit, day)
                           ? { backgroundColor: 'transparent', borderColor: 'transparent', color: '#000000' }
                           : { color: 'var(--color-sand)' })"
-                    :title="'Tanggal ' + day"
+                    :title="isDaySkipped(habit, day) ? ('Tanggal ' + day + ' — 🏖️ Libur') : ('Tanggal ' + day)"
                     style="background: none; border: none; padding: 1px;"
                   >
-                    <!-- Lucide tree-deciduous icon (checked = filled color, libur hari ini = filled amber, unchecked = muted outline) -->
+                    <!-- Lucide tree-deciduous icon (checked = filled color, libur = filled amber, unchecked = muted outline) -->
                     <svg viewBox="0 0 24 24"
-                      :width="isDayChecked(habit, day) || (isSkippedToday(habit) && day === new Date().getDate()) ? 17 : 15"
-                      :height="isDayChecked(habit, day) || (isSkippedToday(habit) && day === new Date().getDate()) ? 17 : 15"
+                      :width="isDayChecked(habit, day) || isDaySkipped(habit, day) ? 17 : 15"
+                      :height="isDayChecked(habit, day) || isDaySkipped(habit, day) ? 17 : 15"
                       fill="none" stroke="currentColor"
-                      :stroke-width="isDayChecked(habit, day) || (isSkippedToday(habit) && day === new Date().getDate()) ? 2 : 1.5"
+                      :stroke-width="isDayChecked(habit, day) || isDaySkipped(habit, day) ? 2 : 1.5"
                       stroke-linecap="round" stroke-linejoin="round">
                       <path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.07V6a3 3 0 0 1 6 0v.07a3.5 3.5 0 0 1 3.24 5.61A4 4 0 0 1 16 19Z"/>
                       <path d="M12 19v3"/>
@@ -8444,6 +8444,15 @@ const HabitTracker = {
     isDayChecked(habit, day) {
       const checked = habit.history[this.currentYearMonth] || [];
       return checked.includes(day);
+    },
+    // Cek apakah tanggal (day, di bulan yang sedang aktif dilihat) ada di skipDays habit —
+    // beda dengan isSkippedToday yang cuma cek hari ini. Dipakai tabel Habit supaya tanggal
+    // yang diliburkan dari panel Notifikasi Terlewat / Tugas Terlewat (bisa tanggal lampau)
+    // ikut tampil bertanda libur di sini, bukan cuma terlihat seperti "tidak dikerjakan".
+    isDaySkipped(habit, day) {
+      if (!Array.isArray(habit.skipDays) || habit.skipDays.length === 0) return false;
+      const dateStr = `${this.currentYearMonth}-${String(day).padStart(2, '0')}`;
+      return habit.skipDays.includes(dateStr);
     },
     getCheckedDaysCount(habit) {
       const checked = habit.history[this.currentYearMonth] || [];
@@ -10187,33 +10196,8 @@ const GoogleCalendar = {
                     </button>
                   </div>
 
-                  <!-- Sesi berjalan / pause — sync dengan floating widget & halaman Pomodoro Timer -->
-                  <div v-else class="fct-wrapper agenda-detail-pomo-running">
-                    <div class="fct-icon">
-                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="fct-hg-icon" :style="{ animationPlayState: agendaPomo.isRunning ? 'running' : 'paused' }">
-                        <path d="M5 2h14"></path>
-                        <path d="M5 22h14"></path>
-                        <path d="M19 2v4c0 3-2.5 4.5-5 5.5c2.5 1 5 2.5 5 5.5v4"></path>
-                        <path d="M5 2v4c0 3 2.5 4.5 5 5.5c-2.5 1-5 2.5-5 5.5v4"></path>
-                      </svg>
-                    </div>
-                    <div class="fct-body">
-                      <span class="fct-label">{{ agendaPomo.isRunning ? 'WAKTU TERSISA' : 'DIJEDA' }}</span>
-                      <span class="fct-time" :style="{ opacity: agendaPomo.isRunning ? 1 : 0.55 }">{{ agendaPomoFormattedTime }}</span>
-                    </div>
-                    <svg class="fct-ring" viewBox="0 0 36 36" width="52" height="52">
-                      <circle class="fct-ring-bg" cx="18" cy="18" r="15.5" fill="none" stroke-width="2.5"/>
-                      <circle class="fct-ring-fill" cx="18" cy="18" r="15.5" fill="none" stroke-width="2.5"
-                        :stroke-dasharray="97.4" :stroke-dashoffset="agendaPomoRingOffset"
-                        stroke-linecap="round" transform="rotate(-90 18 18)"
-                        :style="{ opacity: agendaPomo.isRunning ? 1 : 0.45 }"/>
-                    </svg>
-                    <button class="fct-pause-btn" @click.stop="localTogglePausePomoFromDetail"
-                      :title="agendaPomo.isRunning ? 'Jeda timer' : 'Lanjutkan timer'">
-                      <svg v-if="agendaPomo.isRunning" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
-                      <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
-                    </button>
-                  </div>
+                  <!-- Sesi berjalan dikendalikan sepenuhnya oleh widget mengambang (floating-countdown-timer)
+                       di pojok kanan bawah — panel ini otomatis tertutup begitu sesi dimulai, lihat localStartPomoFromDetail() -->
                 </div>
               </transition>
 
@@ -11564,6 +11548,19 @@ const GoogleCalendar = {
       const isToday = dateStr === todayStr;
       const result = [];
 
+      // Kumpulkan habit yang sedang diliburkan pada tanggal ini (skipDays), supaya
+      // block-nya ikut hilang dari Daily N — konsisten dengan popup & panel notifikasi
+      // begitu tombol "Libur" ditekan di mana pun.
+      let skippedHabitIds = new Set();
+      try {
+        const rawHabits = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+        if (rawHabits) {
+          JSON.parse(rawHabits).forEach(h => {
+            if (Array.isArray(h.skipDays) && h.skipDays.includes(dateStr)) skippedHabitIds.add(h.id);
+          });
+        }
+      } catch(_e) { /* ignore */ }
+
       if (isToday) {
         let actionStatus = {};
         try {
@@ -11574,9 +11571,11 @@ const GoogleCalendar = {
         try {
           const habits = JSON.parse(WorkspaceStorage.getItem('ws_habit_notifs') || '[]');
           habits.forEach(h => {
+            const habitId = h.habitId || h.id.replace(/^habit_/, '');
+            if (skippedHabitIds.has(habitId)) return; // sedang libur hari ini, jangan tampilkan block-nya
             result.push({
               id: h.id, // sama dengan key di ws_habit_notifs & notif panel (mis. 'habit_xxx')
-              habitId: h.habitId || h.id.replace(/^habit_/, ''),
+              habitId,
               title: h.title,
               time: h.time || null,
               done: actionStatus[h.id] === true,
@@ -11599,6 +11598,7 @@ const GoogleCalendar = {
             const createdDateStr = String(h.createdAt).split('T')[0];
             if (dateStr < createdDateStr) return;
           }
+          if (skippedHabitIds.has(h.id)) return; // diliburkan pada tanggal ini, jangan tampilkan block-nya
           const checkedDays = (h.history && h.history[yearMonthKey]) || [];
           const done = checkedDays.includes(dayNum);
           const overrideTime = h.timeOverrides && h.timeOverrides[dateStr];
@@ -11968,6 +11968,11 @@ const GoogleCalendar = {
         return;
       }
       this._loadAgendaPomoFromStorage();
+      // Jika sesi sudah berjalan (dimulai dari sini/halaman lain), kontrolnya sepenuhnya
+      // ada di widget mengambang (floating-countdown-timer) — jangan buka panel duplikat di sini.
+      if (this.agendaPomo.everStarted && this.agendaPomo.timeLeft > 0) {
+        return;
+      }
       this.agendaPomo.show = true;
       this._agendaPomoListener = (e) => this._applyAgendaPomoState(e.detail);
       globalThis.addEventListener('pomo-state-update', this._agendaPomoListener);
@@ -11979,13 +11984,17 @@ const GoogleCalendar = {
       if (this._agendaPomoListener) { globalThis.removeEventListener('pomo-state-update', this._agendaPomoListener); this._agendaPomoListener = null; }
     },
     _loadAgendaPomoFromStorage() {
+      // PENTING: selalu panggil _applyAgendaPomoState, termasuk saat storage kosong/null
+      // (misal setelah tombol reset di floating widget menghapusnya). Kalau early-return
+      // di sini, state lokal agendaPomo.everStarted lama tetap nyangkut "true" selamanya,
+      // dan tombol jam pasir jadi seolah tidak bisa diklik lagi.
       try {
         const raw = localStorage.getItem('pomo_floating_state');
-        if (!raw) return;
-        const s = JSON.parse(raw);
-        if (!s.everStarted) return;
+        const s = raw ? JSON.parse(raw) : { everStarted: false };
         this._applyAgendaPomoState(s);
-      } catch(_e) { /* ignore */ }
+      } catch(_e) {
+        this._applyAgendaPomoState({ everStarted: false });
+      }
     },
     _applyAgendaPomoState(s) {
       if (!s || !s.everStarted) {
@@ -12048,6 +12057,10 @@ const GoogleCalendar = {
       };
       localStorage.setItem('pomo_floating_state', JSON.stringify(state));
       globalThis.dispatchEvent(new CustomEvent('pomo-state-update', { detail: state }));
+
+      // Langsung tutup panel, kembali ke tampilan popup biasa — timer berjalan
+      // ditampilkan lewat widget mengambang (floating-countdown-timer) di pojok kanan bawah.
+      this.localClosePomoPanel();
     },
     // ── Pause / Resume sesi dari panel Agenda Detail (sync ke widget floating & halaman Pomodoro) ──
     localTogglePausePomoFromDetail() {
@@ -12089,6 +12102,21 @@ const GoogleCalendar = {
         localStorage.setItem('pomo_floating_state', JSON.stringify(state));
         globalThis.dispatchEvent(new CustomEvent('pomo-state-update', { detail: state }));
       }
+    },
+    // ── Reset sesi dari panel Agenda Detail (sync ke widget floating & halaman Pomodoro) ──
+    // Menghentikan & menghapus sesi berjalan sepenuhnya, kembali ke layar pilih durasi,
+    // sama seperti tombol "Setel Ulang" pada halaman Pomodoro Timer.
+    localResetPomoFromDetail() {
+      this.agendaPomo.everStarted = false;
+      this.agendaPomo.isRunning = false;
+      this.agendaPomo.timeLeft = 0;
+      this.agendaPomo.totalDuration = 0;
+      this.agendaPomo.deadline = null;
+
+      localStorage.removeItem('pomo_floating_state');
+      globalThis.dispatchEvent(new CustomEvent('pomo-state-update', { detail: {
+        isRunning: false, timeLeft: 0, totalDuration: 0, deadline: null, everStarted: false
+      }}));
     },
 
     localEditFromDetail(block) {

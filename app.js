@@ -691,16 +691,25 @@ const FloatingCountdownTimer = {
             stroke-linecap="round" transform="rotate(-90 18 18)"
             :style="{ opacity: isRunning ? 1 : 0.45 }"/>
         </svg>
-        <button class="fct-pause-btn" @click.stop="togglePause"
-                :title="isRunning ? 'Jeda timer' : 'Lanjutkan timer'">
-          <svg v-if="isRunning" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-            <rect x="6" y="4" width="4" height="16" rx="1"/>
-            <rect x="14" y="4" width="4" height="16" rx="1"/>
-          </svg>
-          <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-            <polygon points="5,3 19,12 5,21"/>
-          </svg>
-        </button>
+        <div class="fct-btn-group">
+          <button class="fct-pause-btn" @click.stop="togglePause"
+                  :title="isRunning ? 'Jeda timer' : 'Lanjutkan timer'">
+            <svg v-if="isRunning" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16" rx="1"/>
+              <rect x="14" y="4" width="4" height="16" rx="1"/>
+            </svg>
+            <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+              <polygon points="5,3 19,12 5,21"/>
+            </svg>
+          </button>
+          <button class="fct-reset-btn" @click.stop="resetTimer" title="Setel ulang timer">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
+                 stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 4v6h-6"></path>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+          </button>
+        </div>
       </div>
     </transition>
   `,
@@ -857,6 +866,23 @@ const FloatingCountdownTimer = {
 
     goToPomodoro() {
       globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'pomodoroTimer' }));
+    },
+
+    // ── Reset — hentikan & hapus sesi sepenuhnya, sync ke semua tempat ──
+    // Perilakunya sama persis dengan tombol "Setel Ulang" di halaman Pomodoro Timer:
+    // stop timer, hapus localStorage, broadcast everStarted:false supaya widget ini
+    // (dan panel Agenda Detail Popup) langsung kembali ke kondisi awal / tersembunyi.
+    resetTimer() {
+      this.isRunning = false;
+      this.timeLeft = 0;
+      this.totalDuration = 0;
+      this.deadline = null;
+      this.everStarted = false;
+
+      localStorage.removeItem('pomo_floating_state');
+      globalThis.dispatchEvent(new CustomEvent('pomo-state-update', { detail: {
+        isRunning: false, timeLeft: 0, totalDuration: 0, deadline: null, everStarted: false
+      }}));
     }
   }
 };
