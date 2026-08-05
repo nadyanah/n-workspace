@@ -1107,35 +1107,24 @@ const ReminderPopup = {
       if (!this.popupRescheduleItem || !this.popupRescheduleDate || !this.popupRescheduleTime) return;
       const item = this.popupRescheduleItem;
       try {
-        const raw = WorkspaceStorage.getItem('ws_manual_notifs');
-        let manuals = raw ? JSON.parse(raw) : [];
-        const oldEntry = manuals.find(m => m.id === item.id);
-        manuals = manuals.filter(m => m.id !== item.id);
-        const [hh, mm] = this.popupRescheduleTime.split(':').map(Number);
-        const timeVal = hh * 60 + (mm || 0);
-        const newId = 'manual_' + Date.now();
-        manuals.push({
-          ...(oldEntry || {}),
-          id: newId,
+        // Sama seperti penjadwalan manual di halaman masing-masing: habit → Habit Tracker,
+        // task plan → Job Logbook/Daily N, sisanya → Pengingat manual.
+        const result = _routeReschedule(item, this.popupRescheduleDate, this.popupRescheduleTime, {
           title: item.title,
-          subtitle: item.subtitle || 'Pengingat manual',
-          time: this.popupRescheduleTime,
-          timeVal,
-          date: this.popupRescheduleDate,
-          endDate: null,
-          recurrence: 'none',
-          excludedDates: [],
-          isManual: true,
-          isHabit: false,
+          subtitle: item.subtitle,
+          sourceDate: this.todayStr
         });
-        WorkspaceStorage.setItem('ws_manual_notifs', JSON.stringify(manuals));
-        window.dispatchEvent(new CustomEvent('ws-manual-notif-updated'));
 
-        // Tandai item asli hari ini sebagai sudah ditangani supaya tidak nyangkut di daftar kelewat
-        this._markPopupStatusHandled(item.id);
-        // Reminder sudah dijadwal ulang → putus rentetan kelewatnya & hapus dari antrian alert
-        try { _resetReminderMissStreak(item.id); } catch(e) {}
-        this.showPopupToast(`Dijadwalkan ulang ke ${this._formatPopupDate(this.popupRescheduleDate)} pukul ${this.popupRescheduleTime}`);
+        if (result.ok) {
+          // Tandai item asli hari ini sebagai sudah ditangani supaya tidak nyangkut di daftar kelewat
+          this._markPopupStatusHandled(item.id);
+          // Reminder sudah dijadwal ulang → putus rentetan kelewatnya & hapus dari antrian alert
+          try { _resetReminderMissStreak(item.id); } catch(e) {}
+          const msg = result.kind === 'habit'
+            ? `Jadwal harian "${item.title}" diubah ke pukul ${this.popupRescheduleTime}`
+            : `Dijadwalkan ulang ke ${this._formatPopupDate(this.popupRescheduleDate)} pukul ${this.popupRescheduleTime}`;
+          this.showPopupToast(msg);
+        }
       } catch(e) {}
       this.showPopupReschedule = false;
       const rescheduledId = item.id;
@@ -1493,6 +1482,137 @@ function _dequeueRescheduleAlert(id) {
   const q = _getRescheduleAlertQueue().filter(a => a.id !== id);
   _saveRescheduleAlertQueue(q);
 }
+
+// ══════════════════════════════════════════════════════════════════════════
+// ── Jadwal Ulang (missed panel / popup / halaman Tugas Terlewat) — DISATUKAN
+//    supaya perilakunya sama persis dengan penjadwalan manual di halaman
+//    masing-masing (Daily N / Habit Tracker / Job Logbook), bukan cuma bikin
+//    entri "Pengingat manual" generik yang lepas dari sumber aslinya.
+// ══════════════════════════════════════════════════════════════════════════
+
+// Habit → update jadwal default di Habit Tracker (aesthetic_habit_tracker_habits),
+// sama seperti "Pindah jam habit" / drag-reschedule scope "seterusnya" di Daily N.
+function _rescheduleHabitById(rawId, newTime) {
+  try {
+    const habitId = String(rawId).replace(/^habit_/, '');
+    const raw = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+    const habits = raw ? JSON.parse(raw) : [];
+    const idx = habits.findIndex(h => String(h.id) === String(habitId));
+    if (idx === -1) return false;
+    habits[idx] = { ...habits[idx], timeSchedule: newTime };
+    WorkspaceStorage.setItem('aesthetic_habit_tracker_habits', JSON.stringify(habits));
+    // Sinkronkan juga ws_habit_notifs supaya panel notif hari ini langsung ikut waktu baru
+    try {
+      const notifRaw = WorkspaceStorage.getItem('ws_habit_notifs');
+      const notifs = notifRaw ? JSON.parse(notifRaw) : [];
+      const nIdx = notifs.findIndex(n => String(n.id) === String(rawId) || String(n.habitId) === String(habitId));
+      if (nIdx !== -1) {
+        const [hh, mm] = newTime.split(':').map(Number);
+        notifs[nIdx] = { ...notifs[nIdx], time: newTime, timeVal: hh * 60 + (mm || 0) };
+        WorkspaceStorage.setItem('ws_habit_notifs', JSON.stringify(notifs));
+      }
+    } catch(e) {}
+    window.dispatchEvent(new CustomEvent('ws-habit-time-updated'));
+    return true;
+  } catch(e) { return false; }
+}
+
+// Task Plan → update tanggal & jam langsung di personal_workspace_job_plans,
+// sama seperti drag-reschedule Task Plan di Daily N (localApplyTaskDragReschedule).
+function _rescheduleTaskPlanById(rawId, newDate, newTime) {
+  try {
+    const planId = String(rawId).replace(/^taskplan-/, '');
+    const raw = WorkspaceStorage.getItem('personal_workspace_job_plans');
+    const plans = raw ? JSON.parse(raw) : [];
+    const idx = plans.findIndex(p => String(p.id) === String(planId));
+    if (idx === -1) return false;
+    // Pertahankan durasi lama (kalau ada jam selesai) supaya rentang jamnya ikut geser
+    let newTimeEnd = plans[idx].timeEnd || null;
+    if (plans[idx].time && plans[idx].timeEnd) {
+      const [sh, sm] = plans[idx].time.split(':').map(Number);
+      const [eh, em] = plans[idx].timeEnd.split(':').map(Number);
+      const durMin = Math.max(0, (eh * 60 + em) - (sh * 60 + sm));
+      const [nh, nm] = newTime.split(':').map(Number);
+      const endMin = Math.min(1439, nh * 60 + nm + durMin);
+      newTimeEnd = String(Math.floor(endMin / 60)).padStart(2, '0') + ':' + String(endMin % 60).padStart(2, '0');
+    }
+    plans[idx] = { ...plans[idx], date: newDate, time: newTime, timeEnd: newTimeEnd };
+    WorkspaceStorage.setItem('personal_workspace_job_plans', JSON.stringify(plans));
+    window.dispatchEvent(new CustomEvent('ws-plans-updated'));
+    window.dispatchEvent(new CustomEvent('ws-job-plans-updated'));
+    return true;
+  } catch(e) { return false; }
+}
+
+// Pengingat manual → tetap tulis ke ws_manual_notifs, TAPI kalau seri-nya berulang
+// jangan hapus total serinya (bug lama) — cukup kecualikan tanggal asal & tambah
+// entri baru khusus tanggal target, sama seperti drag-reschedule scope "hari ini
+// saja" di Daily N. Kalau non-berulang (atau tidak ketemu di ws_manual_notifs sama
+// sekali), perilakunya seperti sebelumnya: ganti total entrinya.
+function _rescheduleManualById(rawId, newDate, newTime, extra) {
+  extra = extra || {};
+  try {
+    const raw = WorkspaceStorage.getItem('ws_manual_notifs');
+    let manuals = raw ? JSON.parse(raw) : [];
+    const oldEntry = manuals.find(m => m.id === rawId);
+    const [hh, mm] = newTime.split(':').map(Number);
+    const timeVal = hh * 60 + (mm || 0);
+    const newId = 'manual_' + Date.now();
+    const isRecurring = !!(oldEntry && oldEntry.recurrence && oldEntry.recurrence !== 'none');
+
+    if (isRecurring) {
+      const idx = manuals.findIndex(m => m.id === rawId);
+      if (extra.sourceDate && idx !== -1) {
+        const excluded = Array.isArray(manuals[idx].excludedDates) ? [...manuals[idx].excludedDates] : [];
+        if (!excluded.includes(extra.sourceDate)) excluded.push(extra.sourceDate);
+        manuals[idx] = { ...manuals[idx], excludedDates: excluded };
+      }
+      manuals.push({
+        ...oldEntry,
+        id: newId,
+        title: extra.title || oldEntry.title,
+        subtitle: extra.subtitle || oldEntry.subtitle || 'Pengingat manual',
+        time: newTime,
+        timeVal,
+        date: newDate,
+        endDate: newDate,
+        recurrence: 'none',
+        customRecurrence: null,
+        excludedDates: [],
+        isManual: true,
+        isHabit: false,
+      });
+    } else {
+      manuals = manuals.filter(m => m.id !== rawId);
+      manuals.push({
+        ...(oldEntry || {}),
+        id: newId,
+        title: extra.title || (oldEntry && oldEntry.title),
+        subtitle: extra.subtitle || (oldEntry && oldEntry.subtitle) || 'Pengingat manual',
+        time: newTime,
+        timeVal,
+        date: newDate,
+        endDate: null,
+        recurrence: 'none',
+        excludedDates: [],
+        isManual: true,
+        isHabit: false,
+      });
+    }
+    WorkspaceStorage.setItem('ws_manual_notifs', JSON.stringify(manuals));
+    window.dispatchEvent(new CustomEvent('ws-manual-notif-updated'));
+    return true;
+  } catch(e) { return false; }
+}
+
+// Router utama — dipanggil dari ketiga tempat "Jadwal Ulang" (popup, panel Terlewat,
+// halaman Tugas Terlewat) supaya hasilnya identik dengan penjadwalan manual langsung
+// di halaman masing-masing.
+function _routeReschedule(item, newDate, newTime, extra) {
+  if (item && (item.isHabit || item.type === 'habit')) return { ok: _rescheduleHabitById(item.id, newTime), kind: 'habit' };
+  if (item && (item.isTaskPlan || item.type === 'taskplan')) return { ok: _rescheduleTaskPlanById(item.id, newDate, newTime), kind: 'taskplan' };
+  return { ok: _rescheduleManualById(item.id, newDate, newTime, extra), kind: 'manual' };
+}
 // Tambah 1 hari "kelewat" (dipanggil dari tombol Missed / snapshot rollover harian).
 // Konsisten dipanggil berkali-kali untuk tanggal yang sama tanpa dobel hitung.
 function _bumpReminderMissStreak(id, dateStr, meta) {
@@ -1561,17 +1681,19 @@ function _updateMissStreaksForDate(dateStr) {
   } catch(e) {}
 }
 
-// ── Sinkronkan log "Terlewat" dengan Task Plan yang mungkin sudah diubah tanggal/judulnya
-//    dari halaman Job Logbook. Snapshot "Terlewat" itu statis (diambil sekali saat rollover
-//    hari), jadi kalau setelahnya task-nya dipindah ke tanggal lain (atau dihapus) dari
-//    Logbook, entry lama di sini perlu ikut disesuaikan — bukan nyangkut nampilin data basi.
-//    - Task plan sudah dihapus              → buang dari log
-//    - Task plan.date sudah beda dari entry.date (dipindah ke tanggal lain) → buang dari
-//      entry tanggal LAMA ini (task-nya jadi urusan tanggal barunya, bukan tanggal ini lagi)
-//    - Judul (task.tasks) berubah            → update judul di log biar tidak basi
-//    Selain taskplan (habit/manual) tidak disentuh di sini.
+// ── Sinkronkan log "Terlewat" dengan Task Plan / Pengingat Manual / Habit yang mungkin
+//    sudah diubah tanggal/jam/judulnya (termasuk lewat drag-reschedule di Daily N).
+//    Snapshot "Terlewat" itu statis (diambil sekali saat rollover hari), jadi kalau
+//    setelahnya item-nya dipindah ke tanggal/jam lain (atau dihapus), entry lama di sini
+//    perlu ikut disesuaikan — bukan nyangkut nampilin data basi seolah masih kelewat.
+//    - Item sudah dihapus                                    → buang dari log
+//    - Sudah dipindah ke tanggal lain (taskplan.date berubah / manual tidak lagi occur
+//      di entry.date)                                        → buang dari entry tanggal
+//      LAMA ini (item-nya jadi urusan tanggal barunya, bukan tanggal ini lagi)
+//    - Judul / jam berubah tapi tanggalnya masih sama         → update di log biar tidak basi
 function _reconcileMissedTaskPlans(log) {
   if (!Array.isArray(log) || log.length === 0) return log;
+
   let plans = [];
   try {
     const raw = WorkspaceStorage.getItem('personal_workspace_job_plans');
@@ -1580,20 +1702,67 @@ function _reconcileMissedTaskPlans(log) {
   const planById = {};
   plans.forEach(p => { planById[p.id] = p; });
 
+  let manuals = [];
+  try {
+    const raw = WorkspaceStorage.getItem('ws_manual_notifs');
+    manuals = raw ? JSON.parse(raw) : [];
+  } catch(e) { manuals = []; }
+  const manualById = {};
+  manuals.forEach(m => { manualById[m.id] = m; });
+
+  let habits = [];
+  try {
+    const raw = WorkspaceStorage.getItem('ws_habit_notifs');
+    habits = raw ? JSON.parse(raw) : [];
+  } catch(e) { habits = []; }
+  const habitById = {};
+  habits.forEach(h => { habitById[h.id] = h; });
+
   let changed = false;
   const next = log.map(entry => {
     const tasks = entry.tasks.map(t => {
-      if (t.type !== 'taskplan') return t;
-      const planId = String(t.id).replace(/^taskplan-/, '');
-      const plan = planById[planId];
-      if (!plan) return null; // sudah dihapus dari Logbook
-      if (plan.date !== entry.date) return null; // sudah dipindah ke tanggal lain
-      const currentTitle = plan.tasks;
-      const currentSubtitle = 'Task Plan · ' + (plan.category || 'Umum');
-      if ((currentTitle && currentTitle !== t.title) || currentSubtitle !== t.subtitle) {
-        changed = true;
-        return { ...t, title: currentTitle || t.title, subtitle: currentSubtitle };
+      if (t.type === 'taskplan') {
+        const planId = String(t.id).replace(/^taskplan-/, '');
+        const plan = planById[planId];
+        if (!plan) return null; // sudah dihapus dari Logbook
+        if (plan.date !== entry.date) return null; // sudah dipindah ke tanggal lain
+        const currentTitle = plan.tasks;
+        const currentSubtitle = 'Task Plan · ' + (plan.category || 'Umum');
+        if ((currentTitle && currentTitle !== t.title) || currentSubtitle !== t.subtitle) {
+          changed = true;
+          return { ...t, title: currentTitle || t.title, subtitle: currentSubtitle };
+        }
+        return t;
       }
+
+      if (t.type === 'manual') {
+        const m = manualById[t.id];
+        if (!m) return null; // sudah dihapus
+        // Sudah dijadwal ulang (drag di Daily N / modal) sehingga tidak lagi jatuh
+        // di tanggal entry ini → bukan lagi kelewat untuk tanggal lama.
+        if (!reminderOccursOnDate(m, entry.date)) return null;
+        const currentTitle = m.title;
+        const currentSubtitle = m.subtitle || 'Pengingat manual';
+        const currentTime = m.endTime ? m.time + ' – ' + m.endTime : m.time;
+        if ((currentTitle && currentTitle !== t.title) || currentSubtitle !== t.subtitle || currentTime !== t.time) {
+          changed = true;
+          return { ...t, title: currentTitle || t.title, subtitle: currentSubtitle, time: currentTime };
+        }
+        return t;
+      }
+
+      if (t.type === 'habit') {
+        const h = habitById[t.id];
+        if (!h) return null; // habit sudah dihapus / dinonaktifkan
+        const currentTitle = h.title;
+        const currentSubtitle = h.subtitle || 'Habit harian';
+        if ((currentTitle && currentTitle !== t.title) || currentSubtitle !== t.subtitle || h.time !== t.time) {
+          changed = true;
+          return { ...t, title: currentTitle || t.title, subtitle: currentSubtitle, time: h.time };
+        }
+        return t;
+      }
+
       return t;
     });
     const filteredTasks = tasks.filter(Boolean);
@@ -2817,9 +2986,15 @@ const NotificationPanel = {
 
     // Refresh panel kalau task plan dihapus dari Agenda View (tombol "Hapus" di detail popup)
     // atau pengingat manual diubah, supaya item langsung hilang dari panel tanpa perlu reload.
-    this._onJobPlansUpdated = () => { this.loadData(); };
+    // Juga refresh tab Terlewat (loadMissedLog) — dulu cuma loadData() sehingga item yang
+    // di-drag-reschedule ke tanggal/jam lain di Daily N tetap nyangkut sebagai "kelewat" basi.
+    this._onJobPlansUpdated = () => { this.loadData(); this.loadMissedLog(); };
     window.addEventListener('ws-job-plans-updated', this._onJobPlansUpdated);
     window.addEventListener('ws-manual-notif-updated', this._onJobPlansUpdated);
+    // Drag-reschedule jam habit di Daily N (localApplyHabitDragReschedule) cuma dispatch
+    // event ini — sebelumnya tidak di-listen sama sekali sehingga panel & tab Terlewat
+    // tidak pernah tahu jam habit-nya sudah berubah.
+    window.addEventListener('ws-habit-time-updated', this._onJobPlansUpdated);
 
     // Refresh tab Terlewat kalau task plan diubah tanggal/judulnya dari halaman Job Logbook
     // (savePlansToStorage men-dispatch 'ws-plans-updated'), supaya entry lama yang sudah
@@ -2842,6 +3017,7 @@ const NotificationPanel = {
     window.removeEventListener('ws-notif-status-updated', this._onNotifStatusUpdated);
     window.removeEventListener('ws-job-plans-updated', this._onJobPlansUpdated);
     window.removeEventListener('ws-manual-notif-updated', this._onJobPlansUpdated);
+    window.removeEventListener('ws-habit-time-updated', this._onJobPlansUpdated);
     window.removeEventListener('ws-plans-updated', this._onPlansUpdated);
     window.removeEventListener('ws-dzikir-completed', this._onDzikirCompleted);
     window.removeEventListener('ws-habit-skip-changed', this._onHabitSkipChanged);
@@ -3285,38 +3461,28 @@ const NotificationPanel = {
     confirmMissedReschedule() {
       if (!this.missedRescheduleTask || !this.missedRescheduleDate || !this.missedRescheduleTime) return;
       try {
-        const raw = WorkspaceStorage.getItem('ws_manual_notifs');
-        let manuals = raw ? JSON.parse(raw) : [];
-        const oldEntry = manuals.find(m => m.id === this.missedRescheduleTask.id);
-        manuals = manuals.filter(m => m.id !== this.missedRescheduleTask.id);
-        const [hh, mm] = this.missedRescheduleTime.split(':').map(Number);
-        const timeVal = hh * 60 + (mm || 0);
-        const newId = 'manual_' + Date.now();
-        manuals.push({
-          ...(oldEntry || {}),
-          id: newId,
-          title: this.missedRescheduleTask.title,
-          subtitle: this.missedRescheduleTask.subtitle || 'Pengingat manual',
-          time: this.missedRescheduleTime,
-          timeVal,
-          date: this.missedRescheduleDate,
-          endDate: null,
-          recurrence: 'none',
-          excludedDates: [],
-          isManual: true,
-          isHabit: false,
+        const task = this.missedRescheduleTask;
+        // Sama seperti penjadwalan manual di halaman masing-masing: habit → Habit Tracker,
+        // task plan → Job Logbook/Daily N, sisanya → Pengingat manual.
+        const result = _routeReschedule(task, this.missedRescheduleDate, this.missedRescheduleTime, {
+          title: task.title,
+          subtitle: task.subtitle,
+          sourceDate: this.missedRescheduleSourceDate
         });
-        WorkspaceStorage.setItem('ws_manual_notifs', JSON.stringify(manuals));
-        window.dispatchEvent(new CustomEvent('ws-manual-notif-updated'));
 
-        // Reminder sudah dijadwal ulang → putus rentetan kelewatnya, sama seperti di popup
-        // (confirmPopupReschedule) supaya alert "perlu dijadwal ulang" tidak nyangkut.
-        try { _resetReminderMissStreak(this.missedRescheduleTask.id); } catch(e) {}
+        if (result.ok) {
+          // Reminder sudah dijadwal ulang → putus rentetan kelewatnya, sama seperti di popup
+          // (confirmPopupReschedule) supaya alert "perlu dijadwal ulang" tidak nyangkut.
+          try { _resetReminderMissStreak(task.id); } catch(e) {}
 
-        if (this.missedRescheduleSourceDate) {
-          this.removeTaskFromMissedLog(this.missedRescheduleSourceDate, this.missedRescheduleTask.id);
+          if (this.missedRescheduleSourceDate) {
+            this.removeTaskFromMissedLog(this.missedRescheduleSourceDate, task.id);
+          }
+          const msg = result.kind === 'habit'
+            ? `Jadwal harian "${task.title}" diubah ke pukul ${this.missedRescheduleTime}`
+            : `Dijadwalkan ulang ke ${this.formatMissedDate(this.missedRescheduleDate)} pukul ${this.missedRescheduleTime}`;
+          this.showMissedToast(msg);
         }
-        this.showMissedToast(`Dijadwalkan ulang ke ${this.formatMissedDate(this.missedRescheduleDate)} pukul ${this.missedRescheduleTime}`);
       } catch(e) {}
       this.showMissedReschedule = false;
       this.missedRescheduleTask = null;
@@ -3671,6 +3837,13 @@ const MissedTasksPage = {
     // disesuaikan/hilang di sini juga.
     this._onPlansUpdated = () => { this.loadData(); };
     window.addEventListener('ws-plans-updated', this._onPlansUpdated);
+    // Refresh kalau pengingat manual atau jam habit diubah/di-drag-reschedule dari Daily N.
+    // Sebelumnya kedua event ini tidak di-listen sama sekali di halaman ini, jadi item yang
+    // sudah dipindah tanggal/jamnya tetap nyangkut basi di daftar "Terlewat".
+    this._onManualOrHabitUpdated = () => { this.loadData(); };
+    window.addEventListener('ws-manual-notif-updated', this._onManualOrHabitUpdated);
+    window.addEventListener('ws-job-plans-updated', this._onManualOrHabitUpdated);
+    window.addEventListener('ws-habit-time-updated', this._onManualOrHabitUpdated);
   },
 
   beforeUnmount() {
@@ -3678,6 +3851,9 @@ const MissedTasksPage = {
     window.removeEventListener('ws-notif-status-updated', this._onNotifStatusUpdated);
     window.removeEventListener('ws-habit-skip-changed', this._onHabitSkipChanged);
     window.removeEventListener('ws-plans-updated', this._onPlansUpdated);
+    window.removeEventListener('ws-manual-notif-updated', this._onManualOrHabitUpdated);
+    window.removeEventListener('ws-job-plans-updated', this._onManualOrHabitUpdated);
+    window.removeEventListener('ws-habit-time-updated', this._onManualOrHabitUpdated);
     if (this._toastTimer) clearTimeout(this._toastTimer);
   },
 
@@ -3872,42 +4048,29 @@ const MissedTasksPage = {
     confirmReschedule() {
       if (!this.rescheduleTask || !this.rescheduleDate || !this.rescheduleTime) return;
       try {
-        const raw = WorkspaceStorage.getItem('ws_manual_notifs');
-        let manuals = raw ? JSON.parse(raw) : [];
-        // Hapus entri lama dengan id yang sama (jika ada)
-        const oldEntry = manuals.find(m => m.id === this.rescheduleTask.id);
-        manuals = manuals.filter(m => m.id !== this.rescheduleTask.id);
-        // Hitung timeVal baru
-        const [hh, mm] = this.rescheduleTime.split(':').map(Number);
-        const timeVal = hh * 60 + (mm || 0);
-        // Tambah jadwal baru — pertahankan semua field asli (recurrence, category, endTime, page, dll)
-        const newId = 'manual_' + Date.now();
-        manuals.push({
-          ...(oldEntry || {}),           // salin semua field asli jika ada
-          id: newId,
-          title: this.rescheduleTask.title,
-          subtitle: this.rescheduleTask.subtitle || 'Pengingat manual',
-          time: this.rescheduleTime,
-          timeVal,
-          date: this.rescheduleDate,
-          endDate: null,                 // jadwal ulang: reset endDate agar berlaku mulai hari itu
-          recurrence: 'none',            // jadwal ulang: jangan ulang otomatis, biarkan user set manual
-          excludedDates: [],
-          isManual: true,
-          isHabit: false,
+        const task = this.rescheduleTask;
+        // Sama seperti penjadwalan manual di halaman masing-masing: habit → Habit Tracker,
+        // task plan → Job Logbook/Daily N, sisanya → Pengingat manual (dengan seri berulang
+        // tetap dipertahankan, bukan dihapus total).
+        const result = _routeReschedule(task, this.rescheduleDate, this.rescheduleTime, {
+          title: task.title,
+          subtitle: task.subtitle,
+          sourceDate: this.rescheduleSourceDate
         });
-        WorkspaceStorage.setItem('ws_manual_notifs', JSON.stringify(manuals));
-        // Dispatch event agar NotificationPanel reload
-        window.dispatchEvent(new CustomEvent('ws-manual-notif-updated'));
 
-        // Reminder sudah dijadwal ulang → putus rentetan kelewatnya, sama seperti di popup & panel
-        try { _resetReminderMissStreak(this.rescheduleTask.id); } catch(e) {}
+        if (result.ok) {
+          // Reminder sudah dijadwal ulang → putus rentetan kelewatnya, sama seperti di popup & panel
+          try { _resetReminderMissStreak(task.id); } catch(e) {}
 
-        // Hapus dari log kelewat supaya tidak numpuk lagi di daftar terlewat
-        if (this.rescheduleSourceDate) {
-          this.removeTaskFromLog(this.rescheduleSourceDate, this.rescheduleTask.id);
+          // Hapus dari log kelewat supaya tidak numpuk lagi di daftar terlewat
+          if (this.rescheduleSourceDate) {
+            this.removeTaskFromLog(this.rescheduleSourceDate, task.id);
+          }
+          const msg = result.kind === 'habit'
+            ? `Jadwal harian "${task.title}" diubah ke pukul ${this.rescheduleTime}`
+            : `Dijadwalkan ulang ke ${this.formatDate(this.rescheduleDate)} pukul ${this.rescheduleTime}`;
+          this.showToast(msg);
         }
-        this.showToast(`Dijadwalkan ulang ke ${this.formatDate(this.rescheduleDate)} pukul ${this.rescheduleTime}`);
       } catch(e) {}
       this.showReschedule = false;
       this.rescheduleTask = null;
