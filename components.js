@@ -11592,6 +11592,16 @@ const GoogleCalendar = {
         const [yr, mo, dayNum] = dateStr.split('-').map(Number);
         const yearMonthKey = `${String(yr).padStart(4,'0')}-${String(mo).padStart(2,'0')}`;
         const habits = JSON.parse(WorkspaceStorage.getItem('aesthetic_habit_tracker_habits') || '[]');
+        // Status "missed" (ditandai lewat tombol Missed di panel Notif Terlewat / popup
+        // Kelewat / halaman Tugas Terlewat) disimpan di ws_notif_action_status per-tanggal,
+        // BUKAN di habit.history — jadi perlu dibaca terpisah supaya block-nya ikut kecoret
+        // merah di sini, konsisten dengan tab "Hari Ini" & Agenda/Google Calendar view.
+        let dateActionStatus = {};
+        try {
+          const rawStatus = WorkspaceStorage.getItem('ws_notif_action_status');
+          const s = JSON.parse(rawStatus || '{}');
+          dateActionStatus = s[dateStr] || {};
+        } catch(_e) { /* ignore */ }
         habits.forEach(h => {
           // Jika habit punya createdAt dan tanggal yg dilihat sebelum habit dibuat, skip
           if (h.createdAt) {
@@ -11600,7 +11610,9 @@ const GoogleCalendar = {
           }
           if (skippedHabitIds.has(h.id)) return; // diliburkan pada tanggal ini, jangan tampilkan block-nya
           const checkedDays = (h.history && h.history[yearMonthKey]) || [];
-          const done = checkedDays.includes(dayNum);
+          const notifId = 'habit_' + h.id;
+          const done = checkedDays.includes(dayNum) || dateActionStatus[notifId] === true;
+          const missed = !done && dateActionStatus[notifId] === 'missed';
           const overrideTime = h.timeOverrides && h.timeOverrides[dateStr];
           result.push({
             id: 'habit-' + h.id,
@@ -11608,6 +11620,7 @@ const GoogleCalendar = {
             title: h.name,
             time: overrideTime || h.timeSchedule || null,
             done,
+            missed,
             actionable: false // histori: tidak bisa di-toggle dari Google Calendar
           });
         });
