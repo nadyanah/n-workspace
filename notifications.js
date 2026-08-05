@@ -1398,9 +1398,25 @@ if (typeof isDzikirReadyForHabit === 'undefined') {
 // ── Helper: kumpulkan semua reminder (habit + manual + task plan) yang aktif pada tanggal tertentu ──
 function _collectReminderBaseForDate(dateStr) {
   const base = [];
+  // Kumpulkan habit yang diliburkan (skipDays) pada tanggal ini lebih dulu, supaya
+  // habit yang sengaja di-Libur-kan (dari popup, panel notif, atau Habit Tracker)
+  // TIDAK ikut dianggap "kelewat" untuk tanggal tsb — konsisten dengan Daily N yang
+  // sudah menyembunyikan block-nya via skipDays juga. Tanpa filter ini, snapshot
+  // "Terlewat" & streak counter tetap menganggap habit itu missed walau sudah libur.
+  let skippedHabitIds = new Set();
+  try {
+    const rawHabits = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+    if (rawHabits) {
+      JSON.parse(rawHabits).forEach(h => {
+        if (Array.isArray(h.skipDays) && h.skipDays.includes(dateStr)) skippedHabitIds.add(h.id);
+      });
+    }
+  } catch(e) {}
   try {
     const raw = WorkspaceStorage.getItem('ws_habit_notifs');
     if (raw) JSON.parse(raw).forEach(h => {
+      const habitId = h.habitId || String(h.id).replace(/^habit_/, '');
+      if (skippedHabitIds.has(habitId)) return; // sedang libur pada tanggal ini, jangan hitung kelewat
       if (!base.find(b => b.id === h.id))
         base.push({ id: h.id, title: h.title, subtitle: h.subtitle || 'Habit harian', time: h.time, type: 'habit', color: h.color });
     });
@@ -1519,6 +1535,19 @@ function _updateMissStreaksForDate(dateStr) {
     const statusRaw = WorkspaceStorage.getItem('ws_notif_action_status');
     const actionStatus = statusRaw ? JSON.parse(statusRaw) : {};
     const status = actionStatus[dateStr] || {};
+    // Habit yang libur (skipDays) pada tanggal ini sudah dikeluarkan dari `base` oleh
+    // _collectReminderBaseForDate, jadi tidak ikut dihitung kelewat di bawah. Tapi
+    // rentetannya juga perlu diputus di sini (bukan cuma dibiarkan/frozen), supaya
+    // konsisten dengan tombol Libur manual yang selalu me-reset streak.
+    try {
+      const rawHabits = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+      const habits = rawHabits ? JSON.parse(rawHabits) : [];
+      habits.forEach(h => {
+        if (Array.isArray(h.skipDays) && h.skipDays.includes(dateStr)) {
+          _resetReminderMissStreak('habit_' + h.id);
+        }
+      });
+    } catch(e) {}
     const base = _collectReminderBaseForDate(dateStr);
     base.forEach(n => {
       if (status[n.id] === true) {
@@ -1530,6 +1559,31 @@ function _updateMissStreaksForDate(dateStr) {
       }
     });
   } catch(e) {}
+}
+
+// ── Bersihkan log "Terlewat" dari task habit yang sebenarnya sedang libur (skipDays)
+//    pada tanggal entry tsb. Dipakai saat memuat ws_missed_tasks supaya entry LAMA yang
+//    kebetulan disimpan sebelum di-Libur-kan (atau snapshot rollover yang belum sempat
+//    difilter) tetap ikut sinkron dan hilang dari daftar Terlewat, konsisten dengan
+//    block-nya yang sudah hilang di Daily N & Habit Tracker.
+function _filterSkippedFromMissedLog(log) {
+  if (!Array.isArray(log) || log.length === 0) return log;
+  let habits = [];
+  try {
+    const rawHabits = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
+    habits = rawHabits ? JSON.parse(rawHabits) : [];
+  } catch(e) { habits = []; }
+  const isSkippedOn = (taskId, dateStr) => {
+    const habitId = String(taskId).replace(/^habit_/, '');
+    const h = habits.find(x => x.id === habitId);
+    return !!(h && Array.isArray(h.skipDays) && h.skipDays.includes(dateStr));
+  };
+  return log
+    .map(entry => ({
+      ...entry,
+      tasks: entry.tasks.filter(t => !(t.type === 'habit' && isSkippedOn(t.id, entry.date)))
+    }))
+    .filter(entry => entry.tasks.length > 0);
 }
 
 // ── Simpan snapshot missed tasks untuk satu hari tertentu ──
@@ -2973,7 +3027,7 @@ const NotificationPanel = {
     loadMissedLog() {
       try {
         const raw = WorkspaceStorage.getItem('ws_missed_tasks');
-        this.missedLog = raw ? JSON.parse(raw) : [];
+        this.missedLog = _filterSkippedFromMissedLog(raw ? JSON.parse(raw) : []);
       } catch(e) { this.missedLog = []; }
     },
 
@@ -3571,7 +3625,7 @@ const MissedTasksPage = {
     loadData() {
       try {
         const raw = WorkspaceStorage.getItem('ws_missed_tasks');
-        this.missedLog = raw ? JSON.parse(raw) : [];
+        this.missedLog = _filterSkippedFromMissedLog(raw ? JSON.parse(raw) : []);
       } catch(e) { this.missedLog = []; }
     },
 
