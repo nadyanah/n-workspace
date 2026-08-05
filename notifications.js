@@ -1561,6 +1561,52 @@ function _updateMissStreaksForDate(dateStr) {
   } catch(e) {}
 }
 
+// ── Sinkronkan log "Terlewat" dengan Task Plan yang mungkin sudah diubah tanggal/judulnya
+//    dari halaman Job Logbook. Snapshot "Terlewat" itu statis (diambil sekali saat rollover
+//    hari), jadi kalau setelahnya task-nya dipindah ke tanggal lain (atau dihapus) dari
+//    Logbook, entry lama di sini perlu ikut disesuaikan — bukan nyangkut nampilin data basi.
+//    - Task plan sudah dihapus              → buang dari log
+//    - Task plan.date sudah beda dari entry.date (dipindah ke tanggal lain) → buang dari
+//      entry tanggal LAMA ini (task-nya jadi urusan tanggal barunya, bukan tanggal ini lagi)
+//    - Judul (task.tasks) berubah            → update judul di log biar tidak basi
+//    Selain taskplan (habit/manual) tidak disentuh di sini.
+function _reconcileMissedTaskPlans(log) {
+  if (!Array.isArray(log) || log.length === 0) return log;
+  let plans = [];
+  try {
+    const raw = WorkspaceStorage.getItem('personal_workspace_job_plans');
+    plans = raw ? JSON.parse(raw) : [];
+  } catch(e) { plans = []; }
+  const planById = {};
+  plans.forEach(p => { planById[p.id] = p; });
+
+  let changed = false;
+  const next = log.map(entry => {
+    const tasks = entry.tasks.map(t => {
+      if (t.type !== 'taskplan') return t;
+      const planId = String(t.id).replace(/^taskplan-/, '');
+      const plan = planById[planId];
+      if (!plan) return null; // sudah dihapus dari Logbook
+      if (plan.date !== entry.date) return null; // sudah dipindah ke tanggal lain
+      const currentTitle = plan.tasks;
+      const currentSubtitle = 'Task Plan · ' + (plan.category || 'Umum');
+      if ((currentTitle && currentTitle !== t.title) || currentSubtitle !== t.subtitle) {
+        changed = true;
+        return { ...t, title: currentTitle || t.title, subtitle: currentSubtitle };
+      }
+      return t;
+    });
+    const filteredTasks = tasks.filter(Boolean);
+    if (filteredTasks.length !== entry.tasks.length) changed = true;
+    return { ...entry, tasks: filteredTasks };
+  }).filter(entry => entry.tasks.length > 0);
+
+  if (changed || next.length !== log.length) {
+    try { WorkspaceStorage.setItem('ws_missed_tasks', JSON.stringify(next)); } catch(e) {}
+  }
+  return next;
+}
+
 // ── Bersihkan log "Terlewat" dari task habit yang sebenarnya sedang libur (skipDays)
 //    pada tanggal entry tsb. Dipakai saat memuat ws_missed_tasks supaya entry LAMA yang
 //    kebetulan disimpan sebelum di-Libur-kan (atau snapshot rollover yang belum sempat
@@ -2775,6 +2821,12 @@ const NotificationPanel = {
     window.addEventListener('ws-job-plans-updated', this._onJobPlansUpdated);
     window.addEventListener('ws-manual-notif-updated', this._onJobPlansUpdated);
 
+    // Refresh tab Terlewat kalau task plan diubah tanggal/judulnya dari halaman Job Logbook
+    // (savePlansToStorage men-dispatch 'ws-plans-updated'), supaya entry lama yang sudah
+    // dipindah tanggalnya (atau judulnya diganti) langsung ikut disesuaikan/hilang di sini.
+    this._onPlansUpdated = () => { this.loadMissedLog(); };
+    window.addEventListener('ws-plans-updated', this._onPlansUpdated);
+
     // Refresh panel begitu sesi Dzikir Counter dituntaskan, supaya gating
     // habit "Dzikir Waktu" langsung terbuka tanpa nunggu polling 60 detik.
     this._onDzikirCompleted = () => { this.loadData(); };
@@ -2790,6 +2842,7 @@ const NotificationPanel = {
     window.removeEventListener('ws-notif-status-updated', this._onNotifStatusUpdated);
     window.removeEventListener('ws-job-plans-updated', this._onJobPlansUpdated);
     window.removeEventListener('ws-manual-notif-updated', this._onJobPlansUpdated);
+    window.removeEventListener('ws-plans-updated', this._onPlansUpdated);
     window.removeEventListener('ws-dzikir-completed', this._onDzikirCompleted);
     window.removeEventListener('ws-habit-skip-changed', this._onHabitSkipChanged);
     if (this._missedToastTimer) clearTimeout(this._missedToastTimer);
@@ -3027,7 +3080,8 @@ const NotificationPanel = {
     loadMissedLog() {
       try {
         const raw = WorkspaceStorage.getItem('ws_missed_tasks');
-        this.missedLog = _filterSkippedFromMissedLog(raw ? JSON.parse(raw) : []);
+        const log = _reconcileMissedTaskPlans(raw ? JSON.parse(raw) : []);
+        this.missedLog = _filterSkippedFromMissedLog(log);
       } catch(e) { this.missedLog = []; }
     },
 
@@ -3612,12 +3666,18 @@ const MissedTasksPage = {
     // supaya langsung hilang dari sini juga — konsisten dengan panel & popup.
     this._onHabitSkipChanged = () => { this.loadData(); };
     window.addEventListener('ws-habit-skip-changed', this._onHabitSkipChanged);
+    // Refresh kalau task plan diubah tanggal/judulnya dari halaman Job Logbook, supaya
+    // entry lama yang sudah dipindah tanggalnya (atau judulnya diganti) langsung ikut
+    // disesuaikan/hilang di sini juga.
+    this._onPlansUpdated = () => { this.loadData(); };
+    window.addEventListener('ws-plans-updated', this._onPlansUpdated);
   },
 
   beforeUnmount() {
     window.removeEventListener('snapshot-missed-tasks', this.loadData);
     window.removeEventListener('ws-notif-status-updated', this._onNotifStatusUpdated);
     window.removeEventListener('ws-habit-skip-changed', this._onHabitSkipChanged);
+    window.removeEventListener('ws-plans-updated', this._onPlansUpdated);
     if (this._toastTimer) clearTimeout(this._toastTimer);
   },
 
@@ -3625,7 +3685,8 @@ const MissedTasksPage = {
     loadData() {
       try {
         const raw = WorkspaceStorage.getItem('ws_missed_tasks');
-        this.missedLog = _filterSkippedFromMissedLog(raw ? JSON.parse(raw) : []);
+        const log = _reconcileMissedTaskPlans(raw ? JSON.parse(raw) : []);
+        this.missedLog = _filterSkippedFromMissedLog(log);
       } catch(e) { this.missedLog = []; }
     },
 
