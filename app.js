@@ -22,6 +22,7 @@ const App = {
     const showBucketListModal = ref(false);
     const showQuranModal = ref(false);
     const showWishListModal = ref(false);
+    const showDailyStokModal = ref(false);
 
     // --- TAB BAR STATE (mirip Chrome) ---
     // Lucide SVG path strings — dirender via v-html di tab favicon
@@ -599,6 +600,7 @@ const App = {
       showBucketListModal,
       showQuranModal,
       showWishListModal,
+      showDailyStokModal,
       showSettingsGroup,
       // Tab bar
       openTabs,
@@ -915,6 +917,7 @@ app.component('dzikir-counter', DzikirCounter);
 app.component('bucket-list-yearly', BucketList100);
 app.component('quran-reader', QuranReader);
 app.component('wish-list-2026', WishList2026);
+app.component('daily-stok', DailyStok);
 app.component('push-notif-toggle', PushNotifToggle);
 app.component('daily-question-float', DailyQuestionFloat);
 app.component('daily-question-float-circle', DailyQuestionFloatCircle);

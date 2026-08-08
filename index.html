@@ -930,6 +930,11 @@
                   🛒
                 </button>
 
+                <!-- Sub-btn E: Daily Stok -->
+                <button class="desk-config-floating-btn desk-submenu-btn" @click="showDailyStokModal = true; showSettingsGroup = false" title="Daily Stok — kategori barang & tanggal expired">
+                  📦
+                </button>
+
               </div>
             </transition>
 
@@ -1261,6 +1266,12 @@
         :show="showWishListModal"
         @close="showWishListModal = false">
       </wish-list-2026>
+
+      <!-- Daily Stok — popup baru di main page: kategori custom + tanggal expired + checklist pemakaian -->
+      <daily-stok
+        :show="showDailyStokModal"
+        @close="showDailyStokModal = false">
+      </daily-stok>
 
       <icon-manager v-if="showSettings" 
                     :assigned-icons="assignedIcons" 

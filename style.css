@@ -11848,6 +11848,325 @@ input:checked + .switch-slider:before {
 .wl26-item-leave-to    { opacity: 0; }
 
 /* ============================================================ */
+/* DAILY STOK — Kategori custom + tanggal expired + checklist   */
+/* ============================================================ */
+
+.dstok-overlay {
+  position: fixed; inset: 0; z-index: 1100;
+  background: rgba(44, 38, 33, 0.45);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+
+.dstok-sheet {
+  position: relative;
+  background: var(--bg-cream, #FDFBF7);
+  border-radius: 24px;
+  box-shadow: 0 24px 64px rgba(44, 38, 33, 0.18);
+  width: 100%; max-width: 600px;
+  max-height: 88vh;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+.dstok-close {
+  position: absolute; top: 14px; right: 16px;
+  background: rgba(255,255,255,0.18); border: none; cursor: pointer;
+  font-size: 14px; color: #fff;
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.18s;
+  z-index: 1;
+}
+.dstok-close:hover { background: rgba(255,255,255,0.32); }
+
+/* Tombol arsip — di sebelah kiri tombol close (X) */
+.dstok-archive-btn {
+  position: absolute; top: 14px; right: 54px;
+  background: rgba(255,255,255,0.18); border: none; cursor: pointer;
+  color: #fff;
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.18s;
+  z-index: 1;
+}
+.dstok-archive-btn:hover { background: rgba(255,255,255,0.32); }
+.dstok-archive-btn.active { background: rgba(255,255,255,0.4); }
+.dstok-archive-badge {
+  position: absolute; top: -4px; right: -4px;
+  background: #C63C3C; color: #fff;
+  font-size: 9px; font-weight: 700;
+  min-width: 15px; height: 15px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 3px;
+  border: 1.5px solid var(--color-terracotta, #D67B52);
+}
+
+.dstok-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 20px 24px 18px;
+  background: var(--color-terracotta, #D67B52);
+  flex-shrink: 0;
+}
+.dstok-header-icon { font-size: 24px; line-height: 1; }
+.dstok-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 19px; font-weight: 700;
+  color: #fff; margin: 0;
+  letter-spacing: -0.3px;
+  padding-right: 76px; /* ruang untuk tombol arsip + close */
+}
+.dstok-subtitle { font-size: 11.5px; color: rgba(255,255,255,0.78); margin: 2px 76px 0 0; }
+
+.dstok-divider {
+  height: 1px; background: var(--color-sand);
+  margin: 0 24px;
+}
+
+/* Summary bar */
+.dstok-summary {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: 0; padding: 11px 24px;
+  background: rgba(var(--color-terracotta-rgb, 214,123,82), 0.06);
+  border-bottom: 1px solid rgba(var(--color-terracotta-rgb, 214,123,82), 0.15);
+}
+.dstok-summary-item { display: flex; flex-direction: column; align-items: center; padding: 0 10px; flex: 1; min-width: 80px; }
+.dstok-summary-label { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); margin-bottom: 2px; }
+.dstok-summary-val { font-size: 13px; font-weight: 600; color: var(--text-dark); }
+.dstok-summary-sep { width: 1px; height: 28px; background: rgba(var(--color-terracotta-rgb, 214,123,82), 0.18); }
+.dstok-val-warn { color: #C4622B; font-weight: 700; }
+.dstok-val-done { color: var(--color-terracotta, #D67B52); }
+
+/* Body / kategori container */
+.dstok-body {
+  flex: 1; overflow-y: auto; padding: 14px 24px 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-sand) transparent;
+}
+.dstok-body::-webkit-scrollbar { width: 5px; }
+.dstok-body::-webkit-scrollbar-track { background: transparent; }
+.dstok-body::-webkit-scrollbar-thumb { background: var(--color-sand); border-radius: 9px; }
+
+/* Kategori card */
+.dstok-cat {
+  background: #fff;
+  border: 1.5px solid var(--color-sand);
+  border-radius: 14px;
+  padding: 12px 12px 10px;
+  margin-bottom: 14px;
+}
+
+.dstok-cat-header {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px;
+}
+.dstok-cat-icon { font-size: 14px; flex-shrink: 0; }
+.dstok-cat-name {
+  flex: 1; min-width: 0;
+  border: none; background: transparent; outline: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14.5px; font-weight: 700; color: var(--text-dark);
+  padding: 2px 0;
+  border-bottom: 1.5px dashed transparent;
+}
+.dstok-cat-name:focus { border-bottom-color: var(--color-terracotta, #D67B52); }
+.dstok-cat-name::placeholder { color: #C5BBAF; font-weight: 500; }
+.dstok-cat-count {
+  flex-shrink: 0; font-size: 10.5px; color: var(--text-muted);
+  background: var(--bg-cream, #FDFBF7);
+  border: 1px solid var(--color-sand);
+  border-radius: 20px; padding: 2px 9px;
+}
+.dstok-cat-del {
+  flex-shrink: 0; width: 24px; height: 24px; border-radius: 7px;
+  border: none; background: transparent; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); opacity: 0.45;
+  transition: background 0.18s, color 0.18s, opacity 0.18s;
+}
+.dstok-cat-del:hover { background: rgba(198, 60, 60, 0.1); color: #C63C3C; opacity: 1; }
+
+.dstok-cat-empty {
+  font-size: 12px; color: var(--text-muted); text-align: center;
+  padding: 10px 0; font-style: italic;
+}
+.dstok-cat-empty-archived { color: var(--color-terracotta, #D67B52); font-style: normal; font-weight: 500; }
+
+/* ── Mode Arsip ── */
+.dstok-archive-body { padding-top: 14px; }
+.dstok-archive-title-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.dstok-archive-title { font-family: 'Outfit', sans-serif; font-size: 13.5px; font-weight: 700; color: var(--text-dark); }
+.dstok-back-btn {
+  background: transparent; border: 1.5px solid var(--color-sand);
+  color: var(--text-secondary, var(--text-muted));
+  font-size: 11.5px; font-weight: 600; font-family: 'Outfit', sans-serif;
+  border-radius: 8px; padding: 5px 12px; cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+}
+.dstok-back-btn:hover { background: var(--color-sand-light, #EDE8E1); border-color: var(--color-terracotta, #D67B52); }
+.dstok-archive-cat { background: rgba(var(--color-terracotta-rgb, 214,123,82), 0.03); }
+.dstok-cat-name-static {
+  flex: 1; min-width: 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14.5px; font-weight: 700; color: var(--text-dark);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Item rows */
+.dstok-items { display: flex; flex-direction: column; }
+.dstok-row {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  background: var(--bg-cream, #FDFBF7);
+  border: 1.5px solid var(--color-sand);
+  transition: border-color 0.2s, background 0.2s, opacity 0.2s;
+}
+.dstok-row:hover { border-color: var(--color-terracotta, #D67B52); }
+.dstok-row-used {
+  background: rgba(var(--color-terracotta-rgb, 214,123,82), 0.04);
+  border-color: rgba(var(--color-terracotta-rgb, 214,123,82), 0.2) !important;
+  opacity: 0.65;
+}
+.dstok-row-expired { border-color: rgba(198, 60, 60, 0.4) !important; background: rgba(198, 60, 60, 0.05); }
+.dstok-row-soon { border-color: rgba(196, 98, 43, 0.4) !important; background: rgba(196, 98, 43, 0.06); }
+
+/* Checkbox */
+.dstok-check {
+  flex-shrink: 0; width: 20px; height: 20px; border-radius: 6px;
+  border: 2px solid var(--color-sand);
+  background: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.18s, border-color 0.18s;
+  color: #fff;
+}
+.dstok-check.checked {
+  background: var(--color-terracotta, #D67B52);
+  border-color: var(--color-terracotta, #D67B52);
+}
+.dstok-check:hover:not(.checked) { border-color: var(--color-terracotta, #D67B52); }
+
+/* Name column */
+.dstok-name-col {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.dstok-name {
+  width: 100%;
+  border: none; background: transparent; outline: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13.5px; color: var(--text-dark);
+  padding: 0;
+}
+.dstok-name::placeholder { color: #C5BBAF; }
+.dstok-name:disabled { cursor: default; }
+.dstok-name-done { text-decoration: line-through; color: var(--text-muted); }
+
+.dstok-used-date {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; color: var(--color-terracotta, #D67B52);
+  font-weight: 500; letter-spacing: 0.2px; opacity: 0.8;
+}
+
+/* Expiry badge */
+.dstok-expiry-badge {
+  display: inline-flex; align-items: center; width: fit-content;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.2px;
+  padding: 1px 7px; border-radius: 20px;
+  text-transform: lowercase;
+}
+.dstok-expiry-ok    { color: #3E8A5C; background: rgba(62, 138, 92, 0.12); }
+.dstok-expiry-warn  { color: #C4622B; background: rgba(196, 98, 43, 0.14); }
+.dstok-expiry-danger{ color: #C63C3C; background: rgba(198, 60, 60, 0.14); }
+
+/* Tanggal expired input */
+.dstok-date-wrap {
+  display: flex; align-items: center; gap: 5px;
+  background: #fff;
+  border: 1.5px solid var(--color-sand);
+  border-radius: 8px; padding: 4px 8px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+.dstok-date {
+  border: none; background: transparent; outline: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11.5px; color: var(--text-dark);
+  width: 118px;
+}
+.dstok-date:disabled { cursor: default; color: var(--text-muted); opacity: 0.7; }
+
+/* Delete */
+.dstok-del {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 7px;
+  border: none; background: transparent; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); opacity: 0.45;
+  transition: background 0.18s, color 0.18s, opacity 0.18s;
+}
+.dstok-del:hover { background: rgba(var(--color-terracotta-rgb, 214,123,82), 0.12); color: var(--color-terracotta, #D67B52); opacity: 1; }
+
+/* Tambah barang per kategori */
+.dstok-add-item-btn {
+  display: flex; align-items: center; gap: 5px; justify-content: center;
+  width: 100%;
+  background: transparent;
+  color: var(--color-terracotta, #D67B52);
+  border: 1.5px dashed rgba(var(--color-terracotta-rgb, 214,123,82), 0.4);
+  border-radius: 9px;
+  padding: 7px 12px; font-size: 12px; font-weight: 600;
+  font-family: 'Outfit', sans-serif; cursor: pointer;
+  margin-top: 4px;
+  transition: background 0.18s, border-color 0.18s;
+}
+.dstok-add-item-btn:hover { background: rgba(var(--color-terracotta-rgb, 214,123,82), 0.08); border-color: var(--color-terracotta, #D67B52); }
+
+/* Empty state (belum ada kategori) */
+.dstok-empty {
+  text-align: center; padding: 40px 24px;
+  color: var(--text-muted); font-size: 13.5px; line-height: 1.7;
+}
+.dstok-empty-icon { font-size: 32px; margin-bottom: 10px; }
+
+/* Add category */
+.dstok-add-row {
+  padding: 14px 24px 20px;
+  display: flex; justify-content: center;
+  flex-shrink: 0;
+}
+.dstok-add-cat-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--color-terracotta, #D67B52);
+  color: #fff; border: none; border-radius: 10px;
+  padding: 9px 18px; font-size: 13px; font-weight: 600;
+  font-family: 'Outfit', sans-serif; cursor: pointer;
+  transition: opacity 0.18s, transform 0.15s;
+  box-shadow: 0 2px 10px rgba(var(--color-terracotta-rgb, 214,123,82), 0.32);
+}
+.dstok-add-cat-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.dstok-add-cat-btn:active { transform: translateY(0); opacity: 1; }
+
+/* Transitions */
+.dstok-fade-enter-active, .dstok-fade-leave-active { transition: opacity 0.25s, transform 0.25s; }
+.dstok-fade-enter-from, .dstok-fade-leave-to { opacity: 0; transform: scale(0.96) translateY(8px); }
+
+.dstok-item-enter-active { transition: opacity 0.2s, transform 0.2s; }
+.dstok-item-leave-active { transition: opacity 0.15s; position: absolute; width: 100%; }
+.dstok-item-enter-from  { opacity: 0; transform: translateY(-6px); }
+.dstok-item-leave-to    { opacity: 0; }
+
+@media (max-width: 640px) {
+  .dstok-row { flex-wrap: wrap; }
+  .dstok-date-wrap { order: 3; margin-left: 30px; }
+  .dstok-name-col { order: 2; }
+}
+
+/* ============================================================ */
 /* DAILY QUESTION FLOAT — Floating button + mini slot machine   */
 /* ============================================================ */
 
