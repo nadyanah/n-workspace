@@ -6141,7 +6141,7 @@ const InterviewPractice = {
 // 5. Daily Nutrition & Insights Component
 const DailyNutrition = {
   template: `
-    <div class="daily-nutrition">
+    <div class="daily-nutrition" @click="showDatePicker = false; showFilterCatManager = false">
       <!-- HEADER -->
       <div class="flex-between" style="border-bottom: 2px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 24px; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
         <div>
@@ -6231,13 +6231,33 @@ const DailyNutrition = {
                 <div v-if="showCatManager" style="margin-bottom: 14px; background: #FDFBF7; border: 1.5px solid var(--color-sand); border-radius: 10px; padding: 12px; animation: popIn 0.15s ease;">
                   <p style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em;">Kelola Kategori Insight</p>
                   <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;">
-                    <span v-for="cat in customInsightCategories" :key="cat"
-                      style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 20px; padding: 3px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; color: var(--text-dark);">
-                      {{ cat }}
-                      <button type="button" @click="deleteInsightCategory(cat)"
-                        style="background: none; border: none; cursor: pointer; font-size: 13px; line-height: 1; color: var(--color-rose); padding: 0;">✕</button>
+                    <span v-for="cat in insightCategories" :key="cat">
+                      <!-- Mode edit: chip berubah jadi input inline -->
+                      <span v-if="editingCatOldName === cat"
+                        style="background: #fff; border: 1.5px solid var(--color-terracotta); border-radius: 20px; padding: 3px 5px 3px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 5px;">
+                        <input type="text" class="cat-chip-edit-input" v-model="editingCatValue"
+                          @keydown.enter.prevent="confirmEditCategory" @keydown.esc.prevent="cancelEditCategory"
+                          style="border: none; outline: none; background: transparent; font-size: 12px; width: 110px; color: var(--text-dark); font-family: inherit;" />
+                        <button type="button" @click="confirmEditCategory" title="Simpan"
+                          style="background: none; border: none; cursor: pointer; padding: 0; color: var(--color-sage, #5A8764); display: inline-flex;">
+                          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </button>
+                        <button type="button" @click="cancelEditCategory" title="Batal"
+                          style="background: none; border: none; cursor: pointer; padding: 0; color: var(--text-muted); display: inline-flex;">✕</button>
+                      </span>
+                      <!-- Mode normal: chip nama + edit + hapus -->
+                      <span v-else
+                        style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 20px; padding: 3px 8px 3px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; color: var(--text-dark);">
+                        {{ cat }}
+                        <button type="button" @click="startEditCategory(cat)" title="Edit nama kategori"
+                          style="background: none; border: none; cursor: pointer; font-size: 11px; line-height: 1; color: var(--color-terracotta); padding: 0; display: inline-flex;">
+                          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                        </button>
+                        <button type="button" @click="deleteInsightCategory(cat)" title="Hapus kategori"
+                          style="background: none; border: none; cursor: pointer; font-size: 13px; line-height: 1; color: var(--color-rose); padding: 0;">✕</button>
+                      </span>
                     </span>
-                    <span v-if="customInsightCategories.length === 0" style="font-size: 12px; color: var(--text-muted); font-style: italic;">Belum ada kategori kustom</span>
+                    <span v-if="insightCategories.length === 0" style="font-size: 12px; color: var(--text-muted); font-style: italic;">Belum ada kategori</span>
                   </div>
                   <div style="display: flex; gap: 8px;">
                     <input type="text" class="form-input" v-model="newInsightCatInput" placeholder="Nama kategori baru..."
@@ -6431,12 +6451,58 @@ const DailyNutrition = {
             <input type="text" class="form-input" v-model="searchQuery" placeholder="Cari judul, rangkuman, takeaway..." style="height: 40px;" />
           </div>
           <!-- Category filter -->
-          <div class="form-group" style="margin: 0;">
-            <label style="font-size: 11.5px; font-weight: 600; color: var(--text-muted);">Kategori</label>
+          <div class="form-group" style="margin: 0; position: relative;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <label style="font-size: 11.5px; font-weight: 600; color: var(--text-muted);">Kategori</label>
+              <button type="button" @click.stop="showFilterCatManager = !showFilterCatManager"
+                style="background: none; border: none; cursor: pointer; font-size: 10.5px; font-weight: 600; color: var(--color-terracotta); display: inline-flex; align-items: center; gap: 3px; padding: 0;"
+                title="Kelola kategori (tambah/edit/hapus)">
+                <svg viewBox="0 0 24 24" width="10.5" height="10.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                Kelola
+              </button>
+            </div>
             <select class="form-input" v-model="filterCategory" style="height: 40px;">
               <option value="">Semua Kategori</option>
               <option v-for="cat in allInsightCategories" :key="cat" :value="cat">{{ cat }}</option>
             </select>
+
+            <!-- Popover kelola kategori — tambah/edit/hapus tanpa buka modal insight -->
+            <div v-if="showFilterCatManager" @click.stop
+              style="position: absolute; top: calc(100% + 6px); left: 0; z-index: 999; background: #fff; border: 1.5px solid var(--color-sand); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.13); padding: 12px; min-width: 260px;">
+              <p style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em;">Kelola Kategori Insight</p>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;">
+                <span v-for="cat in insightCategories" :key="'fbar-'+cat">
+                  <span v-if="editingCatOldName === cat"
+                    style="background: #fff; border: 1.5px solid var(--color-terracotta); border-radius: 20px; padding: 3px 5px 3px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 5px;">
+                    <input type="text" class="cat-chip-edit-input" v-model="editingCatValue"
+                      @keydown.enter.prevent="confirmEditCategory" @keydown.esc.prevent="cancelEditCategory"
+                      style="border: none; outline: none; background: transparent; font-size: 12px; width: 100px; color: var(--text-dark); font-family: inherit;" />
+                    <button type="button" @click="confirmEditCategory" title="Simpan"
+                      style="background: none; border: none; cursor: pointer; padding: 0; color: var(--color-sage, #5A8764); display: inline-flex;">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </button>
+                    <button type="button" @click="cancelEditCategory" title="Batal"
+                      style="background: none; border: none; cursor: pointer; padding: 0; color: var(--text-muted); display: inline-flex;">✕</button>
+                  </span>
+                  <span v-else
+                    style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 20px; padding: 3px 8px 3px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; color: var(--text-dark);">
+                    {{ cat }}
+                    <button type="button" @click="startEditCategory(cat)" title="Edit nama kategori"
+                      style="background: none; border: none; cursor: pointer; font-size: 11px; line-height: 1; color: var(--color-terracotta); padding: 0; display: inline-flex;">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                    </button>
+                    <button type="button" @click="deleteInsightCategory(cat)" title="Hapus kategori"
+                      style="background: none; border: none; cursor: pointer; font-size: 13px; line-height: 1; color: var(--color-rose); padding: 0;">✕</button>
+                  </span>
+                </span>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" class="form-input" v-model="newInsightCatInput" placeholder="Nama kategori baru..."
+                  @keydown.enter.prevent="addInsightCategory" style="flex: 1; height: 36px; font-size: 13px;" />
+                <button type="button" @click="addInsightCategory"
+                  style="background: var(--color-terracotta); color: #fff; border: none; border-radius: 8px; padding: 0 14px; height: 36px; cursor: pointer; font-size: 13px; font-weight: 600; flex-shrink: 0;">Tambah</button>
+              </div>
+            </div>
           </div>
           <!-- Date range -->
           <div class="form-group" style="margin: 0; position: relative;">
@@ -7060,6 +7126,7 @@ const DailyNutrition = {
     return {
       showAddLog: false,
       showCatManager: false,
+      showFilterCatManager: false,
       showDatePicker: false,
       searchQuery: '',
       filterCategory: '',
@@ -7068,7 +7135,9 @@ const DailyNutrition = {
       calYear: new Date().getFullYear(),
       calMonth: new Date().getMonth(),
       newInsightCatInput: '',
-      customInsightCategories: [],
+      insightCategories: [],   // semua kategori (default + kustom) — bisa ditambah/edit/hapus bebas
+      editingCatOldName: null, // nama kategori yang sedang di-edit (mode rename di chip)
+      editingCatValue: '',
       insights: [],
       expandedInsights: new Set(),
       editingInsightId: null,
@@ -7104,11 +7173,8 @@ const DailyNutrition = {
     };
   },
   computed: {
-    defaultInsightCategories() {
-      return ['Self', 'Quotes Life', 'Framework Life', 'Journaling', 'Psikologi', 'Teknologi'];
-    },
     allInsightCategories() {
-      return [...this.defaultInsightCategories, ...this.customInsightCategories];
+      return this.insightCategories;
     },
     calMonthLabel() {
       const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -7153,7 +7219,14 @@ const DailyNutrition = {
     await globalThis._workspaceStorageReady;
 
     const savedCats = WorkspaceStorage.getItem('personal_workspace_insight_categories');
-    if (savedCats) { try { this.customInsightCategories = JSON.parse(savedCats); } catch(_e) { this.customInsightCategories = []; } }
+    if (savedCats) {
+      try { this.insightCategories = JSON.parse(savedCats); } catch(_e) { this.insightCategories = []; }
+    }
+    // Seed default kategori hanya jika belum pernah disimpan sama sekali (first run)
+    if (!this.insightCategories || this.insightCategories.length === 0) {
+      this.insightCategories = ['Self', 'Quotes Life', 'Framework Life', 'Journaling', 'Psikologi', 'Teknologi'];
+      this.saveInsightCategories();
+    }
 
     const saved = WorkspaceStorage.getItem('personal_workspace_nutrition_insights');
     if (saved) {
@@ -7262,16 +7335,55 @@ const DailyNutrition = {
     },
     addInsightCategory() {
       const name = this.newInsightCatInput.trim();
-      if (!name || this.allInsightCategories.includes(name)) return;
-      this.customInsightCategories.push(name);
-      WorkspaceStorage.setItem('personal_workspace_insight_categories', JSON.stringify(this.customInsightCategories));
+      if (!name || this.insightCategories.includes(name)) return;
+      this.insightCategories.push(name);
+      this.saveInsightCategories();
       this.newInsightCatInput = '';
     },
     deleteInsightCategory(cat) {
-      if (!confirm(`Hapus kategori "${cat}"?`)) return;
-      this.customInsightCategories = this.customInsightCategories.filter(c => c !== cat);
-      WorkspaceStorage.setItem('personal_workspace_insight_categories', JSON.stringify(this.customInsightCategories));
-      if (this.form.category === cat) this.form.category = this.allInsightCategories[0];
+      if (this.insightCategories.length <= 1) { alert('Minimal harus ada 1 kategori.'); return; }
+      const usedCount = this.insights.filter(i => i.category === cat).length + this.nextPlans.filter(p => p.category === cat).length;
+      const warn = usedCount > 0 ? ` Kategori ini masih dipakai oleh ${usedCount} insight/plan — nama kategorinya akan tetap tersimpan di data lama.` : '';
+      if (!confirm(`Hapus kategori "${cat}"?${warn}`)) return;
+      this.insightCategories = this.insightCategories.filter(c => c !== cat);
+      this.saveInsightCategories();
+      if (this.form.category === cat) this.form.category = this.insightCategories[0];
+      if (this.planForm.category === cat) this.planForm.category = this.insightCategories[0];
+      if (this.editingCatIndex !== null && this.editingCatOldName === cat) this.cancelEditCategory();
+    },
+    saveInsightCategories() {
+      WorkspaceStorage.setItem('personal_workspace_insight_categories', JSON.stringify(this.insightCategories));
+    },
+    // ── Edit / rename kategori — juga ikut update kategori di semua insight & plan yang memakainya ──
+    startEditCategory(cat) {
+      this.editingCatOldName = cat;
+      this.editingCatValue = cat;
+      this.$nextTick(() => {
+        const input = this.$el.querySelector('.cat-chip-edit-input');
+        if (input) { input.focus(); input.select(); }
+      });
+    },
+    cancelEditCategory() {
+      this.editingCatOldName = null;
+      this.editingCatValue = '';
+    },
+    confirmEditCategory() {
+      const oldName = this.editingCatOldName;
+      const newName = this.editingCatValue.trim();
+      if (!newName) { this.cancelEditCategory(); return; }
+      if (newName === oldName) { this.cancelEditCategory(); return; }
+      if (this.insightCategories.includes(newName)) { alert(`Kategori "${newName}" sudah ada.`); return; }
+      const idx = this.insightCategories.indexOf(oldName);
+      if (idx !== -1) this.insightCategories.splice(idx, 1, newName);
+      this.saveInsightCategories();
+      // Ikut update kategori pada insight & plan yang lama memakai nama ini
+      this.insights.forEach(i => { if (i.category === oldName) i.category = newName; });
+      this.saveToStorage();
+      this.nextPlans.forEach(p => { if (p.category === oldName) p.category = newName; });
+      this.savePlansToStorage();
+      if (this.form.category === oldName) this.form.category = newName;
+      if (this.planForm.category === oldName) this.planForm.category = newName;
+      this.cancelEditCategory();
     },
     formatDate(d) {
       try { return new Date(d).toLocaleDateString('id-ID', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' }); }
