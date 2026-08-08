@@ -20818,10 +20818,6 @@ const DailyStok = {
                 <h2 class="dstok-title">daily stok.</h2>
                 <p class="dstok-subtitle">pantau stok barang & tanggal expired ✦</p>
               </div>
-              <button class="dstok-archive-btn" :class="{ active: showArchive }" @click="showArchive = !showArchive" :title="showArchive ? 'Kembali ke daftar aktif' : 'Lihat arsip barang terpakai'">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
-                <span v-if="usedCount > 0" class="dstok-archive-badge">{{ usedCount }}</span>
-              </button>
               <button class="dstok-close" @click="$emit('close')" title="Tutup">✕</button>
             </div>
             <div class="dstok-divider"></div>
@@ -20849,131 +20845,138 @@ const DailyStok = {
               </div>
             </div>
 
-            <!-- ═══ MODE ARSIP: barang yang sudah dicentang pindah ke sini ═══ -->
-            <div class="dstok-body dstok-archive-body" v-if="showArchive">
-              <div class="dstok-archive-title-row">
-                <span class="dstok-archive-title">🗄️ Arsip Barang Terpakai</span>
-                <button class="dstok-back-btn" @click="showArchive = false">← Kembali</button>
-              </div>
+            <!-- Kategori — tiap kategori dibagi 2 section: stok (belum dipake) & udah dipake -->
+            <div class="dstok-body" v-if="categories.length" @click="confirmItemId = null">
+              <div v-for="cat in categories" :key="cat.id" class="dstok-cat">
 
-              <div v-if="archivedGroups.length">
-                <div v-for="grp in archivedGroups" :key="grp.catId" class="dstok-cat dstok-archive-cat">
-                  <div class="dstok-cat-header">
-                    <span class="dstok-cat-icon">🗂️</span>
-                    <span class="dstok-cat-name-static">{{ grp.catName || '(tanpa nama)' }}</span>
-                    <span class="dstok-cat-count">{{ grp.items.length }} arsip</span>
-                  </div>
-                  <div class="dstok-items">
+                <div class="dstok-cat-header">
+                  <span class="dstok-cat-icon">🗂️</span>
+                  <input
+                    class="dstok-cat-name"
+                    v-model="cat.name"
+                    placeholder="nama kategori (mis. Bumbu Dapur)..."
+                    @change="save" />
+                  <span class="dstok-cat-count">{{ activeItems(cat).length }} barang</span>
+                  <button class="dstok-cat-del" @click="removeCategory(cat.id)" title="Hapus kategori">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                  </button>
+                </div>
+
+                <!-- ═══ SECTION: stok (belum dipake) ═══ -->
+                <div class="dstok-section-label">
+                  <span class="dstok-section-dot dstok-section-dot-stock"></span>
+                  stok <span class="dstok-section-count">{{ activeItems(cat).length }}</span>
+                </div>
+
+                <div class="dstok-items" v-if="activeItems(cat).length">
+                  <transition-group name="dstok-item">
+                    <div v-for="item in activeItems(cat)" :key="item.id"
+                      class="dstok-row"
+                      :class="{
+                        'dstok-row-expired': isExpired(item),
+                        'dstok-row-soon': !isExpired(item) && isExpiringSoon(item)
+                      }">
+
+                      <!-- Jumlah stok: +/- , kurangi akan menawarkan pindah ke "udah dipake" -->
+                      <div class="dstok-qty-wrap" @click="$event.stopPropagation()">
+                        <button class="dstok-qty-btn dstok-qty-minus" @click="decrementQty(cat.id, item.id)" title="Kurangi stok">−</button>
+                        <span class="dstok-qty-val">{{ item.qty ?? 1 }}</span>
+                        <button class="dstok-qty-btn dstok-qty-plus" @click="incrementQty(cat.id, item.id)" title="Tambah stok">+</button>
+
+                        <div v-if="confirmItemId === item.id" class="dstok-qty-confirm">
+                          <span class="dstok-qty-confirm-text">pindah ke udah dipake?</span>
+                          <div class="dstok-qty-confirm-actions">
+                            <button class="dstok-qty-confirm-yes" @click="confirmMoveUsed(cat.id, item.id)">ya</button>
+                            <button class="dstok-qty-confirm-no" @click="confirmItemId = null">tidak</button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Nama barang + status -->
+                      <div class="dstok-name-col">
+                        <input
+                          class="dstok-name"
+                          v-model="item.name"
+                          placeholder="nama barang..."
+                          @change="save" />
+                        <span v-if="item.expiredDate" class="dstok-expiry-badge" :class="expiryClass(item)">
+                          {{ expiryLabel(item) }}
+                        </span>
+                      </div>
+
+                      <!-- Tanggal expired -->
+                      <div class="dstok-date-wrap">
+                        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <input
+                          type="date"
+                          class="dstok-date"
+                          v-model="item.expiredDate"
+                          @change="save" />
+                      </div>
+
+                      <!-- Hapus -->
+                      <button class="dstok-del" @click="removeItem(cat.id, item.id)" title="Hapus">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                      </button>
+                    </div>
+                  </transition-group>
+                </div>
+                <div v-else class="dstok-cat-empty">belum ada barang di kategori ini.</div>
+
+                <button class="dstok-add-item-btn" @click="addItem(cat.id)">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Tambah Barang
+                </button>
+
+                <!-- ═══ SECTION: udah dipake (arsip, buat tracking expired) — selalu tampil ═══ -->
+                <button class="dstok-used-toggle" @click="toggleUsedSection(cat.id)">
+                  <span class="dstok-section-dot dstok-section-dot-used"></span>
+                  <span class="dstok-used-toggle-label">udah dipake</span>
+                  <span class="dstok-section-count">{{ usedItems(cat).length }}</span>
+                  <svg class="dstok-section-chevron" :class="{ 'dstok-section-chevron--open': expandedUsed[cat.id] }" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+
+                <div v-if="expandedUsed[cat.id]">
+                  <div class="dstok-items dstok-items-used" v-if="usedItems(cat).length">
                     <transition-group name="dstok-item">
-                      <div v-for="item in grp.items" :key="item.id" class="dstok-row dstok-row-used">
-                        <button class="dstok-check checked" @click="toggleUsed(grp.catId, item.id)" title="Kembalikan ke aktif">
+                      <div v-for="item in usedItems(cat)" :key="item.id" class="dstok-row dstok-row-used">
+                        <button class="dstok-check checked" @click="toggleUsed(cat.id, item.id)" title="Kembalikan ke stok">
                           <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         </button>
                         <div class="dstok-name-col">
                           <span class="dstok-name dstok-name-done">{{ item.name || '(tanpa nama)' }}</span>
                           <span class="dstok-used-date">
                             <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            dipakai {{ formatDate(item.usedDate) }}
+                            dipakai {{ formatDate(item.usedDate) }} · sisa {{ item.qty ?? 0 }}
                           </span>
                         </div>
-                        <button class="dstok-del" @click="removeItem(grp.catId, item.id)" title="Hapus permanen">
+                        <span v-if="item.expiredDate" class="dstok-expiry-badge" :class="expiryClass(item)">
+                          {{ expiryLabel(item) }}
+                        </span>
+                        <button class="dstok-del" @click="removeItem(cat.id, item.id)" title="Hapus permanen">
                           <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                         </button>
                       </div>
                     </transition-group>
                   </div>
+                  <div v-else class="dstok-cat-empty">belum ada barang yang dipakai di kategori ini.</div>
                 </div>
-              </div>
-              <div v-else class="dstok-empty">
-                <div class="dstok-empty-icon">🗄️</div>
-                <p>arsip masih kosong.<br>barang yang dicentang "sudah dipakai" akan pindah ke sini.</p>
               </div>
             </div>
 
-            <!-- ═══ MODE AKTIF: kategori & barang yang belum dipakai ═══ -->
-            <template v-else>
-              <div class="dstok-body" v-if="categories.length">
-                <div v-for="cat in categories" :key="cat.id" class="dstok-cat">
+            <!-- Empty state -->
+            <div v-else class="dstok-empty">
+              <div class="dstok-empty-icon">📦</div>
+              <p>belum ada kategori.<br>buat kategori custom pertama kamu!</p>
+            </div>
 
-                  <div class="dstok-cat-header">
-                    <span class="dstok-cat-icon">🗂️</span>
-                    <input
-                      class="dstok-cat-name"
-                      v-model="cat.name"
-                      placeholder="nama kategori (mis. Bumbu Dapur)..."
-                      @change="save" />
-                    <span class="dstok-cat-count">{{ activeItems(cat).length }} barang</span>
-                    <button class="dstok-cat-del" @click="removeCategory(cat.id)" title="Hapus kategori">
-                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                    </button>
-                  </div>
-
-                  <div class="dstok-items" v-if="activeItems(cat).length">
-                    <transition-group name="dstok-item">
-                      <div v-for="item in activeItems(cat)" :key="item.id"
-                        class="dstok-row"
-                        :class="{
-                          'dstok-row-expired': isExpired(item),
-                          'dstok-row-soon': !isExpired(item) && isExpiringSoon(item)
-                        }">
-
-                        <!-- Checklist: sudah dipakai → pindah ke arsip -->
-                        <button class="dstok-check" @click="toggleUsed(cat.id, item.id)" title="Tandai sudah dipakai (pindah ke arsip)">
-                        </button>
-
-                        <!-- Nama barang + status -->
-                        <div class="dstok-name-col">
-                          <input
-                            class="dstok-name"
-                            v-model="item.name"
-                            placeholder="nama barang..."
-                            @change="save" />
-                          <span v-if="item.expiredDate" class="dstok-expiry-badge" :class="expiryClass(item)">
-                            {{ expiryLabel(item) }}
-                          </span>
-                        </div>
-
-                        <!-- Tanggal expired -->
-                        <div class="dstok-date-wrap">
-                          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                          <input
-                            type="date"
-                            class="dstok-date"
-                            v-model="item.expiredDate"
-                            @change="save" />
-                        </div>
-
-                        <!-- Hapus -->
-                        <button class="dstok-del" @click="removeItem(cat.id, item.id)" title="Hapus">
-                          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                        </button>
-                      </div>
-                    </transition-group>
-                  </div>
-                  <div v-else-if="cat.items.length === 0" class="dstok-cat-empty">belum ada barang di kategori ini.</div>
-                  <div v-else class="dstok-cat-empty dstok-cat-empty-archived">semua barang sudah dipakai — lihat di 🗄️ Arsip</div>
-
-                  <button class="dstok-add-item-btn" @click="addItem(cat.id)">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Tambah Barang
-                  </button>
-                </div>
-              </div>
-
-              <!-- Empty state -->
-              <div v-else class="dstok-empty">
-                <div class="dstok-empty-icon">📦</div>
-                <p>belum ada kategori.<br>buat kategori custom pertama kamu!</p>
-              </div>
-
-              <!-- Add category -->
-              <div class="dstok-add-row">
-                <button class="dstok-add-cat-btn" @click="addCategory">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  Kategori Baru
-                </button>
-              </div>
-            </template>
+            <!-- Add category -->
+            <div class="dstok-add-row">
+              <button class="dstok-add-cat-btn" @click="addCategory">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Kategori Baru
+              </button>
+            </div>
 
           </div>
         </div>
@@ -20983,8 +20986,9 @@ const DailyStok = {
 
   data() {
     return {
-      categories: [],   // [{ id, name, items: [{ id, name, expiredDate, used, usedDate }] }]
-      showArchive: false,
+      categories: [],   // [{ id, name, items: [{ id, name, expiredDate, qty, used, usedDate }] }]
+      confirmItemId: null, // id item yang lagi nampilin popover "pindah ke udah dipake?"
+      expandedUsed: {}, // { [catId]: true/false } — apakah section "udah dipake" kategori itu lagi kebuka
     };
   },
 
@@ -20998,34 +21002,38 @@ const DailyStok = {
     expiringSoonCount() {
       return this.categories.reduce((s, c) => s + c.items.filter(i => !i.used && (this.isExpired(i) || this.isExpiringSoon(i))).length, 0);
     },
-    // Barang yang sudah dicentang "dipakai", dikelompokkan per kategori — ditampilkan di mode Arsip
-    archivedGroups() {
-      return this.categories
-        .map(c => ({
-          catId: c.id,
-          catName: c.name,
-          items: c.items.filter(i => i.used).slice().sort((a, b) => (b.usedDate || '').localeCompare(a.usedDate || ''))
-        }))
-        .filter(g => g.items.length > 0);
-    },
   },
 
   watch: {
-    show(val) { if (val) { this.load(); this.showArchive = false; } }
+    show(val) { if (val) this.load(); }
   },
 
   mounted() { this.load(); },
 
   methods: {
-    // Barang yang BELUM dipakai di kategori tsb (ditampilkan di daftar aktif)
+    // Barang yang BELUM dipakai di kategori tsb (section "stok")
     activeItems(cat) {
       return cat.items.filter(i => !i.used);
+    },
+
+    // Barang yang sudah "udah dipake" di kategori tsb (section bawah, collapsible)
+    usedItems(cat) {
+      return cat.items.filter(i => i.used).slice().sort((a, b) => (b.usedDate || '').localeCompare(a.usedDate || ''));
+    },
+
+    toggleUsedSection(catId) {
+      this.expandedUsed = { ...this.expandedUsed, [catId]: !this.expandedUsed[catId] };
     },
 
     load() {
       try {
         const raw = WorkspaceStorage.getItem('ws_daily_stok');
         this.categories = raw ? JSON.parse(raw) : [];
+        this.categories.forEach(cat => {
+          (cat.items || []).forEach(item => {
+            if (item.qty === undefined || item.qty === null) item.qty = 1;
+          });
+        });
       } catch(e) { this.categories = []; }
     },
 
@@ -21053,7 +21061,7 @@ const DailyStok = {
     addItem(catId) {
       const cat = this.categories.find(c => c.id === catId);
       if (!cat) return;
-      cat.items.push({ id: Date.now() + Math.random(), name: '', expiredDate: '', used: false, usedDate: null });
+      cat.items.push({ id: Date.now() + Math.random(), name: '', expiredDate: '', qty: 1, used: false, usedDate: null });
       this.save();
       this.$nextTick(() => {
         const inputs = this.$el.querySelectorAll('.dstok-name:not(:disabled)');
@@ -21066,6 +21074,36 @@ const DailyStok = {
       if (!cat) return;
       const idx = cat.items.findIndex(i => i.id === itemId);
       if (idx !== -1) { cat.items.splice(idx, 1); this.save(); }
+    },
+
+    findItem(catId, itemId) {
+      const cat = this.categories.find(c => c.id === catId);
+      if (!cat) return null;
+      return cat.items.find(i => i.id === itemId) || null;
+    },
+
+    incrementQty(catId, itemId) {
+      const item = this.findItem(catId, itemId);
+      if (!item) return;
+      item.qty = (item.qty ?? 1) + 1;
+      this.save();
+    },
+
+    decrementQty(catId, itemId) {
+      const item = this.findItem(catId, itemId);
+      if (!item) return;
+      item.qty = Math.max(0, (item.qty ?? 1) - 1);
+      this.save();
+      // Tawarkan pindah ke arsip "udah dipake" tiap kali stok dikurangi
+      this.confirmItemId = itemId;
+    },
+
+    confirmMoveUsed(catId, itemId) {
+      this.confirmItemId = null;
+      const item = this.findItem(catId, itemId);
+      if (!item || item.used) return;
+      this.toggleUsed(catId, itemId);
+      this.expandedUsed = { ...this.expandedUsed, [catId]: true };
     },
 
     toggleUsed(catId, itemId) {
