@@ -12056,10 +12056,25 @@ input:checked + .switch-slider:before {
   position: relative;
   flex-shrink: 0;
   display: flex; align-items: center; gap: 0;
+}
+.dstok-qty-inner {
+  display: flex; align-items: center; gap: 0;
   background: #fff;
   border: 1.5px solid var(--color-sand);
   border-radius: 8px;
   overflow: hidden;
+}
+/* Qty statis (read-only) di row "sedang dipake" — jumlah udah terkunci dari stok, gak diubah lagi */
+.dstok-qty-static {
+  flex-shrink: 0;
+  min-width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12.5px; font-weight: 600; color: var(--text-muted);
+  background: var(--color-sand-light, #EDE8E1);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 8px;
+  padding: 0 8px;
 }
 .dstok-qty-btn {
   width: 22px; height: 26px;
@@ -12158,6 +12173,10 @@ input:checked + .switch-slider:before {
 }
 .dstok-section-chevron--open { transform: rotate(180deg); }
 .dstok-items-used { margin-top: 2px; }
+.dstok-section-label-done {
+  padding-top: 10px;
+  border-top: 1px dashed var(--color-sand);
+}
 
 /* Name column */
 .dstok-name-col {

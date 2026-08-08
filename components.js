@@ -20879,12 +20879,14 @@ const DailyStok = {
 
                       <!-- Jumlah stok: +/- , kurangi akan menawarkan pindah ke "udah dipake" -->
                       <div class="dstok-qty-wrap" @click="$event.stopPropagation()">
-                        <button class="dstok-qty-btn dstok-qty-minus" @click="decrementQty(cat.id, item.id)" title="Kurangi stok">−</button>
-                        <span class="dstok-qty-val">{{ item.qty ?? 1 }}</span>
-                        <button class="dstok-qty-btn dstok-qty-plus" @click="incrementQty(cat.id, item.id)" title="Tambah stok">+</button>
+                        <div class="dstok-qty-inner">
+                          <button class="dstok-qty-btn dstok-qty-minus" @click="decrementQty(cat.id, item.id)" title="Kurangi stok">−</button>
+                          <span class="dstok-qty-val">{{ item.qty ?? 1 }}</span>
+                          <button class="dstok-qty-btn dstok-qty-plus" @click="incrementQty(cat.id, item.id)" title="Tambah stok">+</button>
+                        </div>
 
                         <div v-if="confirmItemId === item.id" class="dstok-qty-confirm">
-                          <span class="dstok-qty-confirm-text">pindah ke udah dipake?</span>
+                          <span class="dstok-qty-confirm-text">catat 1 udah dipake?</span>
                           <div class="dstok-qty-confirm-actions">
                             <button class="dstok-qty-confirm-yes" @click="confirmMoveUsed(cat.id, item.id)">ya</button>
                             <button class="dstok-qty-confirm-no" @click="confirmItemId = null">tidak</button>
@@ -20937,29 +20939,83 @@ const DailyStok = {
                 </button>
 
                 <div v-if="expandedUsed[cat.id]">
-                  <div class="dstok-items dstok-items-used" v-if="usedItems(cat).length">
+                  <!-- Sedang dipake: belum di-checklist selesai, tampilannya masih kayak row biasa -->
+                  <div class="dstok-items" v-if="inUseItems(cat).length">
                     <transition-group name="dstok-item">
-                      <div v-for="item in usedItems(cat)" :key="item.id" class="dstok-row dstok-row-used">
-                        <button class="dstok-check checked" @click="toggleUsed(cat.id, item.id)" title="Kembalikan ke stok">
-                          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        </button>
+                      <div v-for="item in inUseItems(cat)" :key="item.id"
+                        class="dstok-row"
+                        :class="{
+                          'dstok-row-expired': isExpired(item),
+                          'dstok-row-soon': !isExpired(item) && isExpiringSoon(item)
+                        }">
+
+                        <div class="dstok-qty-static" title="Jumlah yang dipake dari stok">
+                          {{ item.qty ?? 1 }}
+                        </div>
+
                         <div class="dstok-name-col">
-                          <span class="dstok-name dstok-name-done">{{ item.name || '(tanpa nama)' }}</span>
-                          <span class="dstok-used-date">
-                            <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            dipakai {{ formatDate(item.usedDate) }} · sisa {{ item.qty ?? 0 }}
+                          <input
+                            class="dstok-name"
+                            v-model="item.name"
+                            placeholder="nama barang..."
+                            @change="save" />
+                          <span v-if="item.expiredDate" class="dstok-expiry-badge" :class="expiryClass(item)">
+                            {{ expiryLabel(item) }}
                           </span>
                         </div>
-                        <span v-if="item.expiredDate" class="dstok-expiry-badge" :class="expiryClass(item)">
-                          {{ expiryLabel(item) }}
-                        </span>
-                        <button class="dstok-del" @click="removeItem(cat.id, item.id)" title="Hapus permanen">
+
+                        <div class="dstok-date-wrap">
+                          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                          <input
+                            type="date"
+                            class="dstok-date"
+                            v-model="item.expiredDate"
+                            @change="save" />
+                        </div>
+
+                        <!-- Checklist selesai dipake: baru di sini dicoret & pindah ke arsip -->
+                        <button class="dstok-check" @click="confirmDone(cat.id, item.id)" title="Tandai selesai dipake">
+                          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </button>
+
+                        <button class="dstok-del" @click="removeItem(cat.id, item.id)" title="Hapus">
                           <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                         </button>
                       </div>
                     </transition-group>
                   </div>
-                  <div v-else class="dstok-cat-empty">belum ada barang yang dipakai di kategori ini.</div>
+
+                  <!-- Selesai dipake: udah di-checklist, dicoret, arsip buat tracking expired terakhir -->
+                  <template v-if="doneItems(cat).length">
+                    <div class="dstok-section-label dstok-section-label-done">
+                      <span class="dstok-section-dot dstok-section-dot-used"></span>
+                      selesai dipake <span class="dstok-section-count">{{ doneItems(cat).length }}</span>
+                    </div>
+                    <div class="dstok-items dstok-items-used">
+                      <transition-group name="dstok-item">
+                        <div v-for="item in doneItems(cat)" :key="item.id" class="dstok-row dstok-row-used">
+                          <button class="dstok-check checked" @click="undoDone(cat.id, item.id)" title="Batalkan, balikin ke sedang dipake">
+                            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          </button>
+                          <div class="dstok-name-col">
+                            <span class="dstok-name dstok-name-done">{{ item.name || '(tanpa nama)' }}</span>
+                            <span class="dstok-used-date">
+                              <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                              dipakai {{ formatDate(item.usedDate) }} · sisa {{ item.qty ?? 0 }}
+                            </span>
+                          </div>
+                          <span v-if="item.expiredDate" class="dstok-expiry-badge" :class="expiryClass(item)">
+                            {{ expiryLabel(item) }}
+                          </span>
+                          <button class="dstok-del" @click="removeItem(cat.id, item.id)" title="Hapus permanen">
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                          </button>
+                        </div>
+                      </transition-group>
+                    </div>
+                  </template>
+
+                  <div v-if="!inUseItems(cat).length && !doneItems(cat).length" class="dstok-cat-empty">belum ada barang yang dipakai di kategori ini.</div>
                 </div>
               </div>
             </div>
@@ -20997,10 +21053,14 @@ const DailyStok = {
       return this.categories.reduce((s, c) => s + c.items.length, 0);
     },
     usedCount() {
-      return this.categories.reduce((s, c) => s + c.items.filter(i => i.used).length, 0);
+      // "sudah dipakai" di summary = barang yang beneran udah selesai di-checklist,
+      // bukan yang masih dilacak sebagai "sedang dipake"
+      return this.categories.reduce((s, c) => s + c.items.filter(i => i.confirmed).length, 0);
     },
     expiringSoonCount() {
-      return this.categories.reduce((s, c) => s + c.items.filter(i => !i.used && (this.isExpired(i) || this.isExpiringSoon(i))).length, 0);
+      // Barang yang masih relevan buat dipantau expired-nya: yang di stok ATAU yang
+      // masih "sedang dipake" (belum di-checklist selesai). Yang udah "selesai dipake" dilewatin.
+      return this.categories.reduce((s, c) => s + c.items.filter(i => !i.confirmed && (this.isExpired(i) || this.isExpiringSoon(i))).length, 0);
     },
   },
 
@@ -21016,9 +21076,20 @@ const DailyStok = {
       return cat.items.filter(i => !i.used);
     },
 
-    // Barang yang sudah "udah dipake" di kategori tsb (section bawah, collapsible)
+    // Semua barang yang udah dipindah keluar dari "stok" (buat badge count section "udah dipake")
     usedItems(cat) {
-      return cat.items.filter(i => i.used).slice().sort((a, b) => (b.usedDate || '').localeCompare(a.usedDate || ''));
+      return cat.items.filter(i => i.used);
+    },
+
+    // Barang yang sedang dipake, sudah dipindah dari "stok" tapi BELUM di-checklist selesai —
+    // tampilannya masih kayak row biasa (bisa diedit, ada +/- qty)
+    inUseItems(cat) {
+      return cat.items.filter(i => i.used && !i.confirmed);
+    },
+
+    // Barang yang udah di-checklist "selesai dipake" — dicoret, arsip, buat tracking expired terakhir
+    doneItems(cat) {
+      return cat.items.filter(i => i.used && i.confirmed).slice().sort((a, b) => (b.usedDate || '').localeCompare(a.usedDate || ''));
     },
 
     toggleUsedSection(catId) {
@@ -21032,6 +21103,11 @@ const DailyStok = {
         this.categories.forEach(cat => {
           (cat.items || []).forEach(item => {
             if (item.qty === undefined || item.qty === null) item.qty = 1;
+            // Migrasi data lama: barang yang sebelumnya udah "used" (belum kenal status
+            // confirmed) dianggap udah "selesai dipake" karena dulu langsung dicoret & ada usedDate.
+            if (item.confirmed === undefined || item.confirmed === null) {
+              item.confirmed = !!item.used;
+            }
           });
         });
       } catch(e) { this.categories = []; }
@@ -21061,7 +21137,7 @@ const DailyStok = {
     addItem(catId) {
       const cat = this.categories.find(c => c.id === catId);
       if (!cat) return;
-      cat.items.push({ id: Date.now() + Math.random(), name: '', expiredDate: '', qty: 1, used: false, usedDate: null });
+      cat.items.push({ id: Date.now() + Math.random(), name: '', expiredDate: '', qty: 1, used: false, usedDate: null, confirmed: false });
       this.save();
       this.$nextTick(() => {
         const inputs = this.$el.querySelectorAll('.dstok-name:not(:disabled)');
@@ -21094,32 +21170,50 @@ const DailyStok = {
       if (!item) return;
       item.qty = Math.max(0, (item.qty ?? 1) - 1);
       this.save();
-      // Tawarkan pindah ke arsip "udah dipake" tiap kali stok dikurangi
+      // Tiap kali stok dikurangi, tawarkan buat catat 1 unit itu sebagai "udah dipake"
+      // (sisa stoknya tetap di section stok — cocok buat stok banyak yang dipake sebagian2)
       this.confirmItemId = itemId;
     },
 
+    // Mencatat 1 unit yang baru dikurangi sebagai entri terpisah di "udah dipake",
+    // supaya expired-nya bisa dilacak per-batch tanpa mindahin sisa stok yang belum dipake.
+    // Belum di-checklist selesai — masih tampil kayak row biasa (bisa diedit, ada qty).
     confirmMoveUsed(catId, itemId) {
       this.confirmItemId = null;
+      const cat = this.categories.find(c => c.id === catId);
       const item = this.findItem(catId, itemId);
-      if (!item || item.used) return;
-      this.toggleUsed(catId, itemId);
+      if (!cat || !item) return;
+      cat.items.push({
+        id: Date.now() + Math.random(),
+        name: item.name,
+        expiredDate: item.expiredDate,
+        qty: 1,
+        used: true,
+        confirmed: false,
+        usedDate: null,
+      });
+      this.save();
       this.expandedUsed = { ...this.expandedUsed, [catId]: true };
     },
 
-    toggleUsed(catId, itemId) {
-      const cat = this.categories.find(c => c.id === catId);
-      if (!cat) return;
-      const item = cat.items.find(i => i.id === itemId);
+    // Checklist "selesai dipake" — baru di sini barang dicoret & pindah ke sub-section arsip
+    confirmDone(catId, itemId) {
+      const item = this.findItem(catId, itemId);
       if (!item) return;
-      item.used = !item.used;
-      if (item.used) {
-        const now = new Date();
-        item.usedDate = now.getFullYear() + '-'
-          + String(now.getMonth() + 1).padStart(2, '0') + '-'
-          + String(now.getDate()).padStart(2, '0');
-      } else {
-        item.usedDate = null;
-      }
+      item.confirmed = true;
+      const now = new Date();
+      item.usedDate = now.getFullYear() + '-'
+        + String(now.getMonth() + 1).padStart(2, '0') + '-'
+        + String(now.getDate()).padStart(2, '0');
+      this.save();
+    },
+
+    // Batalkan checklist "selesai dipake" — balik lagi jadi "sedang dipake" (bisa diedit lagi)
+    undoDone(catId, itemId) {
+      const item = this.findItem(catId, itemId);
+      if (!item) return;
+      item.confirmed = false;
+      item.usedDate = null;
       this.save();
     },
 
