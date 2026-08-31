@@ -13337,3 +13337,220 @@ input:checked + .switch-slider:before {
   color: var(--color-terracotta);
   background: #FFF4ED;
 }
+
+/* ============================================================================
+   ============================================================================
+   GLOBAL MOBILE CONSISTENCY PATCH
+   Ditambahkan untuk merapikan tampilan mobile/HP: menyeragamkan ukuran font
+   input/tombol, mencegah elemen "nabrak" (overlap/overflow), menyeragamkan
+   bentuk (radius/padding) form & modal, dan mencegah scroll horizontal.
+   Diletakkan di akhir file supaya urutan cascade CSS menang atas rule lain,
+   dan pakai !important secukupnya untuk menang atas inline style di HTML.
+   ============================================================================
+   ============================================================================ */
+
+/* ---------- Cegah scroll horizontal di semua ukuran ---------- */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+img, svg, video, canvas, iframe {
+  max-width: 100%;
+}
+
+/* ============================================================================
+   TABLET & BAWAH (<=1024px) — layout mulai menyempit
+   ============================================================================ */
+@media (max-width: 1024px) {
+  .app-container {
+    padding: 16px;
+  }
+}
+
+/* ============================================================================
+   MOBILE UTAMA (<=768px)
+   ============================================================================ */
+@media (max-width: 768px) {
+
+  /* ---------- Container & header global ---------- */
+  .app-container {
+    padding: 12px;
+    min-height: 100vh;
+  }
+
+  .top-header {
+    flex-wrap: wrap;
+    gap: 10px;
+    row-gap: 8px;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+  }
+
+  /* ---------- Semua baris flex generik jadi boleh wrap ---------- */
+  /* Banyak baris form (tanggal + kategori, jam mulai + jam selesai, dst)
+     ditulis dengan inline style "display: flex; gap: ..." tanpa flex-wrap,
+     sehingga di layar sempit input-nya saling bertabrakan/terpotong.
+     Rule ini memaksa semua baris flex tersebut boleh melipat ke bawah bila
+     tidak muat, tanpa mengubah tampilan desktop. */
+  [style*="display: flex"],
+  [style*="display:flex"] {
+    flex-wrap: wrap;
+  }
+
+  /* Baris kecil yang isinya cuma ikon + 1 label pendek tidak perlu wrap,
+     tapi karena flex-wrap hanya aktif saat kontennya tidak muat, ini aman. */
+
+  /* ---------- Grid multi-kolom jadi 1 kolom di HP ---------- */
+  .grid-2,
+  .grid-3,
+  .grid-4,
+  [style*="grid-template-columns: repeat"],
+  [style*="grid-template-columns:repeat"] {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* ---------- Form: label & spacing seragam ---------- */
+  .form-group {
+    margin-bottom: 14px !important;
+    min-width: 0;
+  }
+
+  .form-group label {
+    font-size: 13px !important;
+  }
+
+  /* ---------- INPUT / SELECT / TEXTAREA — seragamkan total ----------
+     Banyak input pakai inline style height (32/34/36/38/42px) & font-size
+     (11px–14.5px) berbeda-beda antar fitur. Blok ini menyamakan semuanya
+     supaya rapi, sekaligus font-size 16px mencegah auto-zoom di iOS Safari. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+  select,
+  textarea,
+  .form-input,
+  .g-form-input {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    height: auto !important;
+    min-height: 44px !important;
+    padding: 10px 12px !important;
+    font-size: 16px !important;
+    line-height: 1.35 !important;
+    border-radius: 8px !important;
+  }
+
+  textarea.form-input,
+  textarea {
+    min-height: 80px !important;
+  }
+
+  input[type="color"] {
+    min-height: 38px !important;
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-width: 18px;
+    min-height: 18px;
+  }
+
+  /* Input pencarian dengan lebar tetap (mis. width:200px) jadi fleksibel */
+  input[type="text"][style*="width: 200px"],
+  input[style*="width:200px"] {
+    width: 100% !important;
+  }
+
+  /* ---------- BUTTON — seragamkan tinggi & font ---------- */
+  .btn,
+  button:not(.close-btn):not(.lh-btn-toggle) {
+    font-size: 14px !important;
+    min-height: 42px;
+    padding: 9px 16px !important;
+    border-radius: 8px !important;
+    white-space: normal;
+  }
+
+  /* Tombol kecil (ikon-only / aksi ringkas) tetap boleh lebih kecil,
+     tapi tetap terjangkau jempol (min 36px) */
+  button[style*="height: 32px"],
+  button[style*="height:32px"],
+  button[style*="width: 32px"] {
+    min-height: 36px !important;
+  }
+
+  /* ---------- MODAL — biar tidak kepotong di layar kecil ---------- */
+  .modal-backdrop {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .moment-modal,
+  [class$="-modal-overlay"] > div,
+  [class*="modal-content"],
+  [class*="modal-box"],
+  .gcal-modal-header,
+  .gcal-modal-body,
+  .cv2-modal-body,
+  .cf-modal-header,
+  .cf-modal-body,
+  .cf-modal-footer {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 16px !important;
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+
+  /* ---------- Dropdown / popover kalender & filter jangan keluar layar ---------- */
+  [style*="min-width: 272px"],
+  [class*="dropdown"],
+  [class*="popup"],
+  [class*="picker"] {
+    max-width: 92vw !important;
+  }
+
+  /* ---------- Tabel — scroll horizontal daripada merusak layout ---------- */
+  table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ---------- Heading yang kegedean di HP ---------- */
+  h1 { font-size: clamp(20px, 6vw, 26px) !important; }
+  h2 { font-size: clamp(18px, 5vw, 22px) !important; }
+  h3 { font-size: clamp(16px, 4.5vw, 19px) !important; }
+}
+
+/* ============================================================================
+   HP KECIL (<=480px) — penyesuaian tambahan
+   ============================================================================ */
+@media (max-width: 480px) {
+  .app-container {
+    padding: 10px;
+  }
+
+  .moment-modal,
+  [class$="-modal-overlay"] > div {
+    padding: 14px !important;
+  }
+
+  .btn,
+  button:not(.close-btn):not(.lh-btn-toggle) {
+    font-size: 13.5px !important;
+    padding: 8px 12px !important;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+  select,
+  textarea,
+  .form-input,
+  .g-form-input {
+    font-size: 15px !important;
+    padding: 9px 10px !important;
+  }
+}
