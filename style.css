@@ -4004,6 +4004,87 @@ input:checked + .switch-slider:before {
 
 
 /* ============================================================================
+   QUICK SHORTCUT: jalan pintas input baru — menyatu di floating-action-dock
+   Tombol memanjang ke atas dengan gaya bulat sama seperti tombol dock
+   lainnya, bedanya tiap tombol punya keterangan (label) di sampingnya.
+   ============================================================================ */
+.quick-shortcut-group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.quick-shortcut-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.quick-shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.quick-shortcut-label {
+  background-color: var(--bg-card);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: var(--text-dark);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+}
+
+.quick-shortcut-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-shortcut-item-icon svg {
+  display: block;
+}
+
+/* Toggle button pakai base .desk-config-floating-btn, tambahan berikut khusus ikon "+" */
+.quick-shortcut-toggle-btn {
+  color: var(--color-terracotta);
+}
+
+.quick-shortcut-toggle-icon {
+  display: block;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.quick-shortcut-toggle-btn.is-open .quick-shortcut-toggle-icon {
+  transform: rotate(45deg);
+}
+
+.quick-shortcut-toggle-btn.is-open {
+  border-color: var(--color-terracotta);
+  box-shadow: 0 0 0 3px rgba(214, 123, 82, 0.18), var(--shadow-md);
+}
+
+/* Expand/collapse animation untuk menu shortcut */
+.quick-shortcut-expand-enter-active {
+  animation: quickShortcutMenuIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.quick-shortcut-expand-leave-active {
+  animation: quickShortcutMenuIn 0.18s ease-in reverse;
+}
+@keyframes quickShortcutMenuIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.88); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ============================================================================
    AESTHETIC FLOATING ACTION DOCK
    ============================================================================ */
 .floating-action-dock {

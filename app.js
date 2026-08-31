@@ -416,6 +416,47 @@ const App = {
       showNavDrawer.value = false;
     };
 
+    // ══════════════════════════════════════════════════════════════
+    // FLOATING SHORTCUT: jalan pintas "input baru" dari Main Page (Desk)
+    // langsung menuju halaman tujuan + auto-buka form/aksi terkait.
+    // Tinggal tambah item baru di array ini kalau mau nambah shortcut lain.
+    // `action` akan dibaca oleh halaman tujuan (lihat mounted() komponennya)
+    // lewat globalThis.__wsPendingQuickAction.
+    // ══════════════════════════════════════════════════════════════
+    const showQuickShortcut = ref(false);
+    const quickShortcutActions = [
+      {
+        key: 'setReminder',
+        label: 'Set Pengingat',
+        // Lucide "bell" icon — sama seperti tombol notifikasi
+        icon: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+        page: 'googleCalendar',
+        action: 'openReminderForm',
+      },
+      {
+        key: 'addLog',
+        label: 'Catat Hari Baru',
+        // Ikon sama persis dengan tombol "Catat Hari Baru" di Job Logbook
+        icon: '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="19"/><line x1="9.5" y1="16.5" x2="14.5" y2="16.5"/></svg>',
+        page: 'jobLogbook',
+        action: 'openAddLog',
+      },
+      {
+        key: 'addTaskPlan',
+        label: 'Tambah Task Plan',
+        // Ikon sama persis dengan tombol "Tambah Task Plan" di Job Logbook
+        icon: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1" ry="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="13" y2="15"/></svg>',
+        page: 'jobLogbook',
+        action: 'openAddPlan',
+      },
+    ];
+
+    const triggerQuickShortcut = (qa) => {
+      globalThis.__wsPendingQuickAction = qa.action;
+      navigateTo(qa.page);
+      showQuickShortcut.value = false;
+    };
+
     // Click handler for desk icons — skip navigation if it was a drag
     const handleIconClick = (pageKey) => {
       if (hasDragged) return;
@@ -631,6 +672,9 @@ const App = {
       startDrag,
       resetLayout,
       navigateTo,
+      showQuickShortcut,
+      quickShortcutActions,
+      triggerQuickShortcut,
       handleIconClick,
       handleUpdateMapping,
       notifPanelRef,

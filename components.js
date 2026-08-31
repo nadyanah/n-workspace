@@ -2166,6 +2166,21 @@ const JobLogbook = {
       } catch(_e) { /* ignore */ }
     };
     globalThis.addEventListener('ws-job-plans-updated', this._onExternalPlansUpdated);
+
+    // ── Jalankan aksi dari Floating Shortcut di Main Page (Desk), kalau ada ──
+    // Contoh: klik "Catat Hari Baru" / "Tambah Task Plan" di Desk akan
+    // ditandai lewat flag global ini sebelum pindah halaman ke sini.
+    if (globalThis.__wsPendingQuickAction) {
+      const pendingAction = globalThis.__wsPendingQuickAction;
+      globalThis.__wsPendingQuickAction = null;
+      this.$nextTick(() => {
+        if (pendingAction === 'openAddLog') {
+          this.showAddLog = true;
+        } else if (pendingAction === 'openAddPlan') {
+          this.openAddPlan();
+        }
+      });
+    }
   },
   unmounted() {
     document.removeEventListener('click', this._closeRangePicker);
@@ -2222,13 +2237,13 @@ const CalendarMoment = {
               <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
               Kalender
             </button>
-            <button type="button" @click="currentView = 'timeline'"
+            <button type="button" @click="currentView = 'timeline'" v-if="false"
                     :style="currentView==='timeline' ? {background:'var(--color-terracotta)',color:'#fff'} : {background:'transparent',color:'#5D4F43'}"
                     style="border:none; font-size:11.5px; padding:0 10px; border-radius:6px; font-weight:700; height:100%; display:inline-flex; align-items:center; gap:4px; cursor:pointer; transition:all 0.15s; white-space:nowrap;">
               <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
               Kenangan
             </button>
-            <button type="button" @click="currentView = 'wheel'"
+            <button type="button" @click="currentView = 'wheel'" v-if="false"
                     :style="currentView==='wheel' ? {background:'var(--color-terracotta)',color:'#fff'} : {background:'transparent',color:'#5D4F43'}"
                     style="border:none; font-size:11.5px; padding:0 10px; border-radius:6px; font-weight:700; height:100%; display:inline-flex; align-items:center; gap:4px; cursor:pointer; transition:all 0.15s; white-space:nowrap;">
               <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m16.2 7.8 2.2-2.2"></path><path d="m12 12 4.2-4.2"></path></svg>
@@ -11592,6 +11607,20 @@ const GoogleCalendar = {
       if (!(cat.key in this.agendaFilters)) this.agendaFilters[cat.key] = true;
       if (!(cat.key in this.agendaFilterColors)) this.agendaFilterColors[cat.key] = cat.color || '#9CA3AF';
     });
+
+    // ── Jalankan aksi dari Floating Shortcut di Main Page (Desk), kalau ada ──
+    // Contoh: klik "Set Pengingat" di Desk akan ditandai lewat flag global ini
+    // sebelum pindah halaman ke sini, lalu form pengingat langsung terbuka
+    // otomatis (sama persis dengan tombol "Set Pengingat" di halaman ini).
+    if (globalThis.__wsPendingQuickAction) {
+      const pendingAction = globalThis.__wsPendingQuickAction;
+      globalThis.__wsPendingQuickAction = null;
+      this.$nextTick(() => {
+        if (pendingAction === 'openReminderForm') {
+          this.localResetReminderFormAndOpen();
+        }
+      });
+    }
 
   },
   beforeUnmount() {
