@@ -6610,6 +6610,19 @@ input:checked + .switch-slider:before {
 }
 .gcal-btn-save:hover { background: #c06844; transform: translateY(-1px); }
 
+/* ---- MODAL: Set Pengingat Manual — layout 2 kolom (default/desktop) ---- */
+.gcal-form-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+.gcal-form-col-left {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
 /* ---- MODAL: Set Pengingat Manual — responsive (mobile) ---- */
 @media (max-width: 640px) {
   .gcal-modal-overlay {
@@ -6626,10 +6639,10 @@ input:checked + .switch-slider:before {
   .gcal-modal-body {
     padding: 16px;
   }
+  /* Kolom kiri & kanan ditumpuk vertikal (section per section ke bawah) */
   .gcal-form-columns {
-    display: flex !important;
-    flex-direction: column;
-    gap: 16px !important;
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
   .gcal-form-col-right {
     padding: 14px !important;

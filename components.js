@@ -10556,11 +10556,11 @@ const GoogleCalendar = {
             </div>
             <div class="gcal-modal-body" style="padding:20px;">
 
-              <!-- ── 2-kolom layout utama ── -->
-              <div class="gcal-form-columns" style="display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start;">
+              <!-- ── 2-kolom layout utama (desktop) / 1-kolom bertumpuk (mobile, lihat @media di style.css) ── -->
+              <div class="gcal-form-columns">
 
                 <!-- ── KOLOM KIRI: Judul, Keterangan, Waktu, Tanggal ── -->
-                <div class="gcal-form-col-left" style="display:flex; flex-direction:column; gap:13px;">
+                <div class="gcal-form-col-left">
                   <div>
                     <label class="gcal-label">Judul Pengingat *</label>
                     <input type="text" class="gcal-input" v-model="localNewReminder.title" placeholder="cth., Minum obat, Hubungi klien..." maxlength="60" />
