@@ -10032,21 +10032,45 @@ const GoogleCalendar = {
           <h2 style="font-size: 24px; font-weight: 800; color: var(--text-dark); margin: 0 0 4px 0;">daily n</h2>
           <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 4px;">Sinkronisasikan agenda kesibukan & jadwal harian Anda secara langsung</p>
         </div>
-        <!-- Profile metadata status if signed in -->
-        <div v-if="user" class="flex-gap" style="align-items: center;">
-          <div style="text-align: right; display: flex; flex-direction: column; justify-content: center;">
-            <span style="font-weight: 600; font-size: 14.2px; color: var(--text-dark);">{{ user.displayName || 'Pengguna Google' }}</span>
-            <span style="font-size: 11px; color: var(--text-muted); font-family: monospace;">{{ user.email }}</span>
+
+        <!-- Right side: Daily/Moment tab switcher (sejajar vertikal dgn tombol "Set Pengingat" di toolbar bawah) + profile -->
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px; flex-shrink:0;">
+
+          <!-- Daily / Moment Tab Switcher -->
+          <div style="display:flex; gap:4px; background:var(--bg-cream); border:1.5px solid var(--color-sand); border-radius:10px; padding:3px; flex-shrink:0;">
+            <button type="button" @click="dailyMomentTab = 'daily'"
+                    :style="dailyMomentTab==='daily' ? {background:'var(--color-terracotta)',color:'#fff'} : {background:'transparent',color:'#5D4F43'}"
+                    style="border:none; font-size:12.5px; padding:7px 16px; border-radius:8px; font-weight:700; display:inline-flex; align-items:center; gap:6px; cursor:pointer; transition:all 0.15s; white-space:nowrap;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              Daily
+            </button>
+            <button type="button" @click="dailyMomentTab = 'moment'"
+                    :style="dailyMomentTab==='moment' ? {background:'var(--color-terracotta)',color:'#fff'} : {background:'transparent',color:'#5D4F43'}"
+                    style="border:none; font-size:12.5px; padding:7px 16px; border-radius:8px; font-weight:700; display:inline-flex; align-items:center; gap:6px; cursor:pointer; transition:all 0.15s; white-space:nowrap;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+              Moment
+            </button>
           </div>
-          <img :src="user.photoURL || 'https://www.gravatar.com/avatar/?d=mp'" 
-               style="width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--color-gold); object-fit: cover;" />
-          <button class="btn btn-secondary" @click="handleSignOut" style="font-size: 11px; padding: 6px 12px; margin-left: 8px; display: inline-flex; align-items: center; gap: 4px;">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-            Keluar
-          </button>
+
+          <!-- Profile metadata status if signed in -->
+          <div v-if="user" class="flex-gap" style="align-items: center;">
+            <div style="text-align: right; display: flex; flex-direction: column; justify-content: center;">
+              <span style="font-weight: 600; font-size: 14.2px; color: var(--text-dark);">{{ user.displayName || 'Pengguna Google' }}</span>
+              <span style="font-size: 11px; color: var(--text-muted); font-family: monospace;">{{ user.email }}</span>
+            </div>
+            <img :src="user.photoURL || 'https://www.gravatar.com/avatar/?d=mp'" 
+                 style="width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--color-gold); object-fit: cover;" />
+            <button class="btn btn-secondary" @click="handleSignOut" style="font-size: 11px; padding: 6px 12px; margin-left: 8px; display: inline-flex; align-items: center; gap: 4px;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              Keluar
+            </button>
+          </div>
         </div>
 
       </div>
+
+      <!-- ═══ DAILY TAB CONTENT ═══ -->
+      <div v-if="dailyMomentTab === 'daily'">
 
       <!-- LOCAL CALENDAR VIEW (always shown, no auth needed) -->
       <div v-if="needsAuth">
@@ -11031,11 +11055,23 @@ const GoogleCalendar = {
         </div>
       </div>
 
+      </div>
+      <!-- ═══ END DAILY TAB CONTENT ═══ -->
+
+      <!-- ═══ MOMENT TAB CONTENT (kosong dulu, menyusul) ═══ -->
+      <div v-else-if="dailyMomentTab === 'moment'" class="animate-fade-in"
+           style="padding: 80px 24px; text-align: center; background-color: #FFFFFF; border: 1.5px dashed var(--color-sand); border-radius: 20px; color: var(--text-muted);">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px; opacity: 0.5;"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+        <p style="font-weight: 700; font-size: 14px; color: var(--text-dark); margin: 0 0 4px 0;">Segera Hadir</p>
+        <p style="font-size: 12.5px; margin: 0;">Fitur Moment masih dalam pengembangan.</p>
+      </div>
+
     </div>
   `,
   emits: ['trigger-habit'],
   data() {
     return {
+      dailyMomentTab: 'daily',
       auth: null,
       provider: null,
       user: null,
