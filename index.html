@@ -812,7 +812,7 @@
         </div>
         <!-- Scattered Icons/Objects mapping to Pages -->
         <!-- Drag-and-drop is supported; positions are saved automatically in localStorage -->
-        <div v-for="(cfg, pageKey) in assignedIcons" 
+        <div v-for="(cfg, pageKey) in visibleAssignedIcons" 
              :key="pageKey" 
              class="desk-item" 
              :style="{ left: cfg.x + '%', top: cfg.y + '%' }"
@@ -1088,17 +1088,6 @@
                 <span class="ws-drawer-sub">pencatatan aktivitas harian kerja</span>
               </div>
               <span class="ws-drawer-num">01</span>
-            </button>
-
-            <button class="ws-drawer-item" :class="{ active: activePage === 'calendarMoment' }" @click="navigateTo('calendarMoment'); showNavDrawer = false">
-              <span class="ws-drawer-icon">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              </span>
-              <div class="ws-drawer-item-text">
-                <span class="ws-drawer-label">Calendar Moment</span>
-                <span class="ws-drawer-sub">kalender digital & catatan memo</span>
-              </div>
-              <span class="ws-drawer-num">02</span>
             </button>
 
             <button class="ws-drawer-item" :class="{ active: activePage === 'contentTracker' }" @click="navigateTo('contentTracker'); showNavDrawer = false">

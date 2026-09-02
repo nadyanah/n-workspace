@@ -361,6 +361,16 @@ const App = {
 
     const assignedIcons = reactive({});
 
+    // Halaman yang disembunyikan dari tampilan meja (desk) tapi datanya tetap aman di storage
+    const HIDDEN_PAGES = ['calendarMoment'];
+    const visibleAssignedIcons = Vue.computed(() => {
+      const out = {};
+      for (const key in assignedIcons) {
+        if (!HIDDEN_PAGES.includes(key)) out[key] = assignedIcons[key];
+      }
+      return out;
+    });
+
     // Drag and Drop tracking state
     let draggingKey = null;
     let dragStartOffset = { x: 0, y: 0 }; // object properties mutated, not reassigned
@@ -663,6 +673,7 @@ const App = {
       iconPool,
       availableIconsList,
       assignedIcons,
+      visibleAssignedIcons,
       deskViewport,
       habitYearMonth,
       habitDaysInMonth,

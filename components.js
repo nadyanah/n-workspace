@@ -11058,12 +11058,130 @@ const GoogleCalendar = {
       </div>
       <!-- ═══ END DAILY TAB CONTENT ═══ -->
 
-      <!-- ═══ MOMENT TAB CONTENT (kosong dulu, menyusul) ═══ -->
-      <div v-else-if="dailyMomentTab === 'moment'" class="animate-fade-in"
-           style="padding: 80px 24px; text-align: center; background-color: #FFFFFF; border: 1.5px dashed var(--color-sand); border-radius: 20px; color: var(--text-muted);">
-        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px; opacity: 0.5;"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
-        <p style="font-weight: 700; font-size: 14px; color: var(--text-dark); margin: 0 0 4px 0;">Segera Hadir</p>
-        <p style="font-size: 12.5px; margin: 0;">Fitur Moment masih dalam pengembangan.</p>
+      <!-- ═══ MOMENT TAB CONTENT ═══ -->
+      <div v-else-if="dailyMomentTab === 'moment'" class="animate-fade-in">
+
+        <!-- Success / Error toast (mengikuti pola toast Daily) -->
+        <div v-if="momentSuccess" class="gcal-toast gcal-toast-success">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          {{ momentSuccess }}
+        </div>
+
+        <!-- Kartu input cepat: catat moment hari ini -->
+        <div style="background: var(--bg-card); border: 1.5px solid var(--color-sand); border-radius: 16px; padding: 20px; margin-bottom: 24px;">
+          <div style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;" :style="showMomentForm ? {marginBottom:'14px'} : {}" @click="showMomentForm = !showMomentForm">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+            <span style="font-weight: 700; font-size: 14px; color: var(--text-dark); flex:1;">{{ momentEditingId ? 'Edit Moment' : 'Catat Moment' }}</span>
+            <button type="button" @click.stop="showMomentForm = !showMomentForm" :title="showMomentForm ? 'Tutup form' : 'Buka form'"
+                    style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 8px; width: 26px; height: 26px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; color: var(--text-muted); flex-shrink:0;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: showMomentForm ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+          </div>
+
+          <div v-if="showMomentForm" class="animate-fade-in">
+          <!-- Baris 1: Tanggal & Kategori berdampingan -->
+          <div style="display:flex; gap: 12px; margin-bottom: 12px;">
+            <div style="flex: 1; min-width: 0;">
+              <label style="font-size: 11.5px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom: 5px;">Tanggal</label>
+              <input type="date" class="gcal-input" v-model="momentForm.date" style="width:100%;" />
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <label style="font-size: 11.5px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom: 5px;">Kategori</label>
+              <select class="gcal-input" v-model="momentForm.category" style="width:100%; cursor:pointer;">
+                <option v-for="f in agendaFilterOptions" :key="f.key" :value="f.key">{{ f.label }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Baris 2: Isi moment -->
+          <div style="margin-bottom: 12px;">
+            <label style="font-size: 11.5px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom: 5px;">Apa yang ingin kamu ingat di hari itu?</label>
+            <textarea class="gcal-input" v-model="momentForm.text" rows="2" maxlength="280"
+                      style="width:100%; resize:vertical; min-height:44px;"
+                      placeholder="Tulis momen singkat, mis. 'Ketemu teman lama di kafe'..."
+                      @keydown.enter.meta="addMoment" @keydown.enter.ctrl="addMoment"></textarea>
+            <span style="font-size: 11px; color: var(--text-muted); display:block; text-align:right; margin-top: 3px;">{{ momentForm.text.length }}/280</span>
+          </div>
+
+          <!-- Baris 3: Link opsional -->
+          <div style="margin-bottom: 4px;">
+            <label style="font-size: 11.5px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom: 5px;">Link Moment <span style="font-weight: 400; opacity: 0.75;">(opsional)</span></label>
+            <input type="url" class="gcal-input" v-model="momentForm.link" style="width:100%;" placeholder="https://..." />
+          </div>
+
+          <!-- Baris aksi -->
+          <div style="display:flex; justify-content:flex-end; align-items:center; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1.5px solid var(--color-sand);">
+            <button v-if="momentEditingId" class="btn btn-secondary" type="button" @click="cancelEditMoment" style="font-size: 12.5px; padding: 8px 16px;">Batal</button>
+            <button class="gcal-create-btn" type="button" @click="addMoment" :disabled="!momentForm.text.trim()" :style="!momentForm.text.trim() ? {opacity:0.5, cursor:'not-allowed'} : {}">
+              <svg v-if="!momentEditingId" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              {{ momentEditingId ? 'Update Moment' : 'Simpan Moment' }}
+            </button>
+          </div>
+          </div>
+        </div>
+
+        <!-- Timeline moment tersimpan, dikelompokkan per tanggal & bisa dibuka/tutup -->
+        <div v-if="groupedMoments.length === 0" class="animate-fade-in"
+             style="padding: 60px 24px; text-align: center; background-color: #FFFFFF; border: 1.5px dashed var(--color-sand); border-radius: 20px; color: var(--text-muted);">
+          <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px; opacity: 0.5;"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+          <p style="font-weight: 700; font-size: 14px; color: var(--text-dark); margin: 0 0 4px 0;">Belum Ada Moment</p>
+          <p style="font-size: 12.5px; margin: 0;">Momen yang kamu catat akan muncul di sini.</p>
+        </div>
+
+        <div v-else class="timeline">
+          <div v-for="group in groupedMoments" :key="group.dateString" class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+              <div class="timeline-date" style="margin-bottom: 0;">{{ formatMomentDate(group.dateString) }}</div>
+              <button type="button"
+                      @click="toggleMomentDateGroup(group.dateString)"
+                      :title="isMomentDateExpanded(group.dateString) ? 'Sembunyikan moment' : ('Lihat ' + group.items.length + ' moment')"
+                      style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700; color: var(--color-terracotta); padding: 2px 8px 2px 7px; line-height: 1.6;">
+                {{ group.items.length }}
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" :style="{ transform: isMomentDateExpanded(group.dateString) ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+            </div>
+
+            <div v-if="isMomentDateExpanded(group.dateString)" style="display: flex; flex-direction: column; gap: 6px;">
+              <div v-for="m in group.items" :key="m.id"
+                   class="timeline-compact-row"
+                   style="display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid var(--color-sand); border-radius: 9px; background-color: var(--bg-card);">
+
+                <span style="width: 13px; height: 13px; color: var(--color-terracotta); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;" title="Moment">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 4.6-4.6 1.9 4.6 1.9L12 16l1.9-4.6 4.6-1.9-4.6-1.9L12 3Z"></path><path d="M5 3v4M3 5h4M19 17v4M17 19h4"></path></svg>
+                </span>
+
+                <span class="timeline-category"
+                      :style="{ background: momentCategoryColor(m.category) + '22', color: momentCategoryColor(m.category), border: '1.5px solid ' + momentCategoryColor(m.category) + '55' }">
+                  {{ momentCategoryLabel(m.category) }}
+                </span>
+
+                <span style="color: var(--color-sand); flex-shrink: 0;">–</span>
+
+                <span style="font-size: 13px; font-weight: 700; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0;">{{ m.text }}</span>
+
+                <a v-if="m.link" :href="m.link" target="_blank" rel="noopener noreferrer" title="Buka link moment"
+                   style="flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; width: 22px; height: 22px; border-radius: 6px; background: rgba(214,123,82,0.10); color: var(--color-terracotta); transition: background 0.15s;"
+                   onmouseover="this.style.background='rgba(214,123,82,0.22)'" onmouseout="this.style.background='rgba(214,123,82,0.10)'">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                </a>
+
+                <div style="display: inline-flex; gap: 5px; flex-shrink: 0;">
+                  <button class="card-nav-btn" @click="startEditMoment(m)" title="Edit moment"
+                          style="background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 6px; padding: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  <button class="card-nav-btn" @click="deleteMoment(m.id)" title="Hapus moment"
+                          style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
     </div>
@@ -11161,6 +11279,20 @@ const GoogleCalendar = {
       },
       dragHandleActiveId: null, // id block yang drag handle-nya sedang aktif di touch
 
+      // ── Moment (tab "Moment" di halaman Daily N) ──
+      momentForm: { date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(), text: '', category: 'manual', link: '' },
+      moments: (() => {
+        try {
+          const raw = WorkspaceStorage.getItem('gcal_daily_moments');
+          return raw ? JSON.parse(raw) : [];
+        } catch(_e) { return []; }
+      })(),
+      momentEditingId: null,
+      showMomentForm: true,
+      momentExpandedDates: {},
+      momentSuccess: null,
+      momentSuccessTimer: null,
+
     };
   },
   computed: {
@@ -11213,6 +11345,19 @@ const GoogleCalendar = {
         });
       }
       return this.events;
+    },
+    // --- Moment Computeds ---
+    groupedMoments() {
+      const sorted = [...this.moments].sort((a, b) => {
+        if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      });
+      const map = new Map();
+      sorted.forEach(m => {
+        if (!map.has(m.date)) map.set(m.date, []);
+        map.get(m.date).push(m);
+      });
+      return Array.from(map.entries()).map(([dateString, items]) => ({ dateString, items }));
     },
     // --- Local Calendar Computeds ---
     localMonthLabel() {
@@ -11664,6 +11809,81 @@ const GoogleCalendar = {
     globalThis.removeEventListener('ws-notif-status-updated', this._onNotifStatusUpdated);
   },
   methods: {
+    // ── Moment (tab "Moment" di halaman Daily N) ──
+    saveMoments() {
+      try { WorkspaceStorage.setItem('gcal_daily_moments', JSON.stringify(this.moments)); } catch(_e) { /* ignore */ }
+    },
+    addMoment() {
+      const text = this.momentForm.text.trim();
+      if (!text) return;
+      const date = this.momentForm.date || this.localFmtDate(new Date());
+      const category = this.momentForm.category || 'manual';
+      const link = (this.momentForm.link || '').trim();
+
+      if (this.momentEditingId) {
+        const idx = this.moments.findIndex(m => m.id === this.momentEditingId);
+        if (idx !== -1) {
+          this.moments[idx] = { ...this.moments[idx], date, text, category, link };
+        }
+        this.momentSuccess = 'Moment diperbarui ✦';
+        this.momentEditingId = null;
+      } else {
+        this.moments.push({
+          id: 'moment-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+          date,
+          text,
+          category,
+          link,
+          createdAt: Date.now()
+        });
+        this.momentSuccess = 'Moment tersimpan ✦';
+      }
+
+      this.saveMoments();
+      this.momentExpandedDates = { ...this.momentExpandedDates, [date]: true };
+      this.momentForm.text = '';
+      this.momentForm.link = '';
+      clearTimeout(this.momentSuccessTimer);
+      this.momentSuccessTimer = setTimeout(() => { this.momentSuccess = null; }, 2500);
+    },
+    startEditMoment(m) {
+      this.momentEditingId = m.id;
+      this.momentForm = { date: m.date, text: m.text, category: m.category || 'manual', link: m.link || '' };
+      this.showMomentForm = true;
+    },
+    cancelEditMoment() {
+      this.momentEditingId = null;
+      this.momentForm.text = '';
+      this.momentForm.link = '';
+    },
+    deleteMoment(id) {
+      this.moments = this.moments.filter(m => m.id !== id);
+      this.saveMoments();
+      if (this.momentEditingId === id) this.cancelEditMoment();
+    },
+    toggleMomentDateGroup(dateString) {
+      this.momentExpandedDates = { ...this.momentExpandedDates, [dateString]: !this.isMomentDateExpanded(dateString) };
+    },
+    isMomentDateExpanded(dateString) {
+      if (dateString in this.momentExpandedDates) return this.momentExpandedDates[dateString];
+      // Default: hanya grup tanggal paling baru yang terbuka otomatis
+      return this.groupedMoments.length > 0 && this.groupedMoments[0].dateString === dateString;
+    },
+    momentCategoryLabel(key) {
+      const f = this.agendaFilterOptions.find(o => o.key === key);
+      return f ? f.label : (key || 'Umum');
+    },
+    momentCategoryColor(key) {
+      return this.agendaFilterColors[key] || '#9CA3AF';
+    },
+    formatMomentDate(dateStr) {
+      const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+      const dows = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+      const todayStr = this.localFmtDate(new Date());
+      const dt = new Date(dateStr + 'T12:00:00');
+      const label = dows[dt.getDay()] + ', ' + dt.getDate() + ' ' + months[dt.getMonth()] + ' ' + dt.getFullYear();
+      return dateStr === todayStr ? 'Hari Ini · ' + label : label;
+    },
     // ── Custom warna kategori filter agenda ──
     localUpdateFilterColor(key, value) {
       this.agendaFilterColors = { ...this.agendaFilterColors, [key]: value };
