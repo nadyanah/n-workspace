@@ -11173,12 +11173,17 @@ const GoogleCalendar = {
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
                 </a>
 
-                <div style="display: inline-flex; gap: 5px; flex-shrink: 0;">
-                  <button class="card-nav-btn" @click="startEditMoment(m)" title="Edit moment"
+                <div style="display: inline-flex; gap: 5px; flex-shrink: 0; align-items:center;">
+                  <button v-if="momentIsSynced(m)" @click="yearDotsOpenFromSyncedMoment(m)"
+                          title="Momen ini dikelola dari tab 365 Hari — klik buat buka di sana"
+                          style="font-size: 9.5px; font-weight: 700; color: var(--color-terracotta); background: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 6px; padding: 3px 6px; white-space: nowrap; cursor: pointer; font-family: 'Outfit', sans-serif;">
+                    dari 365 Hari
+                  </button>
+                  <button class="card-nav-btn" @click="startEditMoment(m)" :title="momentIsSynced(m) ? 'Buka di 365 Hari' : 'Edit moment'"
                           style="background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 6px; padding: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
                     <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                   </button>
-                  <button class="card-nav-btn" @click="deleteMoment(m.id)" title="Hapus moment"
+                  <button v-if="!momentIsSynced(m)" class="card-nav-btn" @click="deleteMoment(m.id)" title="Hapus moment"
                           style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
                     <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                   </button>
@@ -11213,26 +11218,34 @@ const GoogleCalendar = {
             type="button"
             class="y365-dot"
             :class="{ 'y365-dot--filled': d.hasEntry, 'y365-dot--today': d.isToday, 'y365-dot--future': d.isFuture && !d.hasEntry }"
-            :style="d.hasEntry && d.entry && d.entry.photo ? { backgroundImage: 'url(' + d.entry.photo + ')' } : {}"
+            :style="d.coverPhoto ? { backgroundImage: 'url(' + d.coverPhoto + ')' } : {}"
             :title="yearDotsDateLabel(d.dateStr) + (d.hasEntry ? ' — ada cerita' : '')"
             @click="yearDotsOpenDay(d.dateStr)"
           ></button>
         </div>
 
-        <!-- Modal isi cerita & foto per hari -->
+        <!-- Modal isi cerita & foto per hari (bisa lebih dari 1 momen, geser ke samping) -->
         <transition name="insight-modal-fade">
           <div v-if="yearDotsModalOpen" class="reminder-popup-overlay" @click.self="yearDotsCloseModal">
             <div class="y365-modal">
               <div class="y365-modal-header">
-                <div class="y365-modal-date">{{ yearDotsIsActiveToday ? 'Hari Ini' : yearDotsDateLabel(yearDotsActiveDate) }}</div>
+                <div class="y365-modal-date">
+                  {{ yearDotsIsActiveToday ? 'Hari Ini' : yearDotsDateLabel(yearDotsActiveDate) }}
+                  <span v-if="yearDotsDayMoments.length > 1" class="y365-modal-count">{{ yearDotsActiveMomentIdx + 1 }}/{{ yearDotsDayMoments.length }}</span>
+                </div>
                 <div class="y365-modal-header-right">
-                  <button v-if="yearDotsEntries[yearDotsActiveDate]" type="button" class="y365-modal-delete" @click="yearDotsDeleteEntry" title="Hapus catatan">
+                  <button type="button" class="y365-icon-btn" @click="yearDotsAddMoment" title="Tambah momen">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  </button>
+                  <button type="button" class="y365-icon-btn y365-icon-btn--danger" @click="yearDotsDeleteCurrentMoment" title="Hapus momen ini">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                   </button>
-                  <button type="button" class="y365-modal-save" @click="yearDotsSaveEntry"
-                          :disabled="!yearDotsForm.text.trim() && !yearDotsForm.photo"
-                          :style="(!yearDotsForm.text.trim() && !yearDotsForm.photo) ? {opacity:0.5, cursor:'not-allowed'} : {}">Simpan</button>
-                  <button type="button" class="y365-modal-close" @click="yearDotsCloseModal" title="Tutup">
+                  <button type="button" class="y365-icon-btn" @click="yearDotsSaveEntry"
+                          :disabled="!yearDotsHasAnyContent"
+                          :style="!yearDotsHasAnyContent ? {opacity:0.5, cursor:'not-allowed'} : {}" title="Simpan">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
+                  <button type="button" class="y365-icon-btn" @click="yearDotsCloseModal" title="Tutup">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </button>
                 </div>
@@ -11240,23 +11253,55 @@ const GoogleCalendar = {
 
               <input type="file" accept="image/*" id="y365-file-input" style="display:none;" @change="yearDotsHandleFileChange" />
 
-              <div class="y365-modal-body">
-                <div class="y365-modal-media">
-                  <div v-if="yearDotsForm.photo" class="y365-modal-photo-wrap" @click="yearDotsOpenFilePicker" title="Ganti foto">
-                    <img :src="yearDotsForm.photo" class="y365-modal-photo" />
-                    <button type="button" class="y365-modal-photo-remove" @click.stop="yearDotsForm.photo = ''" title="Hapus foto">
-                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
+              <div class="y365-modal-slider">
+                <div class="y365-modal-track"
+                     :style="{ transform: 'translateX(-' + (yearDotsActiveMomentIdx * 100) + '%)' }"
+                     @touchstart="yearDotsTouchStart"
+                     @touchend="yearDotsTouchEnd">
+                  <div class="y365-modal-slide" v-for="(m, idx) in yearDotsDayMoments" :key="m.id">
+                    <div class="y365-modal-body">
+                      <div class="y365-modal-media">
+                        <button type="button" class="y365-icon-btn y365-modal-cover-btn" :class="{ 'is-cover': yearDotsCoverId === m.id }"
+                                @click.stop="yearDotsSetCover(m.id)" :title="yearDotsCoverId === m.id ? 'Momen ini jadi cover' : 'Jadikan cover'">
+                          <svg viewBox="0 0 24 24" width="13" height="13" :fill="yearDotsCoverId === m.id ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        </button>
+                        <div v-if="m.photo" class="y365-modal-photo-wrap" @click="yearDotsOpenFilePicker(idx)" title="Ganti foto">
+                          <img :src="m.photo" class="y365-modal-photo" />
+                          <button type="button" class="y365-modal-photo-remove" @click.stop="m.photo = ''" title="Hapus foto">
+                            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                          </button>
+                        </div>
+                        <button v-else type="button" class="y365-modal-photo-add" @click="yearDotsOpenFilePicker(idx)">
+                          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                          <span>Tambah foto</span>
+                        </button>
+                      </div>
+
+                      <div class="y365-modal-content">
+                        <input type="text" class="y365-modal-title-input" v-model="m.title" maxlength="80"
+                               placeholder="Judul momen (opsional)" />
+                        <textarea class="y365-modal-caption" v-model="m.text" rows="2" maxlength="600"
+                                  placeholder="tulis cerita momen ini..."></textarea>
+                      </div>
+                    </div>
                   </div>
-                  <button v-else type="button" class="y365-modal-photo-add" @click="yearDotsOpenFilePicker">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                    <span>Tambah foto</span>
-                  </button>
                 </div>
 
-                <div class="y365-modal-content">
-                  <textarea class="y365-modal-caption" v-model="yearDotsForm.text" rows="2" maxlength="600"
-                            placeholder="tulis cerita hari ini..."></textarea>
+                <!-- Panah navigasi antar momen -->
+                <button v-if="yearDotsActiveMomentIdx > 0" type="button" class="y365-slide-arrow y365-slide-arrow--left" @click="yearDotsPrevMoment" title="Momen sebelumnya">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <button v-if="yearDotsActiveMomentIdx < yearDotsDayMoments.length - 1" type="button" class="y365-slide-arrow y365-slide-arrow--right" @click="yearDotsNextMoment" title="Momen berikutnya">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+              </div>
+
+              <!-- Titik indikator antar momen -->
+              <div class="y365-modal-footer" v-if="yearDotsDayMoments.length > 1">
+                <div class="y365-slide-dots">
+                  <button v-for="(m, idx) in yearDotsDayMoments" :key="'dot-'+m.id" type="button"
+                          class="y365-slide-dot" :class="{ 'is-active': idx === yearDotsActiveMomentIdx }"
+                          @click="yearDotsActiveMomentIdx = idx" :title="'Momen ' + (idx+1)"></button>
                 </div>
               </div>
             </div>
@@ -11331,7 +11376,7 @@ const GoogleCalendar = {
       // agendaFilterOptions moved to computed (includes custom categories)
       // Warna kustom per kategori filter agenda (bisa diubah lewat color picker)
       agendaFilterColors: (() => {
-        const defaults = { task: '#D67B52', habit: '#A3B18A', manual: '#F59E0B', content: '#8E7CC3' };
+        const defaults = { task: '#D67B52', habit: '#A3B18A', manual: '#F59E0B', content: '#8E7CC3', year365: '#B45309' };
         try {
           const raw = WorkspaceStorage.getItem('gcal_agenda_filter_colors');
           return raw ? { ...defaults, ...JSON.parse(raw) } : { ...defaults };
@@ -11384,7 +11429,12 @@ const GoogleCalendar = {
       })(),
       yearDotsModalOpen: false,
       yearDotsActiveDate: null,
-      yearDotsForm: { text: '', photo: '' },
+      // Array momen (bisa lebih dari 1) untuk tanggal yang sedang dibuka di modal
+      yearDotsDayMoments: [],
+      yearDotsActiveMomentIdx: 0,
+      yearDotsCoverId: null,
+      yearDotsFilePickerIdx: 0,
+      yearDotsTouchStartX: 0,
 
     };
   },
@@ -11473,7 +11523,8 @@ const GoogleCalendar = {
           isToday: dateStr === todayStr,
           isFuture: dateStr > todayStr,
           hasEntry: !!entry,
-          entry: entry || null
+          entry: entry || null,
+          coverPhoto: entry ? this.yearDotsGetCoverPhoto(entry) : ''
         });
       }
       return days;
@@ -11484,6 +11535,10 @@ const GoogleCalendar = {
     yearDotsIsActiveToday() {
       const todayStr = this.localFmtDate(new Date());
       return this.yearDotsActiveDate === todayStr;
+    },
+    // Ada isi (judul/teks/foto) di minimal salah satu momen yang sedang diedit di modal?
+    yearDotsHasAnyContent() {
+      return this.yearDotsDayMoments.some(m => (m.title && m.title.trim()) || (m.text && m.text.trim()) || m.photo);
     },
     // --- Local Calendar Computeds ---
     localMonthLabel() {
@@ -11557,6 +11612,7 @@ const GoogleCalendar = {
         { key: 'habit',  label: 'Habit (Habit Tracker)',   color: '#A3B18A' },
         { key: 'manual', label: 'Pengingat (edit by n)',   color: '#F59E0B' },
         { key: 'content', label: 'Content Plan (Content Tracker)', color: '#8E7CC3' },
+        { key: 'year365', label: 'Momen (365 Hari)', color: '#B45309' },
       ];
       const custom = this.customReminderCategories.map(cat => ({
         key: cat.key, label: cat.label, color: cat.color || '#9CA3AF'
@@ -11915,6 +11971,10 @@ const GoogleCalendar = {
       if (!(cat.key in this.agendaFilterColors)) this.agendaFilterColors[cat.key] = cat.color || '#9CA3AF';
     });
 
+    // Rangkum ulang judul-judul momen dari "365 Hari" ke daftar tab "Moment"
+    // (jaga-jaga kalau ada data lama yang belum pernah disinkronkan).
+    this.yearDotsSyncTitlesToMoments();
+
     // ── Jalankan aksi dari Floating Shortcut di Main Page (Desk), kalau ada ──
     // Contoh: klik "Set Pengingat" di Desk akan ditandai lewat flag global ini
     // sebelum pindah halaman ke sini, lalu form pengingat langsung terbuka
@@ -11972,7 +12032,16 @@ const GoogleCalendar = {
       clearTimeout(this.momentSuccessTimer);
       this.momentSuccessTimer = setTimeout(() => { this.momentSuccess = null; }, 2500);
     },
+    momentIsSynced(m) {
+      return !!(m && m.id && m.id.startsWith('year365-'));
+    },
     startEditMoment(m) {
+      // Kalau moment ini hasil rangkuman judul dari "365 Hari", edit-nya diarahkan
+      // langsung ke modal 365 Hari (bukan form edit biasa di tab Moment).
+      if (m.id && m.id.startsWith('year365-')) {
+        this.yearDotsOpenFromSyncedMoment(m);
+        return;
+      }
       this.momentEditingId = m.id;
       this.momentForm = { date: m.date, text: m.text, category: m.category || 'manual', link: m.link || '' };
       this.showMomentForm = true;
@@ -11983,6 +12052,13 @@ const GoogleCalendar = {
       this.momentForm.link = '';
     },
     deleteMoment(id) {
+      // Moment hasil rangkuman dari "365 Hari" nggak bisa dihapus langsung dari sini,
+      // arahkan ke modal 365 Hari supaya sumber datanya tetap konsisten.
+      const target = this.moments.find(m => m.id === id);
+      if (target && target.id.startsWith('year365-')) {
+        this.yearDotsOpenFromSyncedMoment(target);
+        return;
+      }
       this.moments = this.moments.filter(m => m.id !== id);
       this.saveMoments();
       if (this.momentEditingId === id) this.cancelEditMoment();
@@ -12020,23 +12096,110 @@ const GoogleCalendar = {
     yearDotsNextYear() {
       this.yearDotsSelectedYear++;
     },
+    // Bikin id unik buat tiap momen dalam satu hari
+    yearDotsGenId() {
+      return 'm_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+    },
+    // Ubah entry lama (format single {text,photo}) atau baru ({moments,coverId}) jadi array moments yang konsisten
+    yearDotsNormalizeEntry(entry) {
+      if (!entry) return { moments: [], coverId: null };
+      if (Array.isArray(entry.moments)) {
+        // Pastikan tiap momen punya field title (buat data lama sebelum fitur judul ada)
+        const moments = entry.moments.map(m => ({ title: '', ...m }));
+        return { moments, coverId: entry.coverId || (moments[0] && moments[0].id) || null };
+      }
+      // Format lama: satu cerita/foto langsung di root entry
+      if (entry.text !== undefined || entry.photo !== undefined) {
+        const id = this.yearDotsGenId();
+        const m = { id, title: entry.title || '', text: entry.text || '', photo: entry.photo || '', updatedAt: entry.updatedAt || Date.now() };
+        return { moments: [m], coverId: id };
+      }
+      return { moments: [], coverId: null };
+    },
+    // Ambil foto cover suatu hari (dipakai buat thumbnail dot di grid), support format lama & baru
+    yearDotsGetCoverPhoto(entry) {
+      if (!entry) return '';
+      const { moments, coverId } = this.yearDotsNormalizeEntry(entry);
+      if (!moments.length) return '';
+      const cover = moments.find(m => m.id === coverId) || moments[0];
+      return cover ? (cover.photo || '') : '';
+    },
     yearDotsOpenDay(dateStr) {
       this.yearDotsActiveDate = dateStr;
       const existing = this.yearDotsEntries[dateStr];
-      this.yearDotsForm = { text: existing ? (existing.text || '') : '', photo: existing ? (existing.photo || '') : '' };
+      const { moments, coverId } = this.yearDotsNormalizeEntry(existing);
+      // Deep-copy supaya edit di modal nggak langsung ubah data tersimpan sebelum "Simpan"
+      const cloned = moments.map(m => ({ ...m }));
+      if (!cloned.length) {
+        // Belum ada cerita — siapkan 1 slot momen kosong buat mulai nulis
+        const id = this.yearDotsGenId();
+        cloned.push({ id, title: '', text: '', photo: '', updatedAt: Date.now() });
+        this.yearDotsCoverId = id;
+      } else {
+        this.yearDotsCoverId = coverId || cloned[0].id;
+      }
+      this.yearDotsDayMoments = cloned;
+      this.yearDotsActiveMomentIdx = 0;
       this.yearDotsModalOpen = true;
     },
     yearDotsCloseModal() {
       this.yearDotsModalOpen = false;
       this.yearDotsActiveDate = null;
+      this.yearDotsDayMoments = [];
+      this.yearDotsActiveMomentIdx = 0;
+      this.yearDotsCoverId = null;
     },
-    yearDotsOpenFilePicker() {
+    // Tambah slot momen baru dalam hari yang sama, lalu geser ke situ
+    yearDotsAddMoment() {
+      const id = this.yearDotsGenId();
+      this.yearDotsDayMoments.push({ id, title: '', text: '', photo: '', updatedAt: Date.now() });
+      this.yearDotsActiveMomentIdx = this.yearDotsDayMoments.length - 1;
+    },
+    // Hapus momen yang lagi ditampilkan (bukan seluruh hari)
+    yearDotsDeleteCurrentMoment() {
+      if (!this.yearDotsDayMoments.length) return;
+      const removed = this.yearDotsDayMoments[this.yearDotsActiveMomentIdx];
+      this.yearDotsDayMoments.splice(this.yearDotsActiveMomentIdx, 1);
+      if (removed && this.yearDotsCoverId === removed.id) {
+        this.yearDotsCoverId = this.yearDotsDayMoments[0] ? this.yearDotsDayMoments[0].id : null;
+      }
+      if (this.yearDotsActiveMomentIdx >= this.yearDotsDayMoments.length) {
+        this.yearDotsActiveMomentIdx = Math.max(0, this.yearDotsDayMoments.length - 1);
+      }
+      // Kalau momen terakhir dihapus, langsung hapus catatan hari ini & tutup modal
+      if (!this.yearDotsDayMoments.length) {
+        this.yearDotsDeleteEntry();
+      }
+    },
+    // Tandai momen tertentu (via tombol logo/bintang) jadi cover thumbnail hari itu
+    yearDotsSetCover(momentId) {
+      this.yearDotsCoverId = momentId;
+    },
+    yearDotsPrevMoment() {
+      if (this.yearDotsActiveMomentIdx > 0) this.yearDotsActiveMomentIdx--;
+    },
+    yearDotsNextMoment() {
+      if (this.yearDotsActiveMomentIdx < this.yearDotsDayMoments.length - 1) this.yearDotsActiveMomentIdx++;
+    },
+    // Swipe geser ke samping di layar sentuh
+    yearDotsTouchStart(e) {
+      this.yearDotsTouchStartX = e.changedTouches[0].clientX;
+    },
+    yearDotsTouchEnd(e) {
+      const dx = e.changedTouches[0].clientX - this.yearDotsTouchStartX;
+      if (Math.abs(dx) < 40) return; // ambang batas swipe
+      if (dx < 0) this.yearDotsNextMoment();
+      else this.yearDotsPrevMoment();
+    },
+    yearDotsOpenFilePicker(idx) {
+      this.yearDotsFilePickerIdx = idx;
       const el = document.getElementById('y365-file-input');
       if (el) el.click();
     },
     yearDotsHandleFileChange(event) {
       const file = event.target.files[0];
       if (!file) return;
+      const targetIdx = this.yearDotsFilePickerIdx;
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = (e) => {
@@ -12061,21 +12224,40 @@ const GoogleCalendar = {
           canvas.height = h;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, w, h);
-          this.yearDotsForm.photo = canvas.toDataURL('image/jpeg', 0.72);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+          if (this.yearDotsDayMoments[targetIdx]) {
+            this.yearDotsDayMoments[targetIdx].photo = dataUrl;
+          }
         };
       };
       event.target.value = '';
     },
+    // Buka modal 365 Hari dari sebuah entri "Moment" hasil sinkron judul.
+    // Otomatis pindah ke tab 365 Hari, buka hari yang sesuai, dan geser ke momen aslinya.
+    yearDotsOpenFromSyncedMoment(m) {
+      const originalId = m.id.replace(/^year365-/, '');
+      this.dailyMomentTab = 'year365';
+      this.yearDotsOpenDay(m.date);
+      const idx = this.yearDotsDayMoments.findIndex(mm => mm.id === originalId);
+      if (idx !== -1) this.yearDotsActiveMomentIdx = idx;
+    },
     yearDotsSaveEntry() {
       if (!this.yearDotsActiveDate) return;
-      const text = this.yearDotsForm.text.trim();
-      const photo = this.yearDotsForm.photo || '';
-      if (!text && !photo) return;
+      // Cuma simpan momen yang ada isinya (judul, teks, atau foto)
+      const filled = this.yearDotsDayMoments
+        .filter(m => (m.title && m.title.trim()) || (m.text && m.text.trim()) || m.photo)
+        .map(m => ({ id: m.id, title: (m.title || '').trim(), text: (m.text || '').trim(), photo: m.photo || '', updatedAt: Date.now() }));
+      if (!filled.length) {
+        this.yearDotsDeleteEntry();
+        return;
+      }
+      const coverId = filled.find(m => m.id === this.yearDotsCoverId) ? this.yearDotsCoverId : filled[0].id;
       this.yearDotsEntries = {
         ...this.yearDotsEntries,
-        [this.yearDotsActiveDate]: { text, photo, updatedAt: Date.now() }
+        [this.yearDotsActiveDate]: { moments: filled, coverId }
       };
       this.yearDotsPersistEntries();
+      this.yearDotsSyncTitlesToMoments();
       this.yearDotsCloseModal();
     },
     yearDotsDeleteEntry() {
@@ -12084,7 +12266,33 @@ const GoogleCalendar = {
       delete copy[this.yearDotsActiveDate];
       this.yearDotsEntries = copy;
       this.yearDotsPersistEntries();
+      this.yearDotsSyncTitlesToMoments();
       this.yearDotsCloseModal();
+    },
+    // Rangkum semua judul momen dari "365 Hari" jadi entri di tab "Moment", supaya
+    // ketemu dalam satu timeline di halaman Daily N. Disusun ulang tiap kali disimpan/dihapus,
+    // jadi selalu mencerminkan judul-judul terbaru (edit & hapus otomatis ikut sinkron).
+    yearDotsSyncTitlesToMoments() {
+      // Buang dulu entri hasil sinkronisasi lama, sisain punya user yang dibuat manual di tab Moment
+      const manual = this.moments.filter(m => !(m.id && m.id.startsWith('year365-')));
+      const synced = [];
+      Object.keys(this.yearDotsEntries).forEach(dateStr => {
+        const { moments } = this.yearDotsNormalizeEntry(this.yearDotsEntries[dateStr]);
+        moments.forEach(m => {
+          const title = (m.title || '').trim();
+          if (!title) return;
+          synced.push({
+            id: 'year365-' + m.id,
+            date: dateStr,
+            text: title,
+            category: 'year365',
+            link: '',
+            createdAt: m.updatedAt || Date.now()
+          });
+        });
+      });
+      this.moments = [...manual, ...synced];
+      this.saveMoments();
     },
     yearDotsPersistEntries() {
       try { WorkspaceStorage.setItem('gcal_year_dots_entries', JSON.stringify(this.yearDotsEntries)); } catch(_e) { /* ignore */ }

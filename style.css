@@ -6174,7 +6174,7 @@ input:checked + .switch-slider:before {
   align-items: center;
   gap: 8px;
 }
-.y365-modal-close {
+.y365-icon-btn {
   width: 26px;
   height: 26px;
   border-radius: 50%;
@@ -6187,8 +6187,11 @@ input:checked + .switch-slider:before {
   color: var(--text-muted);
   transition: background 0.15s, color 0.15s;
   flex-shrink: 0;
+  padding: 0;
 }
-.y365-modal-close:hover { background: var(--color-sand); color: var(--text-dark); }
+.y365-icon-btn:hover { background: var(--color-sand); color: var(--text-dark); }
+.y365-icon-btn--danger { color: #B91C1C; }
+.y365-icon-btn--danger:hover { background: #FEF2F2; border-color: #FCA5A5; color: #B91C1C; }
 .y365-modal-date {
   font-size: 12px;
   font-weight: 500;
@@ -6254,6 +6257,97 @@ input:checked + .switch-slider:before {
   flex-direction: column;
   width: 100%;
 }
+/* ---- 365 HARI: slider antar-momen dalam 1 hari ---- */
+.y365-modal-count {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--color-terracotta);
+  background: #FFF4ED;
+  border: 1px solid #F3D8C7;
+  border-radius: 10px;
+  padding: 1px 7px;
+  vertical-align: middle;
+}
+.y365-modal-slider {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+.y365-modal-track {
+  display: flex;
+  width: 100%;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.y365-modal-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 100%;
+  box-sizing: border-box;
+}
+.y365-slide-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.92);
+  border: 1.5px solid var(--color-sand);
+  color: #5D4F43;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(44,38,33,0.16);
+  z-index: 3;
+  transition: background 0.15s, transform 0.15s;
+}
+.y365-slide-arrow:hover { background: #fff; transform: translateY(-50%) scale(1.08); }
+.y365-slide-arrow--left { left: 4px; }
+.y365-slide-arrow--right { right: 4px; }
+.y365-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.y365-slide-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.y365-slide-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-sand);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+.y365-slide-dot.is-active {
+  background: var(--color-terracotta);
+  transform: scale(1.3);
+}
+.y365-modal-cover-btn {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 4;
+  background: rgba(255,255,255,0.92);
+  box-shadow: 0 2px 6px rgba(44,38,33,0.14);
+}
+.y365-modal-cover-btn.is-cover {
+  background: var(--color-terracotta);
+  border-color: var(--color-terracotta);
+  color: #fff;
+}
+.y365-modal-media { position: relative; }
 .y365-modal-media {
   width: 100%;
 }
@@ -6277,32 +6371,20 @@ input:checked + .switch-slider:before {
   margin-bottom: 6px;
 }
 .y365-modal-caption::placeholder { color: var(--text-muted); font-weight: 400; font-style: italic; }
-.y365-modal-delete {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  background: #FEF2F2;
-  border: 1.5px solid #FCA5A5;
-  color: #B91C1C;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-.y365-modal-save {
-  padding: 8px 18px;
-  background: var(--color-terracotta);
-  color: #fff;
+.y365-modal-title-input {
+  width: 100%;
   border: none;
-  border-radius: 18px;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
+  outline: none;
+  background: transparent;
   font-family: 'Outfit', sans-serif;
-  transition: background 0.15s, transform 0.12s;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-dark);
+  text-align: left;
+  padding: 0;
+  margin-bottom: 4px;
 }
-.y365-modal-save:hover { background: #c06844; transform: scale(1.03); }
+.y365-modal-title-input::placeholder { color: var(--text-muted); font-weight: 600; font-style: italic; }
 
 /* ---- 365 HARI: layout khusus desktop — foto & cerita sejajar ---- */
 /* Breakpoint dinaikkan ke 1024px supaya HP (termasuk orientasi landscape)
