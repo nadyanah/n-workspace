@@ -6162,10 +6162,19 @@ input:checked + .switch-slider:before {
   position: relative;
   font-family: 'Outfit', sans-serif;
 }
+.y365-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.y365-modal-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .y365-modal-close {
-  position: absolute;
-  top: 14px;
-  right: 14px;
   width: 26px;
   height: 26px;
   border-radius: 50%;
@@ -6177,7 +6186,7 @@ input:checked + .switch-slider:before {
   cursor: pointer;
   color: var(--text-muted);
   transition: background 0.15s, color 0.15s;
-  z-index: 2;
+  flex-shrink: 0;
 }
 .y365-modal-close:hover { background: var(--color-sand); color: var(--text-dark); }
 .y365-modal-date {
@@ -6185,9 +6194,9 @@ input:checked + .switch-slider:before {
   font-weight: 500;
   color: var(--text-muted);
   letter-spacing: 0.01em;
-  margin-bottom: 12px;
   text-align: left;
-  padding-right: 30px;
+  flex: 1;
+  min-width: 0;
 }
 .y365-modal-photo-wrap {
   position: relative;
@@ -6268,17 +6277,9 @@ input:checked + .switch-slider:before {
   margin-bottom: 6px;
 }
 .y365-modal-caption::placeholder { color: var(--text-muted); font-weight: 400; font-style: italic; }
-.y365-modal-actions {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 10px;
-}
 .y365-modal-delete {
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   border-radius: 8px;
   background: #FEF2F2;
   border: 1.5px solid #FCA5A5;
@@ -6304,7 +6305,10 @@ input:checked + .switch-slider:before {
 .y365-modal-save:hover { background: #c06844; transform: scale(1.03); }
 
 /* ---- 365 HARI: layout khusus desktop — foto & cerita sejajar ---- */
-@media (min-width: 768px) {
+/* Breakpoint dinaikkan ke 1024px supaya HP (termasuk orientasi landscape)
+   dan tablet kecil tetap pakai layout foto atas / cerita bawah (mobile),
+   dan cuma layar beneran lebar (laptop/desktop) yang jadi sejajar. */
+@media (min-width: 1024px) {
   .y365-modal {
     width: min(560px, 88vw);
     padding: 30px 30px 24px;
@@ -6331,9 +6335,6 @@ input:checked + .switch-slider:before {
   .y365-modal-content .y365-modal-caption {
     flex: 1;
     min-height: 160px;
-  }
-  .y365-modal-content .y365-modal-actions {
-    margin-top: 16px;
   }
 }
 

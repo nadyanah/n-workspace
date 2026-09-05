@@ -11223,11 +11223,20 @@ const GoogleCalendar = {
         <transition name="insight-modal-fade">
           <div v-if="yearDotsModalOpen" class="reminder-popup-overlay" @click.self="yearDotsCloseModal">
             <div class="y365-modal">
-              <button type="button" class="y365-modal-close" @click="yearDotsCloseModal" title="Tutup">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-
-              <div class="y365-modal-date">{{ yearDotsIsActiveToday ? 'Hari Ini' : yearDotsDateLabel(yearDotsActiveDate) }}</div>
+              <div class="y365-modal-header">
+                <div class="y365-modal-date">{{ yearDotsIsActiveToday ? 'Hari Ini' : yearDotsDateLabel(yearDotsActiveDate) }}</div>
+                <div class="y365-modal-header-right">
+                  <button v-if="yearDotsEntries[yearDotsActiveDate]" type="button" class="y365-modal-delete" @click="yearDotsDeleteEntry" title="Hapus catatan">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                  </button>
+                  <button type="button" class="y365-modal-save" @click="yearDotsSaveEntry"
+                          :disabled="!yearDotsForm.text.trim() && !yearDotsForm.photo"
+                          :style="(!yearDotsForm.text.trim() && !yearDotsForm.photo) ? {opacity:0.5, cursor:'not-allowed'} : {}">Simpan</button>
+                  <button type="button" class="y365-modal-close" @click="yearDotsCloseModal" title="Tutup">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+              </div>
 
               <input type="file" accept="image/*" id="y365-file-input" style="display:none;" @change="yearDotsHandleFileChange" />
 
@@ -11248,16 +11257,6 @@ const GoogleCalendar = {
                 <div class="y365-modal-content">
                   <textarea class="y365-modal-caption" v-model="yearDotsForm.text" rows="2" maxlength="600"
                             placeholder="tulis cerita hari ini..."></textarea>
-
-                  <div class="y365-modal-actions">
-                    <button v-if="yearDotsEntries[yearDotsActiveDate]" type="button" class="y365-modal-delete" @click="yearDotsDeleteEntry" title="Hapus catatan">
-                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                    </button>
-                    <div v-else></div>
-                    <button type="button" class="y365-modal-save" @click="yearDotsSaveEntry"
-                            :disabled="!yearDotsForm.text.trim() && !yearDotsForm.photo"
-                            :style="(!yearDotsForm.text.trim() && !yearDotsForm.photo) ? {opacity:0.5, cursor:'not-allowed'} : {}">Simpan</button>
-                  </div>
                 </div>
               </div>
             </div>
