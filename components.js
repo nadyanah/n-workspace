@@ -11233,13 +11233,13 @@ const GoogleCalendar = {
 
               <div class="y365-modal-body">
                 <div class="y365-modal-media">
-                  <div v-if="yearDotsForm.photo" class="y365-modal-photo-wrap" @click="document.getElementById('y365-file-input').click()" title="Ganti foto">
+                  <div v-if="yearDotsForm.photo" class="y365-modal-photo-wrap" @click="yearDotsOpenFilePicker" title="Ganti foto">
                     <img :src="yearDotsForm.photo" class="y365-modal-photo" />
                     <button type="button" class="y365-modal-photo-remove" @click.stop="yearDotsForm.photo = ''" title="Hapus foto">
                       <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                   </div>
-                  <button v-else type="button" class="y365-modal-photo-add" @click="document.getElementById('y365-file-input').click()">
+                  <button v-else type="button" class="y365-modal-photo-add" @click="yearDotsOpenFilePicker">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                     <span>Tambah foto</span>
                   </button>
@@ -12030,6 +12030,10 @@ const GoogleCalendar = {
     yearDotsCloseModal() {
       this.yearDotsModalOpen = false;
       this.yearDotsActiveDate = null;
+    },
+    yearDotsOpenFilePicker() {
+      const el = document.getElementById('y365-file-input');
+      if (el) el.click();
     },
     yearDotsHandleFileChange(event) {
       const file = event.target.files[0];

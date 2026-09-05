@@ -6083,10 +6083,13 @@ input:checked + .switch-slider:before {
 .gcal-toast-error   { background: rgba(214,123,82,0.10); color: #8c3a20; border-left: 4px solid var(--color-terracotta); }
 
 /* ---- 365 HARI (dot grid per tahun) ---- */
+/* Mobile-first: kolom lebar TETAP + justify-content:center, supaya grid
+   tidak melar/renggang aneh saat kontainer lebar (mis. HP posisi landscape). */
 .y365-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(16px, 1fr));
-  gap: 10px 12px;
+  grid-template-columns: repeat(auto-fill, 16px);
+  justify-content: center;
+  gap: 10px;
   padding: 8px 4px 32px;
 }
 .y365-dot {
@@ -6123,10 +6126,27 @@ input:checked + .switch-slider:before {
 }
 @media (max-width: 640px) {
   .y365-grid {
-    grid-template-columns: repeat(auto-fill, minmax(13px, 1fr));
-    gap: 8px 9px;
+    grid-template-columns: repeat(auto-fill, 13px);
+    gap: 8px;
   }
   .y365-dot { width: 13px; height: 13px; }
+}
+/* Desktop: lingkaran dibesarin & stretch penuh kanan-kiri mengikuti
+   lebar kontainer/web, bukan ukuran tetap kecil kayak mobile. */
+@media (min-width: 768px) {
+  .y365-grid {
+    grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+    justify-content: stretch;
+    gap: 14px;
+  }
+  .y365-dot {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+  .y365-dot:hover {
+    transform: scale(1.12);
+  }
 }
 
 /* ---- 365 HARI: modal catatan hari (simple/minimal) ---- */
