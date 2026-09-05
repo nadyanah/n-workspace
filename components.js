@@ -10050,6 +10050,12 @@ const GoogleCalendar = {
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
               Moment
             </button>
+            <button type="button" @click="dailyMomentTab = 'year365'"
+                    :style="dailyMomentTab==='year365' ? {background:'var(--color-terracotta)',color:'#fff'} : {background:'transparent',color:'#5D4F43'}"
+                    style="border:none; font-size:12.5px; padding:7px 16px; border-radius:8px; font-weight:700; display:inline-flex; align-items:center; gap:6px; cursor:pointer; transition:all 0.15s; white-space:nowrap;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="8" r="1"></circle><circle cx="15.5" cy="10.5" r="1"></circle><circle cx="15.5" cy="14.5" r="1"></circle><circle cx="12" cy="16.5" r="1"></circle><circle cx="8.5" cy="14.5" r="1"></circle><circle cx="8.5" cy="10.5" r="1"></circle></svg>
+              365 Hari
+            </button>
           </div>
 
           <!-- Profile metadata status if signed in -->
@@ -11184,6 +11190,82 @@ const GoogleCalendar = {
 
       </div>
 
+      <!-- ═══ 365 HARI TAB CONTENT ═══ -->
+      <div v-else-if="dailyMomentTab === 'year365'" class="animate-fade-in">
+
+        <!-- Navigasi tahun + ringkasan -->
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <button type="button" class="gcal-nav-btn" @click="yearDotsPrevYear" title="Tahun sebelumnya">&#8249;</button>
+            <span style="font-size:20px; font-weight:800; color:var(--text-dark); font-family:'Hack', monospace; min-width:70px; text-align:center;">{{ yearDotsSelectedYear }}</span>
+            <button type="button" class="gcal-nav-btn" @click="yearDotsNextYear" title="Tahun berikutnya">&#8250;</button>
+          </div>
+          <div style="font-size:12.5px; color:var(--text-muted); font-weight:600; background:var(--bg-cream); border:1.5px solid var(--color-sand); padding:6px 12px; border-radius:20px;">
+            {{ yearDotsFilledCount }} / {{ yearDotsTotalDays }} hari terisi ✦
+          </div>
+        </div>
+
+        <!-- Grid dot per hari dalam setahun -->
+        <div class="y365-grid">
+          <button
+            v-for="d in yearDotsGridDays"
+            :key="d.dateStr"
+            type="button"
+            class="y365-dot"
+            :class="{ 'y365-dot--filled': d.hasEntry, 'y365-dot--today': d.isToday, 'y365-dot--future': d.isFuture && !d.hasEntry }"
+            :style="d.hasEntry && d.entry && d.entry.photo ? { backgroundImage: 'url(' + d.entry.photo + ')' } : {}"
+            :title="yearDotsDateLabel(d.dateStr) + (d.hasEntry ? ' — ada cerita' : '')"
+            @click="yearDotsOpenDay(d.dateStr)"
+          ></button>
+        </div>
+
+        <!-- Modal isi cerita & foto per hari -->
+        <transition name="insight-modal-fade">
+          <div v-if="yearDotsModalOpen" class="reminder-popup-overlay" @click.self="yearDotsCloseModal">
+            <div class="y365-modal">
+              <button type="button" class="y365-modal-close" @click="yearDotsCloseModal" title="Tutup">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+
+              <div class="y365-modal-date">{{ yearDotsIsActiveToday ? 'Hari Ini' : yearDotsDateLabel(yearDotsActiveDate) }}</div>
+
+              <input type="file" accept="image/*" id="y365-file-input" style="display:none;" @change="yearDotsHandleFileChange" />
+
+              <div class="y365-modal-body">
+                <div class="y365-modal-media">
+                  <div v-if="yearDotsForm.photo" class="y365-modal-photo-wrap" @click="document.getElementById('y365-file-input').click()" title="Ganti foto">
+                    <img :src="yearDotsForm.photo" class="y365-modal-photo" />
+                    <button type="button" class="y365-modal-photo-remove" @click.stop="yearDotsForm.photo = ''" title="Hapus foto">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                  <button v-else type="button" class="y365-modal-photo-add" @click="document.getElementById('y365-file-input').click()">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    <span>Tambah foto</span>
+                  </button>
+                </div>
+
+                <div class="y365-modal-content">
+                  <textarea class="y365-modal-caption" v-model="yearDotsForm.text" rows="2" maxlength="600"
+                            placeholder="tulis cerita hari ini..."></textarea>
+
+                  <div class="y365-modal-actions">
+                    <button v-if="yearDotsEntries[yearDotsActiveDate]" type="button" class="y365-modal-delete" @click="yearDotsDeleteEntry" title="Hapus catatan">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                    </button>
+                    <div v-else></div>
+                    <button type="button" class="y365-modal-save" @click="yearDotsSaveEntry"
+                            :disabled="!yearDotsForm.text.trim() && !yearDotsForm.photo"
+                            :style="(!yearDotsForm.text.trim() && !yearDotsForm.photo) ? {opacity:0.5, cursor:'not-allowed'} : {}">Simpan</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </transition>
+
+      </div>
+
     </div>
   `,
   emits: ['trigger-habit'],
@@ -11293,6 +11375,18 @@ const GoogleCalendar = {
       momentSuccess: null,
       momentSuccessTimer: null,
 
+      // ── 365 Hari (tab "365 Hari" di halaman Daily N) ──
+      yearDotsSelectedYear: new Date().getFullYear(),
+      yearDotsEntries: (() => {
+        try {
+          const raw = WorkspaceStorage.getItem('gcal_year_dots_entries');
+          return raw ? JSON.parse(raw) : {};
+        } catch(_e) { return {}; }
+      })(),
+      yearDotsModalOpen: false,
+      yearDotsActiveDate: null,
+      yearDotsForm: { text: '', photo: '' },
+
     };
   },
   computed: {
@@ -11358,6 +11452,39 @@ const GoogleCalendar = {
         map.get(m.date).push(m);
       });
       return Array.from(map.entries()).map(([dateString, items]) => ({ dateString, items }));
+    },
+    // --- 365 Hari Computeds ---
+    yearDotsTotalDays() {
+      return this.yearDotsIsLeapYear(this.yearDotsSelectedYear) ? 366 : 365;
+    },
+    yearDotsGridDays() {
+      const year = this.yearDotsSelectedYear;
+      const total = this.yearDotsTotalDays;
+      const todayStr = this.localFmtDate(new Date());
+      const start = new Date(year, 0, 1);
+      const days = [];
+      for (let i = 0; i < total; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const entry = this.yearDotsEntries[dateStr];
+        days.push({
+          dateStr,
+          dayNum: i + 1,
+          isToday: dateStr === todayStr,
+          isFuture: dateStr > todayStr,
+          hasEntry: !!entry,
+          entry: entry || null
+        });
+      }
+      return days;
+    },
+    yearDotsFilledCount() {
+      return this.yearDotsGridDays.filter(d => d.hasEntry).length;
+    },
+    yearDotsIsActiveToday() {
+      const todayStr = this.localFmtDate(new Date());
+      return this.yearDotsActiveDate === todayStr;
     },
     // --- Local Calendar Computeds ---
     localMonthLabel() {
@@ -11883,6 +12010,88 @@ const GoogleCalendar = {
       const dt = new Date(dateStr + 'T12:00:00');
       const label = dows[dt.getDay()] + ', ' + dt.getDate() + ' ' + months[dt.getMonth()] + ' ' + dt.getFullYear();
       return dateStr === todayStr ? 'Hari Ini · ' + label : label;
+    },
+    // ── 365 Hari (tab "365 Hari" di halaman Daily N) ──
+    yearDotsIsLeapYear(year) {
+      return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+    },
+    yearDotsPrevYear() {
+      this.yearDotsSelectedYear--;
+    },
+    yearDotsNextYear() {
+      this.yearDotsSelectedYear++;
+    },
+    yearDotsOpenDay(dateStr) {
+      this.yearDotsActiveDate = dateStr;
+      const existing = this.yearDotsEntries[dateStr];
+      this.yearDotsForm = { text: existing ? (existing.text || '') : '', photo: existing ? (existing.photo || '') : '' };
+      this.yearDotsModalOpen = true;
+    },
+    yearDotsCloseModal() {
+      this.yearDotsModalOpen = false;
+      this.yearDotsActiveDate = null;
+    },
+    yearDotsHandleFileChange(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (e) => {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = () => {
+          const maxWidth = 640;
+          const maxHeight = 640;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxWidth || h > maxHeight) {
+            if (w > h) {
+              h = Math.round((h * maxWidth) / w);
+              w = maxWidth;
+            } else {
+              w = Math.round((w * maxHeight) / h);
+              h = maxHeight;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          this.yearDotsForm.photo = canvas.toDataURL('image/jpeg', 0.72);
+        };
+      };
+      event.target.value = '';
+    },
+    yearDotsSaveEntry() {
+      if (!this.yearDotsActiveDate) return;
+      const text = this.yearDotsForm.text.trim();
+      const photo = this.yearDotsForm.photo || '';
+      if (!text && !photo) return;
+      this.yearDotsEntries = {
+        ...this.yearDotsEntries,
+        [this.yearDotsActiveDate]: { text, photo, updatedAt: Date.now() }
+      };
+      this.yearDotsPersistEntries();
+      this.yearDotsCloseModal();
+    },
+    yearDotsDeleteEntry() {
+      if (!this.yearDotsActiveDate) return;
+      const copy = { ...this.yearDotsEntries };
+      delete copy[this.yearDotsActiveDate];
+      this.yearDotsEntries = copy;
+      this.yearDotsPersistEntries();
+      this.yearDotsCloseModal();
+    },
+    yearDotsPersistEntries() {
+      try { WorkspaceStorage.setItem('gcal_year_dots_entries', JSON.stringify(this.yearDotsEntries)); } catch(_e) { /* ignore */ }
+    },
+    yearDotsDateLabel(dateStr) {
+      if (!dateStr) return '';
+      const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+      const dows = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+      const dt = new Date(dateStr + 'T12:00:00');
+      return dows[dt.getDay()] + ', ' + dt.getDate() + ' ' + months[dt.getMonth()] + ' ' + dt.getFullYear();
     },
     // ── Custom warna kategori filter agenda ──
     localUpdateFilterColor(key, value) {

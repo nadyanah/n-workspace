@@ -6082,6 +6082,241 @@ input:checked + .switch-slider:before {
 .gcal-toast-success { background: rgba(163,177,138,0.15); color: #3a5a2a; border-left: 4px solid var(--color-sage); }
 .gcal-toast-error   { background: rgba(214,123,82,0.10); color: #8c3a20; border-left: 4px solid var(--color-terracotta); }
 
+/* ---- 365 HARI (dot grid per tahun) ---- */
+.y365-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16px, 1fr));
+  gap: 10px 12px;
+  padding: 8px 4px 32px;
+}
+.y365-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--bg-cream);
+  border: 1.5px solid var(--color-sand);
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+.y365-dot:hover {
+  transform: scale(1.35);
+  border-color: var(--color-terracotta);
+  box-shadow: 0 2px 8px rgba(214,123,82,0.25);
+  z-index: 2;
+  position: relative;
+}
+.y365-dot--future {
+  opacity: 0.4;
+}
+.y365-dot--today {
+  border-color: var(--color-terracotta);
+  border-width: 2px;
+  box-shadow: 0 0 0 3px rgba(214,123,82,0.15);
+}
+.y365-dot--filled {
+  background-color: var(--color-terracotta);
+  border-color: var(--color-terracotta);
+}
+@media (max-width: 640px) {
+  .y365-grid {
+    grid-template-columns: repeat(auto-fill, minmax(13px, 1fr));
+    gap: 8px 9px;
+  }
+  .y365-dot { width: 13px; height: 13px; }
+}
+
+/* ---- 365 HARI: modal catatan hari (simple/minimal) ---- */
+.y365-modal {
+  background: var(--bg-card);
+  border-radius: 22px;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.10);
+  width: min(340px, 90vw);
+  padding: 26px 20px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  position: relative;
+  font-family: 'Outfit', sans-serif;
+}
+.y365-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bg-cream);
+  border: 1.5px solid var(--color-sand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: background 0.15s, color 0.15s;
+  z-index: 2;
+}
+.y365-modal-close:hover { background: var(--color-sand); color: var(--text-dark); }
+.y365-modal-date {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+  margin-bottom: 12px;
+  text-align: left;
+  padding-right: 30px;
+}
+.y365-modal-photo-wrap {
+  position: relative;
+  width: 84%;
+  margin: 0 auto 16px;
+  border-radius: 34px 34px 16px 16px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(44,38,33,0.14);
+}
+.y365-modal-photo {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  display: block;
+}
+.y365-modal-photo-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.5);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+}
+.y365-modal-photo-add {
+  width: 84%;
+  margin: 0 auto 16px;
+  aspect-ratio: 3 / 4;
+  padding: 12px;
+  border: 1.5px dashed var(--color-sand);
+  border-radius: 34px 34px 16px 16px;
+  background: var(--bg-cream);
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  transition: border-color 0.15s, color 0.15s;
+}
+.y365-modal-photo-add:hover { border-color: var(--color-terracotta); color: var(--color-terracotta); }
+.y365-modal-body {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.y365-modal-media {
+  width: 100%;
+}
+.y365-modal-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.y365-modal-caption {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  resize: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14.5px;
+  font-weight: 400;
+  color: var(--text-dark);
+  text-align: left;
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+.y365-modal-caption::placeholder { color: var(--text-muted); font-weight: 400; font-style: italic; }
+.y365-modal-actions {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+.y365-modal-delete {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #FEF2F2;
+  border: 1.5px solid #FCA5A5;
+  color: #B91C1C;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.y365-modal-save {
+  padding: 8px 18px;
+  background: var(--color-terracotta);
+  color: #fff;
+  border: none;
+  border-radius: 18px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  transition: background 0.15s, transform 0.12s;
+}
+.y365-modal-save:hover { background: #c06844; transform: scale(1.03); }
+
+/* ---- 365 HARI: layout khusus desktop — foto & cerita sejajar ---- */
+@media (min-width: 768px) {
+  .y365-modal {
+    width: min(560px, 88vw);
+    padding: 30px 30px 24px;
+  }
+  .y365-modal-body {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 24px;
+  }
+  .y365-modal-media {
+    width: 210px;
+    flex-shrink: 0;
+  }
+  .y365-modal-media .y365-modal-photo-wrap,
+  .y365-modal-media .y365-modal-photo-add {
+    width: 100%;
+    margin: 0;
+  }
+  .y365-modal-content {
+    flex: 1;
+    min-width: 0;
+    justify-content: space-between;
+  }
+  .y365-modal-content .y365-modal-caption {
+    flex: 1;
+    min-height: 160px;
+  }
+  .y365-modal-content .y365-modal-actions {
+    margin-top: 16px;
+  }
+}
+
 /* ---- MONTH VIEW ---- */
 .gcal-month-wrap { background: var(--bg-card); border: 1.5px solid var(--color-sand); border-radius: 12px; margin-top: 0; overflow: visible; }
 .gcal-month-grid-outer { overflow: visible; }
