@@ -10050,7 +10050,7 @@ const GoogleCalendar = {
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
               Moment
             </button>
-            <button type="button" @click="dailyMomentTab = 'year365'"
+            <button type="button" @click="yearDotsEnterTab"
                     :style="dailyMomentTab==='year365' ? {background:'var(--color-terracotta)',color:'#fff'} : {background:'transparent',color:'#5D4F43'}"
                     style="border:none; font-size:12.5px; padding:7px 16px; border-radius:8px; font-weight:700; display:inline-flex; align-items:center; gap:6px; cursor:pointer; transition:all 0.15s; white-space:nowrap;">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="8" r="1"></circle><circle cx="15.5" cy="10.5" r="1"></circle><circle cx="15.5" cy="14.5" r="1"></circle><circle cx="12" cy="16.5" r="1"></circle><circle cx="8.5" cy="14.5" r="1"></circle><circle cx="8.5" cy="10.5" r="1"></circle></svg>
@@ -11986,6 +11986,10 @@ const GoogleCalendar = {
       this.$nextTick(() => {
         if (pendingAction === 'openReminderForm') {
           this.localResetReminderFormAndOpen();
+        } else if (pendingAction === 'openYear365Today') {
+          // Klik "Catat Momen Hari Ini" di Floating Shortcut Desk →
+          // langsung pindah ke tab 365 Days & buka pop up momen hari ini.
+          this.yearDotsEnterTab();
         }
       });
     }
@@ -12209,15 +12213,16 @@ const GoogleCalendar = {
       this.yearDotsActiveMomentIdx = idx;
       this.yearDotsAutoGrowAllCaptions();
     },
-    // Swipe geser ke samping di layar sentuh
+    // Swipe geser ke kiri/kanan di modal = pindah ke HARI sebelum/sesudahnya
+    // (bukan pindah momen — momen dipindah lewat panah/titik di dalam slide)
     yearDotsTouchStart(e) {
       this.yearDotsTouchStartX = e.changedTouches[0].clientX;
     },
     yearDotsTouchEnd(e) {
       const dx = e.changedTouches[0].clientX - this.yearDotsTouchStartX;
       if (Math.abs(dx) < 40) return; // ambang batas swipe
-      if (dx < 0) this.yearDotsNextMoment();
-      else this.yearDotsPrevMoment();
+      if (dx < 0) this.yearDotsGoToDay(1);
+      else this.yearDotsGoToDay(-1);
     },
     yearDotsOpenFilePicker(idx) {
       this.yearDotsFilePickerIdx = idx;
@@ -12271,22 +12276,51 @@ const GoogleCalendar = {
     },
     yearDotsSaveEntry() {
       if (!this.yearDotsActiveDate) return;
+      this.yearDotsSaveDraft();
+      this.yearDotsCloseModal();
+    },
+    // Simpan draft hari yang sedang dibuka TANPA menutup modal — dipakai otomatis
+    // waktu geser ke hari lain, biar tulisan yang lagi diketik nggak hilang.
+    yearDotsSaveDraft() {
+      if (!this.yearDotsActiveDate) return;
       // Cuma simpan momen yang ada isinya (judul, teks, atau foto)
       const filled = this.yearDotsDayMoments
         .filter(m => (m.title && m.title.trim()) || (m.text && m.text.trim()) || m.photo)
         .map(m => ({ id: m.id, title: (m.title || '').trim(), text: (m.text || '').trim(), photo: m.photo || '', updatedAt: Date.now() }));
       if (!filled.length) {
-        this.yearDotsDeleteEntry();
-        return;
+        if (this.yearDotsEntries[this.yearDotsActiveDate]) {
+          const copy = { ...this.yearDotsEntries };
+          delete copy[this.yearDotsActiveDate];
+          this.yearDotsEntries = copy;
+        }
+      } else {
+        const coverId = filled.find(m => m.id === this.yearDotsCoverId) ? this.yearDotsCoverId : filled[0].id;
+        this.yearDotsEntries = {
+          ...this.yearDotsEntries,
+          [this.yearDotsActiveDate]: { moments: filled, coverId }
+        };
       }
-      const coverId = filled.find(m => m.id === this.yearDotsCoverId) ? this.yearDotsCoverId : filled[0].id;
-      this.yearDotsEntries = {
-        ...this.yearDotsEntries,
-        [this.yearDotsActiveDate]: { moments: filled, coverId }
-      };
       this.yearDotsPersistEntries();
       this.yearDotsSyncTitlesToMoments();
-      this.yearDotsCloseModal();
+    },
+    // Pindah ke hari sebelum (-1) atau sesudah (+1) tanggal yang lagi dibuka,
+    // sambil nyimpen draft hari sekarang dulu biar aman.
+    yearDotsGoToDay(delta) {
+      if (!this.yearDotsActiveDate) return;
+      this.yearDotsSaveDraft();
+      const base = new Date(this.yearDotsActiveDate + 'T12:00:00');
+      base.setDate(base.getDate() + delta);
+      const newDateStr = this.localFmtDate(base);
+      this.yearDotsSelectedYear = base.getFullYear();
+      this.yearDotsOpenDay(newDateStr);
+    },
+    // Dipanggil waktu tombol tab "365 Days" diklik — langsung munculin pop up
+    // input momen buat hari ini duluan, sebelum halaman grid-nya keliatan.
+    yearDotsEnterTab() {
+      this.dailyMomentTab = 'year365';
+      const todayStr = this.localFmtDate(new Date());
+      this.yearDotsSelectedYear = new Date().getFullYear();
+      this.yearDotsOpenDay(todayStr);
     },
     yearDotsDeleteEntry() {
       if (!this.yearDotsActiveDate) return;

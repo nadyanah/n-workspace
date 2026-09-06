@@ -4734,3 +4734,221 @@ const DailyQuotePopup = {
     }
   }
 };
+
+
+// ============================================================================
+// MomentEveningPopup — Pop up otomatis jam 20:00 malam kalau momen "365 Hari"
+// hari ini BELUM diisi manual sama sekali
+// ============================================================================
+//   • Muncul tepat jam 20:00 (atau saat web dibuka setelah jam 20:00 & belum
+//     tampil hari itu), TAPI hanya kalau hari ini belum ada momen tersimpan
+//     di data "365 Hari" (gcal_year_dots_entries).
+//   • Kalau hari ini sudah ada momen (judul/cerita/foto) → popup tidak muncul.
+//   • Modal input langsung di popup ini (judul + cerita singkat), simpan
+//     langsung ke storage yang sama dipakai fitur "365 Hari" di Daily N,
+//     supaya datanya otomatis konsisten & sinkron ke tab "Moment" juga.
+//   • Tombol "Buka Editor Lengkap" → pindah ke Daily N, tab 365 Hari, hari ini
+//     (bisa tambah foto / lebih dari satu momen di sana).
+//   Storage: WorkspaceStorage
+//     ws_moment_evening_shown → { "YYYY-MM-DD": true }
+//     gcal_year_dots_entries  → { "YYYY-MM-DD": { moments: [...], coverId } }  (dipakai bareng "365 Hari")
+// ============================================================================
+const MomentEveningPopup = {
+  template: `
+    <transition name="moment-eve-fade">
+      <div v-if="visible" class="moment-eve-overlay" @click.self="dismiss">
+        <div class="moment-eve-card">
+
+          <!-- ── Header ── -->
+          <div class="moment-eve-header">
+            <div class="moment-eve-header-icon">
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div class="moment-eve-title">Momen Hari Ini Belum Diisi</div>
+              <div class="moment-eve-date">{{ todayLabel }}</div>
+            </div>
+          </div>
+
+          <!-- ── Body ── -->
+          <div class="moment-eve-body">
+            <p class="moment-eve-intro">Udah jam 8 malam, tapi momen hari ini belum dicatat. Yuk isi sebentar sebelum lupa ✦</p>
+
+            <div style="margin-bottom: 12px;">
+              <label style="font-size: 11.5px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom: 5px;">Judul singkat <span style="font-weight:400; opacity:0.75;">(opsional)</span></label>
+              <input type="text" class="gcal-input" v-model="momentTitle" maxlength="80" placeholder="Contoh: Ngobrol seru sama Ayah" />
+            </div>
+
+            <div style="margin-bottom: 4px;">
+              <label style="font-size: 11.5px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom: 5px;">Ceritanya apa hari ini?</label>
+              <textarea class="gcal-input" v-model="momentText" rows="3" maxlength="500"
+                        style="resize: vertical; min-height: 64px;"
+                        placeholder="Tulis momen singkat hari ini..."
+                        @keydown.enter.meta="saveMoment" @keydown.enter.ctrl="saveMoment"></textarea>
+              <span style="font-size: 11px; color: var(--text-muted); display:block; text-align:right; margin-top: 3px;">{{ momentText.length }}/500</span>
+            </div>
+
+            <div v-if="saved" class="moment-eve-saved">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Momen tersimpan ✦
+            </div>
+          </div>
+
+          <!-- ── Footer ── -->
+          <div class="moment-eve-footer">
+            <button class="moment-eve-btn-secondary" @click="openFullEditor">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+              Editor Lengkap
+            </button>
+            <button class="moment-eve-btn-ghost" @click="dismiss">Nanti Saja</button>
+            <button class="moment-eve-btn-primary" @click="saveMoment" :disabled="!canSave" :style="!canSave ? {opacity:0.5, cursor:'not-allowed'} : {}">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              Simpan Momen
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </transition>
+  `,
+
+  data() {
+    return {
+      visible: false,
+      todayStr: '',
+      momentTitle: '',
+      momentText: '',
+      saved: false,
+      _interval: null
+    };
+  },
+
+  computed: {
+    todayLabel() {
+      const now = new Date();
+      const days   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+      const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+      return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+    },
+    canSave() {
+      return !!(this.momentTitle.trim() || this.momentText.trim());
+    }
+  },
+
+  mounted() {
+    this.todayStr = this._getTodayStr();
+    // Cek saat web dibuka (delay 1.2s biar WorkspaceStorage selesai init) — catch-up kalau sudah lewat jam 20:00
+    setTimeout(() => this._checkTime(), 1200);
+    // Polling setiap 30 detik untuk menangkap tepat jam 20:00 saat web sedang terbuka
+    this._interval = setInterval(() => this._checkTime(), 30000);
+  },
+
+  beforeUnmount() {
+    clearInterval(this._interval);
+  },
+
+  methods: {
+    _getTodayStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    },
+
+    _getShownLog() {
+      try { return JSON.parse(WorkspaceStorage.getItem('ws_moment_evening_shown') || '{}'); }
+      catch(e) { return {}; }
+    },
+
+    _isShownToday() {
+      return !!this._getShownLog()[this.todayStr];
+    },
+
+    _markShownToday() {
+      const log = this._getShownLog();
+      log[this.todayStr] = true;
+      WorkspaceStorage.setItem('ws_moment_evening_shown', JSON.stringify(log));
+    },
+
+    // ── Ambil semua entri "365 Hari" dari storage ──
+    _getYearDotsEntries() {
+      try { return JSON.parse(WorkspaceStorage.getItem('gcal_year_dots_entries') || '{}'); }
+      catch(e) { return {}; }
+    },
+
+    // ── Cek apakah hari ini sudah ada momen manual yang keisi (judul/cerita/foto) ──
+    _isTodayFilled() {
+      const entries = this._getYearDotsEntries();
+      const entry = entries[this.todayStr];
+      if (!entry) return false;
+      const moments = Array.isArray(entry.moments) ? entry.moments : (entry.text !== undefined || entry.photo !== undefined ? [entry] : []);
+      return moments.some(m => m && ((m.title && m.title.trim()) || (m.text && m.text.trim()) || m.photo));
+    },
+
+    // ── Cek apakah sudah jam 20:00 malam & momen hari ini belum diisi ──
+    _checkTime() {
+      if (this.visible) return;
+      this.todayStr = this._getTodayStr();
+      if (this._isShownToday()) return;
+
+      const now    = new Date();
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+      if (nowMin >= 20 * 60) {  // jam 20:00 malam sudah tercapai (atau terlewat saat web baru dibuka)
+        if (this._isTodayFilled()) {
+          // Sudah ada momen manual hari ini — nggak perlu diingatkan lagi
+          this._markShownToday();
+          return;
+        }
+        this._markShownToday();
+        this.visible = true;
+        this.momentTitle = '';
+        this.momentText = '';
+        this.saved = false;
+        this._triggerBellShake();
+        NotifSound.playNotifSafe();
+      }
+    },
+
+    _triggerBellShake() {
+      const bells = document.querySelectorAll('.desk-notif-float-btn, .ws-notif-btn');
+      bells.forEach(btn => {
+        btn.classList.remove('bell-has-notif');
+        void btn.offsetWidth;
+        btn.classList.add('bell-has-notif');
+        setTimeout(() => btn.classList.remove('bell-has-notif'), 4000);
+      });
+    },
+
+    // ── Simpan momen langsung dari popup ke storage "365 Hari" ──
+    saveMoment() {
+      if (!this.canSave) return;
+      NotifSound.flushPendingSound();
+      try {
+        const entries = this._getYearDotsEntries();
+        const existing = entries[this.todayStr];
+        const prevMoments = existing && Array.isArray(existing.moments) ? existing.moments : [];
+        const id = 'm_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+        const newMoment = { id, title: this.momentTitle.trim(), text: this.momentText.trim(), photo: '', updatedAt: Date.now() };
+        const moments = [...prevMoments, newMoment];
+        entries[this.todayStr] = { moments, coverId: (existing && existing.coverId) || id };
+        WorkspaceStorage.setItem('gcal_year_dots_entries', JSON.stringify(entries));
+      } catch(e) { /* ignore */ }
+
+      NotifSound.playCheck();
+      this.saved = true;
+      setTimeout(() => { this.visible = false; }, 900);
+    },
+
+    // ── Tombol "Editor Lengkap" — pindah ke Daily N tab 365 Hari hari ini ──
+    openFullEditor() {
+      NotifSound.flushPendingSound();
+      globalThis.__wsPendingQuickAction = 'openYear365Today';
+      globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'googleCalendar' }));
+      this.visible = false;
+    },
+
+    // ── Tutup popup tanpa menyimpan (sudah ditandai shown saat trigger) ──
+    dismiss() {
+      NotifSound.flushPendingSound();
+      this.visible = false;
+    }
+  }
+};

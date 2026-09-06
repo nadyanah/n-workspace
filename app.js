@@ -459,6 +459,14 @@ const App = {
         page: 'jobLogbook',
         action: 'openAddPlan',
       },
+      {
+        key: 'addYear365Moment',
+        label: 'Catat Momen Hari Ini',
+        // Ikon bunga — senada dengan tema tab "365 Days" di halaman Daily N
+        icon: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 3-3Z"/><path d="M12 22a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3Z"/><path d="M2 12a3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3Z"/><path d="M22 12a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3Z"/></svg>',
+        page: 'googleCalendar',
+        action: 'openYear365Today',
+      },
     ];
 
     const triggerQuickShortcut = (qa) => {
@@ -965,6 +973,7 @@ app.component('notification-panel', NotificationPanel);
 app.component('reminder-popup', ReminderPopup);
 app.component('quran-noon-popup', QuranNoonPopup);
 app.component('daily-quote-popup', DailyQuotePopup);
+app.component('moment-evening-popup', MomentEveningPopup);
 app.component('missed-tasks-page', MissedTasksPage);
 app.component('inspiration-board', InspirationBoard);
 app.component('journal-question-board', JournalQuestionBoard);
