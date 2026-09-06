@@ -6373,10 +6373,12 @@ input:checked + .switch-slider:before {
 }
 .y365-modal-caption {
   width: 100%;
+  min-height: 130px;
   border: none;
   outline: none;
   background: transparent;
   resize: none;
+  overflow: hidden;
   font-family: 'Outfit', sans-serif;
   font-size: 14.5px;
   font-weight: 400;
@@ -6435,8 +6437,7 @@ input:checked + .switch-slider:before {
   }
   .y365-modal-content .y365-modal-title-input { font-size: 19px; }
   .y365-modal-content .y365-modal-caption {
-    flex: 1;
-    min-height: 220px;
+    min-height: 200px;
     font-size: 15px;
   }
 }

@@ -10054,7 +10054,7 @@ const GoogleCalendar = {
                     :style="dailyMomentTab==='year365' ? {background:'var(--color-terracotta)',color:'#fff'} : {background:'transparent',color:'#5D4F43'}"
                     style="border:none; font-size:12.5px; padding:7px 16px; border-radius:8px; font-weight:700; display:inline-flex; align-items:center; gap:6px; cursor:pointer; transition:all 0.15s; white-space:nowrap;">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="8" r="1"></circle><circle cx="15.5" cy="10.5" r="1"></circle><circle cx="15.5" cy="14.5" r="1"></circle><circle cx="12" cy="16.5" r="1"></circle><circle cx="8.5" cy="14.5" r="1"></circle><circle cx="8.5" cy="10.5" r="1"></circle></svg>
-              365 Hari
+              365 Days
             </button>
           </div>
 
@@ -11201,12 +11201,12 @@ const GoogleCalendar = {
         <!-- Navigasi tahun + ringkasan -->
         <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
           <div style="display:flex; align-items:center; gap:10px;">
-            <button type="button" class="gcal-nav-btn" @click="yearDotsPrevYear" title="Tahun sebelumnya">&#8249;</button>
+            <button type="button" class="gcal-nav-btn" @click="yearDotsPrevYear" title="Previous year">&#8249;</button>
             <span style="font-size:20px; font-weight:800; color:var(--text-dark); font-family:'Hack', monospace; min-width:70px; text-align:center;">{{ yearDotsSelectedYear }}</span>
-            <button type="button" class="gcal-nav-btn" @click="yearDotsNextYear" title="Tahun berikutnya">&#8250;</button>
+            <button type="button" class="gcal-nav-btn" @click="yearDotsNextYear" title="Next year">&#8250;</button>
           </div>
           <div style="font-size:12.5px; color:var(--text-muted); font-weight:600; background:var(--bg-cream); border:1.5px solid var(--color-sand); padding:6px 12px; border-radius:20px;">
-            {{ yearDotsFilledCount }} / {{ yearDotsTotalDays }} hari terisi ✦
+            {{ yearDotsFilledCount }} / {{ yearDotsTotalDays }} days filled ✦
           </div>
         </div>
 
@@ -11219,7 +11219,7 @@ const GoogleCalendar = {
             class="y365-dot"
             :class="{ 'y365-dot--filled': d.hasEntry, 'y365-dot--today': d.isToday, 'y365-dot--future': d.isFuture && !d.hasEntry }"
             :style="d.coverPhoto ? { backgroundImage: 'url(' + d.coverPhoto + ')' } : {}"
-            :title="yearDotsDateLabel(d.dateStr) + (d.hasEntry ? ' — ada cerita' : '')"
+            :title="yearDotsDateLabel(d.dateStr) + (d.hasEntry ? ' — has a story' : '')"
             @click="yearDotsOpenDay(d.dateStr)"
           ></button>
         </div>
@@ -11230,22 +11230,22 @@ const GoogleCalendar = {
             <div class="y365-modal">
               <div class="y365-modal-header">
                 <div class="y365-modal-date">
-                  {{ yearDotsIsActiveToday ? 'Hari Ini' : yearDotsDateLabel(yearDotsActiveDate) }}
+                  {{ yearDotsIsActiveToday ? 'Today' : yearDotsDateLabel(yearDotsActiveDate) }}
                   <span v-if="yearDotsDayMoments.length > 1" class="y365-modal-count">{{ yearDotsActiveMomentIdx + 1 }}/{{ yearDotsDayMoments.length }}</span>
                 </div>
                 <div class="y365-modal-header-right">
-                  <button type="button" class="y365-icon-btn" @click="yearDotsAddMoment" title="Tambah momen">
+                  <button type="button" class="y365-icon-btn" @click="yearDotsAddMoment" title="Add moment">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                   </button>
-                  <button type="button" class="y365-icon-btn y365-icon-btn--danger" @click="yearDotsDeleteCurrentMoment" title="Hapus momen ini">
+                  <button type="button" class="y365-icon-btn y365-icon-btn--danger" @click="yearDotsDeleteCurrentMoment" title="Delete this moment">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                   </button>
                   <button type="button" class="y365-icon-btn" @click="yearDotsSaveEntry"
                           :disabled="!yearDotsHasAnyContent"
-                          :style="!yearDotsHasAnyContent ? {opacity:0.5, cursor:'not-allowed'} : {}" title="Simpan">
+                          :style="!yearDotsHasAnyContent ? {opacity:0.5, cursor:'not-allowed'} : {}" title="Save">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                   </button>
-                  <button type="button" class="y365-icon-btn" @click="yearDotsCloseModal" title="Tutup">
+                  <button type="button" class="y365-icon-btn" @click="yearDotsCloseModal" title="Close">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </button>
                 </div>
@@ -11262,36 +11262,37 @@ const GoogleCalendar = {
                     <div class="y365-modal-body">
                       <div class="y365-modal-media">
                         <button type="button" class="y365-icon-btn y365-modal-cover-btn" :class="{ 'is-cover': yearDotsCoverId === m.id }"
-                                @click.stop="yearDotsSetCover(m.id)" :title="yearDotsCoverId === m.id ? 'Momen ini jadi cover' : 'Jadikan cover'">
+                                @click.stop="yearDotsSetCover(m.id)" :title="yearDotsCoverId === m.id ? 'This is the cover' : 'Set as cover'">
                           <svg viewBox="0 0 24 24" width="13" height="13" :fill="yearDotsCoverId === m.id ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                         </button>
-                        <div v-if="m.photo" class="y365-modal-photo-wrap" @click="yearDotsOpenFilePicker(idx)" title="Ganti foto">
+                        <div v-if="m.photo" class="y365-modal-photo-wrap" @click="yearDotsOpenFilePicker(idx)" title="Change photo">
                           <img :src="m.photo" class="y365-modal-photo" />
-                          <button type="button" class="y365-modal-photo-remove" @click.stop="m.photo = ''" title="Hapus foto">
+                          <button type="button" class="y365-modal-photo-remove" @click.stop="m.photo = ''" title="Remove photo">
                             <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                           </button>
                         </div>
                         <button v-else type="button" class="y365-modal-photo-add" @click="yearDotsOpenFilePicker(idx)">
                           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                          <span>Tambah foto</span>
+                          <span>Add photo</span>
                         </button>
                       </div>
 
                       <div class="y365-modal-content">
                         <input type="text" class="y365-modal-title-input" v-model="m.title" maxlength="80"
-                               placeholder="Judul momen (opsional)" />
+                               placeholder="Moment title (optional)" />
                         <textarea class="y365-modal-caption" v-model="m.text" rows="2" maxlength="600"
-                                  placeholder="tulis cerita momen ini..."></textarea>
+                                  @input="yearDotsAutoGrowCaption($event)"
+                                  placeholder="write about this moment..."></textarea>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <!-- Panah navigasi antar momen -->
-                <button v-if="yearDotsActiveMomentIdx > 0" type="button" class="y365-slide-arrow y365-slide-arrow--left" @click="yearDotsPrevMoment" title="Momen sebelumnya">
+                <button v-if="yearDotsActiveMomentIdx > 0" type="button" class="y365-slide-arrow y365-slide-arrow--left" @click="yearDotsPrevMoment" title="Previous moment">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                 </button>
-                <button v-if="yearDotsActiveMomentIdx < yearDotsDayMoments.length - 1" type="button" class="y365-slide-arrow y365-slide-arrow--right" @click="yearDotsNextMoment" title="Momen berikutnya">
+                <button v-if="yearDotsActiveMomentIdx < yearDotsDayMoments.length - 1" type="button" class="y365-slide-arrow y365-slide-arrow--right" @click="yearDotsNextMoment" title="Next moment">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </button>
               </div>
@@ -11301,7 +11302,7 @@ const GoogleCalendar = {
                 <div class="y365-slide-dots">
                   <button v-for="(m, idx) in yearDotsDayMoments" :key="'dot-'+m.id" type="button"
                           class="y365-slide-dot" :class="{ 'is-active': idx === yearDotsActiveMomentIdx }"
-                          @click="yearDotsActiveMomentIdx = idx" :title="'Momen ' + (idx+1)"></button>
+                          @click="yearDotsGoToMoment(idx)" :title="'Moment ' + (idx+1)"></button>
                 </div>
               </div>
             </div>
@@ -12141,6 +12142,7 @@ const GoogleCalendar = {
       this.yearDotsDayMoments = cloned;
       this.yearDotsActiveMomentIdx = 0;
       this.yearDotsModalOpen = true;
+      this.yearDotsAutoGrowAllCaptions();
     },
     yearDotsCloseModal() {
       this.yearDotsModalOpen = false;
@@ -12154,6 +12156,22 @@ const GoogleCalendar = {
       const id = this.yearDotsGenId();
       this.yearDotsDayMoments.push({ id, title: '', text: '', photo: '', updatedAt: Date.now() });
       this.yearDotsActiveMomentIdx = this.yearDotsDayMoments.length - 1;
+      this.yearDotsAutoGrowAllCaptions();
+    },
+    // Bikin tinggi textarea cerita ngikutin panjang teksnya sendiri (kayak diary asli),
+    // biar nggak kepotong/harus scroll di dalam kotak kecil.
+    yearDotsAutoGrowCaption(event) {
+      const el = event.target;
+      el.style.height = 'auto';
+      el.style.height = el.scrollHeight + 'px';
+    },
+    yearDotsAutoGrowAllCaptions() {
+      this.$nextTick(() => {
+        document.querySelectorAll('.y365-modal-caption').forEach(el => {
+          el.style.height = 'auto';
+          el.style.height = el.scrollHeight + 'px';
+        });
+      });
     },
     // Hapus momen yang lagi ditampilkan (bukan seluruh hari)
     yearDotsDeleteCurrentMoment() {
@@ -12176,10 +12194,20 @@ const GoogleCalendar = {
       this.yearDotsCoverId = momentId;
     },
     yearDotsPrevMoment() {
-      if (this.yearDotsActiveMomentIdx > 0) this.yearDotsActiveMomentIdx--;
+      if (this.yearDotsActiveMomentIdx > 0) {
+        this.yearDotsActiveMomentIdx--;
+        this.yearDotsAutoGrowAllCaptions();
+      }
     },
     yearDotsNextMoment() {
-      if (this.yearDotsActiveMomentIdx < this.yearDotsDayMoments.length - 1) this.yearDotsActiveMomentIdx++;
+      if (this.yearDotsActiveMomentIdx < this.yearDotsDayMoments.length - 1) {
+        this.yearDotsActiveMomentIdx++;
+        this.yearDotsAutoGrowAllCaptions();
+      }
+    },
+    yearDotsGoToMoment(idx) {
+      this.yearDotsActiveMomentIdx = idx;
+      this.yearDotsAutoGrowAllCaptions();
     },
     // Swipe geser ke samping di layar sentuh
     yearDotsTouchStart(e) {
@@ -12299,10 +12327,10 @@ const GoogleCalendar = {
     },
     yearDotsDateLabel(dateStr) {
       if (!dateStr) return '';
-      const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-      const dows = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+      const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      const dows = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
       const dt = new Date(dateStr + 'T12:00:00');
-      return dows[dt.getDay()] + ', ' + dt.getDate() + ' ' + months[dt.getMonth()] + ' ' + dt.getFullYear();
+      return dows[dt.getDay()] + ', ' + months[dt.getMonth()] + ' ' + dt.getDate() + ', ' + dt.getFullYear();
     },
     // ── Custom warna kategori filter agenda ──
     localUpdateFilterColor(key, value) {
