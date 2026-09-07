@@ -9940,6 +9940,11 @@ const GoogleCalendar = {
   template: `
     <div class="google-calendar-screen">
 
+      <!-- Floating "Set Pengingat" button — sejajar/sebelah tombol Kelola Kategori -->
+      <button class="gcal-reminder-float-btn" @click.stop="localResetReminderFormAndOpen" title="Set Pengingat">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+
       <!-- Floating "Tampilkan di Agenda" button (checklist kategori + kelola kategori, popup mirip Daily Question float) -->
       <div class="gcal-filter-float" @click.stop>
         <button class="gcal-filter-float-btn" :class="{ 'gcal-filter-float-btn--open': agendaFilterOpen }" @click="agendaFilterOpen = !agendaFilterOpen" title="Kelola Kategori">
@@ -10095,10 +10100,6 @@ const GoogleCalendar = {
               <button :class="['gcal-view-btn', localView==='week' && 'active']" @click="localView='week'">Minggu</button>
               <button :class="['gcal-view-btn', localView==='agenda' && 'active']" @click="localView='agenda'">Agenda</button>
             </div>
-            <button class="gcal-create-btn" @click="localResetReminderFormAndOpen">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><path d="M12 5v14M5 12h14"/></svg>
-              Set Pengingat
-            </button>
           </div>
         </div>
 

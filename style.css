@@ -5536,6 +5536,37 @@ input:checked + .switch-slider:before {
   }
 }
 
+/* ── Floating "Set Pengingat" Button — Daily N Page (sebelah Kelola Kategori) ── */
+.gcal-reminder-float-btn {
+  position: fixed;
+  bottom: 28px;
+  right: 84px;
+  z-index: 300;
+  width: 44px;
+  height: 44px;
+  background: var(--color-terracotta);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition-fast);
+}
+.gcal-reminder-float-btn:hover {
+  background: #c06844;
+  transform: scale(1.08);
+  box-shadow: var(--shadow-lg);
+}
+@media (max-width: 640px) {
+  .gcal-reminder-float-btn {
+    bottom: 20px;
+    right: 72px;
+  }
+}
+
 .gcal-filter-float-popup {
   background: var(--bg-card, #fff);
   border: 1.5px solid var(--color-sand, #E8DFD8);
