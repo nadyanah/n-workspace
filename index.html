@@ -1226,7 +1226,7 @@
         <interview-practice v-if="activePage === 'interviewPractice'"></interview-practice>
         <daily-nutrition v-if="activePage === 'dailyNutrition'"></daily-nutrition>
         <pomodoro-timer v-if="activePage === 'pomodoroTimer'"></pomodoro-timer>
-        <google-calendar v-if="activePage === 'googleCalendar'"></google-calendar>
+        <google-calendar v-if="activePage === 'googleCalendar'" @navigate="navigateTo"></google-calendar>
         <financial-tracker v-if="activePage === 'financialTracker'"></financial-tracker>
         <!-- Dynamic Month state passed to Habit Tracker component -->
         <missed-tasks-page v-if="activePage === 'missedTasksPage'"></missed-tasks-page>

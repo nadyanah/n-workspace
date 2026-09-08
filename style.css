@@ -5536,11 +5536,11 @@ input:checked + .switch-slider:before {
   }
 }
 
-/* ── Floating "Set Pengingat" Button — Daily N Page (sebelah Kelola Kategori) ── */
+/* ── Floating "Set Pengingat" Button — Daily N Page (paling kiri, sebelah Job Logbook) ── */
 .gcal-reminder-float-btn {
   position: fixed;
   bottom: 28px;
-  right: 84px;
+  right: 140px;
   z-index: 300;
   width: 44px;
   height: 44px;
@@ -5562,6 +5562,37 @@ input:checked + .switch-slider:before {
 }
 @media (max-width: 640px) {
   .gcal-reminder-float-btn {
+    bottom: 20px;
+    right: 128px;
+  }
+}
+
+/* ── Floating "Buka Job Logbook" Button — Daily N Page (di tengah, antara Kelola Kategori & Set Pengingat) ── */
+.gcal-joblog-float-btn {
+  position: fixed;
+  bottom: 28px;
+  right: 84px;
+  z-index: 300;
+  width: 44px;
+  height: 44px;
+  background-color: var(--bg-card);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-terracotta);
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition-fast);
+}
+.gcal-joblog-float-btn:hover {
+  transform: scale(1.08) rotate(-12deg);
+  border-color: var(--color-terracotta);
+  box-shadow: var(--shadow-lg);
+}
+@media (max-width: 640px) {
+  .gcal-joblog-float-btn {
     bottom: 20px;
     right: 72px;
   }
