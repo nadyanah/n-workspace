@@ -4141,6 +4141,10 @@ const ContentTracker = {
               Tabel
             </button>
           </div>
+          <button class="btn btn-secondary" style="padding: 10px; display: inline-flex; align-items: center; justify-content: center; height: 38px; border: 1.5px solid #EAE5DD; background-color: #FFFFFF; position: relative;" @click="showNotesModal = true" title="Catatan Umum (Jadwal Posting, dll)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span v-if="pageNotes && pageNotes.trim()" style="position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--color-terracotta); border: 1.5px solid #fff;"></span>
+          </button>
           <button class="btn btn-secondary" style="padding: 10px; display: inline-flex; align-items: center; justify-content: center; height: 38px; border: 1.5px solid #EAE5DD; background-color: #FFFFFF;" @click="showSettingsModal = true" title="Pengaturan Board">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
           </button>
@@ -4624,6 +4628,33 @@ const ContentTracker = {
         </div>
       </div>
 
+      <!-- Catatan Umum Modal (scratchpad bebas, terpisah dari kartu konten) -->
+      <div v-if="showNotesModal" class="modal-backdrop" @click.self="closeNotesModal">
+        <div class="moment-modal text-left" style="max-width: 560px; width: 100%; max-height: 88vh; overflow-y: auto; text-align: left; display: flex; flex-direction: column;">
+          <div class="flex-between" style="border-bottom: 1.5px solid #EAE5DD; padding-bottom: 12px; margin-bottom: 14px;">
+            <div>
+              <h3 style="font-size: 18px; font-weight: 700; color: var(--text-dark); margin: 0;">Catatan Umum</h3>
+              <p style="font-size: 11.5px; color: #9A8F85; margin: 3px 0 0;">Scratchpad bebas — jadwal posting, ide random, reminder pribadi. Terpisah dari kartu ide konten.</p>
+            </div>
+            <button class="close-btn" @click="closeNotesModal">×</button>
+          </div>
+
+          <textarea
+            class="form-input"
+            v-model="pageNotes"
+            @input="scheduleSaveNotes"
+            rows="14"
+            placeholder="Contoh:&#10;Jadwal posting minggu ini —&#10;Senin: IG Reels jam 19.00&#10;Rabu: TikTok jam 12.00&#10;Jumat: YouTube Short jam 17.00"
+            style="flex: 1; min-height: 260px; resize: vertical; font-size: 13px; line-height: 1.6; font-family: 'Space Mono', monospace;"
+          ></textarea>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+            <span style="font-size: 11px; color: #9A8F85; font-family: 'Space Mono', monospace;">{{ notesSaveStatus }}</span>
+            <button class="btn btn-primary" style="height: 36px; padding: 0 18px; font-size: 12.5px; font-weight: 700;" @click="closeNotesModal">Selesai</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Legend/Keterangan Warna Visual Notifikasi Rilis di bagian paling bawah -->
       <div style="background-color: #FCFAF7; border: 1.5px solid #EAE5DD; border-radius: 12px; padding: 16px 20px; margin-top: 24px;">
         <h4 style="font-size: 13.5px; font-weight: 700; color: #1C3B34; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
@@ -4683,6 +4714,10 @@ const ContentTracker = {
     return {
       showAddModal: false,
       showSettingsModal: false,
+      showNotesModal: false,
+      pageNotes: '',
+      notesSaveStatus: '',
+      notesSaveTimer: null,
       isEditing: false,
       editingItemId: null,
       draggedOverCol: null,
@@ -4795,7 +4830,13 @@ const ContentTracker = {
       this.saveToStorage();
     }
 
-    // 7. Event Listener for syncing logbook entries to content planning
+    // 7. Load Catatan Umum (scratchpad bebas — jadwal posting, dll)
+    const savedPageNotes = WorkspaceStorage.getItem('personal_workspace_content_page_notes');
+    if (savedPageNotes !== null && savedPageNotes !== undefined) {
+      this.pageNotes = savedPageNotes;
+    }
+
+    // 8. Event Listener for syncing logbook entries to content planning
     this.handleSyncEvent = (e) => {
       const data = e.detail;
       this.openAddModal();
@@ -4808,8 +4849,24 @@ const ContentTracker = {
     if (this.handleSyncEvent) {
       globalThis.removeEventListener('sync-logbook-content', this.handleSyncEvent);
     }
+    clearTimeout(this.notesSaveTimer);
   },
   methods: {
+    // ── Catatan Umum (scratchpad bebas, terpisah dari kartu konten) ──
+    scheduleSaveNotes() {
+      this.notesSaveStatus = 'Menyimpan...';
+      clearTimeout(this.notesSaveTimer);
+      this.notesSaveTimer = setTimeout(() => {
+        WorkspaceStorage.setItem('personal_workspace_content_page_notes', this.pageNotes);
+        this.notesSaveStatus = 'Tersimpan ✓';
+      }, 500);
+    },
+    closeNotesModal() {
+      clearTimeout(this.notesSaveTimer);
+      WorkspaceStorage.setItem('personal_workspace_content_page_notes', this.pageNotes);
+      this.notesSaveStatus = '';
+      this.showNotesModal = false;
+    },
     toggleCard(id) {
       // expandedCards adalah Set — Vue 3 tidak reactive-aware pada Set secara native,
       // jadi kita replace dengan Set baru agar Vue detect perubahannya.
