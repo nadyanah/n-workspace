@@ -19552,7 +19552,7 @@ const MyPortfolio = {
     <!-- ══ MODAL: Edit Task (seluruh isian: Judul, Kata Kunci, Bukti Kerja, Rangkuman Insight, Status) ══ -->
     <transition name="cf-fade">
       <div v-if="editingTaskId" class="cf-modal-overlay" @click.self="cancelEditTask">
-        <div class="cf-modal cf-modal-wide">
+        <div class="cf-modal cf-modal-xl">
           <div class="cf-modal-header">
             <h3 class="cf-modal-title">Edit Task</h3>
             <button class="cf-modal-close" @click="cancelEditTask">
@@ -19562,16 +19562,18 @@ const MyPortfolio = {
           <div class="cf-modal-body" v-if="editingTask">
             <div>
               <label class="cf-field-label">Judul Task (Eng)</label>
-              <input type="text" class="cf-input" v-model="editingTaskTitle" ref="editTaskInput"
-                placeholder="Judul task (Bahasa Inggris)"
-                @keyup.enter="saveEditTask" @keyup.esc="cancelEditTask" />
+              <textarea class="cf-textarea" v-model="editingTaskTitle" ref="editTaskInput"
+                placeholder="Judul task (Bahasa Inggris)" rows="3"
+                style="min-height:64px;"
+                @keydown.enter.exact.prevent="saveEditTask" @keyup.esc="cancelEditTask"></textarea>
             </div>
 
             <div style="margin-top:16px;">
               <label class="cf-field-label">Judul Task (Idn)</label>
-              <input type="text" class="cf-input" v-model="editingTaskTitleIdn"
-                placeholder="Judul task (Bahasa Indonesia)"
-                @keyup.enter="saveEditTask" @keyup.esc="cancelEditTask" />
+              <textarea class="cf-textarea" v-model="editingTaskTitleIdn"
+                placeholder="Judul task (Bahasa Indonesia)" rows="3"
+                style="min-height:64px;"
+                @keydown.enter.exact.prevent="saveEditTask" @keyup.esc="cancelEditTask"></textarea>
             </div>
 
             <div style="margin-top:16px;">
