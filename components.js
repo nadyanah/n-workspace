@@ -4132,8 +4132,8 @@ const ContentTracker = {
         <h2 style="font-size: 24px; font-weight: 800; color: var(--text-dark);">Content Plan & Tracker</h2>
         <div style="display: flex; gap: 8px; align-items: center;">
           <div class="gcal-view-toggle">
-            <button type="button" class="gcal-view-btn" :class="{ active: viewMode === 'kanban' }" @click="viewMode = 'kanban'" title="Tampilan Kanban" style="display: inline-flex; align-items: center; gap: 5px;">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><rect x="3" y="3" width="6" height="18" rx="1"></rect><rect x="10" y="3" width="6" height="10" rx="1"></rect><rect x="17" y="3" width="4" height="14" rx="1"></rect></svg>
+            <button type="button" class="gcal-view-btn" :class="{ active: viewMode === 'kanban' }" @click="viewMode = 'kanban'" title="Tampilan Kanban (Progress ke Bawah)" style="display: inline-flex; align-items: center; gap: 5px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><rect x="3" y="3" width="18" height="5" rx="1"></rect><rect x="3" y="10" width="18" height="4" rx="1"></rect><rect x="3" y="16" width="18" height="5" rx="1"></rect></svg>
               Kanban
             </button>
             <button type="button" class="gcal-view-btn" :class="{ active: viewMode === 'table' }" @click="viewMode = 'table'" title="Tampilan Tabel" style="display: inline-flex; align-items: center; gap: 5px;">
@@ -4199,22 +4199,34 @@ const ContentTracker = {
         </div>
       </div>
 
-      <!-- Kanban Board Wrapper with Scroll -->
-      <div v-if="viewMode === 'kanban'" style="overflow-x: auto; padding-bottom: 12px; margin-top: 16px;">
-        <div class="board-container" :style="{ gridTemplateColumns: 'repeat(' + columns.length + ', minmax(220px, 1fr))', minWidth: (columns.length * 240) + 'px' }">
-          <div v-for="col in columns" 
+      <!-- Kanban Board Wrapper (Tahapan Progress Menurun ke Bawah) -->
+      <div v-if="viewMode === 'kanban'" style="padding-bottom: 12px; margin-top: 16px;">
+        <div class="board-container-vertical">
+          <div v-for="(col, colIdx) in columns" 
                :key="col" 
-               class="board-col" 
-               :style="{ backgroundColor: draggedOverCol === col ? '#F5F2EB' : '', borderColor: draggedOverCol === col ? 'var(--color-terracotta)' : '', minHeight: '520px' }"
+               class="board-col-vertical" 
+               :style="{ backgroundColor: draggedOverCol === col ? '#F5F2EB' : '', borderColor: draggedOverCol === col ? 'var(--color-terracotta)' : '' }"
                @dragover.prevent="draggedOverCol = col"
                @dragleave="draggedOverCol = null"
                @drop="onDrop($event, col)">
-            <div class="board-col-title">
-              <span style="font-family: 'Outfit', sans-serif; font-weight: 700; color: #1C3B34;">{{ col }}</span>
-              <span class="board-col-count">{{ getItemsInCol(col).length }}</span>
+            <div class="board-col-title" style="cursor: pointer; user-select: none;" @click="toggleColCollapse(col)">
+              <span style="display: inline-flex; align-items: center; gap: 8px;">
+                <span class="board-col-index">{{ colIdx + 1 }}</span>
+                <span style="font-family: 'Outfit', sans-serif; font-weight: 700; color: #1C3B34;">{{ col }}</span>
+              </span>
+              <span style="display: inline-flex; align-items: center; gap: 8px;">
+                <span class="board-col-count">{{ getItemsInCol(col).length }}</span>
+                <button type="button" @click.stop="toggleColCollapse(col)" :title="collapsedCols.has(col) ? 'Buka tahap ini' : 'Tutup tahap ini'"
+                  style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; background: transparent; border: 1px solid #EAE5DD; border-radius: 6px; cursor: pointer; color: #7A6F66; flex-shrink: 0;">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                    :style="{ transform: collapsedCols.has(col) ? 'rotate(-90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
+              </span>
             </div>
-            
-            <div class="board-cards" style="min-height: 440px;">
+
+            <div class="board-cards-vertical" v-show="!collapsedCols.has(col)">
               <div v-for="item in getItemsInCol(col)" 
                    :key="item.id" 
                    class="board-card" 
@@ -4326,7 +4338,7 @@ const ContentTracker = {
               </div>
 
               <!-- Drop here visual helper if empty -->
-              <div v-if="getItemsInCol(col).length === 0" style="border: 1.5px dashed #EAE5DD; border-radius: 8px; padding: 16px; text-align: center; color: #9A8F85; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100px;">
+              <div v-if="getItemsInCol(col).length === 0" style="grid-column: 1 / -1; border: 1.5px dashed #EAE5DD; border-radius: 8px; padding: 16px; text-align: center; color: #9A8F85; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80px;">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 4px; opacity: 0.6;"><path d="M12 5v14M5 12h14"></path></svg>
                 Tarik ke sini
               </div>
@@ -4732,6 +4744,9 @@ const ContentTracker = {
       // Toggle collapse per card (Set of item IDs yang sedang expanded)
       expandedCards: new Set(),
 
+      // Toggle collapse per tahap/kolom kanban vertikal (Set of nama kolom yang sedang di-collapse)
+      collapsedCols: new Set(),
+
       // Filters
       filterSearch: '',
       filterPlatform: 'Semua',
@@ -4866,6 +4881,16 @@ const ContentTracker = {
       WorkspaceStorage.setItem('personal_workspace_content_page_notes', this.pageNotes);
       this.notesSaveStatus = '';
       this.showNotesModal = false;
+    },
+    toggleColCollapse(col) {
+      // collapsedCols adalah Set — replace dengan Set baru agar Vue detect perubahannya.
+      const next = new Set(this.collapsedCols);
+      if (next.has(col)) {
+        next.delete(col);
+      } else {
+        next.add(col);
+      }
+      this.collapsedCols = next;
     },
     toggleCard(id) {
       // expandedCards adalah Set — Vue 3 tidak reactive-aware pada Set secara native,

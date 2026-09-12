@@ -962,6 +962,67 @@ h1, h2, h3, h4 {
   gap: 12px;
 }
 
+/* Kanban Vertikal — tahapan progress ditumpuk ke bawah, bukan ke samping */
+.board-container-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 16px;
+}
+
+.board-col-vertical {
+  background-color: var(--bg-cream);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-sand);
+  padding: 14px 16px;
+  position: relative;
+  transition: var(--transition-fast);
+}
+
+.board-col-vertical:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 25px;
+  bottom: -18px;
+  width: 2px;
+  height: 18px;
+  background-image: linear-gradient(var(--color-sand) 60%, transparent 40%);
+  background-size: 2px 8px;
+  background-repeat: repeat-y;
+}
+
+.board-col-title:hover {
+  opacity: 0.85;
+}
+
+.board-col-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 50%;
+  background-color: var(--color-terracotta, #D67B52);
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Space Mono', monospace;
+}
+
+.board-cards-vertical {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .board-cards-vertical {
+    grid-template-columns: 1fr;
+  }
+}
+
 .board-card {
   background-color: var(--bg-card);
   border-radius: var(--border-radius-sm);
