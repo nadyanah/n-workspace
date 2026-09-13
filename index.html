@@ -961,7 +961,10 @@
                 </button>
 
                 <!-- Sub-btn F: Backup Data — download semua data workspace sebagai JSON -->
-                <button class="desk-config-floating-btn desk-submenu-btn" @click="triggerWorkspaceBackup(); showSettingsGroup = false" title="Backup Data — download semua data workspace">
+                <!-- id="_ws_backup_btn" dipakai workspace-safety-ui.js untuk pasang event listener
+                     manual, karena triggerWorkspaceBackup() adalah fungsi global (bukan method
+                     komponen Vue) sehingga tidak bisa dipanggil langsung lewat @click di sini. -->
+                <button id="_ws_backup_btn" class="desk-config-floating-btn desk-submenu-btn" @click="showSettingsGroup = false" title="Backup Data — download semua data workspace">
                   💾
                 </button>
 

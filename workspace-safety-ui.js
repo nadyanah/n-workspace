@@ -77,9 +77,37 @@
   // --------------------------------------------------------------------
   // 2) Tombol backup mengambang TERPISAH sudah tidak dipakai lagi —
   // sekarang tombol "💾 Backup Data" ada di dalam menu Pengaturan & Tema
-  // (lihat index.html, sub-btn F). Fungsi downloadWorkspaceBackup() di atas
-  // tetap dipasang ke globalThis supaya bisa dipanggil langsung dari sana.
+  // (lihat index.html, sub-btn F, id="_ws_backup_btn"). Fungsi
+  // downloadWorkspaceBackup() di atas tetap dipasang ke globalThis.
+  //
+  // ⚠️ BUG YANG DIPERBAIKI: tombol itu sebelumnya dipanggil langsung dari
+  // atribut @click="triggerWorkspaceBackup()" di template Vue. Itu TIDAK
+  // bisa jalan, karena triggerWorkspaceBackup adalah variabel global
+  // (window.triggerWorkspaceBackup), bukan method milik komponen Vue —
+  // dan Vue 3 tidak otomatis membolehkan template mengakses fungsi
+  // sembarangan di window. Hasilnya: klik tombol memunculkan error
+  // "triggerWorkspaceBackup is not a function" di console, dan tidak
+  // terjadi apa-apa di layar (gagal diam-diam).
+  //
+  // Fix: pasang event listener manual di sini (bukan lewat Vue @click),
+  // pakai event delegation dari document dengan `capture: true`. Capture
+  // dipakai supaya listener ini tetap kepanggil walau ada @click.stop di
+  // elemen pembungkus tombol (mis. div.desk-settings-group), karena
+  // capture-phase selalu jalan lebih dulu sebelum stopPropagation di
+  // bubble-phase sempat menghentikannya. Delegation dipakai (bukan
+  // addEventListener langsung ke tombol) karena tombolnya ada di dalam
+  // v-if, jadi elemennya dibuat-ulang tiap kali submenu dibuka/ditutup.
   // --------------------------------------------------------------------
+  function attachBackupButtonListener() {
+    document.addEventListener(
+      'click',
+      (e) => {
+        const btn = e.target.closest('#_ws_backup_btn');
+        if (btn) globalThis.triggerWorkspaceBackup();
+      },
+      true // capture
+    );
+  }
 
   // --------------------------------------------------------------------
   // 3) BANNER PERINGATAN — muncul kalau sync ke Supabase gagal
@@ -121,6 +149,7 @@
   // --------------------------------------------------------------------
   function init() {
     injectErrorBanner();
+    attachBackupButtonListener();
   }
 
   if (document.readyState === 'loading') {
