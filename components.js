@@ -11525,6 +11525,7 @@ const GoogleCalendar = {
       yearDotsCoverId: null,
       yearDotsFilePickerIdx: 0,
       yearDotsTouchStartX: 0,
+      yearDotsSwipeDisabled: false,
 
     };
   },
@@ -12270,6 +12271,7 @@ const GoogleCalendar = {
     yearDotsDeleteCurrentMoment() {
       if (!this.yearDotsDayMoments.length) return;
       const removed = this.yearDotsDayMoments[this.yearDotsActiveMomentIdx];
+      if (!confirm(`Yakin ingin menghapus momen "${removed && removed.title ? removed.title : 'ini'}"? Aksi ini tidak bisa dibatalkan.`)) return;
       this.yearDotsDayMoments.splice(this.yearDotsActiveMomentIdx, 1);
       if (removed && this.yearDotsCoverId === removed.id) {
         this.yearDotsCoverId = this.yearDotsDayMoments[0] ? this.yearDotsDayMoments[0].id : null;
@@ -12304,10 +12306,21 @@ const GoogleCalendar = {
     },
     // Swipe geser ke kiri/kanan di modal = pindah ke HARI sebelum/sesudahnya
     // (bukan pindah momen — momen dipindah lewat panah/titik di dalam slide)
+    // Diabaikan kalau: (1) lagi pinch zoom (multi-touch), atau (2) sentuhan dimulai
+    // dari dalam kolom judul/teks momen (lagi ngetik/pilih teks), biar gak nyasar pindah hari.
     yearDotsTouchStart(e) {
+      if (e.touches && e.touches.length > 1) { this.yearDotsSwipeDisabled = true; return; }
+      const target = e.target;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || (target.closest && target.closest('.y365-modal-content')))) {
+        this.yearDotsSwipeDisabled = true;
+        return;
+      }
+      this.yearDotsSwipeDisabled = false;
       this.yearDotsTouchStartX = e.changedTouches[0].clientX;
     },
     yearDotsTouchEnd(e) {
+      if (this.yearDotsSwipeDisabled) { this.yearDotsSwipeDisabled = false; return; }
+      if ((e.touches && e.touches.length > 0) || e.changedTouches.length > 1) return;
       const dx = e.changedTouches[0].clientX - this.yearDotsTouchStartX;
       if (Math.abs(dx) < 40) return; // ambang batas swipe
       if (dx < 0) this.yearDotsGoToDay(1);
