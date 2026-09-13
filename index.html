@@ -1359,7 +1359,16 @@
         s.onload = resolve;
         document.body.appendChild(s);
       });
-      loadScript('components.js').then(() => loadScript('notifications.js')).then(() => loadScript('app.js')).then(() => loadScript('word-glossary.js'));
+      // ✅ FIX: word-glossary.js DIHAPUS dari sini karena kodenya sudah
+      // tertanam lengkap di ekor components.js (IIFE "WORD GLOSSARY").
+      // Sebelumnya file ini dimuat DUA KALI (sekali lewat components.js,
+      // sekali lagi di sini) → dua listener dblclick, dua modal, dua
+      // state glossary terpisah di memori → berisiko saling menimpa saat
+      // user edit arti kata. Kalau file word-glossary.js masih ada
+      // terpisah di server dan mau dipakai sebagai satu-satunya sumber,
+      // hapus balik blok "WORD GLOSSARY" di ekor components.js supaya
+      // tidak dobel lagi.
+      loadScript('components.js').then(() => loadScript('notifications.js')).then(() => loadScript('app.js'));
     });
   </script>
 </body>

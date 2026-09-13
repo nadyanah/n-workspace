@@ -22784,10 +22784,19 @@ const DailyQuestionFloatCircle = {
   function saveGlossary(data) {
     try {
       const json = JSON.stringify(data);
-      if (typeof WorkspaceStorage !== 'undefined' && WorkspaceStorage._initialized) {
+      // ✅ FIX: JANGAN pernah fallback ke localStorage.setItem() di sini.
+      // Alasan: WorkspaceStorage.getItem() sengaja MENGABAIKAN localStorage
+      // setelah init selesai (supaya data device lain tidak nyasar masuk).
+      // Kalau kita tulis ke localStorage saat belum siap, editan itu akan
+      // "hilang" begitu sinkronisasi selesai — persis kasus yang bikin
+      // data glossary ketimpa/hilang sebelumnya.
+      //
+      // WorkspaceStorage.setItem() sendiri SUDAH aman dipanggil kapan saja:
+      // kalau belum siap, ia menolak diam-diam (console.warn) tanpa merusak
+      // apa pun, sama seperti semua fitur lain di app ini. Jadi cukup
+      // panggil ini saja — konsisten dengan pola yang dipakai fitur lain.
+      if (typeof WorkspaceStorage !== 'undefined') {
         WorkspaceStorage.setItem(STORAGE_KEY, json);
-      } else {
-        localStorage.setItem(STORAGE_KEY, json);
       }
     }
     catch (e) {}

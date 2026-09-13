@@ -444,7 +444,16 @@ const WorkspaceStorage = {
       return 0;
     }
 
+    // ✅ FIX: daftar ini sebelumnya cuma 16 key (sisa dari versi awal app).
+    // Sekarang app sudah punya ~65 key aktif (career_*, fin_*, dzikir_*,
+    // gcal_*, portfolio_*, ws_*, dll) yang TIDAK pernah ikut migrasi
+    // otomatis. Kalau ada device/browser baru yang masih menyimpan data
+    // lama di localStorage untuk key-key itu, sebelumnya data itu tidak
+    // akan pernah masuk ke Supabase — begitu cloud jadi sumber kebenaran,
+    // data itu seolah lenyap. Daftar di bawah sudah mencakup semua key
+    // yang dipakai lewat WorkspaceStorage di seluruh app per hari ini.
     const keys = [
+      // -- set awal (jangan dihapus, demi kompatibilitas) --
       'personal_workspace_assigned_icons','aesthetic_workspace_dominant_color',
       'personal_workspace_job_categories','personal_workspace_job_logs',
       'personal_workspace_calendar_moments','personal_workspace_content_columns',
@@ -454,6 +463,29 @@ const WorkspaceStorage = {
       'personal_workspace_interview_notes','personal_workspace_nutrition_insights',
       'aesthetic_habit_custom_categories','aesthetic_habit_tracker_habits',
       'personal_workspace_pomo_tracker','personal_workspace_pomo_history_logs',
+      // -- tambahan (ditemukan lewat audit, sebelumnya tidak ter-migrasi) --
+      'bucketlist100_years',
+      'career_ats_cv','career_cf_tips','career_docs','career_keyword_bank',
+      'career_keyword_descriptions','career_keyword_meanings','career_last_updated',
+      'career_resume','career_section_order',
+      'dzikir_completed_today','dzikir_last_completed_at','dzikir_list',
+      'dzikir_notes','dzikir_sound_on',
+      'fin_banks','fin_last_updated','fin_transactions',
+      'gcal_agenda_filter_colors','gcal_custom_reminder_categories',
+      'gcal_daily_moments','gcal_year_dots_entries',
+      'inspiration_quotes',
+      'personal_workspace_calendar_category_colors','personal_workspace_calendar_custom_categories',
+      'personal_workspace_content_page_notes','personal_workspace_insight_categories',
+      'personal_workspace_interview_categories','personal_workspace_job_note_cats',
+      'personal_workspace_job_notes','personal_workspace_job_plans',
+      'personal_workspace_life_habits_sections','personal_workspace_next_plans',
+      'portfolio_experience_notes','portfolio_general_note','portfolio_tasks',
+      'ws_daily_quote_shown','ws_daily_stok','ws_habit_notifs','ws_journal_questions',
+      'ws_journal_today_pick','ws_last_seen_date','ws_manual_notifs','ws_missed_tasks',
+      'ws_moment_evening_shown','ws_notif_action_status','ws_quote_writing_log',
+      'ws_quran_noon_shown','ws_quran_prefs','ws_reminder_miss_streak',
+      'ws_reminder_reschedule_alerts','ws_timed_popup_shown','ws_wishlist_2026',
+      'ws_word_glossary',
     ];
     let count = 0;
     for (const key of keys) {
