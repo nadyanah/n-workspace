@@ -64,35 +64,22 @@
   globalThis.downloadWorkspaceBackup = downloadWorkspaceBackup;
   globalThis.restoreWorkspaceBackup = restoreWorkspaceBackup;
 
+  // Wrapper simpel dengan feedback alert — ini yang dipanggil dari tombol UI
+  // (index.html), supaya kalau gagal user tahu, bukan diam-diam tidak terjadi apa-apa.
+  globalThis.triggerWorkspaceBackup = async function () {
+    try {
+      await downloadWorkspaceBackup();
+    } catch (err) {
+      alert('Gagal membuat backup: ' + err.message);
+    }
+  };
+
   // --------------------------------------------------------------------
-  // 2) FLOATING BUTTON — backup manual, selalu ada di pojok layar
+  // 2) Tombol backup mengambang TERPISAH sudah tidak dipakai lagi —
+  // sekarang tombol "💾 Backup Data" ada di dalam menu Pengaturan & Tema
+  // (lihat index.html, sub-btn F). Fungsi downloadWorkspaceBackup() di atas
+  // tetap dipasang ke globalThis supaya bisa dipanggil langsung dari sana.
   // --------------------------------------------------------------------
-  function injectBackupButton() {
-    const btn = document.createElement('button');
-    btn.textContent = '💾 Backup Data';
-    btn.title = 'Download semua data workspace kamu sebagai file JSON';
-    btn.style.cssText = `
-      position: fixed; bottom: 16px; right: 16px; z-index: 99998;
-      background: #2C2621; color: #fff; border: none;
-      padding: 10px 16px; border-radius: 999px;
-      font-family: sans-serif; font-size: 13px; cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-    `;
-    btn.addEventListener('click', async () => {
-      btn.disabled = true;
-      const original = btn.textContent;
-      btn.textContent = 'Menyiapkan...';
-      try {
-        await downloadWorkspaceBackup();
-      } catch (err) {
-        alert('Gagal membuat backup: ' + err.message);
-      } finally {
-        btn.textContent = original;
-        btn.disabled = false;
-      }
-    });
-    document.body.appendChild(btn);
-  }
 
   // --------------------------------------------------------------------
   // 3) BANNER PERINGATAN — muncul kalau sync ke Supabase gagal
@@ -133,7 +120,6 @@
   // Jalankan setelah DOM siap
   // --------------------------------------------------------------------
   function init() {
-    injectBackupButton();
     injectErrorBanner();
   }
 
