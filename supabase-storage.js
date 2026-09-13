@@ -294,8 +294,12 @@ const WorkspaceStorage = {
   _initialized: false,
   _pendingSaves: {},
   _saveDebounceMs: 800,
+  // 🆕 Bisa dibaca UI (mis. tampilkan banner "gagal sinkron") alih-alih diam-diam
+  // melanjutkan seolah semua normal.
+  hasError: false,
+  _MIGRATION_FLAG_KEY: '__migration_done__',
 
-  async init() {
+  async init(_attempt = 1) {
     // ✅ FIX: Jangan skip init kalau sebelumnya error — reset dulu
     // _initialized hanya di-set true setelah berhasil atau error non-fatal
     if (this._initialized) return;
@@ -316,13 +320,23 @@ const WorkspaceStorage = {
       if (data) data.forEach(row => { this._cache[row.key] = row.value; });
 
       this._initialized = true;
+      this.hasError = false;
       console.log(`[WorkspaceStorage] Loaded ${data?.length || 0} keys dari Supabase`);
     } catch (err) {
-      console.error('[WorkspaceStorage] Error init:', err.message);
+      console.error(`[WorkspaceStorage] Error init (percobaan ${_attempt}):`, err.message);
+      // 🆕 FIX: Retry otomatis sampai 3x dengan jeda, jangan langsung menyerah
+      // pada kegagalan sesaat (mis. network blip saat load).
+      if (_attempt < 3) {
+        await new Promise(r => setTimeout(r, 1000 * _attempt));
+        return this.init(_attempt + 1);
+      }
       // ✅ FIX: Kalau error, jangan set initialized = true
       // Biarkan komponen retry lewat _workspaceStorageReady
       // tapi set false supaya getItem tidak fallback ke localStorage
       this._initialized = false;
+      // 🆕 Tandai supaya UI bisa kasih tahu user, bukan tampil normal padahal
+      // data belum tentu lengkap.
+      this.hasError = true;
     }
   },
 
@@ -402,11 +416,31 @@ const WorkspaceStorage = {
   },
 
   async migrateFromLocalStorage() {
-    // ✅ FIX: Hanya migrasi kalau Supabase benar-benar kosong (first time setup)
-    // Pakai ukuran cache yang sudah diload dari Supabase sebagai indikator
-    // Kalau Supabase sudah punya data (cache > 0), SKIP — jangan timpa dengan localStorage
+    // 🛑 FIX PENTING: Kalau init() gagal (_initialized masih false), JANGAN migrasi.
+    // Sebelumnya guard ini hanya cek "this._cache kosong?" — tapi cache JUGA kosong
+    // kalau fetch Supabase error (bukan cuma kalau akun benar-benar baru).
+    // Akibatnya data lama di localStorage bisa menimpa balik data baru di Supabase
+    // setiap kali fetch gagal (race condition / RLS / network blip / dsb).
+    if (!this._initialized) {
+      console.warn('[WorkspaceStorage] Init belum/gagal selesai — skip migrasi localStorage untuk mencegah overwrite data.');
+      return 0;
+    }
+
+    // 🆕 FIX UTAMA: Jangan lagi menebak "sudah pernah migrasi?" dari isi cache.
+    // Pakai marker permanen yang ditulis ke Supabase sendiri setelah migrasi
+    // pertama sukses. Ini anti-salah-tebak walau suatu saat semua key user
+    // kebetulan pernah terhapus/kosong — migrasi tidak akan jalan dua kali.
+    if (this._cache[this._MIGRATION_FLAG_KEY] === 'true') {
+      console.log('[WorkspaceStorage] Migrasi sudah pernah dilakukan sebelumnya (marker ditemukan), skip.');
+      return 0;
+    }
+
+    // ✅ Lapisan kedua (jaga-jaga): kalau Supabase sudah ada data lain meski
+    // marker belum ada (mis. dibuat sebelum fix ini dipasang), tetap skip.
     if (Object.keys(this._cache).length > 0) {
       console.log('[WorkspaceStorage] Data Supabase sudah ada, skip migrasi localStorage');
+      // Tulis marker sekarang juga supaya ke depannya cek jadi cepat & pasti.
+      await this._saveToSupabase(this._MIGRATION_FLAG_KEY, 'true');
       return 0;
     }
 
@@ -431,6 +465,11 @@ const WorkspaceStorage = {
       }
     }
     if (count > 0) console.log(`[WorkspaceStorage] Migrasi ${count} key dari localStorage ke Supabase`);
+
+    // 🆕 Tulis marker migrasi selesai — permanen, tidak bergantung tebakan cache lagi.
+    this._cache[this._MIGRATION_FLAG_KEY] = 'true';
+    await this._saveToSupabase(this._MIGRATION_FLAG_KEY, 'true');
+
     return count;
   }
 };
