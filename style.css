@@ -6329,9 +6329,9 @@ input:checked + .switch-slider:before {
 .y365-strip {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 9px;
   width: 100%;
-  max-width: 160px;
+  max-width: 190px;
   overflow-x: auto;
   overflow-y: visible;
   padding: 18px 6px 4px;
@@ -6347,8 +6347,8 @@ input:checked + .switch-slider:before {
 .y365-strip-item {
   position: relative;
   flex-shrink: 0;
-  width: 6px;
-  height: 6px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: var(--color-sand, #E8DFD8);
   border: none;
@@ -6366,9 +6366,9 @@ input:checked + .switch-slider:before {
   box-shadow: 0 0 0 2px rgba(214,123,82,0.35);
 }
 .y365-strip-item--active {
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   background-color: var(--color-terracotta, #D67B52);
   box-shadow: 0 4px 10px rgba(214,123,82,0.32);
 }
@@ -6377,10 +6377,10 @@ input:checked + .switch-slider:before {
 }
 .y365-strip-item-label {
   position: absolute;
-  top: -16px;
+  top: -19px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--text-dark, #2C2621);
   white-space: nowrap;

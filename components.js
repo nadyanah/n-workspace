@@ -11319,7 +11319,10 @@ const GoogleCalendar = {
             <div class="y365-modal">
               <!-- Strip tanggal — geser/tap buat pindah ke hari sebelum/sesudahnya -->
               <div class="y365-strip-wrap">
-                <div class="y365-strip" ref="y365ModalStrip">
+                <div class="y365-strip" ref="y365ModalStrip"
+                  @touchstart="yearDotsStripTouchStart"
+                  @touchmove.prevent="yearDotsStripTouchMove"
+                  @touchend="yearDotsStripTouchEnd">
                   <button
                     v-for="d in yearDotsModalStripDays"
                     :key="d.dateStr"
@@ -11543,6 +11546,8 @@ const GoogleCalendar = {
       yearDotsFilePickerIdx: 0,
       yearDotsTouchStartX: 0,
       yearDotsSwipeDisabled: false,
+      yearDotsStripSwipeDisabled: false,
+      yearDotsStripTouchStartX: 0,
 
     };
   },
@@ -12463,6 +12468,25 @@ const GoogleCalendar = {
       }
       this.yearDotsPersistEntries();
       this.yearDotsSyncTitlesToMoments();
+    },
+    // Swipe di strip tanggal (dalam modal) = pindah SATU tanggal per swipe,
+    // bukan scroll bebas nge-geser semua dot. Ambang batas sama kayak swipe modal.
+    yearDotsStripTouchStart(e) {
+      if (e.touches && e.touches.length > 1) { this.yearDotsStripSwipeDisabled = true; return; }
+      this.yearDotsStripSwipeDisabled = false;
+      this.yearDotsStripTouchStartX = e.touches[0].clientX;
+    },
+    yearDotsStripTouchMove(e) {
+      // preventDefault (lewat .prevent di template) biar strip nggak ikut ke-scroll browser
+      // pas jari geser — kita cuma butuh arah & jaraknya buat nentuin pindah hari atau nggak.
+    },
+    yearDotsStripTouchEnd(e) {
+      if (this.yearDotsStripSwipeDisabled) { this.yearDotsStripSwipeDisabled = false; return; }
+      if (e.changedTouches.length > 1) return;
+      const dx = e.changedTouches[0].clientX - this.yearDotsStripTouchStartX;
+      if (Math.abs(dx) < 30) return; // ambang batas swipe
+      if (dx < 0) this.yearDotsGoToDay(1);
+      else this.yearDotsGoToDay(-1);
     },
     // Pindah ke hari sebelum (-1) atau sesudah (+1) tanggal yang lagi dibuka,
     // sambil nyimpen draft hari sekarang dulu biar aman.
