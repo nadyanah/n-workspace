@@ -6323,19 +6323,26 @@ input:checked + .switch-slider:before {
 /* ── Strip tanggal di dalam modal 365 Hari — geser/tap buat pindah hari ── */
 .y365-strip-wrap {
   margin: -8px -6px 14px;
+  display: flex;
+  justify-content: center;
 }
 .y365-strip {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 7px;
+  width: 100%;
+  max-width: 160px;
   overflow-x: auto;
   overflow-y: visible;
   padding: 18px 6px 4px;
   scroll-snap-type: x proximity;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  cursor: grab;
 }
+.y365-strip:active { cursor: grabbing; }
 .y365-strip::-webkit-scrollbar { display: none; }
 .y365-strip-item {
   position: relative;

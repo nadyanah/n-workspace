@@ -11651,7 +11651,7 @@ const GoogleCalendar = {
       const center = new Date(this.yearDotsActiveDate + 'T12:00:00');
       const todayStr = this.localFmtDate(new Date());
       const days = [];
-      for (let i = -2; i <= 1; i++) {
+      for (let i = -10; i <= 10; i++) {
         const d = new Date(center);
         d.setDate(d.getDate() + i);
         const dateStr = this.localFmtDate(d);
