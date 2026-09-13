@@ -4978,6 +4978,7 @@ const ContentTracker = {
       }
     },
     deleteItem(item) {
+      if (!confirm(`Yakin ingin menghapus konten "${item.title || 'ini'}"? Aksi ini tidak bisa dibatalkan.`)) return;
       const index = this.items.findIndex(i => i.id === item.id);
       if (index !== -1) {
         this.items.splice(index, 1);
