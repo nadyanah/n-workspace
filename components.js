@@ -17024,35 +17024,8 @@ const CareerFoundation = {
       </button>
     </div>
 
-    <!-- ── Layout: Sidebar Kata Kunci (kiri) + Konten Tab (kanan) ── -->
+    <!-- ── Konten Tab ── -->
     <div class="cf-body-layout">
-
-      <!-- ── Sidebar Kata Kunci ── -->
-      <div class="cf-keyword-sidebar">
-        <p class="cf-keyword-sidebar-title">Kata Kunci</p>
-        <p class="cf-keyword-sidebar-sub">Buat daftar kata kunci di sini, lalu pilih beberapa untuk tiap task di tabel My Portfolio.</p>
-        <div class="cf-keyword-add-row">
-          <input type="text" class="cf-input cf-keyword-input-add" v-model="newKeywordInput"
-            placeholder="cth., Leadership" @keyup.enter="addKeywordToBank" />
-          <button class="cf-btn-primary cf-keyword-add-btn" :disabled="!newKeywordInput.trim()" @click="addKeywordToBank">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </button>
-        </div>
-        <div v-if="!keywordBank.length" class="cf-keyword-empty">Belum ada kata kunci.</div>
-        <div v-else class="cf-keyword-bank-list">
-          <span v-for="kw in keywordBank" :key="kw" class="cf-keyword-bank-chip" :title="keywordMeanings[kw] || ''">
-            {{ kw }}
-            <button class="cf-keyword-bank-chip-edit" title="Edit kata kunci & arti" @click="openEditKeywordModal(kw)">
-              <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </button>
-            <button class="cf-keyword-bank-chip-remove" title="Hapus kata kunci" @click="removeKeywordFromBank(kw)">
-              <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </span>
-        </div>
-      </div>
-
-      <!-- ── Konten Tab ── -->
       <div class="cf-tabs-content">
 
     <!-- ══ TAB: CV ATS v2 ══ -->
@@ -17741,6 +17714,60 @@ const CareerFoundation = {
     </div>
     </transition>
 
+    <!-- ══ TAB: KATA KUNCI ══ -->
+    <transition name="cf-fade">
+    <div v-if="activeTab === 'kata_kunci'" key="kata_kunci">
+      <div class="cf-section-bar">
+        <span class="cf-section-label">Kata Kunci · {{ keywordBank.length }}</span>
+        <div class="cf-keyword-add-row" style="max-width: 280px;">
+          <input type="text" class="cf-input cf-keyword-input-add" v-model="newKeywordInput"
+            placeholder="cth., Leadership" @keyup.enter="addKeywordToBank" />
+          <button class="cf-btn-primary cf-keyword-add-btn" :disabled="!newKeywordInput.trim()" @click="addKeywordToBank">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah
+          </button>
+        </div>
+      </div>
+      <div v-if="keywordBank.length === 0" class="cf-empty">
+        <p class="cf-empty-label">Belum ada kata kunci</p>
+        <p class="cf-empty-sub">Tambahkan kata kunci pertamamu lewat kolom di atas, atau dari sidebar di kiri.</p>
+      </div>
+      <div v-else class="cf-kw-table-wrap">
+        <table class="cf-kw-table">
+          <thead>
+            <tr>
+              <th>Nama Kata Kunci</th>
+              <th>Artinya</th>
+              <th>Deskripsi</th>
+              <th style="width: 90px;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="kw in sortedKeywordBank" :key="kw">
+              <td class="cf-kw-table-name">{{ kw }}</td>
+              <td class="cf-kw-table-meaning">
+                <span v-if="keywordMeanings[kw]">{{ keywordMeanings[kw] }}</span>
+                <span v-else class="cf-kw-table-meaning-empty">Belum ada arti</span>
+              </td>
+              <td class="cf-kw-table-desc">
+                <span v-if="keywordDescriptions[kw]" class="cf-kw-table-desc-text">{{ keywordDescriptions[kw] }}</span>
+                <span v-else class="cf-kw-table-meaning-empty">Belum ada deskripsi</span>
+              </td>
+              <td>
+                <div class="cf-doc-actions">
+                  <button class="cf-doc-action-btn" title="Edit kata kunci & arti" @click="openEditKeywordModal(kw)">Edit</button>
+                  <button class="cf-kw-table-del-btn" title="Hapus kata kunci" @click="removeKeywordFromBank(kw)">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    </transition>
+
       </div>
       <!-- /cf-tabs-content -->
     </div>
@@ -17834,6 +17861,10 @@ const CareerFoundation = {
               <label class="cf-field-label">Arti / Keterangan</label>
               <textarea class="cf-textarea" v-model="keywordEditForm.meaning" rows="3" placeholder="Catatan arti / konteks kata kunci ini, mis. apa maksudnya, kapan dipakai..."></textarea>
               <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Hanya terlihat di popup ini — tidak ikut ditampilkan di sidebar.</p>
+            </div>
+            <div>
+              <label class="cf-field-label">Deskripsi</label>
+              <textarea class="cf-textarea" v-model="keywordEditForm.description" rows="4" placeholder="Deskripsi lebih lengkap tentang kata kunci ini..."></textarea>
             </div>
           </div>
           <div class="cf-modal-footer">
@@ -18248,6 +18279,7 @@ const CareerFoundation = {
         { key: 'linkedin_about', label: 'LinkedIn: About',  emoji: '🪪', color: '#004182',                 shadowColor: 'rgba(0,65,130,0.3)' },
         { key: 'body_email',    label: 'Body Email',       emoji: '📧', color: '#0369A1',                 shadowColor: 'rgba(3,105,161,0.3)' },
         { key: 'all',           label: 'Semua Dokumen',    emoji: '📂', color: 'var(--color-forest)',      shadowColor: 'rgba(40,54,24,0.3)' },
+        { key: 'kata_kunci',    label: 'Kata Kunci',       emoji: '🔑', color: '#B07D3E',                  shadowColor: 'rgba(176,125,62,0.3)' },
       ],
 
       // Resume
@@ -18377,8 +18409,10 @@ const CareerFoundation = {
       // Arti / keterangan tiap kata kunci — { [kataKunci]: arti }. Disimpan terpisah,
       // TIDAK ditampilkan di chip sidebar, hanya terlihat lewat popup Edit Kata Kunci.
       keywordMeanings: {},
+      // Deskripsi tiap kata kunci — { [kataKunci]: deskripsi }. Ditampilkan di kolom Deskripsi tabel Kata Kunci.
+      keywordDescriptions: {},
       editingKeywordOriginal: null, // kata kunci asli yang sedang diedit lewat popup (null = popup tertutup)
-      keywordEditForm: { text: '', meaning: '' },
+      keywordEditForm: { text: '', meaning: '', description: '' },
 
       // CV v2 Custom Sections
       cv2ShowCustomModal: false,
@@ -18393,6 +18427,9 @@ const CareerFoundation = {
   },
 
   computed: {
+    sortedKeywordBank() {
+      return [...this.keywordBank].sort((a, b) => a.localeCompare(b, 'id', { sensitivity: 'base' }));
+    },
     docContentPlaceholderId() {
       if (this.docForm.type === 'cv') return 'Ringkasan poin-poin CV kamu — pengalaman, keahlian, pendidikan...';
       const tpl = this.docTemplates[this.docForm.type];
@@ -18563,12 +18600,19 @@ const CareerFoundation = {
       this.saveKeywordBank();
     },
     removeKeywordFromBank(kw) {
+      if (!confirm(`Yakin ingin menghapus kata kunci "${kw}"?`)) return;
       this.keywordBank = this.keywordBank.filter(k => k !== kw);
       if (this.keywordMeanings[kw] !== undefined) {
         const next = { ...this.keywordMeanings };
         delete next[kw];
         this.keywordMeanings = next;
         this.saveKeywordMeanings();
+      }
+      if (this.keywordDescriptions[kw] !== undefined) {
+        const nextDesc = { ...this.keywordDescriptions };
+        delete nextDesc[kw];
+        this.keywordDescriptions = nextDesc;
+        this.saveKeywordDescriptions();
       }
       this.saveKeywordBank();
     },
@@ -18578,21 +18622,25 @@ const CareerFoundation = {
     saveKeywordMeanings() {
       try { WorkspaceStorage.setItem('career_keyword_meanings', JSON.stringify(this.keywordMeanings)); } catch(_e) {}
     },
+    saveKeywordDescriptions() {
+      try { WorkspaceStorage.setItem('career_keyword_descriptions', JSON.stringify(this.keywordDescriptions)); } catch(_e) {}
+    },
 
     // ── Popup Edit Kata Kunci: ubah teks kata kunci & isi artinya (arti tidak tampil di sidebar) ──
     openEditKeywordModal(kw) {
       this.editingKeywordOriginal = kw;
-      this.keywordEditForm = { text: kw, meaning: this.keywordMeanings[kw] || '' };
+      this.keywordEditForm = { text: kw, meaning: this.keywordMeanings[kw] || '', description: this.keywordDescriptions[kw] || '' };
     },
     closeEditKeywordModal() {
       this.editingKeywordOriginal = null;
-      this.keywordEditForm = { text: '', meaning: '' };
+      this.keywordEditForm = { text: '', meaning: '', description: '' };
     },
     saveEditKeywordModal() {
       const original = this.editingKeywordOriginal;
       if (!original) return;
       const newText = this.keywordEditForm.text.trim();
       const newMeaning = this.keywordEditForm.meaning.trim();
+      const newDescription = this.keywordEditForm.description.trim();
       if (!newText || this.keywordEditIsDuplicate) return;
 
       // Rename di Bank Kata Kunci (kalau teksnya berubah)
@@ -18606,8 +18654,15 @@ const CareerFoundation = {
       if (newMeaning) nextMeanings[newText] = newMeaning;
       this.keywordMeanings = nextMeanings;
 
+      // Pindahkan/perbarui deskripsi ke key yang baru
+      const nextDescriptions = { ...this.keywordDescriptions };
+      delete nextDescriptions[original];
+      if (newDescription) nextDescriptions[newText] = newDescription;
+      this.keywordDescriptions = nextDescriptions;
+
       this.saveKeywordBank();
       this.saveKeywordMeanings();
+      this.saveKeywordDescriptions();
 
       // Kalau nama kata kunci berubah, ikut perbarui task yang sudah memakai kata kunci lama
       // (ditulis langsung ke storage 'portfolio_tasks' biar tetap sinkron walau My Portfolio belum dibuka ulang)
@@ -19249,6 +19304,10 @@ const CareerFoundation = {
     try {
       const km = WorkspaceStorage.getItem('career_keyword_meanings');
       if (km) this.keywordMeanings = JSON.parse(km);
+    } catch(_e) {}
+    try {
+      const kd = WorkspaceStorage.getItem('career_keyword_descriptions');
+      if (kd) this.keywordDescriptions = JSON.parse(kd);
     } catch(_e) {}
     try {
       const ct = WorkspaceStorage.getItem('career_cf_tips');
