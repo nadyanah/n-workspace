@@ -11156,64 +11156,26 @@ const GoogleCalendar = {
       <!-- ═══ MOMENT TAB CONTENT ═══ -->
       <div v-else-if="dailyMomentTab === 'moment'" class="animate-fade-in">
 
+        <!-- Info: input moment sekarang dilakukan lewat tab "365 Days" biar satu sumber data.
+             Moment yang ditulis di sana otomatis muncul & sync di timeline bawah ini. -->
+        <div style="background: var(--bg-card); border: 1.5px solid var(--color-sand); border-radius: 16px; padding: 18px 20px; margin-bottom: 24px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+          <span style="width: 38px; height: 38px; border-radius: 10px; background: var(--bg-cream); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; color: var(--color-terracotta);">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="8" r="1"></circle><circle cx="15.5" cy="10.5" r="1"></circle><circle cx="15.5" cy="14.5" r="1"></circle><circle cx="12" cy="16.5" r="1"></circle><circle cx="8.5" cy="14.5" r="1"></circle><circle cx="8.5" cy="10.5" r="1"></circle></svg>
+          </span>
+          <div style="flex:1; min-width:180px;">
+            <p style="font-weight:700; font-size:13.5px; color: var(--text-dark); margin:0 0 2px 0;">Catat moment lewat 365 Days</p>
+            <p style="font-size:12px; color: var(--text-muted); margin:0;">Semua moment sekarang diinput dari tab 365 Days dan otomatis sync ke timeline di bawah.</p>
+          </div>
+          <button type="button" @click="yearDotsEnterTab" class="gcal-create-btn" style="flex-shrink:0;">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            Buka 365 Days
+          </button>
+        </div>
+
         <!-- Success / Error toast (mengikuti pola toast Daily) -->
         <div v-if="momentSuccess" class="gcal-toast gcal-toast-success">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
           {{ momentSuccess }}
-        </div>
-
-        <!-- Kartu input cepat: catat moment hari ini -->
-        <div style="background: var(--bg-card); border: 1.5px solid var(--color-sand); border-radius: 16px; padding: 20px; margin-bottom: 24px;">
-          <div style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;" :style="showMomentForm ? {marginBottom:'14px'} : {}" @click="showMomentForm = !showMomentForm">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--color-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
-            <span style="font-weight: 700; font-size: 14px; color: var(--text-dark); flex:1;">{{ momentEditingId ? 'Edit Moment' : 'Catat Moment' }}</span>
-            <button type="button" @click.stop="showMomentForm = !showMomentForm" :title="showMomentForm ? 'Tutup form' : 'Buka form'"
-                    style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 8px; width: 26px; height: 26px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; color: var(--text-muted); flex-shrink:0;">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: showMomentForm ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </button>
-          </div>
-
-          <div v-if="showMomentForm" class="animate-fade-in">
-          <!-- Baris 1: Tanggal & Kategori berdampingan -->
-          <div style="display:flex; gap: 12px; margin-bottom: 12px;">
-            <div style="flex: 1; min-width: 0;">
-              <label style="font-size: 11.5px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom: 5px;">Tanggal</label>
-              <input type="date" class="gcal-input" v-model="momentForm.date" style="width:100%;" />
-            </div>
-            <div style="flex: 1; min-width: 0;">
-              <label style="font-size: 11.5px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom: 5px;">Kategori</label>
-              <select class="gcal-input" v-model="momentForm.category" style="width:100%; cursor:pointer;">
-                <option v-for="f in agendaFilterOptions" :key="f.key" :value="f.key">{{ f.label }}</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Baris 2: Isi moment -->
-          <div style="margin-bottom: 12px;">
-            <label style="font-size: 11.5px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom: 5px;">Apa yang ingin kamu ingat di hari itu?</label>
-            <textarea class="gcal-input" v-model="momentForm.text" rows="2" maxlength="280"
-                      style="width:100%; resize:vertical; min-height:44px;"
-                      placeholder="Tulis momen singkat, mis. 'Ketemu teman lama di kafe'..."
-                      @keydown.enter.meta="addMoment" @keydown.enter.ctrl="addMoment"></textarea>
-            <span style="font-size: 11px; color: var(--text-muted); display:block; text-align:right; margin-top: 3px;">{{ momentForm.text.length }}/280</span>
-          </div>
-
-          <!-- Baris 3: Link opsional -->
-          <div style="margin-bottom: 4px;">
-            <label style="font-size: 11.5px; font-weight: 600; color: var(--text-muted); display:block; margin-bottom: 5px;">Link Moment <span style="font-weight: 400; opacity: 0.75;">(opsional)</span></label>
-            <input type="url" class="gcal-input" v-model="momentForm.link" style="width:100%;" placeholder="https://..." />
-          </div>
-
-          <!-- Baris aksi -->
-          <div style="display:flex; justify-content:flex-end; align-items:center; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1.5px solid var(--color-sand);">
-            <button v-if="momentEditingId" class="btn btn-secondary" type="button" @click="cancelEditMoment" style="font-size: 12.5px; padding: 8px 16px;">Batal</button>
-            <button class="gcal-create-btn" type="button" @click="addMoment" :disabled="!momentForm.text.trim()" :style="!momentForm.text.trim() ? {opacity:0.5, cursor:'not-allowed'} : {}">
-              <svg v-if="!momentEditingId" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-              <svg v-else viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              {{ momentEditingId ? 'Update Moment' : 'Simpan Moment' }}
-            </button>
-          </div>
-          </div>
         </div>
 
         <!-- Timeline moment tersimpan, dikelompokkan per tanggal & bisa dibuka/tutup -->
@@ -11268,7 +11230,7 @@ const GoogleCalendar = {
                           style="font-size: 9.5px; font-weight: 700; color: var(--color-terracotta); background: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 6px; padding: 3px 6px; white-space: nowrap; cursor: pointer; font-family: 'Outfit', sans-serif;">
                     dari 365 Hari
                   </button>
-                  <button class="card-nav-btn" @click="startEditMoment(m)" :title="momentIsSynced(m) ? 'Buka di 365 Hari' : 'Edit moment'"
+                  <button v-if="momentIsSynced(m)" class="card-nav-btn" @click="startEditMoment(m)" title="Buka di 365 Hari"
                           style="background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 6px; padding: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
                     <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                   </button>
