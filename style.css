@@ -6319,6 +6319,66 @@ input:checked + .switch-slider:before {
 .y365-icon-btn:hover { background: var(--color-sand); color: var(--text-dark); }
 .y365-icon-btn--danger { color: #B91C1C; }
 .y365-icon-btn--danger:hover { background: #FEF2F2; border-color: #FCA5A5; color: #B91C1C; }
+
+/* ── Strip tanggal di dalam modal 365 Hari — geser/tap buat pindah hari ── */
+.y365-strip-wrap {
+  margin: -8px -6px 14px;
+}
+.y365-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 18px 6px 4px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.y365-strip::-webkit-scrollbar { display: none; }
+.y365-strip-item {
+  position: relative;
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-sand, #E8DFD8);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  scroll-snap-align: center;
+  transition: transform 0.15s, width 0.18s, height 0.18s, border-radius 0.18s;
+  background-size: cover;
+  background-position: center;
+}
+.y365-strip-item--filled {
+  background-color: var(--color-terracotta, #D67B52);
+}
+.y365-strip-item--today:not(.y365-strip-item--active) {
+  box-shadow: 0 0 0 2px rgba(214,123,82,0.35);
+}
+.y365-strip-item--active {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background-color: var(--color-terracotta, #D67B52);
+  box-shadow: 0 4px 10px rgba(214,123,82,0.32);
+}
+.y365-strip-item--active:not(.y365-strip-item--filled) {
+  background-image: linear-gradient(135deg, var(--color-terracotta, #D67B52), var(--color-gold, #DDA15E));
+}
+.y365-strip-item-label {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dark, #2C2621);
+  white-space: nowrap;
+  font-family: 'Hack', monospace;
+}
 .y365-modal-date {
   font-size: 13px;
   font-weight: 500;

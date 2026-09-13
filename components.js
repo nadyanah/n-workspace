@@ -11317,6 +11317,23 @@ const GoogleCalendar = {
         <transition name="insight-modal-fade">
           <div v-if="yearDotsModalOpen" class="reminder-popup-overlay" @click.self="yearDotsCloseModal">
             <div class="y365-modal">
+              <!-- Strip tanggal — geser/tap buat pindah ke hari sebelum/sesudahnya -->
+              <div class="y365-strip-wrap">
+                <div class="y365-strip" ref="y365ModalStrip">
+                  <button
+                    v-for="d in yearDotsModalStripDays"
+                    :key="d.dateStr"
+                    type="button"
+                    class="y365-strip-item"
+                    :class="{ 'y365-strip-item--active': d.isActive, 'y365-strip-item--filled': d.hasEntry, 'y365-strip-item--today': d.isToday }"
+                    :style="d.coverPhoto ? { backgroundImage: 'url(' + d.coverPhoto + ')' } : {}"
+                    :title="d.isToday ? 'Today' : yearDotsDateLabel(d.dateStr)"
+                    @click="yearDotsJumpToDate(d.dateStr)">
+                    <span v-if="d.isActive" class="y365-strip-item-label">{{ d.isToday ? 'Today' : d.dayNum }}</span>
+                  </button>
+                </div>
+              </div>
+
               <div class="y365-modal-header">
                 <div class="y365-modal-date">
                   {{ yearDotsIsActiveToday ? 'Today' : yearDotsDateLabel(yearDotsActiveDate) }}
@@ -11626,6 +11643,29 @@ const GoogleCalendar = {
     yearDotsIsActiveToday() {
       const todayStr = this.localFmtDate(new Date());
       return this.yearDotsActiveDate === todayStr;
+    },
+    // Strip tanggal di dalam modal — beberapa hari sebelum & sesudah tanggal yang lagi dibuka,
+    // buat lompat cepat ke hari lain tanpa perlu swipe atau tutup modal dulu.
+    yearDotsModalStripDays() {
+      if (!this.yearDotsActiveDate) return [];
+      const center = new Date(this.yearDotsActiveDate + 'T12:00:00');
+      const todayStr = this.localFmtDate(new Date());
+      const days = [];
+      for (let i = -2; i <= 1; i++) {
+        const d = new Date(center);
+        d.setDate(d.getDate() + i);
+        const dateStr = this.localFmtDate(d);
+        const entry = this.yearDotsEntries[dateStr];
+        days.push({
+          dateStr,
+          dayNum: d.getDate(),
+          isActive: dateStr === this.yearDotsActiveDate,
+          isToday: dateStr === todayStr,
+          hasEntry: !!entry,
+          coverPhoto: entry ? this.yearDotsGetCoverPhoto(entry) : ''
+        });
+      }
+      return days;
     },
     // Ada isi (judul/teks/foto) di minimal salah satu momen yang sedang diedit di modal?
     yearDotsHasAnyContent() {
@@ -12237,6 +12277,25 @@ const GoogleCalendar = {
       this.yearDotsActiveMomentIdx = 0;
       this.yearDotsModalOpen = true;
       this.yearDotsAutoGrowAllCaptions();
+      this.yearDotsScrollStripToActive();
+    },
+    // Loncat ke tanggal tertentu lewat strip tanggal di dalam modal (nyimpen draft hari
+    // sekarang dulu biar aman, sama kayak yearDotsGoToDay).
+    yearDotsJumpToDate(dateStr) {
+      if (!dateStr || dateStr === this.yearDotsActiveDate) return;
+      this.yearDotsSaveDraft();
+      this.yearDotsSelectedYear = parseInt(dateStr.slice(0, 4), 10);
+      this.yearDotsOpenDay(dateStr);
+    },
+    // Geser strip tanggal biar item yang lagi aktif selalu kelihatan di tengah.
+    yearDotsScrollStripToActive() {
+      this.$nextTick(() => {
+        const el = this.$refs.y365ModalStrip;
+        const activeEl = el && el.querySelector('.y365-strip-item--active');
+        if (activeEl && activeEl.scrollIntoView) {
+          activeEl.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+        }
+      });
     },
     yearDotsCloseModal() {
       this.yearDotsModalOpen = false;
