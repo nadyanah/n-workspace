@@ -11316,8 +11316,9 @@ const GoogleCalendar = {
         <!-- Modal isi cerita & foto per hari (bisa lebih dari 1 momen, geser ke samping) -->
         <transition name="insight-modal-fade">
           <div v-if="yearDotsModalOpen" class="reminder-popup-overlay" @click.self="yearDotsCloseModal">
-            <div class="y365-modal">
-              <!-- Strip tanggal — geser/tap buat pindah ke hari sebelum/sesudahnya -->
+            <div class="y365-modal-stack">
+              <!-- Strip tanggal — nempel tepat di atas modal, rata kiri, background
+                   transparan nyatu sama backdrop gelap-blur di belakang modal -->
               <div class="y365-strip-wrap">
                 <div class="y365-strip" ref="y365ModalStrip"
                   @touchstart="yearDotsStripTouchStart"
@@ -11337,7 +11338,8 @@ const GoogleCalendar = {
                 </div>
               </div>
 
-              <div class="y365-modal-header">
+              <div class="y365-modal">
+                <div class="y365-modal-header">
                 <div class="y365-modal-date">
                   {{ yearDotsIsActiveToday ? 'Today' : yearDotsDateLabel(yearDotsActiveDate) }}
                   <span v-if="yearDotsDayMoments.length > 1" class="y365-modal-count">{{ yearDotsActiveMomentIdx + 1 }}/{{ yearDotsDayMoments.length }}</span>
@@ -11414,6 +11416,7 @@ const GoogleCalendar = {
                           @click="yearDotsGoToMoment(idx)" :title="'Moment ' + (idx+1)"></button>
                 </div>
               </div>
+            </div>
             </div>
           </div>
         </transition>

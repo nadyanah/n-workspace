@@ -6320,29 +6320,40 @@ input:checked + .switch-slider:before {
 .y365-icon-btn--danger { color: #B91C1C; }
 .y365-icon-btn--danger:hover { background: #FEF2F2; border-color: #FCA5A5; color: #B91C1C; }
 
-/* ── Strip tanggal di dalam modal 365 Hari — geser/tap buat pindah hari ── */
-.y365-strip-wrap {
-  margin: -8px -6px 14px;
+/* ── Wrapper strip + modal, biar strip nempel tepat di atas modal & ikut
+   posisi modal (bukan dipatok ke pojok layar) ── */
+.y365-modal-stack {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: flex-start;
+  max-height: 90vh;
+}
+
+/* ── Strip tanggal — nempel tepat di atas modal, rata kiri, background
+   transparan nyatu sama backdrop gelap-blur di belakang modal ── */
+.y365-strip-wrap {
+  display: flex;
+  justify-content: flex-start;
+  background: transparent;
+  margin: 0 0 6px 4px;
+  flex-shrink: 0;
 }
 .y365-strip {
   display: flex;
   align-items: center;
   gap: 9px;
-  width: 100%;
-  max-width: 190px;
-  overflow-x: auto;
+  max-width: 220px;
+  background: transparent;
+  overflow-x: hidden;
   overflow-y: visible;
   padding: 18px 6px 4px;
   scroll-snap-type: x proximity;
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
-  cursor: grab;
+  touch-action: pan-y;
+  cursor: pointer;
 }
-.y365-strip:active { cursor: grabbing; }
 .y365-strip::-webkit-scrollbar { display: none; }
 .y365-strip-item {
   position: relative;
@@ -6350,7 +6361,7 @@ input:checked + .switch-slider:before {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: var(--color-sand, #E8DFD8);
+  background: rgba(255,255,255,0.55);
   border: none;
   padding: 0;
   cursor: pointer;
@@ -6363,14 +6374,14 @@ input:checked + .switch-slider:before {
   background-color: var(--color-terracotta, #D67B52);
 }
 .y365-strip-item--today:not(.y365-strip-item--active) {
-  box-shadow: 0 0 0 2px rgba(214,123,82,0.35);
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.55);
 }
 .y365-strip-item--active {
   width: 36px;
   height: 36px;
   border-radius: 10px;
   background-color: var(--color-terracotta, #D67B52);
-  box-shadow: 0 4px 10px rgba(214,123,82,0.32);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.35);
 }
 .y365-strip-item--active:not(.y365-strip-item--filled) {
   background-image: linear-gradient(135deg, var(--color-terracotta, #D67B52), var(--color-gold, #DDA15E));
@@ -6382,7 +6393,8 @@ input:checked + .switch-slider:before {
   transform: translateX(-50%);
   font-size: 13px;
   font-weight: 700;
-  color: var(--text-dark, #2C2621);
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.45);
   white-space: nowrap;
   font-family: 'Hack', monospace;
 }
