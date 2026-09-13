@@ -14171,7 +14171,7 @@ img, svg, video, canvas, iframe {
   textarea,
   .form-input,
   .g-form-input {
-    font-size: 15px !important;
+    font-size: 16px !important; /* min 16px supaya browser mobile gak auto-zoom pas fokus */
     padding: 9px 10px !important;
   }
 }
