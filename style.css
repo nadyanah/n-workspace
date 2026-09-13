@@ -14067,6 +14067,12 @@ img, svg, video, canvas, iframe {
     min-height: 80px !important;
   }
 
+  /* Editor teks kaya (contenteditable) — samain min 16px juga biar konsisten & aman dari auto-zoom */
+  [contenteditable="true"],
+  .mp-rte-editor {
+    font-size: 16px !important;
+  }
+
   input[type="color"] {
     min-height: 38px !important;
   }
@@ -14173,5 +14179,11 @@ img, svg, video, canvas, iframe {
   .g-form-input {
     font-size: 16px !important; /* min 16px supaya browser mobile gak auto-zoom pas fokus */
     padding: 9px 10px !important;
+  }
+
+  /* Editor teks kaya (contenteditable) — samain min 16px juga biar konsisten & aman dari auto-zoom */
+  [contenteditable="true"],
+  .mp-rte-editor {
+    font-size: 16px !important;
   }
 }
