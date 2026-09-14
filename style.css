@@ -14280,3 +14280,184 @@ img, svg, video, canvas, iframe {
     font-size: 16px !important;
   }
 }
+
+/* ============================================================================
+   MOMENT FEED — tampilan "Log Harian" gaya feed per tanggal (waktu + foto + caption)
+   ============================================================================ */
+.moment-feed {
+  display: flex;
+  flex-direction: column;
+}
+
+.moment-feed-day {
+  display: flex;
+  flex-direction: column;
+}
+
+.moment-feed-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 26px 0 16px;
+}
+
+.moment-feed-day:first-child .moment-feed-divider {
+  margin-top: 4px;
+}
+
+.moment-feed-divider::before,
+.moment-feed-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-sand);
+}
+
+.moment-feed-divider-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  text-transform: lowercase;
+}
+
+.moment-feed-entries {
+  display: flex;
+  flex-direction: column;
+}
+
+.moment-feed-entry {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  padding: 14px 6px;
+  border-bottom: 1px dashed rgba(93, 79, 67, 0.12);
+}
+
+.moment-feed-day .moment-feed-entries .moment-feed-entry:last-child {
+  border-bottom: none;
+}
+
+.moment-feed-time {
+  flex-shrink: 0;
+  width: 58px;
+  padding-top: 2px;
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.moment-feed-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.moment-feed-photos {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.moment-feed-photo-btn {
+  display: block;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  border-radius: 10px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.moment-feed-photo-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+.moment-feed-photo {
+  display: block;
+  width: 128px;
+  height: 128px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--color-sand);
+  box-shadow: var(--shadow-sm);
+}
+
+.moment-feed-title {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-dark);
+  line-height: 1.4;
+}
+
+.moment-feed-caption-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.moment-feed-caption {
+  margin: 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-dark);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.moment-feed-actions {
+  position: absolute;
+  top: 12px;
+  right: 4px;
+  display: inline-flex;
+  gap: 5px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.moment-feed-entry:hover .moment-feed-actions,
+.moment-feed-entry:focus-within .moment-feed-actions {
+  opacity: 1;
+}
+
+.moment-feed-add-link {
+  align-self: flex-start;
+  margin: 6px 0 4px 72px;
+  padding: 5px 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-terracotta);
+}
+
+.moment-feed-add-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .moment-feed-time {
+    width: 46px;
+    font-size: 12px;
+  }
+  .moment-feed-photo {
+    width: 104px;
+    height: 104px;
+  }
+  .moment-feed-add-link {
+    margin-left: 4px;
+  }
+}

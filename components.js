@@ -2710,38 +2710,40 @@ const CalendarMoment = {
             <p style="font-size: 12.5px;">Coba ubah filter, atau klik "Tambah Log" di atas</p>
           </div>
 
-          <div v-else class="timeline">
-            <div v-for="group in groupedLogEntries" :key="group.dateString" class="timeline-item">
-              <div class="timeline-dot"></div>
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                <div class="timeline-date" style="margin-bottom: 0;">{{ formatTimelineDate(group.dateString) }}</div>
-                <button type="button" 
-                        @click="toggleLogDateExpand(group.dateString)" 
-                        :title="isLogDateExpanded(group.dateString) ? 'Sembunyikan log' : ('Lihat ' + group.items.length + ' log')"
-                        style="background: var(--bg-cream); border: 1.5px solid var(--color-sand); border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700; color: var(--color-terracotta); padding: 2px 8px 2px 7px; line-height: 1.6;">
-                  {{ group.items.length }}
-                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" :style="{ transform: isLogDateExpanded(group.dateString) ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                </button>
+          <div v-else class="moment-feed">
+            <div v-for="group in groupedLogEntries" :key="group.dateString" class="moment-feed-day">
+
+              <!-- Date divider, gaya "sep 9" di tengah garis tipis -->
+              <div class="moment-feed-divider">
+                <span class="moment-feed-divider-label">{{ formatFeedDate(group.dateString) }}</span>
               </div>
 
-              <div v-if="isLogDateExpanded(group.dateString)" style="display: flex; flex-direction: column; gap: 6px;">
-                <div v-for="item in group.items" 
-                     :key="item.entry.id" 
-                     class="timeline-compact-row"
-                     style="display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid var(--color-sand); border-radius: 9px; background-color: var(--bg-card);">
+              <div class="moment-feed-entries">
+                <div v-for="item in group.items"
+                     :key="item.entry.id"
+                     class="moment-feed-entry">
 
-                  <span style="width: 13px; height: 13px; color: var(--color-terracotta); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;" :title="getStickerLabel(item.entry.sticker)" v-html="getStickerIcon(item.entry.sticker)"></span>
+                  <!-- Kolom waktu input -->
+                  <div class="moment-feed-time">{{ item.entry.timeStart ? formatTimeAmPm(item.entry.timeStart) : '' }}</div>
 
-                  <span v-if="item.entry.category" class="timeline-category" style="flex-shrink: 0;"
-                        :style="{ background: getWashiColor(item.entry.category) + '22', color: getWashiColor(item.entry.category), border: '1.5px solid ' + getWashiColor(item.entry.category) + '55' }">
-                    {{ item.entry.category }}
-                  </span>
+                  <!-- Kolom isi: foto + caption -->
+                  <div class="moment-feed-body">
 
-                  <span style="color: var(--color-sand); flex-shrink: 0;">–</span>
+                    <div v-if="item.entry.image" class="moment-feed-photos">
+                      <img :src="item.entry.image" class="moment-feed-photo" referrerPolicy="no-referrer" />
+                    </div>
 
-                  <span style="font-size: 13px; font-weight: 700; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0;">{{ item.entry.title || 'Momen Tanpa Judul' }}</span>
+                    <div class="moment-feed-caption-row">
+                      <span v-if="item.entry.category" class="timeline-category"
+                            :style="{ background: getWashiColor(item.entry.category) + '22', color: getWashiColor(item.entry.category), border: '1.5px solid ' + getWashiColor(item.entry.category) + '55' }">
+                        {{ item.entry.category }}
+                      </span>
+                      <p class="moment-feed-caption">{{ momentCaption(item.entry) }}</p>
+                    </div>
+                  </div>
 
-                  <div class="timeline-compact-actions" style="display: inline-flex; gap: 5px; flex-shrink: 0;">
+                  <!-- Aksi edit/hapus, muncul saat hover -->
+                  <div class="moment-feed-actions">
                     <button class="card-nav-btn" @click="openEditFromTimeline({ dateString: item.dateString, id: item.entry.id })" title="Edit / Kelola Momen Kenangan"
                             style="background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 6px; padding: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
                       <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -3436,6 +3438,31 @@ const CalendarMoment = {
         'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
       ];
       return day + ' ' + monthsIndo[parseInt(month) - 1] + ' ' + year;
+    },
+    formatFeedDate(dateStr) {
+      if (!dateStr) return '';
+      const [year, month, day] = dateStr.split('-');
+      const monthsShortId = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      return parseInt(day, 10) + ' ' + (monthsShortId[parseInt(month, 10) - 1] || '');
+    },
+    formatTimeAmPm(timeStr) {
+      if (!timeStr) return '';
+      const parts = timeStr.split(':');
+      let h = parseInt(parts[0], 10);
+      if (isNaN(h)) return timeStr;
+      const m = (parts[1] || '00').padStart(2, '0');
+      const period = h >= 12 ? 'pm' : 'am';
+      h = h % 12;
+      if (h === 0) h = 12;
+      return h + ':' + m + period;
+    },
+    momentCaption(entry) {
+      const t = (entry.title || '').trim();
+      const n = (entry.notes || '').trim();
+      if (t && n) return t + ' — ' + n;
+      if (t) return t;
+      if (n) return n;
+      return 'Momen tanpa catatan';
     },
     getRotationAngle(dayNum) {
       const angles = [-4, 3, -1, 4, -3, 2];
@@ -11200,39 +11227,39 @@ const GoogleCalendar = {
               </button>
             </div>
 
-            <div v-if="isMomentDateExpanded(group.dateString)" style="display: flex; flex-direction: column; gap: 6px;">
-              <div v-for="m in group.items" :key="m.id"
-                   class="timeline-compact-row"
-                   style="display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid var(--color-sand); border-radius: 9px; background-color: var(--bg-card);">
+            <div v-if="isMomentDateExpanded(group.dateString)" class="moment-feed-entries" style="margin-top: 4px;">
+              <div v-for="m in group.items" :key="m.id" class="moment-feed-entry">
 
-                <span style="width: 13px; height: 13px; color: var(--color-terracotta); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;" title="Moment">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 4.6-4.6 1.9 4.6 1.9L12 16l1.9-4.6 4.6-1.9-4.6-1.9L12 3Z"></path><path d="M5 3v4M3 5h4M19 17v4M17 19h4"></path></svg>
-                </span>
+                <!-- Kolom waktu (diambil dari jam dibuat/diedit) -->
+                <div class="moment-feed-time">{{ m.createdAt ? formatMomentTime(m.createdAt) : '' }}</div>
 
-                <span class="timeline-category"
-                      :style="{ background: momentCategoryColor(m.category) + '22', color: momentCategoryColor(m.category), border: '1.5px solid ' + momentCategoryColor(m.category) + '55' }">
-                  {{ momentCategoryLabel(m.category) }}
-                </span>
+                <!-- Kolom isi: judul di atas foto, isian/catatan di bawah foto -->
+                <div class="moment-feed-body">
 
-                <span style="color: var(--color-sand); flex-shrink: 0;">–</span>
+                  <p class="moment-feed-title">{{ m.text }}</p>
 
-                <span style="font-size: 13px; font-weight: 700; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0;">{{ m.text }}</span>
+                  <div v-if="m.photo" class="moment-feed-photos">
+                    <button type="button" class="moment-feed-photo-btn" @click="momentIsSynced(m) ? yearDotsOpenFromSyncedMoment(m) : null" title="Buka momen ini">
+                      <img :src="m.photo" class="moment-feed-photo" referrerPolicy="no-referrer" />
+                    </button>
+                  </div>
 
-                <a v-if="m.link" :href="m.link" target="_blank" rel="noopener noreferrer" title="Buka link moment"
-                   style="flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; width: 22px; height: 22px; border-radius: 6px; background: rgba(214,123,82,0.10); color: var(--color-terracotta); transition: background 0.15s;"
-                   onmouseover="this.style.background='rgba(214,123,82,0.22)'" onmouseout="this.style.background='rgba(214,123,82,0.10)'">
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                </a>
+                  <div v-if="m.momentBody || m.link" class="moment-feed-caption-row">
+                    <p v-if="m.momentBody" class="moment-feed-caption">{{ m.momentBody }}</p>
+                    <a v-if="m.link" :href="m.link" target="_blank" rel="noopener noreferrer" title="Buka link moment"
+                       style="color: var(--color-terracotta); text-decoration: none; font-size: 13px; font-weight: 700; font-family: 'Space Mono', monospace;">🔗 Buka link</a>
+                  </div>
+                </div>
 
-                <div style="display: inline-flex; gap: 5px; flex-shrink: 0; align-items:center;">
-                  <button v-if="momentIsSynced(m)" @click="yearDotsOpenFromSyncedMoment(m)"
-                          title="Momen ini dikelola dari tab 365 Hari — klik buat buka di sana"
-                          style="font-size: 9.5px; font-weight: 700; color: var(--color-terracotta); background: var(--bg-cream); border: 1px solid var(--color-sand); border-radius: 6px; padding: 3px 6px; white-space: nowrap; cursor: pointer; font-family: 'Outfit', sans-serif;">
-                    dari 365 Hari
-                  </button>
+                <!-- Aksi edit/hapus, muncul saat hover -->
+                <div class="moment-feed-actions">
                   <button v-if="momentIsSynced(m)" class="card-nav-btn" @click="startEditMoment(m)" title="Buka di 365 Hari"
                           style="background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: 6px; padding: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
                     <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#1D4ED8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  <button v-if="momentIsSynced(m)" class="card-nav-btn" @click="deleteSyncedMoment(m)" title="Hapus momen ini langsung (dari 365 Hari)"
+                          style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                   </button>
                   <button v-if="!momentIsSynced(m)" class="card-nav-btn" @click="deleteMoment(m.id)" title="Hapus moment"
                           style="background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 6px; padding: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
@@ -11240,6 +11267,11 @@ const GoogleCalendar = {
                   </button>
                 </div>
               </div>
+
+              <!-- Tambah momen cepat untuk tanggal ini -->
+              <button type="button" class="moment-feed-add-link" @click="quickAddMomentForDate(group.dateString)">
+                + Tambah momen di tanggal ini
+              </button>
             </div>
           </div>
         </div>
@@ -12168,6 +12200,21 @@ const GoogleCalendar = {
       this.saveMoments();
       if (this.momentEditingId === id) this.cancelEditMoment();
     },
+    formatMomentTime(ts) {
+      if (!ts) return '';
+      const d = new Date(ts);
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      return hh + '.' + mm;
+    },
+    // Pintasan "+ Tambah momen di tanggal ini" — langsung pindah ke tab 365 Days,
+    // buka hari yang bersangkutan, dan siapkan satu slot momen kosong buat diisi.
+    quickAddMomentForDate(dateStr) {
+      this.dailyMomentTab = 'year365';
+      this.yearDotsSelectedYear = parseInt(dateStr.slice(0, 4), 10);
+      this.yearDotsOpenDay(dateStr);
+      this.yearDotsAddMoment();
+    },
     toggleMomentDateGroup(dateString) {
       this.momentExpandedDates = { ...this.momentExpandedDates, [dateString]: !this.isMomentDateExpanded(dateString) };
     },
@@ -12472,6 +12519,36 @@ const GoogleCalendar = {
       this.yearDotsSelectedYear = new Date().getFullYear();
       this.yearDotsOpenDay(todayStr);
     },
+    // Hapus momen "365 Hari" langsung dari tab Moment (tanpa harus buka modal 365 Hari dulu).
+    // Tetap mengubah sumber data aslinya (yearDotsEntries) supaya tetap konsisten & tersinkron.
+    deleteSyncedMoment(m) {
+      if (!m || !m.id) return;
+      const originalId = m.id.replace(/^year365-/, '');
+      const dateStr = m.date;
+      if (!confirm(`Yakin ingin menghapus momen "${m.text || 'ini'}" dari 365 Hari? Aksi ini tidak bisa dibatalkan.`)) return;
+
+      const entry = this.yearDotsEntries[dateStr];
+      const { moments, coverId } = this.yearDotsNormalizeEntry(entry);
+      const remaining = moments.filter(mm => mm.id !== originalId);
+
+      const copy = { ...this.yearDotsEntries };
+      if (!remaining.length) {
+        delete copy[dateStr];
+      } else {
+        copy[dateStr] = {
+          moments: remaining,
+          coverId: coverId === originalId ? remaining[0].id : coverId
+        };
+      }
+      this.yearDotsEntries = copy;
+      this.yearDotsPersistEntries();
+      this.yearDotsSyncTitlesToMoments();
+
+      // Kalau modal 365 Hari kebetulan lagi kebuka di tanggal yang sama, refresh juga isinya
+      if (this.yearDotsModalOpen && this.yearDotsActiveDate === dateStr) {
+        this.yearDotsOpenDay(dateStr);
+      }
+    },
     yearDotsDeleteEntry() {
       if (!this.yearDotsActiveDate) return;
       const copy = { ...this.yearDotsEntries };
@@ -12497,8 +12574,10 @@ const GoogleCalendar = {
             id: 'year365-' + m.id,
             date: dateStr,
             text: title,
+            momentBody: (m.text || '').trim(),
             category: 'year365',
             link: '',
+            photo: m.photo || '',
             createdAt: m.updatedAt || Date.now()
           });
         });
