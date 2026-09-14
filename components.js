@@ -10150,7 +10150,6 @@ const GoogleCalendar = {
       <div class="flex-between" style="border-bottom: 2px solid var(--color-sand); padding-bottom: 16px; margin-bottom: 24px; align-items: center; flex-wrap: wrap; gap: 12px;">
         <div>
           <h2 style="font-size: 24px; font-weight: 800; color: var(--text-dark); margin: 0 0 4px 0;">daily n</h2>
-          <p style="color: var(--text-muted); font-size: 13.5px; margin-top: 4px;">Sinkronisasikan agenda kesibukan & jadwal harian Anda secara langsung</p>
         </div>
 
         <!-- Right side: Daily/Moment tab switcher (sejajar vertikal dgn tombol "Set Pengingat" di toolbar bawah) + profile -->
@@ -11182,22 +11181,6 @@ const GoogleCalendar = {
 
       <!-- ═══ MOMENT TAB CONTENT ═══ -->
       <div v-else-if="dailyMomentTab === 'moment'" class="animate-fade-in">
-
-        <!-- Info: input moment sekarang dilakukan lewat tab "365 Days" biar satu sumber data.
-             Moment yang ditulis di sana otomatis muncul & sync di timeline bawah ini. -->
-        <div style="background: var(--bg-card); border: 1.5px solid var(--color-sand); border-radius: 16px; padding: 18px 20px; margin-bottom: 24px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-          <span style="width: 38px; height: 38px; border-radius: 10px; background: var(--bg-cream); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; color: var(--color-terracotta);">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="8" r="1"></circle><circle cx="15.5" cy="10.5" r="1"></circle><circle cx="15.5" cy="14.5" r="1"></circle><circle cx="12" cy="16.5" r="1"></circle><circle cx="8.5" cy="14.5" r="1"></circle><circle cx="8.5" cy="10.5" r="1"></circle></svg>
-          </span>
-          <div style="flex:1; min-width:180px;">
-            <p style="font-weight:700; font-size:13.5px; color: var(--text-dark); margin:0 0 2px 0;">Catat moment lewat 365 Days</p>
-            <p style="font-size:12px; color: var(--text-muted); margin:0;">Semua moment sekarang diinput dari tab 365 Days dan otomatis sync ke timeline di bawah.</p>
-          </div>
-          <button type="button" @click="yearDotsEnterTab" class="gcal-create-btn" style="flex-shrink:0;">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-            Buka 365 Days
-          </button>
-        </div>
 
         <!-- Success / Error toast (mengikuti pola toast Daily) -->
         <div v-if="momentSuccess" class="gcal-toast gcal-toast-success">
