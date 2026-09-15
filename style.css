@@ -6320,6 +6320,24 @@ input:checked + .switch-slider:before {
 .y365-icon-btn--danger { color: #B91C1C; }
 .y365-icon-btn--danger:hover { background: #FEF2F2; border-color: #FCA5A5; color: #B91C1C; }
 
+/* Tombol Close (X) di popup Moment kegeser biar nggak nempel sama
+   tombol Save/checklist (centang) di sebelahnya — dulu jaraknya cuma
+   8px kayak tombol lain, jadi gampang kepencet kebalik. */
+.y365-modal-header-right .y365-icon-btn:last-child {
+  margin-left: 14px;
+  position: relative;
+}
+.y365-modal-header-right .y365-icon-btn:last-child::before {
+  content: '';
+  position: absolute;
+  left: -9px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 18px;
+  background: var(--color-sand);
+}
+
 /* ── Wrapper strip + modal, biar strip nempel tepat di atas modal & ikut
    posisi modal (bukan dipatok ke pojok layar) ── */
 .y365-modal-stack {
