@@ -809,6 +809,7 @@ const ReminderPopup = {
         const todayDate = new Date(today);
         contents.forEach(item => {
           if (!item.dueDate) return;
+          if (item.status === 'Published') return; // sudah rilis, jangan ingatkan lagi
           const diff = Math.round((new Date(item.dueDate) - todayDate) / 86400000);
           if (diff > 2) return;
           const label = diff < 0 ? `Terlambat ${Math.abs(diff)}h` : diff === 0 ? 'Rilis Hari Ini' : `H-${diff}`;
@@ -2722,6 +2723,7 @@ const NotificationPanel = {
       const today = new Date(this.todayStr);
       this.contentItems.forEach(item => {
         if (!item.dueDate) return;
+        if (item.status === 'Published') return; // sudah rilis, jangan ingatkan lagi
         const due = new Date(item.dueDate);
         const diff = Math.round((due - today) / (1000 * 60 * 60 * 24));
         let badge = null, badgeColor = 'sage', subtitle = '';

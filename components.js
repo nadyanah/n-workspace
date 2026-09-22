@@ -4269,8 +4269,8 @@ const ContentTracker = {
                   </div>
                   <div style="display:flex; align-items:center; gap:4px; flex-shrink:0; margin-top:1px;">
                     <!-- Urgency moon icon -->
-                    <div v-if="getDueDateAlert(item.dueDate).isUrgent" class="blink-moon-glow" :title="getDueDateAlert(item.dueDate).label" style="display: inline-flex;">
-                      <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" :stroke="getDueDateAlert(item.dueDate).color" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" :style="{ color: getDueDateAlert(item.dueDate).color }">
+                    <div v-if="getDueDateAlert(item.dueDate, item.status).isUrgent" class="blink-moon-glow" :title="getDueDateAlert(item.dueDate, item.status).label" style="display: inline-flex;">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" :stroke="getDueDateAlert(item.dueDate, item.status).color" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline" :style="{ color: getDueDateAlert(item.dueDate, item.status).color }">
                         <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
                       </svg>
                     </div>
@@ -4292,32 +4292,32 @@ const ContentTracker = {
                 <div v-if="!expandedCards.has(item.id)" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:4px;">
                   <span v-if="visibility.platform" class="pill" :class="getPlatformClass(item.platform)" style="font-size: 9.5px; padding: 1px 5px;">{{ item.platform }}</span>
                   <span v-if="visibility.dueDate && item.dueDate" class="text-mono" style="font-size:9.5px; color:#9A8F85;">{{ item.dueDate }}<span v-if="item.dueTime"> · {{ item.dueTime }}</span></span>
-                  <span v-if="getDueDateAlert(item.dueDate).isUrgent"
-                    :style="{ fontSize:'9px', fontWeight:'700', color: getDueDateAlert(item.dueDate).color, background: getDueDateAlert(item.dueDate).bgColor, border: '1px solid ' + getDueDateAlert(item.dueDate).borderColor, padding:'1px 5px', borderRadius:'3px' }">
-                    {{ getDueDateAlert(item.dueDate).label }}
+                  <span v-if="getDueDateAlert(item.dueDate, item.status).isUrgent"
+                    :style="{ fontSize:'9px', fontWeight:'700', color: getDueDateAlert(item.dueDate, item.status).color, background: getDueDateAlert(item.dueDate, item.status).bgColor, border: '1px solid ' + getDueDateAlert(item.dueDate, item.status).borderColor, padding:'1px 5px', borderRadius:'3px' }">
+                    {{ getDueDateAlert(item.dueDate, item.status).label }}
                   </span>
                 </div>
 
                 <!-- ── Expanded detail ── -->
                 <div v-if="expandedCards.has(item.id)" style="margin-top: 6px;">
                   <!-- Visual Notification Near Target Release date -->
-                  <div v-if="getDueDateAlert(item.dueDate).isUrgent" 
+                  <div v-if="getDueDateAlert(item.dueDate, item.status).isUrgent" 
                        :style="{
                          display: 'inline-flex',
                          alignItems: 'center',
                          gap: '4px',
                          fontSize: '9.5px',
                          fontWeight: '700',
-                         color: getDueDateAlert(item.dueDate).color,
-                         backgroundColor: getDueDateAlert(item.dueDate).bgColor,
-                         border: '1px solid ' + getDueDateAlert(item.dueDate).borderColor,
+                         color: getDueDateAlert(item.dueDate, item.status).color,
+                         backgroundColor: getDueDateAlert(item.dueDate, item.status).bgColor,
+                         border: '1px solid ' + getDueDateAlert(item.dueDate, item.status).borderColor,
                          padding: '2px 6px',
                          borderRadius: '4px',
                          marginBottom: '8px',
                          width: 'fit-content'
                        }">
                     <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                    {{ getDueDateAlert(item.dueDate).label }}
+                    {{ getDueDateAlert(item.dueDate, item.status).label }}
                   </div>
                   
                   <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; align-items: center;" v-if="visibility.platform || visibility.username">
@@ -4938,7 +4938,7 @@ const ContentTracker = {
         if (item.username !== this.filterUsername) return false;
       }
       if (this.filterUrgency !== 'Semua') {
-        const alert = this.getDueDateAlert(item.dueDate);
+        const alert = this.getDueDateAlert(item.dueDate, item.status);
         if (this.filterUrgency === 'Lewat Batas') {
           if (alert.label !== 'Lewat Batas Rilis!') return false;
         } else if (this.filterUrgency === 'Hari Ini') {
@@ -4982,6 +4982,58 @@ const ContentTracker = {
       if (found) {
         found.status = newStatus;
         this.saveToStorage();
+        this.syncJobPlanWithPublishedContent(found);
+      }
+    },
+    // ── Sinkron otomatis ke Task Plan (Agenda) saat Content Plan berstatus Published ──
+    // Task Plan (personal_workspace_job_plans) adalah data yang berdiri sendiri, terpisah
+    // dari Content Plan — tidak ada ID relasi bawaan di antara keduanya. Supaya task
+    // jadwal semacam "[Jadwal] Upload Content Linkedin..." di Agenda otomatis ikut
+    // kecoret begitu konten terkait di-set Published, di sini kita cocokkan secara
+    // heuristik: tanggal task plan sama dengan Target Tanggal Rilis konten, DAN
+    // judulnya nyambung (nama platform disebut di judul task, atau ada kata kunci
+    // judul konten yang sama).
+    _normalizeWordsForMatch(str) {
+      const stopwords = ['dan', 'the', 'for', 'dari', 'upload', 'content', 'konten', 'jadwal', 'post', 'posting', 'publish', 'published', 'fix', 'update'];
+      return (str || '')
+        .toLowerCase()
+        .replace(/\[.*?\]/g, ' ')
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .split(/\s+/)
+        .filter(w => w.length >= 3 && !stopwords.includes(w));
+    },
+    _isJobPlanMatchForContent(plan, item) {
+      if (!item.dueDate || plan.date !== item.dueDate) return false;
+      if (plan.phase === 'Completed') return false; // sudah selesai, tidak perlu diutak-atik lagi
+      const planText = (plan.tasks || '').toLowerCase();
+      const platformWord = (item.platform || '').toLowerCase().trim();
+      if (platformWord && planText.includes(platformWord)) return true;
+      const planWords = this._normalizeWordsForMatch(plan.tasks);
+      const itemWords = this._normalizeWordsForMatch(item.title);
+      if (!planWords.length || !itemWords.length) return false;
+      return planWords.some(w => itemWords.includes(w));
+    },
+    syncJobPlanWithPublishedContent(item) {
+      if (!item || item.status !== 'Published') return;
+      try {
+        const raw = WorkspaceStorage.getItem('personal_workspace_job_plans');
+        const plans = JSON.parse(raw || '[]');
+        let changed = false;
+        plans.forEach((p) => {
+          if (this._isJobPlanMatchForContent(p, item)) {
+            p.phase = 'Completed';
+            changed = true;
+          }
+        });
+        if (changed) {
+          WorkspaceStorage.setItem('personal_workspace_job_plans', JSON.stringify(plans));
+          // Pakai event yang sama dengan yang dipakai saat Task Plan diubah dari Agenda,
+          // supaya tampilan Agenda/Task Plan yang lagi terbuka langsung ke-refresh (kecoret).
+          globalThis.dispatchEvent(new CustomEvent('ws-plans-updated'));
+          globalThis.dispatchEvent(new CustomEvent('ws-job-plans-updated'));
+        }
+      } catch (_e) {
+        // Jangan sampai proses simpan Content Plan gagal gara-gara sinkronisasi ini.
       }
     },
     hexToRgba(hex, opacity) {
@@ -5052,8 +5104,12 @@ const ContentTracker = {
       this.customUsernameVal = '';
       this.showUserDropdown = false;
     },
-    getDueDateAlert(dueDate) {
+    getDueDateAlert(dueDate, status) {
       if (!dueDate) return { isUrgent: false, label: '' };
+      // Konten yang statusnya sudah "Published" dianggap sudah rilis —
+      // jangan tampilkan alert/notifikasi apapun (Lewat Batas Rilis, H-1, dst),
+      // walaupun Target Tanggal Rilis-nya sudah lewat dari hari ini.
+      if (status === 'Published') return { isUrgent: false, label: '' };
       try {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -5233,6 +5289,7 @@ const ContentTracker = {
       if (item) {
         item.status = col;
         this.saveToStorage();
+        this.syncJobPlanWithPublishedContent(item);
       }
       this.draggedItem = null;
       this.draggedOverCol = null;
