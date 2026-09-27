@@ -18438,12 +18438,19 @@ const CareerFoundation = {
       </div>
     </transition>
 
-    <!-- ── Floating Button: shortcut ke My Portfolio ── -->
-    <button class="crossnav-fab" @click="goToPortfolio" title="Buka My Portfolio">
-      <span class="crossnav-fab-icon">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-      </span>
-    </button>
+    <!-- ── Floating Buttons: shortcut ke My Portfolio & Job Apply Tracker ── -->
+    <div class="cf-fab-group">
+      <button class="crossnav-fab" @click="goToJobTracker" title="Buka Job Apply Tracker">
+        <span class="crossnav-fab-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
+        </span>
+      </button>
+      <button class="crossnav-fab" @click="goToPortfolio" title="Buka My Portfolio">
+        <span class="crossnav-fab-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        </span>
+      </button>
+    </div>
 
   </div>
   `,
@@ -18767,6 +18774,9 @@ const CareerFoundation = {
     // ── My Portfolio button → buka halaman My Portfolio ──
     goToPortfolio() {
       globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'myPortfolio' }));
+    },
+    goToJobTracker() {
+      globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'jobApplicationTracker' }));
     },
 
     // ── Bank Kata Kunci (master list, dipakai untuk multiselect di tabel My Portfolio) ──
@@ -21293,7 +21303,432 @@ const MyPortfolio = {
   },
 };
 
+// ============================================================================
+// JOB APPLICATION TRACKER — Tabel pelacak lamaran kerja: perusahaan, posisi,
+// tanggal apply, status (Melamar/Screening/Interview/Offer/Diterima/Ditolak/
+// Tidak Ada Kabar), sumber lowongan, link, dan catatan. Data disimpan lewat
+// WorkspaceStorage key 'career_job_apply_tracker' — terpisah dari key lain
+// milik Career Foundation / My Portfolio, jadi tidak menyentuh data lain.
+// Diakses dari tombol floating "Job Apply Tracker" di halaman Career Foundation.
+// ============================================================================
+const JobApplicationTracker = {
+  template: `
+  <div class="cf-clean">
 
+    <!-- ── Hero Header ── -->
+    <div class="cf-hero">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div class="cf-hero-badge">
+          <span class="cf-hero-badge-dot"></span>
+          Job Tracker
+        </div>
+        <button @click="goToCareer" title="Kembali ke Career Foundation"
+          style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;background:transparent;border:1.5px solid var(--color-sand,#C8BDB5);border-radius:8px;cursor:pointer;color:var(--text-secondary,#7A6F66);transition:background 0.15s,border-color 0.15s;"
+          onmouseover="this.style.background='var(--color-sand-light,#EDE8E1)';this.style.borderColor='var(--color-terracotta,#D67B52)'"
+          onmouseout="this.style.background='transparent';this.style.borderColor='var(--color-sand,#C8BDB5)'">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </button>
+      </div>
+      <h2 class="cf-hero-title">Tracker Lamaran Kerja</h2>
+      <p class="cf-hero-sub">Catat & pantau progres semua lamaran kerjamu — dari apply sampai hasil akhir.</p>
+      <div class="cf-hero-stats">
+        <div class="cf-hero-stat">
+          <span class="cf-hero-stat-num">{{ applications.length }}</span>
+          <span>total lamaran</span>
+        </div>
+        <div class="cf-hero-stat">
+          <span class="cf-hero-stat-num">{{ countByGroup('process') }}</span>
+          <span>sedang proses</span>
+        </div>
+        <div class="cf-hero-stat">
+          <span class="cf-hero-stat-num">{{ countByGroup('offer') }}</span>
+          <span>offer / diterima</span>
+        </div>
+        <div class="cf-hero-stat">
+          <span class="cf-hero-stat-num">{{ countByGroup('rejected') }}</span>
+          <span>ditolak / no kabar</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Filter + Search + Tambah ── -->
+    <div class="mp-filter-panel" style="margin: 18px 0 14px;">
+      <div class="mp-filter-row">
+        <select class="form-input mp-filter-select" v-model="filterStatus" style="max-width: 190px;">
+          <option value="">Semua Status</option>
+          <option v-for="s in statusOptions" :key="s.key" :value="s.key">{{ s.label }}</option>
+        </select>
+        <div class="mp-search-wrap">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mp-search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="form-input mp-search-input" v-model="searchQuery"
+            placeholder="Cari perusahaan atau posisi..." />
+          <button v-if="searchQuery" class="mp-search-clear" title="Hapus pencarian" @click="searchQuery = ''">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <button class="cf-btn-primary" style="margin-left: auto; white-space: nowrap;" @click="openAddModal">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah Lamaran
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Empty state: belum ada lamaran sama sekali ── -->
+    <div v-if="!applications.length" class="mp-empty-state">
+      <div class="mp-empty-icon">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
+      </div>
+      <p class="mp-empty-title">Belum ada lamaran tercatat</p>
+      <p class="mp-empty-sub">Klik "Tambah Lamaran" untuk mulai mencatat lamaran kerja pertamamu.</p>
+      <button class="cf-btn-primary" style="margin-top: 16px;" @click="openAddModal">Tambah Lamaran</button>
+    </div>
+
+    <!-- ── Tidak ada hasil filter/search ── -->
+    <div v-else-if="!filteredApplications.length" class="mp-empty-state" style="padding: 40px 24px;">
+      <p class="mp-empty-title">Tidak ada hasil</p>
+      <p class="mp-empty-sub">Coba ubah kata kunci pencarian atau filter status.</p>
+    </div>
+
+    <!-- ── Tabel Lamaran ── -->
+    <div v-else class="mp-table-container">
+      <table class="mp-table">
+        <thead>
+          <tr>
+            <th style="width: 190px;">Perusahaan</th>
+            <th style="width: 190px;">Posisi</th>
+            <th style="width: 120px;">Tgl Apply</th>
+            <th style="width: 120px;">Deadline</th>
+            <th style="width: 160px;">Sumber</th>
+            <th style="width: 180px;">Status</th>
+            <th style="width: 110px;">Dokumen</th>
+            <th style="width: 70px;">Link</th>
+            <th style="width: 90px;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="appItem in filteredApplications" :key="appItem.id">
+            <td style="overflow-wrap: break-word;">
+              <span style="font-weight: 700; color: var(--text-dark);">{{ appItem.company }}</span>
+            </td>
+            <td style="overflow-wrap: break-word;">{{ appItem.position }}</td>
+            <td>{{ formatDate(appItem.appliedDate) || '—' }}</td>
+            <td>
+              <span v-if="appItem.deadlineDate" :style="deadlineStyle(appItem.deadlineDate)">{{ formatDate(appItem.deadlineDate) }}</span>
+              <span v-else style="color: var(--text-muted); font-size: 12px;">—</span>
+            </td>
+            <td>{{ appItem.source || '—' }}</td>
+            <td>
+              <select class="form-input mp-status-select" :style="statusSelectStyle(appItem.status)"
+                :value="appItem.status" @change="quickSetStatus(appItem, $event.target.value)">
+                <option v-for="s in statusOptions" :key="s.key" :value="s.key">{{ s.label }}</option>
+              </select>
+            </td>
+            <td>
+              <button class="cf-doc-action-btn" style="width:100%;" @click="openEditModal(appItem)" :title="docProgressLabel(appItem)">
+                <span :style="{ color: docProgress(appItem).total ? (docProgress(appItem).done === docProgress(appItem).total ? '#16A34A' : 'var(--text-secondary,#7A6F66)') : 'var(--text-muted,#A09690)' }">
+                  {{ docProgress(appItem).total ? (docProgress(appItem).done + '/' + docProgress(appItem).total) : '—' }}
+                </span>
+              </button>
+            </td>
+            <td>
+              <a v-if="appItem.link" :href="appItem.link" target="_blank" rel="noopener noreferrer" class="cf-doc-action-btn" title="Buka link lowongan">Buka</a>
+              <span v-else style="color: var(--text-muted); font-size: 12px;">—</span>
+            </td>
+            <td>
+              <div class="cf-doc-actions">
+                <button class="cf-doc-action-btn" @click="openEditModal(appItem)">Edit</button>
+                <button class="cf-doc-action-btn del" @click="deleteApplication(appItem.id)">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ══ MODAL: Tambah / Edit Lamaran ══ -->
+    <transition name="cf-fade">
+      <div v-if="showModal" class="cf-modal-overlay" @click.self="closeModal">
+        <div class="cf-modal">
+          <div class="cf-modal-header">
+            <h3 class="cf-modal-title">{{ editingId ? 'Edit Lamaran' : 'Tambah Lamaran' }}</h3>
+            <button class="cf-modal-close" @click="closeModal">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="cf-modal-body">
+            <div>
+              <label class="cf-field-label">Nama Perusahaan *</label>
+              <input class="cf-input" v-model="form.company" placeholder="mis. PT Maju Bersama" />
+            </div>
+            <div>
+              <label class="cf-field-label">Posisi yang Dilamar *</label>
+              <input class="cf-input" v-model="form.position" placeholder="mis. Content Creator" />
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 140px;">
+                <label class="cf-field-label">Tanggal Apply</label>
+                <input type="date" class="cf-input" v-model="form.appliedDate" />
+              </div>
+              <div style="flex: 1; min-width: 140px;">
+                <label class="cf-field-label">Deadline Rekrutmen</label>
+                <input type="date" class="cf-input" v-model="form.deadlineDate" />
+              </div>
+              <div style="flex: 1; min-width: 140px;">
+                <label class="cf-field-label">Status</label>
+                <select class="cf-input" v-model="form.status">
+                  <option v-for="s in statusOptions" :key="s.key" :value="s.key">{{ s.label }}</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="cf-field-label">Sumber Lowongan</label>
+              <input class="cf-input" v-model="form.source" placeholder="mis. LinkedIn, JobStreet, Referral..." />
+            </div>
+            <div>
+              <label class="cf-field-label">Link Lowongan</label>
+              <input class="cf-input" v-model="form.link" placeholder="https://..." />
+            </div>
+            <div>
+              <label class="cf-field-label">Persyaratan / Requirement Lowongan</label>
+              <textarea class="cf-textarea" v-model="form.requirements" rows="3" placeholder="mis. Min. S1 semua jurusan, pengalaman 1 tahun, mampu bekerja dalam tim, menguasai Ms. Excel..."></textarea>
+            </div>
+            <div>
+              <label class="cf-field-label">Dokumen yang Dibutuhkan</label>
+              <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
+                <button v-for="qd in quickDocSuggestions" :key="qd" type="button" class="cf-btn-ghost"
+                  style="padding:4px 10px; font-size:11px;" @click="addFormDoc(qd)">
+                  + {{ qd }}
+                </button>
+              </div>
+              <div style="display:flex; gap:8px; margin-bottom:10px;">
+                <input class="cf-input" v-model="newDocName" placeholder="mis. Sertifikat TOEFL" @keyup.enter="addFormDoc(newDocName)" />
+                <button type="button" class="cf-btn-primary" style="white-space:nowrap;" :disabled="!newDocName.trim()" @click="addFormDoc(newDocName)">Tambah</button>
+              </div>
+              <p v-if="!form.documents.length" style="margin:0; font-size:12px; color:var(--text-muted,#A09690);">Belum ada dokumen ditambahkan ke checklist.</p>
+              <div v-else style="display:flex; flex-direction:column; gap:6px;">
+                <label v-for="(doc, dIdx) in form.documents" :key="doc.id"
+                  style="display:flex; align-items:center; gap:8px; padding:7px 10px; border:1.5px solid var(--color-sand,#E8DFD8); border-radius:9px; cursor:pointer; background: var(--bg-cream,#FDF5EB);">
+                  <input type="checkbox" v-model="doc.checked" style="width:15px; height:15px; accent-color: var(--color-terracotta,#D67B52); flex-shrink:0;" />
+                  <span :style="{ flex:1, fontSize:'12.5px', textDecoration: doc.checked ? 'line-through' : 'none', color: doc.checked ? 'var(--text-muted,#A09690)' : 'var(--text-dark,#3D2E22)' }">{{ doc.name }}</span>
+                  <button type="button" @click.stop="removeFormDoc(dIdx)" title="Hapus dari checklist"
+                    style="background:none; border:none; cursor:pointer; color:var(--text-muted,#A09690); padding:2px; display:flex;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </label>
+              </div>
+            </div>
+            <div>
+              <label class="cf-field-label">Catatan</label>
+              <textarea class="cf-textarea" v-model="form.notes" rows="3" placeholder="mis. Sudah interview HR, tunggu jadwal user interview..."></textarea>
+            </div>
+          </div>
+          <div class="cf-modal-footer">
+            <button v-if="editingId" class="cf-doc-action-btn del" style="margin-right: auto;" @click="deleteApplication(editingId, true)">Hapus Lamaran</button>
+            <button class="cf-btn-ghost" @click="closeModal">Batal</button>
+            <button class="cf-btn-primary" :disabled="!form.company.trim() || !form.position.trim()" @click="saveApplication">Simpan</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- ── Floating Button: shortcut kembali ke Career Foundation ── -->
+    <button class="crossnav-fab" @click="goToCareer" title="Kembali ke Career Foundation">
+      <span class="crossnav-fab-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </span>
+    </button>
+
+  </div>
+  `,
+
+  data() {
+    return {
+      applications: [],
+      showModal: false,
+      editingId: null,
+      searchQuery: '',
+      filterStatus: '',
+      newDocName: '',
+      quickDocSuggestions: ['CV', 'Portofolio', 'Surat Lamaran', 'Cover Letter', 'Transkrip Nilai', 'Ijazah', 'KTP', 'Pas Foto', 'SKCK', 'Sertifikat Pendukung'],
+      form: { company: '', position: '', appliedDate: '', deadlineDate: '', status: 'applied', source: '', link: '', requirements: '', documents: [], notes: '' },
+      statusOptions: [
+        { key: 'applied',   label: 'Melamar',          color: '#0369A1' },
+        { key: 'screening', label: 'Screening',        color: '#B07D3E' },
+        { key: 'interview', label: 'Interview',        color: '#7C3AED' },
+        { key: 'offer',     label: 'Offer',            color: '#059669' },
+        { key: 'accepted',  label: 'Diterima',         color: '#16A34A' },
+        { key: 'rejected',  label: 'Ditolak',          color: '#DC2626' },
+        { key: 'ghosted',   label: 'Tidak Ada Kabar',  color: '#6B7280' },
+      ],
+    };
+  },
+
+  computed: {
+    filteredApplications() {
+      let list = this.applications.slice();
+      if (this.filterStatus) list = list.filter(a => a.status === this.filterStatus);
+      const q = this.searchQuery.trim().toLowerCase();
+      if (q) {
+        list = list.filter(a =>
+          (a.company || '').toLowerCase().includes(q) ||
+          (a.position || '').toLowerCase().includes(q)
+        );
+      }
+      list.sort((a, b) => {
+        const dateCompare = (b.appliedDate || '').localeCompare(a.appliedDate || '');
+        if (dateCompare !== 0) return dateCompare;
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      });
+      return list;
+    },
+  },
+
+  methods: {
+    countByGroup(group) {
+      const map = {
+        process: ['applied', 'screening', 'interview'],
+        offer: ['offer', 'accepted'],
+        rejected: ['rejected', 'ghosted'],
+      };
+      const keys = map[group] || [];
+      return this.applications.filter(a => keys.includes(a.status)).length;
+    },
+    statusMeta(key) {
+      return this.statusOptions.find(s => s.key === key) || this.statusOptions[0];
+    },
+    statusSelectStyle(key) {
+      const m = this.statusMeta(key);
+      return { borderColor: m.color, color: m.color, background: m.color + '14', fontWeight: 700 };
+    },
+    deadlineStyle(deadlineIso) {
+      if (!deadlineIso) return {};
+      try {
+        const today = new Date(); today.setHours(0,0,0,0);
+        const dl = new Date(deadlineIso + 'T00:00:00');
+        const diffDays = Math.round((dl - today) / 86400000);
+        if (diffDays < 0) return { color: '#DC2626', fontWeight: 700 };
+        if (diffDays <= 3) return { color: '#B07D3E', fontWeight: 700 };
+        return { color: 'var(--text-dark,#3D2E22)' };
+      } catch (_e) { return {}; }
+    },
+    docProgress(appItem) {
+      const docs = appItem.documents || [];
+      return { done: docs.filter(d => d.checked).length, total: docs.length };
+    },
+    docProgressLabel(appItem) {
+      const p = this.docProgress(appItem);
+      if (!p.total) return 'Belum ada checklist dokumen';
+      return `${p.done} dari ${p.total} dokumen siap — klik untuk lihat/edit`;
+    },
+    addFormDoc(name) {
+      const clean = (name || '').trim();
+      if (!clean) return;
+      const exists = this.form.documents.some(d => d.name.toLowerCase() === clean.toLowerCase());
+      if (!exists) {
+        this.form.documents.push({
+          id: 'doc_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6),
+          name: clean,
+          checked: false,
+        });
+      }
+      this.newDocName = '';
+    },
+    removeFormDoc(idx) {
+      this.form.documents.splice(idx, 1);
+    },
+    formatDate(iso) {
+      if (!iso) return '';
+      try {
+        const d = new Date(iso + 'T00:00:00');
+        if (isNaN(d.getTime())) return iso;
+        const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+        return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+      } catch (_e) { return iso; }
+    },
+    emptyForm() {
+      return {
+        company: '', position: '',
+        appliedDate: new Date().toISOString().slice(0, 10),
+        deadlineDate: '',
+        status: 'applied', source: '', link: '',
+        requirements: '', documents: [],
+        notes: '',
+      };
+    },
+    openAddModal() {
+      this.editingId = null;
+      this.form = this.emptyForm();
+      this.newDocName = '';
+      this.showModal = true;
+    },
+    openEditModal(appItem) {
+      this.editingId = appItem.id;
+      this.form = {
+        company: appItem.company || '',
+        position: appItem.position || '',
+        appliedDate: appItem.appliedDate || '',
+        deadlineDate: appItem.deadlineDate || '',
+        status: appItem.status || 'applied',
+        source: appItem.source || '',
+        link: appItem.link || '',
+        requirements: appItem.requirements || '',
+        documents: (appItem.documents || []).map(d => ({ ...d })),
+        notes: appItem.notes || '',
+      };
+      this.newDocName = '';
+      this.showModal = true;
+    },
+    closeModal() {
+      this.showModal = false;
+    },
+    saveApplication() {
+      const company = this.form.company.trim();
+      const position = this.form.position.trim();
+      if (!company || !position) return;
+      if (this.editingId) {
+        const idx = this.applications.findIndex(a => a.id === this.editingId);
+        if (idx !== -1) {
+          this.applications[idx] = { ...this.applications[idx], ...this.form, company, position };
+        }
+      } else {
+        this.applications.push({
+          id: 'jat_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7),
+          ...this.form,
+          company, position,
+          createdAt: Date.now(),
+        });
+      }
+      this.saveToStorage();
+      this.showModal = false;
+    },
+    quickSetStatus(appItem, status) {
+      appItem.status = status;
+      this.saveToStorage();
+    },
+    deleteApplication(id, closeModalAfter) {
+      if (!confirm('Hapus data lamaran ini? Tindakan tidak bisa dibatalkan.')) return;
+      this.applications = this.applications.filter(a => a.id !== id);
+      this.saveToStorage();
+      if (closeModalAfter) this.showModal = false;
+    },
+    saveToStorage() {
+      WorkspaceStorage.setItem('career_job_apply_tracker', JSON.stringify(this.applications));
+    },
+    goToCareer() {
+      globalThis.dispatchEvent(new CustomEvent('navigate-to-career-foundation'));
+    },
+  },
+
+  async mounted() {
+    await globalThis._workspaceStorageReady;
+    try {
+      const saved = WorkspaceStorage.getItem('career_job_apply_tracker');
+      if (saved) this.applications = JSON.parse(saved);
+    } catch (_e) {}
+  },
+};
 
 // ============================================================================
 // QURAN READER — Modal baca Al-Qur'an harian

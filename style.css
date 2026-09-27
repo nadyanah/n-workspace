@@ -13443,6 +13443,32 @@ input:checked + .switch-slider:before {
   }
 }
 
+/* ── Career Foundation Floating Buttons: My Portfolio & Job Apply Tracker ── */
+.cf-fab-group {
+  position: fixed;
+  bottom: 28px;
+  right: 24px;
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+/* Tombol .crossnav-fab di dalam grup ini jangan fixed sendiri-sendiri,
+   supaya tidak numpuk di titik yang sama — biarkan flex column wrapper yang atur posisi */
+.cf-fab-group .crossnav-fab {
+  position: static;
+  bottom: auto;
+  right: auto;
+}
+@media (max-width: 640px) {
+  .cf-fab-group {
+    bottom: 20px;
+    right: 16px;
+    gap: 10px;
+  }
+}
+
 /* ── Job Logbook Floating Buttons: Catat Hari Baru & Tambah Task Plan ── */
 .joblog-fab-group {
   position: fixed;
