@@ -145,6 +145,35 @@ const NotifSound = {
   }
 };
 
+// ── ExpandableText: teks panjang dipotong "..." (3 baris), klik untuk buka/tutup ──
+// Murni tampilan. Tidak menyentuh data / storage sama sekali.
+const ExpandableText = {
+  props: { text: { type: String, default: '' }, pre: { type: Boolean, default: true } },
+  data() { return { expanded: false, overflowing: false }; },
+  template: `<div ref="el" class="reminder-popup-item-sub rp-sub-expandable"
+                  :class="{ 'rp-sub-clamped': !expanded, 'rp-sub-clickable': overflowing, 'rp-sub-pre': pre }"
+                  :title="overflowing ? (expanded ? 'Klik untuk ringkas' : 'Klik untuk lihat selengkapnya') : ''"
+                  @click="onClick">{{ text }}</div>`,
+  watch: { text() { this.expanded = false; this.$nextTick(this.measure); } },
+  mounted() {
+    this.$nextTick(this.measure);
+    requestAnimationFrame(this.measure);
+    setTimeout(this.measure, 400); // jaga-jaga kalau popup masih animasi / font belum siap
+  },
+  methods: {
+    measure() {
+      const el = this.$refs.el;
+      if (!el || this.expanded) return;
+      this.overflowing = el.scrollHeight > el.clientHeight + 1;
+    },
+    onClick(e) {
+      if (!this.overflowing) return;      // teks pendek: biarkan klik lewat seperti biasa
+      e.stopPropagation();                // supaya tidak ikut memicu klik kartu (buka halaman, dll)
+      this.expanded = !this.expanded;
+    }
+  }
+};
+
 const ReminderPopup = {
   template: `
     <transition name="reminder-popup-fade">
@@ -202,7 +231,7 @@ const ReminderPopup = {
                   <div class="reminder-popup-item-icon">{{ entry.item.icon }}</div>
                   <div class="reminder-popup-item-info-text" style="flex:1; min-width:0;">
                     <div class="reminder-popup-item-title">{{ entry.item.title }}</div>
-                    <div class="reminder-popup-item-sub">{{ entry.item.sub }}</div>
+                    <expandable-text :text="entry.item.sub" :pre="false"></expandable-text>
                   </div>
                   <svg v-if="entry.item.page" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted); opacity:0.55; flex-shrink:0; align-self:center;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </div>
@@ -216,7 +245,7 @@ const ReminderPopup = {
                   <div class="reminder-popup-item-time">{{ entry.item.time }}</div>
                   <div class="reminder-popup-item-info" style="flex:1; min-width:0;">
                     <div class="reminder-popup-item-title">{{ entry.item.title }}</div>
-                    <div class="reminder-popup-item-sub" style="white-space:pre-wrap;">{{ entry.item.subtitle }}</div>
+                    <expandable-text :text="entry.item.subtitle"></expandable-text>
                   </div>
                   <svg v-if="entry.item.page" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted); opacity:0.55; flex-shrink:0; align-self:center;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </div>
@@ -251,7 +280,7 @@ const ReminderPopup = {
                 <div v-else class="reminder-popup-item-time">{{ currentItem.time }}</div>
                 <div class="reminder-popup-item-info">
                   <div class="reminder-popup-item-title">{{ currentItem.title }}</div>
-                  <div class="reminder-popup-item-sub" style="white-space:pre-wrap;">{{ currentItem.subtitle }}</div>
+                  <expandable-text :text="currentItem.subtitle"></expandable-text>
                 </div>
               </div>
             </div>
@@ -279,7 +308,7 @@ const ReminderPopup = {
                   <div class="reminder-popup-item-time reminder-popup-item-time-missed">{{ queue[0].time }}</div>
                   <div class="reminder-popup-item-info">
                     <div class="reminder-popup-item-title">{{ queue[0].title }}</div>
-                    <div class="reminder-popup-item-sub" style="white-space:pre-wrap;">{{ queue[0].subtitle }}</div>
+                    <expandable-text :text="queue[0].subtitle"></expandable-text>
                   </div>
                 </div>
 
@@ -319,7 +348,7 @@ const ReminderPopup = {
                     <div class="reminder-popup-item-time reminder-popup-item-time-missed">{{ currentItem.time }}</div>
                     <div class="reminder-popup-item-info">
                       <div class="reminder-popup-item-title">{{ currentItem.title }}</div>
-                      <div class="reminder-popup-item-sub" style="white-space:pre-wrap;">{{ currentItem.subtitle }}</div>
+                      <expandable-text :text="currentItem.subtitle"></expandable-text>
                     </div>
                   </div>
                 </div>
@@ -384,7 +413,7 @@ const ReminderPopup = {
                 <div class="reminder-popup-item reminder-popup-item-missed">
                   <div class="reminder-popup-item-info">
                     <div class="reminder-popup-item-title">{{ currentStreakItem.title }}</div>
-                    <div v-if="currentStreakItem.subtitle" class="reminder-popup-item-sub" style="white-space:pre-wrap;">{{ currentStreakItem.subtitle }}</div>
+                    <expandable-text v-if="currentStreakItem.subtitle" :text="currentStreakItem.subtitle"></expandable-text>
                   </div>
                 </div>
 

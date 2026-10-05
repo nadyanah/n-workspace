@@ -975,6 +975,7 @@ app.component('career-foundation', CareerFoundation);
 app.component('my-portfolio', MyPortfolio);
 app.component('job-application-tracker', JobApplicationTracker);
 app.component('notification-panel', NotificationPanel);
+app.component('expandable-text', ExpandableText);
 app.component('reminder-popup', ReminderPopup);
 app.component('quran-noon-popup', QuranNoonPopup);
 app.component('daily-quote-popup', DailyQuotePopup);

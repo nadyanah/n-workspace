@@ -111,6 +111,17 @@
       color: var(--text-muted, #A09690);
       margin-top: 2px;
     }
+    /* ── Teks panjang di popup notifikasi: dipotong "..." , klik untuk buka ── */
+    .rp-sub-expandable { word-break: break-word; }
+    .rp-sub-pre { white-space: pre-wrap; }
+    .rp-sub-clamped {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .rp-sub-clickable { cursor: pointer; }
+    .rp-sub-clickable:hover { color: var(--text-primary, #3D2E22); }
     .reminder-popup-footer {
       display: flex;
       align-items: center;
