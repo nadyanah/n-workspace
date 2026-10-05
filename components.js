@@ -21340,10 +21340,14 @@ const JobApplicationTracker = {
         </button>
       </div>
       <h2 class="cf-hero-title">Tracker Lamaran Kerja</h2>
-      <p class="cf-hero-sub">Catat & pantau progres semua lamaran kerjamu — dari apply sampai hasil akhir.</p>
+      <p class="cf-hero-sub">Catat lowongan incaranmu (belum dilamar pun boleh) & pantau progresnya — dari wishlist sampai hasil akhir.</p>
       <div class="cf-hero-stats">
         <div class="cf-hero-stat">
-          <span class="cf-hero-stat-num">{{ applications.length }}</span>
+          <span class="cf-hero-stat-num">{{ countByGroup('wishlist') }}</span>
+          <span>belum dilamar</span>
+        </div>
+        <div class="cf-hero-stat">
+          <span class="cf-hero-stat-num">{{ appliedCount }}</span>
           <span>total lamaran</span>
         </div>
         <div class="cf-hero-stat">
@@ -21419,6 +21423,7 @@ const JobApplicationTracker = {
           <tr v-for="appItem in filteredApplications" :key="appItem.id">
             <td style="overflow-wrap: break-word;">
               <span style="font-weight: 700; color: var(--text-dark);">{{ appItem.company }}</span>
+              <expandable-text v-if="appItem.companyInfo" :text="appItem.companyInfo"></expandable-text>
             </td>
             <td style="overflow-wrap: break-word;">{{ appItem.position }}</td>
             <td>{{ formatDate(appItem.appliedDate) || '—' }}</td>
@@ -21478,7 +21483,7 @@ const JobApplicationTracker = {
             </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
               <div style="flex: 1; min-width: 140px;">
-                <label class="cf-field-label">Tanggal Apply</label>
+                <label class="cf-field-label">Tanggal Apply <span style="font-weight:400; color:var(--text-muted,#A09690); font-size:10.5px;">(kosongkan kalau belum)</span></label>
                 <input type="date" class="cf-input" v-model="form.appliedDate" />
               </div>
               <div style="flex: 1; min-width: 140px;">
@@ -21487,7 +21492,7 @@ const JobApplicationTracker = {
               </div>
               <div style="flex: 1; min-width: 140px;">
                 <label class="cf-field-label">Status</label>
-                <select class="cf-input" v-model="form.status">
+                <select class="cf-input" v-model="form.status" @change="onFormStatusChange">
                   <option v-for="s in statusOptions" :key="s.key" :value="s.key">{{ s.label }}</option>
                 </select>
               </div>
@@ -21499,6 +21504,10 @@ const JobApplicationTracker = {
             <div>
               <label class="cf-field-label">Link Lowongan</label>
               <input class="cf-input" v-model="form.link" placeholder="https://..." />
+            </div>
+            <div>
+              <label class="cf-field-label">Info / Rangkuman Perusahaan</label>
+              <textarea class="cf-textarea" v-model="form.companyInfo" rows="3" placeholder="mis. Startup fintech di Jakarta, ±200 karyawan, budaya kerja hybrid, produk utama aplikasi pembayaran..."></textarea>
             </div>
             <div>
               <label class="cf-field-label">Persyaratan / Requirement Lowongan</label>
@@ -21562,8 +21571,9 @@ const JobApplicationTracker = {
       filterStatus: '',
       newDocName: '',
       quickDocSuggestions: ['CV', 'Portofolio', 'Surat Lamaran', 'Cover Letter', 'Transkrip Nilai', 'Ijazah', 'KTP', 'Pas Foto', 'SKCK', 'Sertifikat Pendukung'],
-      form: { company: '', position: '', appliedDate: '', deadlineDate: '', status: 'applied', source: '', link: '', requirements: '', documents: [], notes: '' },
+      form: { company: '', position: '', appliedDate: '', deadlineDate: '', status: 'wishlist', source: '', link: '', companyInfo: '', requirements: '', documents: [], notes: '' },
       statusOptions: [
+        { key: 'wishlist',  label: 'Belum Dilamar',    color: '#8A7B6E' },
         { key: 'applied',   label: 'Melamar',          color: '#0369A1' },
         { key: 'screening', label: 'Screening',        color: '#B07D3E' },
         { key: 'interview', label: 'Interview',        color: '#7C3AED' },
@@ -21576,6 +21586,9 @@ const JobApplicationTracker = {
   },
 
   computed: {
+    appliedCount() {
+      return this.applications.filter(a => a.status !== 'wishlist').length;
+    },
     filteredApplications() {
       let list = this.applications.slice();
       if (this.filterStatus) list = list.filter(a => a.status === this.filterStatus);
@@ -21583,10 +21596,23 @@ const JobApplicationTracker = {
       if (q) {
         list = list.filter(a =>
           (a.company || '').toLowerCase().includes(q) ||
-          (a.position || '').toLowerCase().includes(q)
+          (a.position || '').toLowerCase().includes(q) ||
+          (a.companyInfo || '').toLowerCase().includes(q)
         );
       }
       list.sort((a, b) => {
+        // Yang belum dilamar (wishlist) ditaruh paling atas, deadline terdekat duluan
+        const aw = a.status === 'wishlist', bw = b.status === 'wishlist';
+        if (aw !== bw) return aw ? -1 : 1;
+        if (aw && bw) {
+          if (a.deadlineDate && b.deadlineDate) {
+            const dd = a.deadlineDate.localeCompare(b.deadlineDate);
+            if (dd !== 0) return dd;
+          } else if (a.deadlineDate || b.deadlineDate) {
+            return a.deadlineDate ? -1 : 1;
+          }
+          return (b.createdAt || 0) - (a.createdAt || 0);
+        }
         const dateCompare = (b.appliedDate || '').localeCompare(a.appliedDate || '');
         if (dateCompare !== 0) return dateCompare;
         return (b.createdAt || 0) - (a.createdAt || 0);
@@ -21598,6 +21624,7 @@ const JobApplicationTracker = {
   methods: {
     countByGroup(group) {
       const map = {
+        wishlist: ['wishlist'],
         process: ['applied', 'screening', 'interview'],
         offer: ['offer', 'accepted'],
         rejected: ['rejected', 'ghosted'],
@@ -21606,7 +21633,7 @@ const JobApplicationTracker = {
       return this.applications.filter(a => keys.includes(a.status)).length;
     },
     statusMeta(key) {
-      return this.statusOptions.find(s => s.key === key) || this.statusOptions[0];
+      return this.statusOptions.find(s => s.key === key) || this.statusOptions.find(s => s.key === 'applied') || this.statusOptions[0];
     },
     statusSelectStyle(key) {
       const m = this.statusMeta(key);
@@ -21660,9 +21687,9 @@ const JobApplicationTracker = {
     emptyForm() {
       return {
         company: '', position: '',
-        appliedDate: new Date().toISOString().slice(0, 10),
+        appliedDate: '',
         deadlineDate: '',
-        status: 'applied', source: '', link: '',
+        status: 'wishlist', source: '', link: '', companyInfo: '',
         requirements: '', documents: [],
         notes: '',
       };
@@ -21683,6 +21710,7 @@ const JobApplicationTracker = {
         status: appItem.status || 'applied',
         source: appItem.source || '',
         link: appItem.link || '',
+        companyInfo: appItem.companyInfo || '',
         requirements: appItem.requirements || '',
         documents: (appItem.documents || []).map(d => ({ ...d })),
         notes: appItem.notes || '',
@@ -21713,8 +21741,18 @@ const JobApplicationTracker = {
       this.saveToStorage();
       this.showModal = false;
     },
+    todayIso() {
+      const d = new Date();
+      const p = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+    },
+    // Pindah dari "Belum Dilamar" ke status lain & tanggal apply masih kosong → isi hari ini
+    onFormStatusChange() {
+      if (this.form.status !== 'wishlist' && !this.form.appliedDate) this.form.appliedDate = this.todayIso();
+    },
     quickSetStatus(appItem, status) {
       appItem.status = status;
+      if (status !== 'wishlist' && !appItem.appliedDate) appItem.appliedDate = this.todayIso();
       this.saveToStorage();
     },
     deleteApplication(id, closeModalAfter) {
