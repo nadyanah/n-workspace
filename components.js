@@ -18438,19 +18438,8 @@ const CareerFoundation = {
       </div>
     </transition>
 
-    <!-- ── Floating Buttons: shortcut ke My Portfolio & Job Apply Tracker ── -->
-    <div class="cf-fab-group">
-      <button class="crossnav-fab" @click="goToJobTracker" title="Buka Job Apply Tracker">
-        <span class="crossnav-fab-icon">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
-        </span>
-      </button>
-      <button class="crossnav-fab" @click="goToPortfolio" title="Buka My Portfolio">
-        <span class="crossnav-fab-icon">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-        </span>
-      </button>
-    </div>
+    <!-- ── Floating Button: menu shortcut halaman Career ── -->
+    <career-nav-fab current="careerFoundation"></career-nav-fab>
 
   </div>
   `,
@@ -20257,19 +20246,8 @@ const MyPortfolio = {
       </div>
     </transition>
 
-    <!-- ── Floating Buttons: shortcut ke Career Foundation & Job Apply Tracker ── -->
-    <div class="cf-fab-group">
-      <button class="crossnav-fab" @click="goToJobTracker" title="Buka Job Apply Tracker">
-        <span class="crossnav-fab-icon">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
-        </span>
-      </button>
-      <button class="crossnav-fab" @click="goToCareer" title="Buka Career Foundation">
-        <span class="crossnav-fab-icon">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        </span>
-      </button>
-    </div>
+    <!-- ── Floating Button: menu shortcut halaman Career ── -->
+    <career-nav-fab current="myPortfolio"></career-nav-fab>
 
   </div>
   `,
@@ -21321,6 +21299,407 @@ const MyPortfolio = {
 // milik Career Foundation / My Portfolio, jadi tidak menyentuh data lain.
 // Diakses dari tombol floating "Job Apply Tracker" di halaman Career Foundation.
 // ============================================================================
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPANY DATABASE — database perusahaan incaran (info, head office, review, link)
+// WorkspaceStorage key 'career_company_database' — terpisah dari key lain.
+// Dipakai sebagai sumber dropdown "Pilih dari Database Perusahaan" di Job Apply Tracker.
+// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
+// CAREER NAV FAB — satu floating button; kalau diklik memunculkan shortcut ke
+// halaman Career lainnya (Career Foundation, My Portfolio, Job Apply Tracker,
+// Database Perusahaan). Halaman yang sedang dibuka otomatis tidak ditampilkan.
+// Murni navigasi — tidak menyentuh data apa pun.
+// ═══════════════════════════════════════════════════════════════════════════
+const CareerNavFab = {
+  props: { current: { type: String, default: '' } },
+  template: `
+  <div class="cf-fab-group cnf-group" :class="{ open: open }">
+    <transition name="cnf-pop">
+      <div v-if="open" class="cnf-items">
+        <div v-for="it in items" :key="it.key" class="cnf-item" @click="go(it)">
+          <span class="cnf-label">{{ it.label }}</span>
+          <button type="button" class="crossnav-fab" :title="it.label" :aria-label="it.label" @click.stop="go(it)">
+            <span class="crossnav-fab-icon" v-html="it.icon"></span>
+          </button>
+        </div>
+      </div>
+    </transition>
+    <button type="button" class="crossnav-fab crossnav-fab--primary" :title="open ? 'Tutup menu Career' : 'Menu Career'" :aria-expanded="open ? 'true' : 'false'" @click="open = !open">
+      <span class="crossnav-fab-icon cnf-main-icon">
+        <svg v-if="!open" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        <svg v-else viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </span>
+    </button>
+  </div>
+  `,
+  data() {
+    const svg = (inner) => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>';
+    return {
+      open: false,
+      allItems: [
+        { key: 'careerFoundation', label: 'Career Foundation', icon: svg('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>') },
+        { key: 'myPortfolio', label: 'My Portfolio', icon: svg('<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>') },
+        { key: 'jobApplicationTracker', label: 'Job Apply Tracker', icon: svg('<rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6"/><path d="M9 16h6"/>') },
+        { key: 'companyDatabase', label: 'Database Perusahaan', icon: svg('<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/>') },
+      ],
+    };
+  },
+  computed: {
+    items() { return this.allItems.filter(i => i.key !== this.current); },
+  },
+  watch: {
+    open(v) {
+      if (v) {
+        document.addEventListener('click', this.onOutside, true);
+        document.addEventListener('keydown', this.onKey);
+      } else {
+        document.removeEventListener('click', this.onOutside, true);
+        document.removeEventListener('keydown', this.onKey);
+      }
+    },
+  },
+  methods: {
+    onOutside(e) { if (this.$el && !this.$el.contains(e.target)) this.open = false; },
+    onKey(e) { if (e.key === 'Escape') this.open = false; },
+    go(it) {
+      this.open = false;
+      if (it.key === 'careerFoundation') {
+        globalThis.dispatchEvent(new CustomEvent('navigate-to-career-foundation'));
+      } else {
+        globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: it.key }));
+      }
+    },
+  },
+  beforeUnmount() {
+    document.removeEventListener('click', this.onOutside, true);
+    document.removeEventListener('keydown', this.onKey);
+  },
+};
+
+const CompanyDatabase = {
+  template: `
+  <div class="cf-clean">
+
+    <!-- ── Hero ── -->
+    <div class="cf-hero">
+      <div class="cf-hero-badge">
+        <span class="cf-hero-badge-dot"></span>
+        Company Database
+      </div>
+      <h2 class="cf-hero-title">Database Perusahaan</h2>
+      <p class="cf-hero-sub">Simpan info perusahaan incaranmu — head office, keunggulan, review, website & LinkedIn — lalu pilih langsung dari Tracker Lamaran.</p>
+      <div class="cf-hero-stats">
+        <div class="cf-hero-stat">
+          <span class="cf-hero-stat-num">{{ companies.length }}</span>
+          <span>perusahaan</span>
+        </div>
+        <div class="cf-hero-stat">
+          <span class="cf-hero-stat-num">{{ appliedCompanyCount }}</span>
+          <span>sudah ada di tracker</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Filter + Search + Tambah ── -->
+    <div class="mp-filter-panel" style="margin: 18px 0 14px;">
+      <div class="mp-filter-row">
+        <select class="form-input mp-filter-select" v-model="filterIndustry" style="max-width: 200px;">
+          <option value="">Semua Industri</option>
+          <option v-for="ind in industryOptions" :key="ind" :value="ind">{{ ind }}</option>
+        </select>
+        <div class="mp-search-wrap">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mp-search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="form-input mp-search-input" v-model="searchQuery" placeholder="Cari nama, industri, alamat, atau info..." />
+          <button v-if="searchQuery" class="mp-search-clear" title="Hapus pencarian" @click="searchQuery = ''">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <button class="cf-btn-primary" style="margin-left: auto; white-space: nowrap;" @click="openAddModal">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah Perusahaan
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Empty: belum ada data ── -->
+    <div v-if="!companies.length" class="mp-empty-state">
+      <p class="mp-empty-title">Database masih kosong</p>
+      <p class="mp-empty-sub">Klik "Tambah Perusahaan" untuk menyimpan perusahaan pertamamu.</p>
+      <button class="cf-btn-primary" style="margin-top: 16px;" @click="openAddModal">Tambah Perusahaan</button>
+    </div>
+
+    <!-- ── Empty: hasil filter kosong ── -->
+    <div v-else-if="!filteredCompanies.length" class="mp-empty-state" style="padding: 40px 24px;">
+      <p class="mp-empty-title">Tidak ada hasil</p>
+      <p class="mp-empty-sub">Coba ubah kata kunci pencarian atau filter industri.</p>
+    </div>
+
+    <!-- ── Kartu perusahaan ── -->
+    <div v-else class="cdb-grid">
+      <div v-for="c in filteredCompanies" :key="c.id" class="cdb-card">
+        <div class="cdb-card-head">
+          <div style="min-width:0;">
+            <div class="cdb-name">{{ c.name }}</div>
+            <div v-if="c.industry || c.size" class="cdb-meta">{{ [c.industry, c.size].filter(Boolean).join(' · ') }}</div>
+          </div>
+          <div v-if="Number(c.rating) > 0" class="cdb-rating" :title="'Rating pribadi: ' + c.rating + '/5'">★ {{ c.rating }}</div>
+        </div>
+
+        <div v-if="c.headOffice" class="cdb-block">
+          <span class="cdb-label">Head Office</span>
+          <div class="cdb-text">{{ c.headOffice }}</div>
+        </div>
+        <div v-if="c.summary" class="cdb-block">
+          <span class="cdb-label">Info Perusahaan</span>
+          <expandable-text :text="c.summary"></expandable-text>
+        </div>
+        <div v-if="c.pros" class="cdb-block">
+          <span class="cdb-label">Keunggulan</span>
+          <expandable-text :text="c.pros"></expandable-text>
+        </div>
+        <div v-if="c.review" class="cdb-block">
+          <span class="cdb-label">Review</span>
+          <expandable-text :text="c.review"></expandable-text>
+        </div>
+        <div v-if="c.cons" class="cdb-block">
+          <span class="cdb-label">Kekurangan / Red Flag</span>
+          <expandable-text :text="c.cons"></expandable-text>
+        </div>
+        <div v-if="c.contact" class="cdb-block">
+          <span class="cdb-label">Kontak</span>
+          <div class="cdb-text">{{ c.contact }}</div>
+        </div>
+
+        <div v-if="safeUrl(c.website) || safeUrl(c.linkedin) || safeUrl(c.reviewLink)" class="cdb-links">
+          <a v-if="safeUrl(c.website)" :href="safeUrl(c.website)" target="_blank" rel="noopener noreferrer" class="cf-doc-action-btn">Website</a>
+          <a v-if="safeUrl(c.linkedin)" :href="safeUrl(c.linkedin)" target="_blank" rel="noopener noreferrer" class="cf-doc-action-btn">LinkedIn</a>
+          <a v-if="safeUrl(c.reviewLink)" :href="safeUrl(c.reviewLink)" target="_blank" rel="noopener noreferrer" class="cf-doc-action-btn">Review</a>
+        </div>
+
+        <div class="cdb-foot">
+          <span v-if="appCount(c)" class="cdb-badge">{{ appCount(c) }} lamaran di tracker</span>
+          <span style="flex:1;"></span>
+          <button class="cf-doc-action-btn" @click="openEditModal(c)">Edit</button>
+          <button class="cf-doc-action-btn del" @click="deleteCompany(c.id)" title="Hapus dari database">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MODAL: Tambah / Edit Perusahaan ══ -->
+    <transition name="cf-fade">
+      <div v-if="showModal" class="cf-modal-overlay" @click.self="closeModal">
+        <div class="cf-modal">
+          <div class="cf-modal-header">
+            <h3 class="cf-modal-title">{{ editingId ? 'Edit Perusahaan' : 'Tambah Perusahaan' }}</h3>
+            <button class="cf-modal-close" @click="closeModal">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="cf-modal-body">
+            <div>
+              <label class="cf-field-label">Nama Perusahaan *</label>
+              <input class="cf-input" v-model="form.name" placeholder="mis. PT Maju Bersama" />
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 160px;">
+                <label class="cf-field-label">Industri / Bidang</label>
+                <input class="cf-input" v-model="form.industry" placeholder="mis. Fintech, Manufaktur, Media" />
+              </div>
+              <div style="flex: 1; min-width: 160px;">
+                <label class="cf-field-label">Ukuran Perusahaan</label>
+                <input class="cf-input" v-model="form.size" placeholder="mis. 200–500 karyawan" />
+              </div>
+            </div>
+            <div>
+              <label class="cf-field-label">Alamat Head Office</label>
+              <textarea class="cf-textarea" v-model="form.headOffice" rows="2" placeholder="mis. Gedung Menara X Lt. 12, Jl. Jend. Sudirman, Jakarta Selatan"></textarea>
+            </div>
+            <div>
+              <label class="cf-field-label">Info / Rangkuman Perusahaan</label>
+              <textarea class="cf-textarea" v-model="form.summary" rows="3" placeholder="mis. Startup fintech, produk utama aplikasi pembayaran, budaya kerja hybrid..."></textarea>
+            </div>
+            <div>
+              <label class="cf-field-label">Keunggulan Perusahaan</label>
+              <textarea class="cf-textarea" v-model="form.pros" rows="2" placeholder="mis. Gaji kompetitif, jenjang karir jelas, WFH 2 hari/minggu..."></textarea>
+            </div>
+            <div>
+              <label class="cf-field-label">Review (dari karyawan / Glassdoor / JobStreet, dll)</label>
+              <textarea class="cf-textarea" v-model="form.review" rows="2" placeholder="mis. Rating 4.1 di Glassdoor, work-life balance bagus tapi onboarding kurang rapi..."></textarea>
+            </div>
+            <div>
+              <label class="cf-field-label">Kekurangan / Red Flag</label>
+              <textarea class="cf-textarea" v-model="form.cons" rows="2" placeholder="mis. Turnover tinggi, sering lembur menjelang rilis..."></textarea>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 160px;">
+                <label class="cf-field-label">Website</label>
+                <input class="cf-input" v-model="form.website" placeholder="https://..." />
+              </div>
+              <div style="flex: 1; min-width: 160px;">
+                <label class="cf-field-label">LinkedIn</label>
+                <input class="cf-input" v-model="form.linkedin" placeholder="https://linkedin.com/company/..." />
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 160px;">
+                <label class="cf-field-label">Link Review (Glassdoor, JobStreet, dll)</label>
+                <input class="cf-input" v-model="form.reviewLink" placeholder="https://..." />
+              </div>
+              <div style="flex: 1; min-width: 160px;">
+                <label class="cf-field-label">Rating Pribadi</label>
+                <select class="cf-input" v-model="form.rating">
+                  <option value="">Belum dinilai</option>
+                  <option value="5">★★★★★ (5)</option>
+                  <option value="4">★★★★ (4)</option>
+                  <option value="3">★★★ (3)</option>
+                  <option value="2">★★ (2)</option>
+                  <option value="1">★ (1)</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="cf-field-label">Kontak (HR / email recruiter, dll)</label>
+              <input class="cf-input" v-model="form.contact" placeholder="mis. hr@perusahaan.com / Bu Rina (HRD)" />
+            </div>
+          </div>
+          <div class="cf-modal-footer">
+            <button v-if="editingId" class="cf-doc-action-btn del" style="margin-right: auto;" @click="deleteCompany(editingId, true)">Hapus Perusahaan</button>
+            <button class="cf-btn-ghost" @click="closeModal">Batal</button>
+            <button class="cf-btn-primary" :disabled="!form.name.trim()" @click="saveCompany">Simpan</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- ── Floating Button: menu shortcut halaman Career ── -->
+    <career-nav-fab current="companyDatabase"></career-nav-fab>
+
+  </div>
+  `,
+
+  data() {
+    return {
+      companies: [],
+      trackerApps: [],        // hanya dibaca, untuk menghitung jumlah lamaran per perusahaan
+      showModal: false,
+      editingId: null,
+      searchQuery: '',
+      filterIndustry: '',
+      form: { name: '', industry: '', size: '', headOffice: '', summary: '', pros: '', review: '', cons: '', website: '', linkedin: '', reviewLink: '', rating: '', contact: '' },
+    };
+  },
+
+  computed: {
+    industryOptions() {
+      const set = new Set();
+      this.companies.forEach(c => { if ((c.industry || '').trim()) set.add(c.industry.trim()); });
+      return Array.from(set).sort((a, b) => a.localeCompare(b));
+    },
+    filteredCompanies() {
+      let list = this.companies.slice();
+      if (this.filterIndustry) list = list.filter(c => (c.industry || '').trim() === this.filterIndustry);
+      const q = this.searchQuery.trim().toLowerCase();
+      if (q) {
+        list = list.filter(c =>
+          [c.name, c.industry, c.headOffice, c.summary, c.pros, c.review, c.cons]
+            .some(v => (v || '').toLowerCase().includes(q))
+        );
+      }
+      list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      return list;
+    },
+    appliedCompanyCount() {
+      return this.companies.filter(c => this.appCount(c) > 0).length;
+    },
+  },
+
+  methods: {
+    emptyForm() {
+      return {
+        name: '', industry: '', size: '', headOffice: '',
+        summary: '', pros: '', review: '', cons: '',
+        website: '', linkedin: '', reviewLink: '', rating: '', contact: '',
+      };
+    },
+    // Hanya izinkan http/https supaya link tidak bisa dipakai untuk "javascript:" dll.
+    safeUrl(u) {
+      const raw = (u || '').trim();
+      if (!raw) return '';
+      const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw : 'https://' + raw;
+      return /^https?:\/\//i.test(withScheme) ? withScheme : '';
+    },
+    appCount(c) {
+      const name = (c.name || '').trim().toLowerCase();
+      return this.trackerApps.filter(a =>
+        a.companyId === c.id || (name && (a.company || '').trim().toLowerCase() === name)
+      ).length;
+    },
+    loadAll() {
+      try {
+        const saved = WorkspaceStorage.getItem('career_company_database');
+        if (saved) this.companies = JSON.parse(saved);
+      } catch (_e) {}
+      try {
+        const t = WorkspaceStorage.getItem('career_job_apply_tracker');
+        if (t) this.trackerApps = JSON.parse(t);
+      } catch (_e) {}
+    },
+    openAddModal() {
+      this.editingId = null;
+      this.form = this.emptyForm();
+      this.showModal = true;
+    },
+    openEditModal(c) {
+      this.editingId = c.id;
+      const base = this.emptyForm();
+      Object.keys(base).forEach(k => { base[k] = c[k] != null ? String(c[k]) : ''; });
+      this.form = base;
+      this.showModal = true;
+    },
+    closeModal() {
+      this.showModal = false;
+    },
+    saveCompany() {
+      const name = this.form.name.trim();
+      if (!name) return;
+      const dup = this.companies.some(c => c.id !== this.editingId && (c.name || '').trim().toLowerCase() === name.toLowerCase());
+      if (dup && !confirm('Perusahaan dengan nama ini sudah ada di database. Tetap simpan sebagai entri baru?')) return;
+      if (this.editingId) {
+        const idx = this.companies.findIndex(c => c.id === this.editingId);
+        if (idx !== -1) this.companies[idx] = { ...this.companies[idx], ...this.form, name };
+      } else {
+        this.companies.push({
+          id: 'cmp_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7),
+          ...this.form,
+          name,
+          createdAt: Date.now(),
+        });
+      }
+      this.saveToStorage();
+      this.showModal = false;
+    },
+    deleteCompany(id, closeModalAfter) {
+      if (!confirm('Hapus perusahaan ini dari database? Lamaran di tracker TIDAK ikut terhapus (nama perusahaannya tetap tersimpan di sana).')) return;
+      this.companies = this.companies.filter(c => c.id !== id);
+      this.saveToStorage();
+      if (closeModalAfter) this.showModal = false;
+    },
+    goToTracker() {
+      globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'jobApplicationTracker' }));
+    },
+    saveToStorage() {
+      WorkspaceStorage.setItem('career_company_database', JSON.stringify(this.companies));
+    },
+  },
+
+  async mounted() {
+    await globalThis._workspaceStorageReady;
+    this.loadAll();
+  },
+};
+
 const JobApplicationTracker = {
   template: `
   <div class="cf-clean">
@@ -21370,7 +21749,15 @@ const JobApplicationTracker = {
       <div class="mp-filter-row">
         <select class="form-input mp-filter-select" v-model="filterStatus" style="max-width: 190px;">
           <option value="">Semua Status</option>
-          <option v-for="s in statusOptions" :key="s.key" :value="s.key">{{ s.label }}</option>
+          <option v-for="s in statusOptions" :key="s.key" :value="s.key">{{ s.label }} ({{ countByStatus(s.key) }})</option>
+        </select>
+        <select class="form-input mp-filter-select" v-model="filterDeadline" style="max-width: 190px;">
+          <option value="">Semua Deadline</option>
+          <option value="week">Dalam 7 hari</option>
+          <option value="month">Dalam 30 hari</option>
+          <option value="upcoming">Belum lewat</option>
+          <option value="overdue">Sudah lewat</option>
+          <option value="none">Tanpa deadline</option>
         </select>
         <div class="mp-search-wrap">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mp-search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -21380,6 +21767,7 @@ const JobApplicationTracker = {
             <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
+        <button v-if="filterStatus || filterDeadline || searchQuery" class="cf-btn-ghost" style="white-space: nowrap;" @click="resetFilters">Reset filter</button>
         <button class="cf-btn-primary" style="margin-left: auto; white-space: nowrap;" @click="openAddModal">
           <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Tambah Lamaran
@@ -21400,7 +21788,7 @@ const JobApplicationTracker = {
     <!-- ── Tidak ada hasil filter/search ── -->
     <div v-else-if="!filteredApplications.length" class="mp-empty-state" style="padding: 40px 24px;">
       <p class="mp-empty-title">Tidak ada hasil</p>
-      <p class="mp-empty-sub">Coba ubah kata kunci pencarian atau filter status.</p>
+      <p class="mp-empty-sub">Coba ubah kata kunci pencarian atau filter yang dipilih.</p>
     </div>
 
     <!-- ── Tabel Lamaran ── -->
@@ -21423,7 +21811,11 @@ const JobApplicationTracker = {
           <tr v-for="appItem in filteredApplications" :key="appItem.id">
             <td style="overflow-wrap: break-word;">
               <span style="font-weight: 700; color: var(--text-dark);">{{ appItem.company }}</span>
-              <expandable-text v-if="appItem.companyInfo" :text="appItem.companyInfo"></expandable-text>
+              <expandable-text v-if="companyInfoOf(appItem)" :text="companyInfoOf(appItem)"></expandable-text>
+              <div v-if="companyOf(appItem) && (safeUrl(companyOf(appItem).website) || safeUrl(companyOf(appItem).linkedin))" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
+                <a v-if="safeUrl(companyOf(appItem).website)" :href="safeUrl(companyOf(appItem).website)" target="_blank" rel="noopener noreferrer" class="cf-doc-action-btn" style="padding: 2px 8px; font-size: 10.5px;">Website</a>
+                <a v-if="safeUrl(companyOf(appItem).linkedin)" :href="safeUrl(companyOf(appItem).linkedin)" target="_blank" rel="noopener noreferrer" class="cf-doc-action-btn" style="padding: 2px 8px; font-size: 10.5px;">LinkedIn</a>
+              </div>
             </td>
             <td style="overflow-wrap: break-word;">{{ appItem.position }}</td>
             <td>{{ formatDate(appItem.appliedDate) || '—' }}</td>
@@ -21474,8 +21866,14 @@ const JobApplicationTracker = {
           </div>
           <div class="cf-modal-body">
             <div>
+              <label class="cf-field-label">Pilih dari Database Perusahaan</label>
+              <select class="cf-input" :value="form.companyId" @change="onPickCompany($event.target.value)" style="margin-bottom: 6px;">
+                <option value="">— Ketik manual / belum ada di database —</option>
+                <option v-for="c in sortedCompanies" :key="c.id" :value="c.id">{{ c.name }}{{ c.industry ? ' · ' + c.industry : '' }}</option>
+              </select>
+              <p v-if="!companies.length" style="margin: 0 0 8px; font-size: 11.5px; color: var(--text-muted,#A09690);">Database masih kosong. <a href="#" @click.prevent="goToCompanyDb" style="color: var(--color-terracotta,#D67B52); font-weight: 600;">Isi dulu di Database Perusahaan</a></p>
               <label class="cf-field-label">Nama Perusahaan *</label>
-              <input class="cf-input" v-model="form.company" placeholder="mis. PT Maju Bersama" />
+              <input class="cf-input" v-model="form.company" @input="onCompanyNameInput" placeholder="mis. PT Maju Bersama" />
             </div>
             <div>
               <label class="cf-field-label">Posisi yang Dilamar *</label>
@@ -21552,12 +21950,8 @@ const JobApplicationTracker = {
       </div>
     </transition>
 
-    <!-- ── Floating Button: shortcut kembali ke Career Foundation ── -->
-    <button class="crossnav-fab" @click="goToCareer" title="Kembali ke Career Foundation">
-      <span class="crossnav-fab-icon">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      </span>
-    </button>
+    <!-- ── Floating Button: menu shortcut halaman Career ── -->
+    <career-nav-fab current="jobApplicationTracker"></career-nav-fab>
 
   </div>
   `,
@@ -21565,13 +21959,15 @@ const JobApplicationTracker = {
   data() {
     return {
       applications: [],
+      companies: [],            // dibaca dari Database Perusahaan (career_company_database)
       showModal: false,
       editingId: null,
       searchQuery: '',
       filterStatus: '',
+      filterDeadline: '',
       newDocName: '',
       quickDocSuggestions: ['CV', 'Portofolio', 'Surat Lamaran', 'Cover Letter', 'Transkrip Nilai', 'Ijazah', 'KTP', 'Pas Foto', 'SKCK', 'Sertifikat Pendukung'],
-      form: { company: '', position: '', appliedDate: '', deadlineDate: '', status: 'wishlist', source: '', link: '', companyInfo: '', requirements: '', documents: [], notes: '' },
+      form: { company: '', position: '', appliedDate: '', deadlineDate: '', status: 'wishlist', source: '', link: '', companyInfo: '', companyId: '', requirements: '', documents: [], notes: '' },
       statusOptions: [
         { key: 'wishlist',  label: 'Belum Dilamar',    color: '#8A7B6E' },
         { key: 'applied',   label: 'Melamar',          color: '#0369A1' },
@@ -21586,12 +21982,16 @@ const JobApplicationTracker = {
   },
 
   computed: {
+    sortedCompanies() {
+      return this.companies.slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    },
     appliedCount() {
       return this.applications.filter(a => a.status !== 'wishlist').length;
     },
     filteredApplications() {
       let list = this.applications.slice();
       if (this.filterStatus) list = list.filter(a => a.status === this.filterStatus);
+      if (this.filterDeadline) list = list.filter(a => this.matchesDeadline(a, this.filterDeadline));
       const q = this.searchQuery.trim().toLowerCase();
       if (q) {
         list = list.filter(a =>
@@ -21601,6 +22001,12 @@ const JobApplicationTracker = {
         );
       }
       list.sort((a, b) => {
+        // Saat filter deadline aktif: urutkan berdasarkan deadline terdekat
+        if (['overdue', 'week', 'month', 'upcoming'].includes(this.filterDeadline)) {
+          const dd = (a.deadlineDate || '').localeCompare(b.deadlineDate || '');
+          if (dd !== 0) return dd;
+          return (b.createdAt || 0) - (a.createdAt || 0);
+        }
         // Yang belum dilamar (wishlist) ditaruh paling atas, deadline terdekat duluan
         const aw = a.status === 'wishlist', bw = b.status === 'wishlist';
         if (aw !== bw) return aw ? -1 : 1;
@@ -21631,6 +22037,66 @@ const JobApplicationTracker = {
       };
       const keys = map[group] || [];
       return this.applications.filter(a => keys.includes(a.status)).length;
+    },
+    loadCompanies() {
+      try {
+        const saved = WorkspaceStorage.getItem('career_company_database');
+        this.companies = saved ? JSON.parse(saved) : [];
+      } catch (_e) { this.companies = []; }
+    },
+    companyOf(appItem) {
+      if (!appItem || !appItem.companyId) return null;
+      return this.companies.find(c => c.id === appItem.companyId) || null;
+    },
+    // Info yang tersimpan di lamaran diutamakan; kalau kosong, ambil rangkuman dari database
+    companyInfoOf(appItem) {
+      if (appItem.companyInfo) return appItem.companyInfo;
+      const c = this.companyOf(appItem);
+      return c ? (c.summary || '') : '';
+    },
+    safeUrl(u) {
+      const raw = (u || '').trim();
+      if (!raw) return '';
+      const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw : 'https://' + raw;
+      return /^https?:\/\//i.test(withScheme) ? withScheme : '';
+    },
+    onPickCompany(id) {
+      this.form.companyId = id || '';
+      const c = this.companies.find(x => x.id === id);
+      if (!c) return;
+      this.form.company = c.name;
+      if (!this.form.companyInfo && c.summary) this.form.companyInfo = c.summary;
+    },
+    // Kalau nama diketik manual dan jadi beda dari perusahaan terpilih, putuskan tautannya
+    onCompanyNameInput() {
+      if (!this.form.companyId) return;
+      const c = this.companies.find(x => x.id === this.form.companyId);
+      if (!c || (c.name || '').trim() !== this.form.company.trim()) this.form.companyId = '';
+    },
+    goToCompanyDb() {
+      globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'companyDatabase' }));
+    },
+    countByStatus(key) {
+      return this.applications.filter(a => a.status === key).length;
+    },
+    matchesDeadline(appItem, mode) {
+      const dl = appItem.deadlineDate;
+      if (mode === 'none') return !dl;
+      if (!dl) return false;
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const d = new Date(dl + 'T00:00:00');
+      if (isNaN(d.getTime())) return false;
+      const diff = Math.round((d - today) / 86400000);
+      if (mode === 'overdue') return diff < 0;
+      if (mode === 'upcoming') return diff >= 0;
+      if (mode === 'week') return diff >= 0 && diff <= 7;
+      if (mode === 'month') return diff >= 0 && diff <= 30;
+      return true;
+    },
+    resetFilters() {
+      this.filterStatus = '';
+      this.filterDeadline = '';
+      this.searchQuery = '';
     },
     statusMeta(key) {
       return this.statusOptions.find(s => s.key === key) || this.statusOptions.find(s => s.key === 'applied') || this.statusOptions[0];
@@ -21689,19 +22155,21 @@ const JobApplicationTracker = {
         company: '', position: '',
         appliedDate: '',
         deadlineDate: '',
-        status: 'wishlist', source: '', link: '', companyInfo: '',
+        status: 'wishlist', source: '', link: '', companyInfo: '', companyId: '',
         requirements: '', documents: [],
         notes: '',
       };
     },
     openAddModal() {
       this.editingId = null;
+      this.loadCompanies();
       this.form = this.emptyForm();
       this.newDocName = '';
       this.showModal = true;
     },
     openEditModal(appItem) {
       this.editingId = appItem.id;
+      this.loadCompanies();
       this.form = {
         company: appItem.company || '',
         position: appItem.position || '',
@@ -21711,6 +22179,7 @@ const JobApplicationTracker = {
         source: appItem.source || '',
         link: appItem.link || '',
         companyInfo: appItem.companyInfo || '',
+        companyId: appItem.companyId || '',
         requirements: appItem.requirements || '',
         documents: (appItem.documents || []).map(d => ({ ...d })),
         notes: appItem.notes || '',
@@ -21771,6 +22240,7 @@ const JobApplicationTracker = {
 
   async mounted() {
     await globalThis._workspaceStorageReady;
+    this.loadCompanies();
     try {
       const saved = WorkspaceStorage.getItem('career_job_apply_tracker');
       if (saved) this.applications = JSON.parse(saved);

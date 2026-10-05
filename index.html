@@ -111,6 +111,28 @@
       color: var(--text-muted, #A09690);
       margin-top: 2px;
     }
+    /* ── Career Nav FAB: 1 tombol → muncul shortcut halaman Career lainnya ── */
+    .cf-fab-group.cnf-group { align-items: flex-end; }
+    .cnf-items { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+    .cnf-item { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .cnf-label { font-size: 12px; font-weight: 600; color: var(--text-dark, #3D2E22); background: var(--bg-card, #fff); border: 1.5px solid var(--color-sand, #E8DFD8); border-radius: 10px; padding: 6px 12px; box-shadow: var(--shadow-md); white-space: nowrap; transition: border-color .15s; }
+    .cnf-item:hover .cnf-label { border-color: var(--color-terracotta, #D67B52); }
+    .cnf-main-icon { display: flex; transition: transform .2s ease; }
+    .cnf-pop-enter-active, .cnf-pop-leave-active { transition: opacity .16s ease, transform .16s ease; }
+    .cnf-pop-enter-from, .cnf-pop-leave-to { opacity: 0; transform: translateY(10px); }
+    /* ── Database Perusahaan ── */
+    .cdb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+    .cdb-card { background: #fff; border: 1.5px solid var(--color-sand, #E8DFD8); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+    .cdb-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .cdb-name { font-weight: 700; font-size: 15px; color: var(--text-dark, #3D2E22); overflow-wrap: anywhere; }
+    .cdb-meta { font-size: 12px; color: var(--text-muted, #A09690); margin-top: 2px; }
+    .cdb-rating { font-size: 12px; font-weight: 700; color: #B07D3E; background: #FFF6E5; border: 1.5px solid #F1DDB4; border-radius: 8px; padding: 2px 8px; white-space: nowrap; }
+    .cdb-block { display: flex; flex-direction: column; gap: 2px; }
+    .cdb-label { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-muted, #A09690); }
+    .cdb-text { font-size: 12.5px; color: var(--text-dark, #3D2E22); white-space: pre-wrap; overflow-wrap: anywhere; }
+    .cdb-links { display: flex; gap: 6px; flex-wrap: wrap; }
+    .cdb-foot { display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 4px; }
+    .cdb-badge { font-size: 11px; font-weight: 600; color: #0369A1; background: #0369A114; border-radius: 8px; padding: 3px 8px; }
     /* ── Teks panjang di popup notifikasi: dipotong "..." , klik untuk buka ── */
     .rp-sub-expandable { word-break: break-word; }
     .rp-sub-pre { white-space: pre-wrap; }
@@ -1207,6 +1229,16 @@
                 </div>
               </button>
 
+            <button class="ws-drawer-item" :class="{ active: activePage === 'companyDatabase' }" @click="navigateTo('companyDatabase'); showNavDrawer = false">
+                <span class="ws-drawer-icon">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/></svg>
+                </span>
+                <div class="ws-drawer-item-text">
+                  <span class="ws-drawer-label">Database Perusahaan</span>
+                  <span class="ws-drawer-sub">info, review & link perusahaan</span>
+                </div>
+              </button>
+
             <button class="ws-drawer-item" :class="{ active: activePage === 'missedTasksPage' }" @click="navigateTo('missedTasksPage'); showNavDrawer = false">
               <span class="ws-drawer-icon">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -1262,6 +1294,7 @@
         <career-foundation v-if="activePage === 'careerFoundation'"></career-foundation>
         <my-portfolio v-if="activePage === 'myPortfolio'"></my-portfolio>
         <job-application-tracker v-if="activePage === 'jobApplicationTracker'"></job-application-tracker>
+        <company-database v-if="activePage === 'companyDatabase'"></company-database>
 
         <habit-tracker v-if="activePage === 'habitTracker'"
                        :current-year-month="habitYearMonth"

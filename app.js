@@ -82,6 +82,10 @@ const App = {
         label: 'Job Apply Tracker',
         icon: _lc('<rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6"/><path d="M9 16h6"/>')
       },
+      companyDatabase: {
+        label: 'Database Perusahaan',
+        icon: _lc('<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/>')
+      },
       missedTasksPage: {
         label: 'Tugas Terlewat',
         icon: _lc('<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>')
@@ -974,6 +978,8 @@ app.component('financial-tracker', FinancialTracker);
 app.component('career-foundation', CareerFoundation);
 app.component('my-portfolio', MyPortfolio);
 app.component('job-application-tracker', JobApplicationTracker);
+app.component('company-database', CompanyDatabase);
+app.component('career-nav-fab', CareerNavFab);
 app.component('notification-panel', NotificationPanel);
 app.component('expandable-text', ExpandableText);
 app.component('reminder-popup', ReminderPopup);
