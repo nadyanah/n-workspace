@@ -4527,12 +4527,12 @@ const ContentTracker = {
                 
                 <div v-if="showUserDropdown" 
                      style="position: absolute; top: 100%; left: 0; right: 0; background: #FFFFFF; border: 1.5px solid #EAE5DD; border-radius: 8px; box-shadow: var(--shadow-md); z-index: 9999; margin-top: 4px; max-height: 200px; overflow-y: auto;">
-                  <div v-for="u in usernames" 
+                  <div v-for="u in orderedUsernames()" 
                        :key="u" 
                        @click="selectUsername(u)"
                        style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; cursor: pointer; transition: background-color 0.2s;"
                        class="custom-dropdown-item">
-                    <span style="font-size: 13px; color: #2C2621;">{{ u }}</span>
+                    <span style="font-size: 13px; color: #2C2621;">{{ u }}<span v-if="getPlatformMeta(form.platform).usernames.includes(u)" style="margin-left: 6px; font-size: 10px; font-weight: 700; color: var(--color-terracotta);">★ {{ form.platform }}</span></span>
                     
                     <button v-if="usernames.length > 1"
                             type="button" 
@@ -4687,6 +4687,61 @@ const ContentTracker = {
             style="flex: 1; min-height: 260px; resize: vertical; font-size: 13px; line-height: 1.6; font-family: 'Space Mono', monospace;"
           ></textarea>
 
+          <!-- Catatan per Platform / Channel + username kontributor yang dipakai -->
+          <div style="margin-top: 16px; border-top: 1.5px solid #EAE5DD; padding-top: 14px;" @click="showPlatNoteDropdown = false">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text-dark);">Catatan per Platform / Channel</div>
+            <p style="font-size: 11px; color: #9A8F85; margin: 3px 0 10px; line-height: 1.4;">Catatan khusus tiap platform dan username kontributor mana yang dipakai. Tersimpan otomatis.</p>
+
+            <div v-if="platformMetaBlocked" style="font-size: 11px; color: #C23939; margin-bottom: 8px;">
+              Data catatan platform gagal dibaca, jadi perubahan di sini tidak disimpan agar data lama tetap aman. Coba refresh halaman.
+            </div>
+
+            <!-- Tombol tambah catatan: pilih platform dulu lewat dropdown -->
+            <div style="position: relative; margin-bottom: 10px;">
+              <button type="button" @click.stop="showPlatNoteDropdown = !showPlatNoteDropdown"
+                      style="height: 34px; padding: 0 14px; font-size: 12px; font-weight: 700; color: var(--color-terracotta); background: #FFF; border: 1.5px dashed var(--color-terracotta); border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                + Tambah Catatan
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+              <div v-if="showPlatNoteDropdown"
+                   style="position: absolute; top: 100%; left: 0; min-width: 210px; background: #FFFFFF; border: 1.5px solid #EAE5DD; border-radius: 8px; box-shadow: var(--shadow-md); z-index: 9999; margin-top: 4px; max-height: 200px; overflow-y: auto;">
+                <div style="padding: 6px 12px; font-size: 10.5px; font-weight: 700; color: #9A8F85; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 1.5px dashed #F5F2EB;">Pilih Platform / Channel</div>
+                <div v-for="p in availablePlatformsForNote()" :key="'pa-' + p" @click.stop="addPlatformNote(p)"
+                     class="custom-dropdown-item"
+                     style="padding: 8px 12px; cursor: pointer; font-size: 13px; color: #2C2621;">{{ p }}</div>
+                <div v-if="availablePlatformsForNote().length === 0" style="padding: 8px 12px; font-size: 12px; color: #9A8F85;">Semua platform sudah punya catatan</div>
+              </div>
+            </div>
+
+            <div v-if="platformNoteKeys().length === 0" style="font-size: 11.5px; color: #9A8F85; line-height: 1.4; padding: 4px 2px;">
+              Belum ada catatan platform. Klik "+ Tambah Catatan" lalu pilih platform.
+            </div>
+
+            <div v-for="plat in platformNoteKeys()" :key="'pn-' + plat" style="background: #FCFAF7; border: 1.5px solid #EAE5DD; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px;">
+              <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+                <span class="pill" :class="getPlatformClass(plat)" style="font-size: 11px; padding: 2px 8px;">{{ plat }}</span>
+                <button type="button" @click.stop="removePlatformNote(plat)" title="Hapus catatan platform ini"
+                        style="background: none; border: none; padding: 0 4px; font-size: 16px; line-height: 1; color: #9A8F85; cursor: pointer;">×</button>
+              </div>
+              <textarea class="form-input"
+                        :value="getPlatformMeta(plat).note"
+                        @input="setPlatformNote(plat, $event.target.value)"
+                        @blur="flushPlatformMeta()"
+                        rows="3"
+                        :placeholder="'Catatan untuk ' + plat + ' (cth: jam posting terbaik, aturan caption, rasio video...)'"
+                        style="min-height: 70px; resize: vertical; font-size: 12.5px; line-height: 1.5; font-family: 'Space Mono', monospace;"></textarea>
+              <div style="font-size: 11px; font-weight: 700; color: #7A6F66; margin: 8px 0 6px;">Username kontributor</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                <button type="button" v-for="u in usernames" :key="'pu-' + plat + u"
+                        @click="togglePlatformUsername(plat, u)"
+                        :style="{ fontSize: '11.5px', fontWeight: '600', padding: '4px 10px', borderRadius: '999px', cursor: 'pointer', fontFamily: 'Space Mono, monospace',
+                                  border: getPlatformMeta(plat).usernames.includes(u) ? '1.5px solid var(--color-terracotta)' : '1.5px solid #EAE5DD',
+                                  background: getPlatformMeta(plat).usernames.includes(u) ? 'var(--color-terracotta)' : '#FFF',
+                                  color: getPlatformMeta(plat).usernames.includes(u) ? '#FFF' : '#7A6F66' }">{{ u }}</button>
+              </div>
+            </div>
+          </div>
+
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
             <span style="font-size: 11px; color: #9A8F85; font-family: 'Space Mono', monospace;">{{ notesSaveStatus }}</span>
             <button class="btn btn-primary" style="height: 36px; padding: 0 18px; font-size: 12.5px; font-weight: 700;" @click="closeNotesModal">Selesai</button>
@@ -4790,6 +4845,11 @@ const ContentTracker = {
       columns: [],
       platforms: [],
       usernames: [],
+      // Profil per Platform/Channel: { "Instagram": { note, usernames: [...] } } — key terpisah, data lama aman
+      platformMeta: {},
+      platformMetaBlocked: false,
+      platformMetaTimer: null,
+      showPlatNoteDropdown: false,
       visibility: {
         platform: true,
         dueDate: true,
@@ -4837,6 +4897,19 @@ const ContentTracker = {
       this.usernames = JSON.parse(savedUsers);
     } else {
       this.usernames = ['@nadya', '@nanda', '@tim_sosmed'];
+    }
+
+    // 3b. Load profil per platform (catatan khusus + username kontributor terkait)
+    try {
+      const rawMeta = WorkspaceStorage.getItem('personal_workspace_content_platform_meta');
+      if (rawMeta) {
+        const pm = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : rawMeta;
+        if (pm && typeof pm === 'object' && !Array.isArray(pm)) this.platformMeta = pm;
+        else this.platformMetaBlocked = true;
+      }
+    } catch (e) {
+      console.error('[Content] Gagal baca profil platform, penulisan diblokir agar data lama aman:', e);
+      this.platformMetaBlocked = true;
     }
 
     // 4. Load Property Visibility Settings
@@ -4892,6 +4965,7 @@ const ContentTracker = {
       globalThis.removeEventListener('sync-logbook-content', this.handleSyncEvent);
     }
     clearTimeout(this.notesSaveTimer);
+    this.flushPlatformMeta();
   },
   methods: {
     // ── Catatan Umum (scratchpad bebas, terpisah dari kartu konten) ──
@@ -4906,6 +4980,8 @@ const ContentTracker = {
     closeNotesModal() {
       clearTimeout(this.notesSaveTimer);
       WorkspaceStorage.setItem('personal_workspace_content_page_notes', this.pageNotes);
+      this.flushPlatformMeta();
+      this.showPlatNoteDropdown = false;
       this.notesSaveStatus = '';
       this.showNotesModal = false;
     },
@@ -5086,9 +5162,78 @@ const ContentTracker = {
         this.saveToStorage();
       }
     },
+    // ── Profil per Platform / Channel: catatan khusus + username kontributor terkait ──
+    // Disimpan di key TERPISAH 'personal_workspace_content_platform_meta', jadi konten, daftar
+    // platform, dan daftar username lama tidak disentuh. Bentuk: { "Instagram": { note, usernames } }
+    getPlatformMeta(name) {
+      const m = (name && this.platformMeta[name]) || {};
+      return { note: m.note || '', usernames: Array.isArray(m.usernames) ? m.usernames : [] };
+    },
+    setPlatformNote(name, val) {
+      if (!name) return;
+      const cur = this.getPlatformMeta(name);
+      this.platformMeta = { ...this.platformMeta, [name]: { ...cur, note: val } };
+      clearTimeout(this.platformMetaTimer);
+      this.platformMetaTimer = setTimeout(() => this.flushPlatformMeta(), 500);
+    },
+    togglePlatformUsername(name, u) {
+      if (!name) return;
+      const cur = this.getPlatformMeta(name);
+      const list = cur.usernames.includes(u) ? cur.usernames.filter(x => x !== u) : [...cur.usernames, u];
+      this.platformMeta = { ...this.platformMeta, [name]: { ...cur, usernames: list } };
+      this.flushPlatformMeta();
+    },
+    flushPlatformMeta() {
+      clearTimeout(this.platformMetaTimer);
+      if (this.platformMetaBlocked) return; // data lama gagal dibaca → jangan menimpa
+      try {
+        WorkspaceStorage.setItem('personal_workspace_content_platform_meta', JSON.stringify(this.platformMeta));
+      } catch (e) {
+        console.error('[Content] Gagal simpan profil platform:', e);
+      }
+    },
+    // Platform yang SUDAH punya kartu catatan (semua key di platformMeta — termasuk data lama, tidak ada yang disembunyikan)
+    platformNoteKeys() {
+      return Object.keys(this.platformMeta);
+    },
+    // Platform yang belum punya kartu catatan → isi dropdown "+ Tambah Catatan"
+    availablePlatformsForNote() {
+      return this.platforms.filter(p => !Object.prototype.hasOwnProperty.call(this.platformMeta, p));
+    },
+    addPlatformNote(plat) {
+      this.showPlatNoteDropdown = false;
+      if (!plat || this.platformMetaBlocked) return;
+      if (Object.prototype.hasOwnProperty.call(this.platformMeta, plat)) return; // jangan menimpa yang sudah ada
+      this.platformMeta = { ...this.platformMeta, [plat]: { note: '', usernames: [] } };
+      this.flushPlatformMeta();
+    },
+    removePlatformNote(plat) {
+      if (this.platformMetaBlocked) return;
+      const m = this.getPlatformMeta(plat);
+      const hasContent = m.note.trim() || m.usernames.length;
+      const msg = hasContent
+        ? 'Hapus catatan untuk ' + plat + '? Isi catatan dan pilihan usernamenya akan hilang.'
+        : 'Hapus kartu catatan ' + plat + '?';
+      if (!confirm(msg)) return;
+      const next = { ...this.platformMeta };
+      delete next[plat];
+      this.platformMeta = next;
+      this.flushPlatformMeta();
+    },
+    // Username yang terkait platform terpilih ditaruh paling atas di dropdown
+    orderedUsernames() {
+      const linked = this.getPlatformMeta(this.form.platform).usernames;
+      return [...this.usernames.filter(u => linked.includes(u)), ...this.usernames.filter(u => !linked.includes(u))];
+    },
     selectPlatform(plat) {
       this.form.platform = plat;
       this.showPlatDropdown = false;
+      // Konten BARU: kalau platform ini punya username kontributor terkait, otomatis pilih yang pertama.
+      // (Saat edit, username konten yang sudah ada tidak diubah.)
+      if (!this.isEditing) {
+        const linked = this.getPlatformMeta(plat).usernames.filter(u => this.usernames.includes(u));
+        if (linked.length && !linked.includes(this.form.username)) this.form.username = linked[0];
+      }
     },
     selectUsername(u) {
       this.form.username = u;
@@ -5195,6 +5340,7 @@ const ContentTracker = {
       this.showAddModal = true;
     },
     saveItem() {
+      this.flushPlatformMeta();
       let finalPlatform = this.form.platform;
       if (this.form.platform === '__CUSTOM__') {
         const customPlat = this.customPlatformName.trim();
