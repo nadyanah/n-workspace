@@ -174,6 +174,209 @@ const ExpandableText = {
   }
 };
 
+// ============================================================================
+// REMINDER CHECKLIST — task kecil di dalam setiap popup pengingat
+// ============================================================================
+// Disimpan di key TERPISAH 'ws_reminder_checklists' (bukan di dalam objek
+// pengingat), jadi data pengingat lama (ws_manual_notifs dll) TIDAK disentuh
+// sama sekali dan tidak bisa ikut ketimpa saat pengingat diedit/digeser.
+//
+// Bentuk data:
+//   { "<idPengingat>": [ { id, text, doneOn: { "YYYY-MM-DD": true }, createdAt } ] }
+//
+// "doneOn" per tanggal → untuk pengingat berulang, centang hari ini tidak
+// otomatis mencentang hari besok.
+//
+// Pengaman: kalau data lama gagal dibaca, operasi tulis DIBATALKAN (tidak
+// menimpa dengan data kosong).
+// ============================================================================
+const ReminderChecklistStore = {
+  KEY: 'ws_reminder_checklists',
+
+  _norm(id) {
+    // habit_xxx (panel notif) dan habit-xxx (agenda) dianggap id yang sama
+    return String(id == null ? '' : id).replace(/^habit[-_]/, 'habit_');
+  },
+
+  _today() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  },
+
+  _read() {
+    try {
+      const raw = WorkspaceStorage.getItem(this.KEY);
+      if (!raw) return { ok: true, data: {} };
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return { ok: true, data: parsed };
+      return { ok: false, data: {} };
+    } catch (e) {
+      console.error('[ReminderChecklist] Gagal baca data checklist:', e);
+      return { ok: false, data: {} };
+    }
+  },
+
+  _write(data) {
+    try {
+      WorkspaceStorage.setItem(this.KEY, JSON.stringify(data));
+      window.dispatchEvent(new CustomEvent('ws-checklist-changed'));
+      return true;
+    } catch (e) {
+      console.error('[ReminderChecklist] Gagal simpan checklist:', e);
+      return false;
+    }
+  },
+
+  list(itemId, date) {
+    const r = this._read();
+    const arr = Array.isArray(r.data[this._norm(itemId)]) ? r.data[this._norm(itemId)] : [];
+    const ds = date || this._today();
+    return arr.map(it => ({ id: it.id, text: it.text, done: !!(it.doneOn && it.doneOn[ds]) }));
+  },
+
+  add(itemId, text) {
+    text = String(text || '').trim();
+    if (!text) return false;
+    const r = this._read();
+    if (!r.ok) return false;
+    const k = this._norm(itemId);
+    const arr = Array.isArray(r.data[k]) ? r.data[k].slice() : [];
+    arr.push({ id: 'cl_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text, doneOn: {}, createdAt: new Date().toISOString() });
+    r.data[k] = arr;
+    return this._write(r.data);
+  },
+
+  toggle(itemId, checkId, date) {
+    const r = this._read();
+    if (!r.ok) return false;
+    const k = this._norm(itemId);
+    const ds = date || this._today();
+    const arr = Array.isArray(r.data[k]) ? r.data[k] : [];
+    r.data[k] = arr.map(it => {
+      if (it.id !== checkId) return it;
+      const doneOn = { ...(it.doneOn || {}) };
+      if (doneOn[ds]) delete doneOn[ds]; else doneOn[ds] = true;
+      return { ...it, doneOn };
+    });
+    return this._write(r.data);
+  },
+
+  remove(itemId, checkId) {
+    const r = this._read();
+    if (!r.ok) return false;
+    const k = this._norm(itemId);
+    const arr = Array.isArray(r.data[k]) ? r.data[k] : [];
+    r.data[k] = arr.filter(it => it.id !== checkId);
+    return this._write(r.data);
+  },
+
+  // Dipakai saat edit pengingat berulang ("acara ini saja" / "dan seterusnya")
+  // yang membuat id baru — checklist lama ikut disalin, tidak hilang.
+  copy(fromId, toId) {
+    const r = this._read();
+    if (!r.ok) return false;
+    const from = this._norm(fromId), to = this._norm(toId);
+    if (from === to || !Array.isArray(r.data[from]) || r.data[from].length === 0) return true;
+    if (Array.isArray(r.data[to]) && r.data[to].length > 0) return true; // jangan timpa
+    r.data[to] = JSON.parse(JSON.stringify(r.data[from]));
+    return this._write(r.data);
+  }
+};
+window.ReminderChecklistStore = ReminderChecklistStore;
+
+const ReminderChecklist = {
+  props: {
+    itemId: { type: [String, Number], required: true },
+    date:   { type: String, default: '' }
+  },
+  template: `
+    <div @click.stop @mousedown.stop @touchstart.stop style="margin-top:8px; text-align:left; cursor:default;">
+      <div v-if="items.length" style="display:flex; align-items:center; justify-content:space-between; font-size:10.5px; font-weight:700; color:var(--text-muted); margin-bottom:3px; letter-spacing:0.04em; text-transform:uppercase;">
+        <span>Checklist</span>
+        <span>{{ doneCount }}/{{ items.length }}</span>
+      </div>
+
+      <div v-for="it in items" :key="it.id" style="display:flex; align-items:flex-start; gap:8px; padding:3px 0;">
+        <button type="button" @click.stop="toggle(it)" :aria-pressed="it.done" :title="it.done ? 'Batalkan centang' : 'Tandai selesai'"
+                :style="{ flex:'0 0 auto', width:'18px', height:'18px', marginTop:'1px', padding:'0', borderRadius:'5px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
+                          border: it.done ? '1.5px solid var(--color-terracotta,#D67B52)' : '1.5px solid var(--color-sand,#D9D0C3)',
+                          background: it.done ? 'var(--color-terracotta,#D67B52)' : '#fff' }">
+          <svg v-if="it.done" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+        <span @click.stop="toggle(it)"
+              :style="{ flex:'1', minWidth:'0', fontSize:'12.5px', lineHeight:'1.45', wordBreak:'break-word', cursor:'pointer',
+                        color: it.done ? 'var(--text-muted)' : 'var(--text-dark)',
+                        textDecoration: it.done ? 'line-through' : 'none',
+                        opacity: it.done ? 0.6 : 1 }">{{ it.text }}</span>
+        <button type="button" @click.stop="remove(it)" title="Hapus task ini"
+                style="flex:0 0 auto; background:none; border:none; padding:0 2px; font-size:15px; line-height:1; color:var(--text-muted); opacity:0.5; cursor:pointer;">×</button>
+      </div>
+
+      <div style="display:flex; gap:6px; margin-top:4px;">
+        <input v-model="newText" @keydown="onKey" type="text" maxlength="120" placeholder="+ Tambah task kecil..."
+               style="flex:1; min-width:0; padding:6px 10px; border:1.5px solid var(--color-sand,#D9D0C3); border-radius:8px; font-size:12px; color:var(--text-dark); background:#fff; outline:none; box-sizing:border-box;" />
+        <button type="button" @click.stop="add" :disabled="!newText.trim()"
+                :style="{ flex:'0 0 auto', padding:'6px 12px', border:'none', borderRadius:'8px', fontSize:'12px', fontWeight:'700', color:'#fff', background:'var(--color-terracotta,#D67B52)', cursor: newText.trim() ? 'pointer' : 'default', opacity: newText.trim() ? 1 : 0.45 }">Tambah</button>
+      </div>
+      <div v-if="error" style="font-size:11px; color:#C23939; margin-top:4px;">{{ error }}</div>
+    </div>
+  `,
+  data() {
+    return { items: [], newText: '', error: '' };
+  },
+  computed: {
+    doneCount() { return this.items.filter(i => i.done).length; }
+  },
+  watch: {
+    itemId() { this.load(); },
+    date()   { this.load(); }
+  },
+  mounted() {
+    this.load();
+    this._onChange = () => this.load();
+    window.addEventListener('ws-checklist-changed', this._onChange);
+  },
+  beforeUnmount() {
+    window.removeEventListener('ws-checklist-changed', this._onChange);
+  },
+  methods: {
+    load() {
+      this.items = ReminderChecklistStore.list(this.itemId, this.date);
+    },
+    _fail() {
+      this.error = 'Checklist gagal disimpan. Data lama tidak diubah, coba lagi.';
+      setTimeout(() => { this.error = ''; }, 4000);
+    },
+    onKey(e) {
+      e.stopPropagation(); // supaya shortcut keyboard global tidak ikut jalan saat mengetik
+      if (e.key === 'Enter') { e.preventDefault(); this.add(); }
+    },
+    add() {
+      const t = this.newText.trim();
+      if (!t) return;
+      if (ReminderChecklistStore.add(this.itemId, t)) { this.newText = ''; this.error = ''; this.load(); }
+      else this._fail();
+    },
+    toggle(it) {
+      if (!ReminderChecklistStore.toggle(this.itemId, it.id, this.date)) { this._fail(); return; }
+      this.load();
+      // Semua task kecil sudah tercentang (dan baru saja dicentang, bukan di-uncheck)
+      // → kabari komponen induk supaya pengingatnya ikut ditandai selesai.
+      const nowItem = this.items.find(x => x.id === it.id);
+      if (nowItem && nowItem.done && this.items.length > 0 && this.items.every(x => x.done)) {
+        this.$emit('all-done');
+      }
+    },
+    remove(it) {
+      if (!confirm('Hapus task "' + it.text + '" dari checklist?')) return;
+      if (ReminderChecklistStore.remove(this.itemId, it.id)) this.load();
+      else this._fail();
+    }
+  }
+};
+ReminderChecklist.emits = ['all-done'];
+window.ReminderChecklist = ReminderChecklist;
+
 const ReminderPopup = {
   template: `
     <transition name="reminder-popup-fade">

@@ -983,6 +983,7 @@ app.component('career-nav-fab', CareerNavFab);
 app.component('notification-panel', NotificationPanel);
 app.component('expandable-text', ExpandableText);
 app.component('reminder-popup', ReminderPopup);
+app.component('reminder-checklist', ReminderChecklist);
 app.component('quran-noon-popup', QuranNoonPopup);
 app.component('daily-quote-popup', DailyQuotePopup);
 app.component('moment-evening-popup', MomentEveningPopup);

@@ -10662,6 +10662,16 @@ const GoogleCalendar = {
                   <span class="agenda-detail-row-text">{{ agendaDetailItem.raw.category }}</span>
                 </div>
 
+
+                <!-- Checklist task kecil (tercoret kalau dicentang) — berlaku untuk semua tipe item -->
+                <div v-if="agendaDetailItem && agendaDetailItem.type !== 'task' && agendaDetailItem.type !== 'habit'" style="padding:10px 0 4px;">
+                  <reminder-checklist
+                    :key="'cl-' + ((agendaDetailItem.raw && agendaDetailItem.raw.id) ? agendaDetailItem.raw.id : agendaDetailItem.id) + '-' + agendaDetailItem.dateStr"
+                    :item-id="String((agendaDetailItem.raw && agendaDetailItem.raw.id) ? agendaDetailItem.raw.id : agendaDetailItem.id)"
+                    :date="agendaDetailItem.dateStr"
+                    @all-done="localChecklistAllDone"></reminder-checklist>
+                </div>
+
               </div>
 
               <!-- Footer: Tandai Selesai (untuk semua tipe yang actionable, kecuali task/Job Logbook) + Buka halaman untuk non-actionable -->
@@ -13015,6 +13025,19 @@ const GoogleCalendar = {
       } catch(_e) { /* ignore */ }
     },
 
+    // ── Semua checklist di popup detail sudah tercentang → otomatis tandai pengingat selesai ──
+    // Memakai jalur yang sama persis dengan tombol "Tandai selesai" (notifikasi, daftar Terlewat,
+    // streak, dan sinkron Habit Tracker ikut terurus). Hanya jalan kalau belum selesai, jadi tidak
+    // pernah membalik status. Task Plan dikecualikan (sama seperti tombolnya) agar alur Job Logbook
+    // tidak terlewati.
+    localChecklistAllDone() {
+      const it = this.agendaDetailItem;
+      if (!it || !it.actionable || it.type === 'task' || it.done) return;
+      this.localMarkDoneFromDetail(it);
+      this.localSuccess = 'Semua checklist selesai — pengingat otomatis ditandai selesai ✓';
+      setTimeout(() => { this.localSuccess = null; }, 3000);
+    },
+
     // ── Batal isi form pengingat — tutup modal & reset semua flag (termasuk split/exclude) ──
     localCancelReminderForm() {
       this.localShowForm = false;
@@ -13640,6 +13663,11 @@ const GoogleCalendar = {
         isManual: true
       });
       WorkspaceStorage.setItem('ws_manual_notifs', JSON.stringify(manuals));
+      // Edit "acara ini saja" / "dan seterusnya" membuat id baru → checklist lama ikut disalin
+      try {
+        const _oldCl = this.localNewReminder._excludeFromSeriesId || this.localNewReminder._splitFromSeriesId;
+        if (_oldCl && typeof ReminderChecklistStore !== 'undefined') ReminderChecklistStore.copy(_oldCl, id);
+      } catch(_e) { /* ignore */ }
       this.localStorageTick++;
       this.localSuccess = (editId ? 'Pengingat berhasil diperbarui!' : 'Pengingat "' + this.localNewReminder.title.trim() + '" berhasil disimpan!');
       this.localError = null;
