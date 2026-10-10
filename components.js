@@ -9282,19 +9282,17 @@ const HabitTracker = {
       btn.style.transform = '';
       btn.style.boxShadow = '';
     },
-    // Gerbang Dzikir Waktu: true kalau centang HARI INI harus diblokir (dzikir belum tuntas).
-    // Kalau diblokir, otomatis membuka panel Dzikir. Hanya berlaku untuk hari ini & aksi mencentang
-    // (uncentang & tanggal lampau tetap bebas).
+    // Gerbang habit: true kalau centang HARI INI harus diblokir — di luar jendela 4 jam dari jam
+    // jadwal (toast), atau Dzikir Waktu belum tuntas (buka panel Dzikir). Hanya berlaku untuk
+    // hari ini & aksi mencentang (uncentang & tanggal lampau tetap bebas).
     _dzikirGateBlocks(habitId, day) {
       const habit = this.habits.find(h => h.id === habitId);
-      if (!habit || habit.category !== 'Dzikir Waktu') return false;
-      const now = new Date();
-      const ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-      if (this.currentYearMonth !== ym || day !== now.getDate()) return false;
-      if ((habit.history[this.currentYearMonth] || []).includes(day)) return false;
-      if (!globalThis.wsIsDzikirLocked(habitId)) return false;
-      globalThis.wsOpenDzikirPanel();
-      return true;
+      if (!habit) return false;
+      if ((habit.history[this.currentYearMonth] || []).includes(day)) return false; // uncheck → bebas
+      // Jendela 4 jam + gerbang dzikir hanya untuk kategori Dzikir Waktu (hari lain → toast terkunci)
+      if (habit.category !== 'Dzikir Waktu') return false;
+      const dateStr = this.currentYearMonth + '-' + String(day).padStart(2, '0');
+      return !!(typeof globalThis.wsHabitGateAct === 'function' && globalThis.wsHabitGateAct('habit_' + habitId, dateStr));
     },
     toggleDayCheckWithSound(habitId, day) {
       if (this._dzikirGateBlocks(habitId, day)) return;
@@ -9558,6 +9556,11 @@ globalThis.wsIsDzikirLocked = function (habitId) {
       .sort((a, b) => (a.timeVal || 0) - (b.timeVal || 0));
     const idx = dz.findIndex(h => h.id === notifId);
     if (idx === -1) return false; // bukan habit Dzikir Waktu (atau tidak berjadwal)
+    // Sesi dzikir harus tuntas di dalam jendela 4 jam habit ini (kalau waktu sesi tersedia)
+    if (typeof globalThis.wsDzikirSessionInWindow === 'function') {
+      const w = globalThis.wsDzikirSessionInWindow(dz[idx].timeVal);
+      if (w !== null) return !w;
+    }
     const now = new Date();
     const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
     const dRaw = WorkspaceStorage.getItem('dzikir_completed_today');
@@ -13346,15 +13349,16 @@ const GoogleCalendar = {
     // Return true kalau diblokir.
     _localDzikirGate(block) {
       try {
-        if (!block || block.type !== 'habit' || !block.raw || !block.raw.habitId) return false;
+        if (!block || block.type !== 'habit' || !block.raw) return false;
+        const hid = block.raw.habitId || (block.raw.id ? String(block.raw.id).replace(/^habit[-_]/, '') : null);
+        if (!hid) return false;
         const ds = block.dateStr || this.localSelectedDate || this.localFmtDate(new Date());
-        if (ds !== this.localFmtDate(new Date())) return false;
         const key = block.raw.id || block.id;
         const st = JSON.parse(WorkspaceStorage.getItem('ws_notif_action_status') || '{}');
         if (st[ds] && st[ds][key] === true) return false; // sudah selesai → boleh di-undo
-        if (!globalThis.wsIsDzikirLocked(block.raw.habitId)) return false;
-        globalThis.wsOpenDzikirPanel();
-        return true;
+        // Jendela 4 jam + Dzikir Waktu. Return 'time' | 'dzikir' | false
+        if (typeof globalThis.wsHabitGateAct !== 'function') return false;
+        return globalThis.wsHabitGateAct('habit_' + hid, ds) || false;
       } catch (_e) { return false; }
     },
     localHandleAgendaAction(block) {
@@ -13567,7 +13571,9 @@ const GoogleCalendar = {
     localMarkDoneFromDetail(block) {
       if (!block) return;
       // Dzikir Waktu masih terkunci → tutup popup detail & buka panel Dzikir
-      if (this._localDzikirGate(block)) { this.agendaDetailItem = null; return; }
+      // (jendela waktu habis/belum waktunya → popup tetap terbuka, cukup toast)
+      const _gate = this._localDzikirGate(block);
+      if (_gate) { if (_gate === 'dzikir') this.agendaDetailItem = null; return; }
       this.localHandleAgendaAction(block);
       // Update the popup state to reflect new done status
       const ds = block.dateStr || this.localSelectedDate || this.localFmtDate(new Date());
@@ -14366,8 +14372,23 @@ const GoogleCalendar = {
       const endMin = Math.min(1439, startMin + duration);
       return this._dragFmtMin(startMin) + ' – ' + this._dragFmtMin(endMin);
     },
+    // Gerbang geser habit Dzikir Waktu (hanya membaca). true = DITOLAK (toast sudah ditampilkan).
+    _localDzikirDragBlocked(block, scope) {
+      try {
+        if (!block || block.type !== 'habit' || !block.raw) return false;
+        if (typeof globalThis.wsHabitRescheduleGate !== 'function') return false;
+        const hid = block.raw.habitId || (block.raw.id ? String(block.raw.id).replace(/^habit[-_]/, '') : null);
+        if (!hid) return false;
+        const occurDate = block.dateStr || this.localSelectedDate || this.localFmtDate(new Date());
+        const g = globalThis.wsHabitRescheduleGate('habit_' + hid, occurDate, scope);
+        if (!g.blocked) return false;
+        if (typeof globalThis.wsToast === 'function') globalThis.wsToast(g.message);
+        return true;
+      } catch (_e) { return false; }
+    },
     localStartBlockDrag(e, block) {
       if (block.type !== 'manual' && block.type !== 'task' && !(block.type === 'habit' && block.actionable)) return;
+      if (this._localDzikirDragBlocked(block)) return; // habit Dzikir Waktu terkunci → tidak mulai drag
       this.agendaDrag = {
         blockId: block.id,
         block: block,
@@ -14389,6 +14410,7 @@ const GoogleCalendar = {
     localHandleDragHandleTouchStart(e, block) {
       if (block.type !== 'manual' && block.type !== 'task' && !(block.type === 'habit' && block.actionable)) return;
       if (this.agendaDrag.blockId) return;
+      if (this._localDzikirDragBlocked(block)) return; // habit Dzikir Waktu terkunci → tidak mulai drag
 
       const touch = e.touches[0];
       if (navigator.vibrate) navigator.vibrate(25);
@@ -14620,6 +14642,10 @@ const GoogleCalendar = {
       if (!habitId) return;
       const occurDate = block.dateStr || this.localSelectedDate || this.localFmtDate(new Date());
       const todayStr = this.localFmtDate(new Date());
+
+      // Pengaman terakhir SEBELUM menulis: scope 'following' mengubah jadwal default dan ikut
+      // menggeser jendela hari ini. Kalau ditolak → tidak ada data yang diubah.
+      if (this._localDzikirDragBlocked(block, scope)) { this.recurActionPopup = null; return; }
 
       try {
         const raw = WorkspaceStorage.getItem('aesthetic_habit_tracker_habits');
@@ -17383,6 +17409,9 @@ const DzikirCounter = {
             data = { date: todayStr, count: 0 };
           }
           data.count += 1;
+          // Simpan waktu tiap sesi tuntas → dipakai gerbang jendela 4 jam habit Dzikir Waktu
+          if (!Array.isArray(data.times)) data.times = [];
+          data.times.push(Date.now());
           WorkspaceStorage.setItem('dzikir_completed_today', JSON.stringify(data));
           // Tetap simpan timestamp lama untuk backward-compat (kalau ada kode lain yg baca)
           WorkspaceStorage.setItem('dzikir_last_completed_at', String(Date.now()));
