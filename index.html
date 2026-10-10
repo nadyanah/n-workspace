@@ -318,6 +318,17 @@
     }
     .reminder-popup-item-info-text { flex: 1; min-width: 0; }
 
+    /* Checklist (hanya-lihat) di dalam item popup pengingat:
+       judul + deskripsi tetap satu baris seperti biasa, checklist turun ke baris sendiri selebar kolom isi.
+       Hanya aktif kalau item punya checklist — item tanpa checklist tidak berubah. */
+    .reminder-popup-item-info:has(> .rcv-wrap) { flex-wrap: wrap; }
+    .reminder-popup-item-info:has(> .rcv-wrap) > .rp-sub-expandable { flex: 1 1 150px; min-width: 0; margin-top: 0; }
+    .reminder-popup-item-info > .rcv-wrap {
+      flex: 0 0 100%; box-sizing: border-box;
+      margin-top: 2px !important; padding-top: 7px;
+      border-top: 1px dashed rgba(214,123,82,0.28);
+    }
+
     /* ── Hover "feels" animation — semua item di popup Pengingat Hari Ini (mode open) ── */
     .reminder-popup-item {
       cursor: default;

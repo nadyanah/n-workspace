@@ -377,7 +377,62 @@ const ReminderChecklist = {
 ReminderChecklist.emits = ['all-done'];
 window.ReminderChecklist = ReminderChecklist;
 
+// ── ReminderChecklistView: daftar checklist HANYA-LIHAT untuk panel notif ──
+// Membaca dari ReminderChecklistStore yang sama dengan popup pengingat di page Daily,
+// tapi tidak punya tombol tambah / centang / hapus. Aksi tetap dilakukan dari page Daily.
+// Murni tampilan: tidak menulis ke storage sama sekali.
+const ReminderChecklistView = {
+  props: {
+    itemId: { type: [String, Number], required: true },
+    date:   { type: String, default: '' }
+  },
+  template: `
+    <div v-if="items.length" class="rcv-wrap" @click.stop @mousedown.stop @touchstart.stop
+         title="Hanya tampilan — centang / ubah checklist dari halaman Daily"
+         style="margin-top:6px; text-align:left; cursor:default;">
+      <div style="display:flex; align-items:center; justify-content:space-between; font-size:9.5px; font-weight:700; color:var(--text-muted); margin-bottom:2px; letter-spacing:0.05em; text-transform:uppercase;">
+        <span>Checklist</span>
+        <span>{{ doneCount }}/{{ items.length }}</span>
+      </div>
+      <div v-for="it in items" :key="it.id" style="display:flex; align-items:flex-start; gap:6px; padding:1.5px 0;">
+        <span :style="{ flex:'0 0 auto', width:'13px', height:'13px', marginTop:'2px', borderRadius:'4px', display:'inline-flex', alignItems:'center', justifyContent:'center', boxSizing:'border-box',
+                        border: it.done ? '1.5px solid var(--color-terracotta,#D67B52)' : '1.5px solid var(--color-sand,#D9D0C3)',
+                        background: it.done ? 'var(--color-terracotta,#D67B52)' : '#fff' }">
+          <svg v-if="it.done" viewBox="0 0 24 24" width="8" height="8" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </span>
+        <span :style="{ flex:'1', minWidth:'0', fontSize:'11.5px', lineHeight:'1.4', wordBreak:'break-word',
+                        color: it.done ? 'var(--text-muted)' : 'var(--text-dark)',
+                        textDecoration: it.done ? 'line-through' : 'none',
+                        opacity: it.done ? 0.6 : 1 }">{{ it.text }}</span>
+      </div>
+    </div>
+  `,
+  data() { return { items: [] }; },
+  computed: {
+    doneCount() { return this.items.filter(i => i.done).length; }
+  },
+  watch: {
+    itemId() { this.load(); },
+    date()   { this.load(); }
+  },
+  mounted() {
+    this.load();
+    this._onChange = () => this.load();
+    window.addEventListener('ws-checklist-changed', this._onChange);
+  },
+  beforeUnmount() {
+    window.removeEventListener('ws-checklist-changed', this._onChange);
+  },
+  methods: {
+    load() {
+      this.items = ReminderChecklistStore.list(this.itemId, this.date);
+    }
+  }
+};
+window.ReminderChecklistView = ReminderChecklistView;
+
 const ReminderPopup = {
+  components: { 'reminder-checklist-view': ReminderChecklistView },
   template: `
     <transition name="reminder-popup-fade">
       <div v-if="visible" class="reminder-popup-overlay" @click.self="dismiss">
@@ -449,6 +504,7 @@ const ReminderPopup = {
                   <div class="reminder-popup-item-info" style="flex:1; min-width:0;">
                     <div class="reminder-popup-item-title">{{ entry.item.title }}</div>
                     <expandable-text :text="entry.item.subtitle"></expandable-text>
+                    <reminder-checklist-view :item-id="entry.item.id" :date="todayStr"></reminder-checklist-view>
                   </div>
                   <svg v-if="entry.item.page" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted); opacity:0.55; flex-shrink:0; align-self:center;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </div>
@@ -512,6 +568,7 @@ const ReminderPopup = {
                   <div class="reminder-popup-item-info">
                     <div class="reminder-popup-item-title">{{ queue[0].title }}</div>
                     <expandable-text :text="queue[0].subtitle"></expandable-text>
+                    <reminder-checklist-view :item-id="queue[0].id" :date="todayStr"></reminder-checklist-view>
                   </div>
                 </div>
 
@@ -552,6 +609,7 @@ const ReminderPopup = {
                     <div class="reminder-popup-item-info">
                       <div class="reminder-popup-item-title">{{ currentItem.title }}</div>
                       <expandable-text :text="currentItem.subtitle"></expandable-text>
+                      <reminder-checklist-view :item-id="currentItem.id" :date="todayStr"></reminder-checklist-view>
                     </div>
                   </div>
                 </div>
@@ -1396,6 +1454,8 @@ const ReminderPopup = {
     // Sync ke actionStatus, histori Habit Tracker (kalau habit), Agenda view, dan
     // putus rentetan kelewat berturut-turut.
     markPopupItemDone(item) {
+      // Dzikir Waktu belum tuntas → tutup popup & arahkan ke panel Dzikir (tidak ditandai selesai)
+      if (item.isHabit && _dzikirGateBlocksId(item.id)) { this.visible = false; return; }
       try { NotifSound.playCheck(); } catch(e) {}
 
       // Tandai selesai di notif status hari ini + dispatch ws-notif-status-updated
@@ -1616,6 +1676,24 @@ if (typeof isDzikirReadyForHabit === 'undefined') {
   };
 }
 
+
+// ── Gerbang Dzikir Waktu untuk popup pengingat & daftar Terlewat ──
+// Aturan sama dengan tab "Hari Ini": habit kategori Dzikir Waktu (HARI INI) tidak boleh
+// ditandai selesai sebelum dzikir tuntas. Kalau masih terkunci → buka panel Dzikir &
+// return true (aksi harus dibatalkan oleh pemanggil). Tanggal lampau tidak dikunci,
+// karena hitungan dzikir hanya berlaku per hari.
+function _dzikirGateBlocksId(notifId, dateStr) {
+  try {
+    if (!notifId || !String(notifId).startsWith('habit_')) return false;
+    const now = new Date();
+    const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    if (dateStr && dateStr !== todayStr) return false;
+    if (typeof globalThis.wsIsDzikirLocked !== 'function') return false;
+    if (!globalThis.wsIsDzikirLocked(notifId)) return false;
+    globalThis.dispatchEvent(new CustomEvent('ws-open-dzikir'));
+    return true;
+  } catch (_e) { return false; }
+}
 
 // ── Helper: kumpulkan semua reminder (habit + manual + task plan) yang aktif pada tanggal tertentu ──
 function _collectReminderBaseForDate(dateStr) {
@@ -2226,6 +2304,7 @@ const NotificationPanel = {
                       <span v-else-if="entry.item.done">Sudah dikerjakan ✓ <span style="opacity:0.6;">· klik untuk batalkan</span></span>
                       <span v-else-if="!(entry.item.isDzikirWaktu && entry.item.dzikirLocked)" style="white-space:pre-wrap;">{{ entry.item.subtitle }}</span>
                     </div>
+                    <reminder-checklist-view :item-id="entry.item.id" :date="todayStr"></reminder-checklist-view>
                   </div>
                   <div class="notif-item-right">
                     <span class="notif-time-badge">{{ entry.item.endTime ? entry.item.time + '–' + entry.item.endTime : entry.item.time }}</span>
@@ -2339,6 +2418,7 @@ const NotificationPanel = {
                       <span v-else-if="entry.item.done">Sudah dikerjakan ✓ <span style="opacity:0.6;">· klik untuk batalkan</span></span>
                       <span v-else-if="!(entry.item.isDzikirWaktu && entry.item.dzikirLocked)" style="white-space:pre-wrap;">{{ entry.item.subtitle }}</span>
                     </div>
+                    <reminder-checklist-view :item-id="entry.item.id" :date="todayStr"></reminder-checklist-view>
                   </div>
                   <div class="notif-item-right">
                     <span class="notif-time-badge">{{ entry.item.endTime ? entry.item.time + '–' + entry.item.endTime : entry.item.time }}</span>
@@ -2451,6 +2531,7 @@ const NotificationPanel = {
                       <span v-else-if="entry.item.done">Sudah dikerjakan ✓ <span style="opacity:0.6;">· klik untuk batalkan</span></span>
                       <span v-else-if="!(entry.item.isDzikirWaktu && entry.item.dzikirLocked)" style="white-space:pre-wrap;">{{ entry.item.subtitle }}</span>
                     </div>
+                    <reminder-checklist-view :item-id="entry.item.id" :date="todayStr"></reminder-checklist-view>
                   </div>
                   <div class="notif-item-right">
                     <span class="notif-time-badge">{{ entry.item.endTime ? entry.item.time + '–' + entry.item.endTime : entry.item.time }}</span>
@@ -2563,6 +2644,7 @@ const NotificationPanel = {
                       <span v-else-if="entry.item.done">Sudah dikerjakan ✓ <span style="opacity:0.6;">· klik untuk batalkan</span></span>
                       <span v-else-if="!(entry.item.isDzikirWaktu && entry.item.dzikirLocked)" style="white-space:pre-wrap;">{{ entry.item.subtitle }}</span>
                     </div>
+                    <reminder-checklist-view :item-id="entry.item.id" :date="todayStr"></reminder-checklist-view>
                   </div>
                   <div class="notif-item-right">
                     <span class="notif-time-badge">{{ entry.item.endTime ? entry.item.time + '–' + entry.item.endTime : entry.item.time }}</span>
@@ -2775,6 +2857,7 @@ const NotificationPanel = {
                         <div style="flex:1; min-width:0;">
                           <div style="font-size:12px; font-weight:700; color:var(--text-dark); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ task.title }}</div>
                           <div style="font-size:10.5px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ task.subtitle }}</div>
+                          <reminder-checklist-view :item-id="task.id" :date="entry.date"></reminder-checklist-view>
                         </div>
                         <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
                           <span style="font-size:10px; font-weight:700; padding:2px 7px; border-radius:7px; background:var(--bg-cream); border:1px solid var(--color-sand); color:var(--text-dark); white-space:nowrap;">{{ task.time }}</span>
@@ -2873,6 +2956,7 @@ const NotificationPanel = {
     </transition>
   `,
 
+  components: { 'reminder-checklist-view': ReminderChecklistView },
   props: {
     show: { type: Boolean, default: false }
   },
@@ -3632,6 +3716,8 @@ const NotificationPanel = {
     // bukan hari ini), Agenda/Google Calendar view (event ws-notif-status-updated),
     // dan rentetan kelewat berturut-turut (direset karena akhirnya dikerjakan).
     markMissedTaskAsDone(entry, task) {
+      // Dzikir Waktu hari ini belum tuntas → arahkan ke panel Dzikir (tidak ditandai selesai)
+      if (task.type === 'habit' && _dzikirGateBlocksId(task.id, entry.date)) return;
       try { NotifSound.playCheck(); } catch(e) {}
 
       // 1) Tandai selesai di actionStatus untuk TANGGAL asli task tsb (entry.date)
@@ -3799,6 +3885,7 @@ const NotificationPanel = {
 // MISSED TASKS PAGE — Full page view untuk riwayat pengingat terlewat
 // ============================================================================
 const MissedTasksPage = {
+  components: { 'reminder-checklist-view': ReminderChecklistView },
   template: `
     <div class="page-module" style="max-width: 680px; margin: 0 auto; padding: 0 16px 48px;">
 
@@ -3897,6 +3984,7 @@ const MissedTasksPage = {
                   <div style="font-size:11px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                     {{ task.subtitle }}
                   </div>
+                  <reminder-checklist-view :item-id="task.id" :date="entry.date"></reminder-checklist-view>
                 </div>
                 <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
                   <span style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:8px;
@@ -4230,6 +4318,8 @@ const MissedTasksPage = {
     // Agenda/Google Calendar view, dan putus rentetan kelewat berturut-turut.
     // Sama persis mekanismenya dengan panel notifikasi, supaya kedua tempat konsisten.
     markAsDone(entry, task) {
+      // Dzikir Waktu hari ini belum tuntas → arahkan ke panel Dzikir (tidak ditandai selesai)
+      if (task.type === 'habit' && _dzikirGateBlocksId(task.id, entry.date)) return;
       try { NotifSound.playCheck(); } catch(e) {}
 
       try {

@@ -598,6 +598,9 @@ const App = {
         if (e.detail && e.detail.page) navigateTo(e.detail.page);
       });
 
+      // Habit Tracker / Daily N meminta panel Dzikir dibuka (habit Dzikir Waktu masih terkunci)
+      globalThis.addEventListener('ws-open-dzikir', () => onOpenDzikir());
+
       // Handle klik notifikasi push (habit) — diteruskan dari push-notifications.js
       globalThis.addEventListener('ws-trigger-habit', (e) => {
         if (e.detail && e.detail.habitId) onTriggerHabit(e.detail.habitId);

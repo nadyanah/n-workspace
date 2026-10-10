@@ -4170,7 +4170,7 @@ const ContentTracker = {
           </div>
           <button class="btn btn-secondary" style="padding: 10px; display: inline-flex; align-items: center; justify-content: center; height: 38px; border: 1.5px solid #EAE5DD; background-color: #FFFFFF; position: relative;" @click="showNotesModal = true" title="Catatan Umum (Jadwal Posting, dll)">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            <span v-if="pageNotes && pageNotes.trim()" style="position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--color-terracotta); border: 1.5px solid #fff;"></span>
+            <span v-if="generalNotes.length" style="position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--color-terracotta); border: 1.5px solid #fff;"></span>
           </button>
           <button class="btn btn-secondary" style="padding: 10px; display: inline-flex; align-items: center; justify-content: center; height: 38px; border: 1.5px solid #EAE5DD; background-color: #FFFFFF;" @click="showSettingsModal = true" title="Pengaturan Board">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -4532,7 +4532,7 @@ const ContentTracker = {
                        @click="selectUsername(u)"
                        style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; cursor: pointer; transition: background-color 0.2s;"
                        class="custom-dropdown-item">
-                    <span style="font-size: 13px; color: #2C2621;">{{ u }}<span v-if="getPlatformMeta(form.platform).usernames.includes(u)" style="margin-left: 6px; font-size: 10px; font-weight: 700; color: var(--color-terracotta);">★ {{ form.platform }}</span></span>
+                    <span style="font-size: 13px; color: #2C2621;">{{ u }}<span v-if="platformLinkedUsernames(form.platform).includes(u)" style="margin-left: 6px; font-size: 10px; font-weight: 700; color: var(--color-terracotta);">★ {{ form.platform }}</span></span>
                     
                     <button v-if="usernames.length > 1"
                             type="button" 
@@ -4669,7 +4669,7 @@ const ContentTracker = {
 
       <!-- Catatan Umum Modal (scratchpad bebas, terpisah dari kartu konten) -->
       <div v-if="showNotesModal" class="modal-backdrop" @click.self="closeNotesModal">
-        <div class="moment-modal text-left" style="max-width: 560px; width: 100%; max-height: 88vh; overflow-y: auto; text-align: left; display: flex; flex-direction: column;">
+        <div class="moment-modal text-left" style="max-width: 760px; width: 100%; max-height: 88vh; overflow-y: auto; text-align: left; display: flex; flex-direction: column;">
           <div class="flex-between" style="border-bottom: 1.5px solid #EAE5DD; padding-bottom: 12px; margin-bottom: 14px;">
             <div>
               <h3 style="font-size: 18px; font-weight: 700; color: var(--text-dark); margin: 0;">Catatan Umum</h3>
@@ -4678,66 +4678,109 @@ const ContentTracker = {
             <button class="close-btn" @click="closeNotesModal">×</button>
           </div>
 
-          <textarea
-            class="form-input"
-            v-model="pageNotes"
-            @input="scheduleSaveNotes"
-            rows="14"
-            placeholder="Contoh:&#10;Jadwal posting minggu ini —&#10;Senin: IG Reels jam 19.00&#10;Rabu: TikTok jam 12.00&#10;Jumat: YouTube Short jam 17.00"
-            style="flex: 1; min-height: 260px; resize: vertical; font-size: 13px; line-height: 1.6; font-family: 'Space Mono', monospace;"
-          ></textarea>
+          <!-- Card catatan (gaya sama seperti Notes di Job Logbook) -->
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <span style="font-size: 11.5px; color: var(--text-muted); font-weight: 600;">{{ generalNotes.length }} note</span>
+            <button type="button" class="btn btn-primary" @click="openGeneralNoteForm()" style="height: 32px; padding: 0 14px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px; white-space: nowrap;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              Note Baru
+            </button>
+          </div>
 
-          <!-- Catatan per Platform / Channel + username kontributor yang dipakai -->
-          <div style="margin-top: 16px; border-top: 1.5px solid #EAE5DD; padding-top: 14px;" @click="showPlatNoteDropdown = false">
-            <div style="font-size: 13px; font-weight: 700; color: var(--text-dark);">Catatan per Platform / Channel</div>
-            <p style="font-size: 11px; color: #9A8F85; margin: 3px 0 10px; line-height: 1.4;">Catatan khusus tiap platform dan username kontributor mana yang dipakai. Tersimpan otomatis.</p>
+          <div v-if="generalNotes.length === 0" style="text-align: center; padding: 36px 20px; color: var(--text-muted); border: 1.5px dashed var(--color-sand); border-radius: 16px; background: var(--bg-cream);">
+            <p style="font-size: 28px; margin: 0 0 8px;">📝</p>
+            <p style="font-size: 13.5px; font-weight: 600; margin: 0;">Belum ada catatan umum.</p>
+          </div>
 
-            <div v-if="platformMetaBlocked" style="font-size: 11px; color: #C23939; margin-bottom: 8px;">
+          <div v-else style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px;">
+            <div v-for="note in generalNotes" :key="note.id"
+                 :style="{ backgroundColor: gnColorStyle(note.color).bg, borderRadius: '20px', padding: '18px 16px 14px', position: 'relative', transition: 'all 0.22s', border: '1.5px solid ' + gnColorStyle(note.color).border }"
+                 onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 14px 30px rgba(0,0,0,0.10)'"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span :style="{ color: gnColorStyle(note.color).headerText }"
+                  style="font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; display: inline-flex; align-items: center; gap: 5px;">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"></circle></svg>
+                  {{ note.category }}
+                </span>
+                <div style="display: flex; gap: 2px;">
+                  <button type="button" @click="openGeneralNoteForm(note)" title="Edit" style="background: none; border: none; cursor: pointer; padding: 5px; border-radius: 6px; opacity: 0.55;" onmouseover="this.style.opacity='1'; this.style.background='rgba(0,0,0,0.06)'" onmouseout="this.style.opacity='0.55'; this.style.background='none'">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" :stroke="gnColorStyle(note.color).headerText" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  <button type="button" @click="deleteGeneralNote(note.id)" title="Hapus" style="background: none; border: none; cursor: pointer; padding: 5px; border-radius: 6px; opacity: 0.55;" onmouseover="this.style.opacity='1'; this.style.background='rgba(185,28,28,0.08)'" onmouseout="this.style.opacity='0.55'; this.style.background='none'">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" :stroke="gnColorStyle(note.color).headerText" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                  </button>
+                </div>
+              </div>
+              <h3 :style="{ color: gnColorStyle(note.color).headerText }" style="font-size: 17px; font-weight: 800; margin: 0 0 8px; line-height: 1.25;">{{ note.title }}</h3>
+              <p :style="{ color: gnColorStyle(note.color).headerText, opacity: '0.72' }"
+                 style="font-size: 12.5px; line-height: 1.55; margin: 0 0 12px; white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;">{{ note.body }}</p>
+              <span :style="{ background: gnColorStyle(note.color).headerText + '15', color: gnColorStyle(note.color).headerText }"
+                style="font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px;">
+                {{ gnFormatDate(note.date) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Catatan per Platform / Channel — tampilan card sama seperti Catatan Umum, tiap note pilih platform + username -->
+          <div style="margin-top: 18px; border-top: 1.5px solid #EAE5DD; padding-top: 14px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 10px;">
+              <div>
+                <div style="font-size: 15px; font-weight: 700; color: var(--text-dark);">Catatan per Platform / Channel</div>
+                <p style="font-size: 11.5px; color: #9A8F85; margin: 3px 0 0; line-height: 1.4;">Catatan khusus tiap platform — pilih platform dan username kontributor yang dipakai.</p>
+              </div>
+            </div>
+
+            <div v-if="!pnLoaded" style="font-size: 11px; color: #C23939; margin: 8px 0;">
               Data catatan platform gagal dibaca, jadi perubahan di sini tidak disimpan agar data lama tetap aman. Coba refresh halaman.
             </div>
 
-            <!-- Tombol tambah catatan: pilih platform dulu lewat dropdown -->
-            <div style="position: relative; margin-bottom: 10px;">
-              <button type="button" @click.stop="showPlatNoteDropdown = !showPlatNoteDropdown"
-                      style="height: 34px; padding: 0 14px; font-size: 12px; font-weight: 700; color: var(--color-terracotta); background: #FFF; border: 1.5px dashed var(--color-terracotta); border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                + Tambah Catatan
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin: 10px 0 12px;">
+              <span style="font-size: 11.5px; color: var(--text-muted); font-weight: 600;">{{ platformNotes.length }} note</span>
+              <button type="button" class="btn btn-primary" @click="openPlatformNoteForm()" style="height: 32px; padding: 0 14px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px; white-space: nowrap;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Note Baru
               </button>
-              <div v-if="showPlatNoteDropdown"
-                   style="position: absolute; top: 100%; left: 0; min-width: 210px; background: #FFFFFF; border: 1.5px solid #EAE5DD; border-radius: 8px; box-shadow: var(--shadow-md); z-index: 9999; margin-top: 4px; max-height: 200px; overflow-y: auto;">
-                <div style="padding: 6px 12px; font-size: 10.5px; font-weight: 700; color: #9A8F85; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 1.5px dashed #F5F2EB;">Pilih Platform / Channel</div>
-                <div v-for="p in availablePlatformsForNote()" :key="'pa-' + p" @click.stop="addPlatformNote(p)"
-                     class="custom-dropdown-item"
-                     style="padding: 8px 12px; cursor: pointer; font-size: 13px; color: #2C2621;">{{ p }}</div>
-                <div v-if="availablePlatformsForNote().length === 0" style="padding: 8px 12px; font-size: 12px; color: #9A8F85;">Semua platform sudah punya catatan</div>
-              </div>
             </div>
 
-            <div v-if="platformNoteKeys().length === 0" style="font-size: 11.5px; color: #9A8F85; line-height: 1.4; padding: 4px 2px;">
-              Belum ada catatan platform. Klik "+ Tambah Catatan" lalu pilih platform.
+            <div v-if="platformNotes.length === 0" style="text-align: center; padding: 36px 20px; color: var(--text-muted); border: 1.5px dashed var(--color-sand); border-radius: 16px; background: var(--bg-cream);">
+              <p style="font-size: 28px; margin: 0 0 8px;">📱</p>
+              <p style="font-size: 13.5px; font-weight: 600; margin: 0;">Belum ada catatan platform.</p>
             </div>
 
-            <div v-for="plat in platformNoteKeys()" :key="'pn-' + plat" style="background: #FCFAF7; border: 1.5px solid #EAE5DD; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px;">
-              <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-                <span class="pill" :class="getPlatformClass(plat)" style="font-size: 11px; padding: 2px 8px;">{{ plat }}</span>
-                <button type="button" @click.stop="removePlatformNote(plat)" title="Hapus catatan platform ini"
-                        style="background: none; border: none; padding: 0 4px; font-size: 16px; line-height: 1; color: #9A8F85; cursor: pointer;">×</button>
-              </div>
-              <textarea class="form-input"
-                        :value="getPlatformMeta(plat).note"
-                        @input="setPlatformNote(plat, $event.target.value)"
-                        @blur="flushPlatformMeta()"
-                        rows="3"
-                        :placeholder="'Catatan untuk ' + plat + ' (cth: jam posting terbaik, aturan caption, rasio video...)'"
-                        style="min-height: 70px; resize: vertical; font-size: 12.5px; line-height: 1.5; font-family: 'Space Mono', monospace;"></textarea>
-              <div style="font-size: 11px; font-weight: 700; color: #7A6F66; margin: 8px 0 6px;">Username kontributor</div>
-              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                <button type="button" v-for="u in usernames" :key="'pu-' + plat + u"
-                        @click="togglePlatformUsername(plat, u)"
-                        :style="{ fontSize: '11.5px', fontWeight: '600', padding: '4px 10px', borderRadius: '999px', cursor: 'pointer', fontFamily: 'Space Mono, monospace',
-                                  border: getPlatformMeta(plat).usernames.includes(u) ? '1.5px solid var(--color-terracotta)' : '1.5px solid #EAE5DD',
-                                  background: getPlatformMeta(plat).usernames.includes(u) ? 'var(--color-terracotta)' : '#FFF',
-                                  color: getPlatformMeta(plat).usernames.includes(u) ? '#FFF' : '#7A6F66' }">{{ u }}</button>
+            <div v-else style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px;">
+              <div v-for="note in platformNotes" :key="note.id"
+                   :style="{ backgroundColor: gnColorStyle(note.color).bg, borderRadius: '20px', padding: '18px 16px 14px', position: 'relative', transition: 'all 0.22s', border: '1.5px solid ' + gnColorStyle(note.color).border }"
+                   onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 14px 30px rgba(0,0,0,0.10)'"
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                  <span :style="{ color: gnColorStyle(note.color).headerText }"
+                    style="font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; display: inline-flex; align-items: center; gap: 5px;">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"></circle></svg>
+                    {{ note.platform || 'Tanpa platform' }}
+                  </span>
+                  <div style="display: flex; gap: 2px;">
+                    <button type="button" @click="openPlatformNoteForm(note)" title="Edit" style="background: none; border: none; cursor: pointer; padding: 5px; border-radius: 6px; opacity: 0.55;" onmouseover="this.style.opacity='1'; this.style.background='rgba(0,0,0,0.06)'" onmouseout="this.style.opacity='0.55'; this.style.background='none'">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" :stroke="gnColorStyle(note.color).headerText" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <button type="button" @click="deletePlatformNote(note.id)" title="Hapus" style="background: none; border: none; cursor: pointer; padding: 5px; border-radius: 6px; opacity: 0.55;" onmouseover="this.style.opacity='1'; this.style.background='rgba(185,28,28,0.08)'" onmouseout="this.style.opacity='0.55'; this.style.background='none'">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" :stroke="gnColorStyle(note.color).headerText" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                    </button>
+                  </div>
+                </div>
+                <h3 :style="{ color: gnColorStyle(note.color).headerText }" style="font-size: 17px; font-weight: 800; margin: 0 0 8px; line-height: 1.25;">{{ note.title }}</h3>
+                <p :style="{ color: gnColorStyle(note.color).headerText, opacity: '0.72' }"
+                   style="font-size: 12.5px; line-height: 1.55; margin: 0 0 12px; white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;">{{ note.body }}</p>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                  <span v-if="note.username" :style="{ background: gnColorStyle(note.color).headerText + '15', color: gnColorStyle(note.color).headerText }"
+                    style="font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; font-family: 'Space Mono', monospace;">
+                    {{ note.username }}
+                  </span>
+                  <span :style="{ background: gnColorStyle(note.color).headerText + '15', color: gnColorStyle(note.color).headerText }"
+                    style="font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px;">
+                    {{ gnFormatDate(note.date) }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -4746,6 +4789,118 @@ const ContentTracker = {
             <span style="font-size: 11px; color: #9A8F85; font-family: 'Space Mono', monospace;">{{ notesSaveStatus }}</span>
             <button class="btn btn-primary" style="height: 36px; padding: 0 18px; font-size: 12.5px; font-weight: 700;" @click="closeNotesModal">Selesai</button>
           </div>
+        </div>
+      </div>
+
+      <!-- Form Note Baru / Edit Note (Catatan Umum) -->
+      <div v-if="showGnForm" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(44, 38, 33, 0.6); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 100000;" @click.self="safeCloseGeneralNoteForm">
+        <div style="background: var(--bg-card, #fff); max-width: 480px; width: 90%; padding: 28px; border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; text-align: left;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3 style="font-size: 18px; margin: 0; color: var(--text-dark);">{{ gnEditingId ? 'Edit Note' : 'Buat Note Baru' }}</h3>
+            <button type="button" @click="cancelGeneralNoteForm" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:24px; line-height:1;">✕</button>
+          </div>
+          <form @submit.prevent="saveGeneralNote">
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label>Judul / Header Note</label>
+              <input type="text" class="form-input" v-model="gnForm.title" placeholder="cth. Jadwal posting minggu ini" required style="font-weight: 600;" />
+            </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label>Kategori</label>
+              <div style="display: flex; gap: 8px;">
+                <select class="form-input" v-model="gnForm.category" required style="flex: 1;">
+                  <option v-for="cat in gnCategories" :key="'gnopt-' + cat" :value="cat">{{ cat }}</option>
+                </select>
+                <button type="button" class="btn btn-secondary" @click="showGnCatManager = !showGnCatManager" style="padding: 0 12px; font-size: 16px;" title="Kelola Kategori">⚙️</button>
+              </div>
+              <div v-if="showGnCatManager" style="margin-top: 8px; background: var(--bg-cream); padding: 12px; border-radius: 8px; border: 1.5px solid var(--color-sand);">
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;">
+                  <span v-for="cat in gnCategories" :key="'gnchip-' + cat" style="background: #fff; border: 1px solid var(--color-sand); padding: 2px 8px; border-radius: 12px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+                    {{ cat }}
+                    <button type="button" @click="deleteGeneralNoteCategory(cat)" style="background: none; border: none; cursor: pointer; color: #DC2626;">✕</button>
+                  </span>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                  <input type="text" class="form-input" v-model="gnNewCatInput" placeholder="Kategori baru..." style="height: 32px; font-size: 12px;" @keydown.enter.prevent="addGeneralNoteCategory" />
+                  <button type="button" class="btn btn-primary" @click="addGeneralNoteCategory" style="height: 32px; padding: 0 12px; font-size: 12px;">Tambah</button>
+                </div>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+              <label>Isi Note</label>
+              <textarea class="form-input" v-model="gnForm.body" rows="7" placeholder="Ketik isi catatan di sini..." required style="line-height: 1.55;"></textarea>
+            </div>
+            <div style="margin-bottom: 20px;">
+              <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 8px;">Warna Kartu</label>
+              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <button v-for="c in gnColorOptions" :key="'gnc-' + c.key" type="button" @click="gnForm.color = c.key" :title="c.label"
+                  :style="{ width: '30px', height: '30px', borderRadius: '50%', background: c.bg,
+                            border: gnForm.color === c.key ? '3px solid ' + c.headerText : '2px solid transparent',
+                            boxShadow: gnForm.color === c.key ? '0 0 0 2px #fff, 0 0 0 4px ' + c.headerText : 'none',
+                            cursor: 'pointer', flexShrink: '0', outline: 'none', padding: '0' }"></button>
+                <label title="Warna kustom" style="position: relative; width: 30px; height: 30px; border-radius: 50%; overflow: hidden; cursor: pointer; flex-shrink: 0; margin: 0;"
+                  :style="{ background: gnForm.color && gnForm.color.startsWith('#') ? gnForm.color : 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)', boxShadow: gnForm.color && gnForm.color.startsWith('#') ? '0 0 0 2px #fff, 0 0 0 4px #555' : 'none' }">
+                  <input type="color" :value="gnForm.color && gnForm.color.startsWith('#') ? gnForm.color : '#D67B52'" @input="gnForm.color = $event.target.value" style="opacity: 0; position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer;" />
+                </label>
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button type="button" class="btn" @click="cancelGeneralNoteForm" style="flex: 1; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); font-weight: bold; cursor: pointer; border-radius: 8px;">Batal</button>
+              <button type="submit" class="btn btn-primary" style="flex: 2;">{{ gnEditingId ? 'Simpan Perubahan' : 'Simpan Note' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Form Note Baru / Edit Note (Catatan per Platform) -->
+      <div v-if="showPnForm" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(44, 38, 33, 0.6); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 100000;" @click.self="safeClosePlatformNoteForm">
+        <div style="background: var(--bg-card, #fff); max-width: 480px; width: 90%; padding: 28px; border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; text-align: left;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3 style="font-size: 18px; margin: 0; color: var(--text-dark);">{{ pnEditingId ? 'Edit Note Platform' : 'Buat Note Platform Baru' }}</h3>
+            <button type="button" @click="cancelPlatformNoteForm" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:24px; line-height:1;">✕</button>
+          </div>
+          <form @submit.prevent="savePlatformNote">
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label>Judul / Header Note</label>
+              <input type="text" class="form-input" v-model="pnForm.title" placeholder="cth. Aturan caption Instagram" required style="font-weight: 600;" />
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+              <div class="form-group" style="margin: 0;">
+                <label>Platform</label>
+                <select class="form-input" v-model="pnForm.platform" required>
+                  <option v-for="p in pnPlatformOptions" :key="'pnplat-' + p" :value="p">{{ p }}</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin: 0;">
+                <label>Username</label>
+                <select class="form-input" v-model="pnForm.username">
+                  <option value="">(tanpa username)</option>
+                  <option v-for="u in pnUsernameOptions" :key="'pnuser-' + u" :value="u">{{ u }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+              <label>Isi Note</label>
+              <textarea class="form-input" v-model="pnForm.body" rows="7" placeholder="Ketik isi catatan di sini (cth: jam posting terbaik, aturan caption, rasio video...)" required style="line-height: 1.55;"></textarea>
+            </div>
+            <div style="margin-bottom: 20px;">
+              <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 8px;">Warna Kartu</label>
+              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <button v-for="c in gnColorOptions" :key="'pnc-' + c.key" type="button" @click="pnForm.color = c.key" :title="c.label"
+                  :style="{ width: '30px', height: '30px', borderRadius: '50%', background: c.bg,
+                            border: pnForm.color === c.key ? '3px solid ' + c.headerText : '2px solid transparent',
+                            boxShadow: pnForm.color === c.key ? '0 0 0 2px #fff, 0 0 0 4px ' + c.headerText : 'none',
+                            cursor: 'pointer', flexShrink: '0', outline: 'none', padding: '0' }"></button>
+                <label title="Warna kustom" style="position: relative; width: 30px; height: 30px; border-radius: 50%; overflow: hidden; cursor: pointer; flex-shrink: 0; margin: 0;"
+                  :style="{ background: pnForm.color && pnForm.color.startsWith('#') ? pnForm.color : 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)', boxShadow: pnForm.color && pnForm.color.startsWith('#') ? '0 0 0 2px #fff, 0 0 0 4px #555' : 'none' }">
+                  <input type="color" :value="pnForm.color && pnForm.color.startsWith('#') ? pnForm.color : '#D67B52'" @input="pnForm.color = $event.target.value" style="opacity: 0; position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer;" />
+                </label>
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button type="button" class="btn" @click="cancelPlatformNoteForm" style="flex: 1; background-color: var(--bg-cream); border: 1.5px solid var(--color-sand); color: var(--text-dark); font-weight: bold; cursor: pointer; border-radius: 8px;">Batal</button>
+              <button type="submit" class="btn btn-primary" style="flex: 2;">{{ pnEditingId ? 'Simpan Perubahan' : 'Simpan Note' }}</button>
+            </div>
+          </form>
         </div>
       </div>
 
@@ -4809,7 +4964,16 @@ const ContentTracker = {
       showAddModal: false,
       showSettingsModal: false,
       showNotesModal: false,
-      pageNotes: '',
+      pageNotes: '', // teks scratchpad LAMA — hanya dibaca untuk migrasi, key lama tidak pernah ditimpa/dihapus
+      // Catatan Umum versi card: [{ id, date, category, title, body, color }]
+      generalNotes: [],
+      gnCategories: ['Jadwal Posting', 'Ide', 'Reminder'],
+      gnLoaded: false,
+      showGnForm: false,
+      gnEditingId: null,
+      showGnCatManager: false,
+      gnNewCatInput: '',
+      gnForm: { title: '', category: 'Jadwal Posting', body: '', color: 'green' },
       notesSaveStatus: '',
       notesSaveTimer: null,
       isEditing: false,
@@ -4845,11 +5009,15 @@ const ContentTracker = {
       columns: [],
       platforms: [],
       usernames: [],
-      // Profil per Platform/Channel: { "Instagram": { note, usernames: [...] } } — key terpisah, data lama aman
+      // Profil per Platform/Channel VERSI LAMA: { "Instagram": { note, usernames: [...] } } — hanya dibaca untuk migrasi sekali, key lama tidak pernah ditimpa/dihapus
       platformMeta: {},
       platformMetaBlocked: false,
-      platformMetaTimer: null,
-      showPlatNoteDropdown: false,
+      // Catatan per Platform versi card: [{ id, date, platform, username, title, body, color }]
+      platformNotes: [],
+      pnLoaded: false,
+      showPnForm: false,
+      pnEditingId: null,
+      pnForm: { title: '', platform: '', username: '', body: '', color: 'blue' },
       visibility: {
         platform: true,
         dueDate: true,
@@ -4951,6 +5119,78 @@ const ContentTracker = {
       this.pageNotes = savedPageNotes;
     }
 
+    // 7b. Load Catatan Umum versi card (key BARU, terpisah dari key teks lama)
+    try {
+      const rawCats = WorkspaceStorage.getItem('personal_workspace_content_general_note_cats');
+      if (rawCats) {
+        const pc = JSON.parse(rawCats);
+        if (Array.isArray(pc) && pc.length) this.gnCategories = pc;
+      }
+    } catch (_e) { /* pakai kategori default */ }
+
+    let gnReadOk = true;
+    const rawGn = WorkspaceStorage.getItem('personal_workspace_content_general_notes');
+    if (rawGn) {
+      try {
+        const parsedGn = JSON.parse(rawGn);
+        if (Array.isArray(parsedGn)) this.generalNotes = parsedGn;
+        else gnReadOk = false;
+      } catch (_e) { gnReadOk = false; }
+    } else if (this.pageNotes && this.pageNotes.trim()) {
+      // MIGRASI sekali: teks scratchpad lama → 1 card. Teks lama TIDAK dihapus/ditimpa.
+      const firstLine = this.pageNotes.trim().split('\n')[0].slice(0, 60);
+      this.generalNotes = [{
+        id: 'gnote-migrated',
+        date: localDateStr(),
+        category: this.gnCategories[0] || 'Catatan',
+        title: firstLine || 'Catatan Lama',
+        body: this.pageNotes,
+        color: 'yellow'
+      }];
+      this.gnLoaded = true;
+      this.saveGeneralNotes();
+    }
+    // Kalau data card ada tapi gagal dibaca, JANGAN izinkan simpan yang menimpa data.
+    this.gnLoaded = gnReadOk;
+
+    // 7c. Load Catatan per Platform versi card (key BARU: personal_workspace_content_platform_notes)
+    let pnReadOk = true;
+    const rawPn = WorkspaceStorage.getItem('personal_workspace_content_platform_notes');
+    if (rawPn) {
+      try {
+        const parsedPn = typeof rawPn === 'string' ? JSON.parse(rawPn) : rawPn;
+        if (Array.isArray(parsedPn)) this.platformNotes = parsedPn;
+        else pnReadOk = false;
+      } catch (_e) { pnReadOk = false; }
+    } else if (!this.platformMetaBlocked) {
+      // MIGRASI sekali: profil platform lama ({note, usernames}) → card. Key lama TIDAK dihapus/ditimpa.
+      const migrated = [];
+      Object.keys(this.platformMeta).forEach((plat) => {
+        const m = this.platformMeta[plat] || {};
+        const note = (m.note || '').trim();
+        const users = Array.isArray(m.usernames) ? m.usernames : [];
+        if (!note && !users.length) return;
+        let body = m.note || '';
+        if (users.length > 1) body += (body ? '\n\n' : '') + 'Username terkait lainnya: ' + users.slice(1).join(', ');
+        migrated.push({
+          id: 'pnote-mig-' + plat,
+          date: localDateStr(),
+          platform: plat,
+          username: users[0] || '',
+          title: (note.split('\n')[0] || ('Catatan ' + plat)).slice(0, 60),
+          body: body || ('Username terkait ' + plat),
+          color: 'blue'
+        });
+      });
+      if (migrated.length) {
+        this.platformNotes = migrated;
+        this.pnLoaded = true;
+        this.savePlatformNotes();
+      }
+    }
+    // Kalau data card ada tapi gagal dibaca, JANGAN izinkan simpan yang menimpa data.
+    this.pnLoaded = pnReadOk;
+
     // 8. Event Listener for syncing logbook entries to content planning
     this.handleSyncEvent = (e) => {
       const data = e.detail;
@@ -4965,23 +5205,122 @@ const ContentTracker = {
       globalThis.removeEventListener('sync-logbook-content', this.handleSyncEvent);
     }
     clearTimeout(this.notesSaveTimer);
-    this.flushPlatformMeta();
+  },
+  computed: {
+    // Opsi dropdown form note platform: daftar platform aktif (+ platform note yang sedang diedit kalau sudah tidak ada di daftar)
+    pnPlatformOptions() {
+      const list = (this.platforms || []).filter(p => p && p !== '__CUSTOM__');
+      const cur = this.pnForm.platform;
+      if (cur && !list.includes(cur)) list.push(cur);
+      return list;
+    },
+    pnUsernameOptions() {
+      const list = [...(this.usernames || [])];
+      const cur = this.pnForm.username;
+      if (cur && !list.includes(cur)) list.push(cur);
+      return list;
+    },
+    gnColorOptions() {
+      return [
+        { key: 'pink',   label: 'Merah Muda', bg: '#FCE7F3', headerText: '#831843' },
+        { key: 'yellow', label: 'Kuning',     bg: '#FEF3C7', headerText: '#92400E' },
+        { key: 'green',  label: 'Hijau',      bg: '#D1FAE5', headerText: '#065F46' },
+        { key: 'blue',   label: 'Biru',       bg: '#DBEAFE', headerText: '#1E3A8A' },
+        { key: 'purple', label: 'Ungu',       bg: '#F3E8FF', headerText: '#4C1D95' },
+        { key: 'rose',   label: 'Rose',       bg: '#FFE4E6', headerText: '#9F1239' },
+        { key: 'orange', label: 'Oranye',     bg: '#FFEDD5', headerText: '#7C2D12' },
+        { key: 'teal',   label: 'Teal',       bg: '#CCFBF1', headerText: '#134E4A' }
+      ];
+    }
   },
   methods: {
     // ── Catatan Umum (scratchpad bebas, terpisah dari kartu konten) ──
-    scheduleSaveNotes() {
-      this.notesSaveStatus = 'Menyimpan...';
-      clearTimeout(this.notesSaveTimer);
-      this.notesSaveTimer = setTimeout(() => {
-        WorkspaceStorage.setItem('personal_workspace_content_page_notes', this.pageNotes);
-        this.notesSaveStatus = 'Tersimpan ✓';
-      }, 500);
+    // Catatan Umum versi card disimpan di key baru; key teks lama (content_page_notes) tidak disentuh lagi.
+    saveGeneralNotes() {
+      if (!this.gnLoaded) return; // data gagal dibaca → jangan menimpa
+      WorkspaceStorage.setItem('personal_workspace_content_general_notes', JSON.stringify(this.generalNotes));
+    },
+    gnColorStyle(color) {
+      const styles = {
+        pink:   { bg: '#FCE7F3', headerText: '#831843', border: '#f3ccde' },
+        blue:   { bg: '#DBEAFE', headerText: '#1E3A8A', border: '#93c5fd' },
+        green:  { bg: '#D1FAE5', headerText: '#065F46', border: '#6ee7b7' },
+        yellow: { bg: '#FEF3C7', headerText: '#92400E', border: '#f5d782' },
+        purple: { bg: '#F3E8FF', headerText: '#4C1D95', border: '#c4b5fd' },
+        rose:   { bg: '#FFE4E6', headerText: '#9F1239', border: '#fda4af' },
+        orange: { bg: '#FFEDD5', headerText: '#7C2D12', border: '#fdba74' },
+        teal:   { bg: '#CCFBF1', headerText: '#134E4A', border: '#5eead4' }
+      };
+      if (color && color.startsWith('#')) return { bg: color + '33', headerText: color, border: color + '66' };
+      return styles[color] || styles.green;
+    },
+    gnFormatDate(d) {
+      try { return new Date(d).toLocaleDateString('id-ID', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }); }
+      catch (_e) { return d; }
+    },
+    openGeneralNoteForm(note) {
+      if (note) {
+        this.gnEditingId = note.id;
+        this.gnForm = { title: note.title, category: note.category, body: note.body, color: note.color || 'green' };
+      } else {
+        this.gnEditingId = null;
+        this.gnForm = { title: '', category: this.gnCategories[0] || 'Catatan', body: '', color: 'green' };
+      }
+      this.showGnCatManager = false;
+      this.showGnForm = true;
+    },
+    cancelGeneralNoteForm() {
+      this.showGnForm = false;
+      this.gnEditingId = null;
+      this.showGnCatManager = false;
+    },
+    safeCloseGeneralNoteForm() {
+      if ((this.gnForm.title.trim() || this.gnForm.body.trim()) &&
+          !confirm('Kamu sudah mengisi beberapa data. Yakin mau tutup dan buang perubahan?')) return;
+      this.cancelGeneralNoteForm();
+    },
+    saveGeneralNote() {
+      if (this.gnEditingId) {
+        const idx = this.generalNotes.findIndex(n => n.id === this.gnEditingId);
+        if (idx !== -1) {
+          this.generalNotes[idx] = { ...this.generalNotes[idx], title: this.gnForm.title, category: this.gnForm.category, body: this.gnForm.body, color: this.gnForm.color || 'green' };
+        }
+      } else {
+        this.generalNotes.unshift({
+          id: 'gnote-' + Date.now(),
+          date: localDateStr(),
+          category: this.gnForm.category,
+          title: this.gnForm.title,
+          body: this.gnForm.body,
+          color: this.gnForm.color || 'green'
+        });
+      }
+      this.saveGeneralNotes();
+      this.cancelGeneralNoteForm();
+    },
+    deleteGeneralNote(id) {
+      if (!confirm('Hapus note ini secara permanen?')) return;
+      this.generalNotes = this.generalNotes.filter(n => n.id !== id);
+      this.saveGeneralNotes();
+    },
+    addGeneralNoteCategory() {
+      const v = (this.gnNewCatInput || '').trim();
+      if (v && !this.gnCategories.includes(v)) {
+        this.gnCategories.push(v);
+        WorkspaceStorage.setItem('personal_workspace_content_general_note_cats', JSON.stringify(this.gnCategories));
+        this.gnNewCatInput = '';
+      }
+    },
+    deleteGeneralNoteCategory(cat) {
+      if (!confirm(`Hapus kategori note "${cat}"? (Note yang sudah ada tetap aman)`)) return;
+      this.gnCategories = this.gnCategories.filter(c => c !== cat);
+      WorkspaceStorage.setItem('personal_workspace_content_general_note_cats', JSON.stringify(this.gnCategories));
+      if (this.gnForm.category === cat) this.gnForm.category = this.gnCategories[0] || '';
     },
     closeNotesModal() {
-      clearTimeout(this.notesSaveTimer);
-      WorkspaceStorage.setItem('personal_workspace_content_page_notes', this.pageNotes);
-      this.flushPlatformMeta();
-      this.showPlatNoteDropdown = false;
+      this.showGnForm = false;
+      this.showPnForm = false;
+      this.pnEditingId = null;
       this.notesSaveStatus = '';
       this.showNotesModal = false;
     },
@@ -5162,67 +5501,75 @@ const ContentTracker = {
         this.saveToStorage();
       }
     },
-    // ── Profil per Platform / Channel: catatan khusus + username kontributor terkait ──
-    // Disimpan di key TERPISAH 'personal_workspace_content_platform_meta', jadi konten, daftar
-    // platform, dan daftar username lama tidak disentuh. Bentuk: { "Instagram": { note, usernames } }
-    getPlatformMeta(name) {
-      const m = (name && this.platformMeta[name]) || {};
-      return { note: m.note || '', usernames: Array.isArray(m.usernames) ? m.usernames : [] };
-    },
-    setPlatformNote(name, val) {
-      if (!name) return;
-      const cur = this.getPlatformMeta(name);
-      this.platformMeta = { ...this.platformMeta, [name]: { ...cur, note: val } };
-      clearTimeout(this.platformMetaTimer);
-      this.platformMetaTimer = setTimeout(() => this.flushPlatformMeta(), 500);
-    },
-    togglePlatformUsername(name, u) {
-      if (!name) return;
-      const cur = this.getPlatformMeta(name);
-      const list = cur.usernames.includes(u) ? cur.usernames.filter(x => x !== u) : [...cur.usernames, u];
-      this.platformMeta = { ...this.platformMeta, [name]: { ...cur, usernames: list } };
-      this.flushPlatformMeta();
-    },
-    flushPlatformMeta() {
-      clearTimeout(this.platformMetaTimer);
-      if (this.platformMetaBlocked) return; // data lama gagal dibaca → jangan menimpa
+    // ── Catatan per Platform / Channel (versi card) ──
+    // Disimpan di key 'personal_workspace_content_platform_notes' (array card). Key lama
+    // 'personal_workspace_content_platform_meta' hanya dibaca sekali untuk migrasi dan tidak disentuh lagi.
+    savePlatformNotes() {
+      if (!this.pnLoaded) return; // data gagal dibaca → jangan menimpa
       try {
-        WorkspaceStorage.setItem('personal_workspace_content_platform_meta', JSON.stringify(this.platformMeta));
+        WorkspaceStorage.setItem('personal_workspace_content_platform_notes', JSON.stringify(this.platformNotes));
       } catch (e) {
-        console.error('[Content] Gagal simpan profil platform:', e);
+        console.error('[Content] Gagal simpan catatan platform:', e);
       }
     },
-    // Platform yang SUDAH punya kartu catatan (semua key di platformMeta — termasuk data lama, tidak ada yang disembunyikan)
-    platformNoteKeys() {
-      return Object.keys(this.platformMeta);
+    openPlatformNoteForm(note) {
+      if (note) {
+        this.pnEditingId = note.id;
+        this.pnForm = { title: note.title, platform: note.platform || '', username: note.username || '', body: note.body, color: note.color || 'blue' };
+      } else {
+        this.pnEditingId = null;
+        const plats = (this.platforms || []).filter(p => p && p !== '__CUSTOM__');
+        this.pnForm = { title: '', platform: plats[0] || '', username: (this.usernames || [])[0] || '', body: '', color: 'blue' };
+      }
+      this.showPnForm = true;
     },
-    // Platform yang belum punya kartu catatan → isi dropdown "+ Tambah Catatan"
-    availablePlatformsForNote() {
-      return this.platforms.filter(p => !Object.prototype.hasOwnProperty.call(this.platformMeta, p));
+    cancelPlatformNoteForm() {
+      this.showPnForm = false;
+      this.pnEditingId = null;
     },
-    addPlatformNote(plat) {
-      this.showPlatNoteDropdown = false;
-      if (!plat || this.platformMetaBlocked) return;
-      if (Object.prototype.hasOwnProperty.call(this.platformMeta, plat)) return; // jangan menimpa yang sudah ada
-      this.platformMeta = { ...this.platformMeta, [plat]: { note: '', usernames: [] } };
-      this.flushPlatformMeta();
+    safeClosePlatformNoteForm() {
+      if ((this.pnForm.title.trim() || this.pnForm.body.trim()) &&
+          !confirm('Kamu sudah mengisi beberapa data. Yakin mau tutup dan buang perubahan?')) return;
+      this.cancelPlatformNoteForm();
     },
-    removePlatformNote(plat) {
-      if (this.platformMetaBlocked) return;
-      const m = this.getPlatformMeta(plat);
-      const hasContent = m.note.trim() || m.usernames.length;
-      const msg = hasContent
-        ? 'Hapus catatan untuk ' + plat + '? Isi catatan dan pilihan usernamenya akan hilang.'
-        : 'Hapus kartu catatan ' + plat + '?';
-      if (!confirm(msg)) return;
-      const next = { ...this.platformMeta };
-      delete next[plat];
-      this.platformMeta = next;
-      this.flushPlatformMeta();
+    savePlatformNote() {
+      if (!this.pnLoaded) {
+        alert('Data catatan platform gagal dibaca, jadi tidak bisa disimpan agar data lama tetap aman. Coba refresh halaman.');
+        return;
+      }
+      const payload = {
+        title: this.pnForm.title,
+        platform: this.pnForm.platform,
+        username: this.pnForm.username,
+        body: this.pnForm.body,
+        color: this.pnForm.color || 'blue'
+      };
+      if (this.pnEditingId) {
+        const idx = this.platformNotes.findIndex(n => n.id === this.pnEditingId);
+        if (idx !== -1) this.platformNotes[idx] = { ...this.platformNotes[idx], ...payload };
+      } else {
+        this.platformNotes.unshift({ id: 'pnote-' + Date.now(), date: localDateStr(), ...payload });
+      }
+      this.savePlatformNotes();
+      this.cancelPlatformNoteForm();
+    },
+    deletePlatformNote(id) {
+      if (!this.pnLoaded) return;
+      if (!confirm('Hapus note platform ini secara permanen?')) return;
+      this.platformNotes = this.platformNotes.filter(n => n.id !== id);
+      this.savePlatformNotes();
+    },
+    // Username yang dipakai di note untuk platform tertentu (dipakai untuk urutan dropdown & auto-pilih username di form konten)
+    platformLinkedUsernames(plat) {
+      const out = [];
+      (this.platformNotes || []).forEach(n => {
+        if (n.platform === plat && n.username && !out.includes(n.username)) out.push(n.username);
+      });
+      return out;
     },
     // Username yang terkait platform terpilih ditaruh paling atas di dropdown
     orderedUsernames() {
-      const linked = this.getPlatformMeta(this.form.platform).usernames;
+      const linked = this.platformLinkedUsernames(this.form.platform);
       return [...this.usernames.filter(u => linked.includes(u)), ...this.usernames.filter(u => !linked.includes(u))];
     },
     selectPlatform(plat) {
@@ -5231,7 +5578,7 @@ const ContentTracker = {
       // Konten BARU: kalau platform ini punya username kontributor terkait, otomatis pilih yang pertama.
       // (Saat edit, username konten yang sudah ada tidak diubah.)
       if (!this.isEditing) {
-        const linked = this.getPlatformMeta(plat).usernames.filter(u => this.usernames.includes(u));
+        const linked = this.platformLinkedUsernames(plat).filter(u => this.usernames.includes(u));
         if (linked.length && !linked.includes(this.form.username)) this.form.username = linked[0];
       }
     },
@@ -5340,7 +5687,6 @@ const ContentTracker = {
       this.showAddModal = true;
     },
     saveItem() {
-      this.flushPlatformMeta();
       let finalPlatform = this.form.platform;
       if (this.form.platform === '__CUSTOM__') {
         const customPlat = this.customPlatformName.trim();
@@ -8936,7 +9282,22 @@ const HabitTracker = {
       btn.style.transform = '';
       btn.style.boxShadow = '';
     },
+    // Gerbang Dzikir Waktu: true kalau centang HARI INI harus diblokir (dzikir belum tuntas).
+    // Kalau diblokir, otomatis membuka panel Dzikir. Hanya berlaku untuk hari ini & aksi mencentang
+    // (uncentang & tanggal lampau tetap bebas).
+    _dzikirGateBlocks(habitId, day) {
+      const habit = this.habits.find(h => h.id === habitId);
+      if (!habit || habit.category !== 'Dzikir Waktu') return false;
+      const now = new Date();
+      const ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+      if (this.currentYearMonth !== ym || day !== now.getDate()) return false;
+      if ((habit.history[this.currentYearMonth] || []).includes(day)) return false;
+      if (!globalThis.wsIsDzikirLocked(habitId)) return false;
+      globalThis.wsOpenDzikirPanel();
+      return true;
+    },
     toggleDayCheckWithSound(habitId, day) {
+      if (this._dzikirGateBlocks(habitId, day)) return;
       const habit = this.habits.find(h => h.id === habitId);
       const checked = habit ? (habit.history[this.currentYearMonth] || []) : [];
       const isCurrentlyChecked = checked.includes(day);
@@ -9075,8 +9436,8 @@ const HabitTracker = {
       const checked = habit.history[this.currentYearMonth] || [];
       const alreadyChecked = checked.includes(today);
 
-      if (!alreadyChecked) {
-        // Centang hari ini
+      if (!alreadyChecked && !this._dzikirGateBlocks(habitId, today)) {
+        // Centang hari ini (kecuali Dzikir Waktu yang masih terkunci → panel Dzikir sudah dibuka)
         this.playCheckSound(true);
         this.toggleDayCheck(habitId, today);
       }
@@ -9180,6 +9541,35 @@ const HabitTracker = {
       this.$emit('next-month');
     }
   }
+};
+
+// ── GERBANG DZIKIR WAKTU (dipakai Habit Tracker & Daily N) ──────────────────
+// Aturan sama persis dengan Panel Notifikasi: habit kategori "Dzikir Waktu"
+// untuk HARI INI tidak boleh dicentang langsung. Harus tuntaskan sesi di
+// Dzikir Counter dulu (putaran ke-N membuka habit urutan ke-N berdasar jam).
+// Kalau masih terkunci → arahkan user ke panel Dzikir (event 'ws-open-dzikir').
+globalThis.wsIsDzikirLocked = function (habitId) {
+  try {
+    const raw = WorkspaceStorage.getItem('ws_habit_notifs');
+    if (!raw) return false;
+    const notifId = String(habitId).startsWith('habit_') ? String(habitId) : 'habit_' + habitId;
+    const dz = JSON.parse(raw)
+      .filter(h => !!h.isDzikirWaktu || h.category === 'Dzikir Waktu')
+      .sort((a, b) => (a.timeVal || 0) - (b.timeVal || 0));
+    const idx = dz.findIndex(h => h.id === notifId);
+    if (idx === -1) return false; // bukan habit Dzikir Waktu (atau tidak berjadwal)
+    const now = new Date();
+    const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    const dRaw = WorkspaceStorage.getItem('dzikir_completed_today');
+    const d = dRaw ? JSON.parse(dRaw) : null;
+    const completed = (d && d.date === todayStr) ? (d.count || 0) : 0;
+    return !(completed > idx);
+  } catch (_e) {
+    return false; // kalau error, jangan kunci user
+  }
+};
+globalThis.wsOpenDzikirPanel = function () {
+  globalThis.dispatchEvent(new CustomEvent('ws-open-dzikir'));
 };
 
 // 7. Customization / Icon Mapping Menu Component
@@ -12951,6 +13341,22 @@ const GoogleCalendar = {
     // ============ LOCAL CALENDAR METHODS ============
     // Task Plan → toggle done langsung di storage (tanpa navigasi, agar checklist lain tidak hilang)
     // Habit/Manual → toggle done via ws_notif_action_status
+    // Gerbang Dzikir Waktu untuk Daily N: habit "Dzikir Waktu" HARI INI yang belum selesai
+    // tidak boleh ditandai selesai sebelum dzikir tuntas → arahkan ke panel Dzikir.
+    // Return true kalau diblokir.
+    _localDzikirGate(block) {
+      try {
+        if (!block || block.type !== 'habit' || !block.raw || !block.raw.habitId) return false;
+        const ds = block.dateStr || this.localSelectedDate || this.localFmtDate(new Date());
+        if (ds !== this.localFmtDate(new Date())) return false;
+        const key = block.raw.id || block.id;
+        const st = JSON.parse(WorkspaceStorage.getItem('ws_notif_action_status') || '{}');
+        if (st[ds] && st[ds][key] === true) return false; // sudah selesai → boleh di-undo
+        if (!globalThis.wsIsDzikirLocked(block.raw.habitId)) return false;
+        globalThis.wsOpenDzikirPanel();
+        return true;
+      } catch (_e) { return false; }
+    },
     localHandleAgendaAction(block) {
       if (block.isTaskPlan) {
         this.localToggleTaskPlanDone(block);
@@ -12974,6 +13380,7 @@ const GoogleCalendar = {
       } catch(_e) { /* ignore */ }
     },
     localToggleAgendaDone(block) {
+      if (this._localDzikirGate(block)) return;
       const ds = this.localSelectedDate || this.localFmtDate(new Date());
       const storageKey = (block.raw && block.raw.id) ? block.raw.id : block.id;
       let nowDone = false;
@@ -13159,6 +13566,8 @@ const GoogleCalendar = {
 
     localMarkDoneFromDetail(block) {
       if (!block) return;
+      // Dzikir Waktu masih terkunci → tutup popup detail & buka panel Dzikir
+      if (this._localDzikirGate(block)) { this.agendaDetailItem = null; return; }
       this.localHandleAgendaAction(block);
       // Update the popup state to reflect new done status
       const ds = block.dateStr || this.localSelectedDate || this.localFmtDate(new Date());
