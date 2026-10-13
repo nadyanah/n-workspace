@@ -20142,39 +20142,61 @@ const MyPortfolio = {
       <p class="mp-hero-sub">Catat task portfolio untuk tiap pengalaman kerja. Task berstatus <strong>Fix</strong> otomatis tampil sebagai Poin Pencapaian di CV ATS.</p>
     </div>
 
-    <!-- ── Catatan General Porto: selalu tampil, tidak terpengaruh filter Pengalaman Kerja ── -->
-    <div class="mp-general-note-card" :class="{ 'mp-general-note-card--collapsed': !generalNoteExpanded }">
-      <!-- Header: klik area ini untuk toggle buka/tutup -->
-      <div class="mp-general-note-header" @click="generalNoteExpanded = !generalNoteExpanded">
-        <div class="mp-general-note-header-left">
-          <span class="mp-note-card-label" style="color: var(--color-terracotta, #D67B52);">✦ Catatan General Portfolio</span>
-          <!-- Preview jumlah catatan saat collapsed -->
-          <span v-if="!generalNoteExpanded && hasGeneralNote" class="mp-general-note-collapsed-preview">{{ generalNotes.length }} catatan</span>
-          <span v-else-if="generalNoteExpanded" class="mp-note-card-sub">Catatan bebas tentang portofolio ini secara keseluruhan — tambah sebanyak yang kamu butuhkan.</span>
-        </div>
-        <div class="mp-general-note-header-right">
-          <!-- Tombol tambah catatan — hanya muncul saat expanded, tidak propagate ke toggle -->
-          <button v-if="generalNoteExpanded" class="mp-insight-btn" @click.stop="openGeneralNoteModal(null)" title="Tambah catatan baru">
+    <!-- ── Catatan General Porto (tampilan Quick Notes seperti Logbook): selalu tampil, tidak terpengaruh filter Pengalaman Kerja ── -->
+    <div class="mp-qn-wrap">
+      <div class="mp-qn-head">
+        <h3 class="mp-qn-title" @click="generalNoteExpanded = !generalNoteExpanded" title="Buka / tutup">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-terracotta, #D67B52);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Catatan General Portfolio
+          <span class="mp-qn-count">{{ generalNotes.length }}</span>
+        </h3>
+        <div class="mp-qn-actions">
+          <button type="button" class="mp-qn-btn" @click.stop="gnCatModalOpen = true" title="Tambah / kelola kategori catatan">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            Kategori
+          </button>
+          <button type="button" class="mp-qn-btn mp-qn-btn--primary" @click.stop="openGeneralNoteModal(null)" title="Tambah catatan baru">
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Tambah Catatan
           </button>
-          <!-- Chevron toggle -->
-          <button class="mp-general-note-chevron" :class="{ 'mp-general-note-chevron--up': generalNoteExpanded }" @click.stop="generalNoteExpanded = !generalNoteExpanded" :title="generalNoteExpanded ? 'Tutup' : 'Buka'">
+          <button type="button" class="mp-general-note-chevron" :class="{ 'mp-general-note-chevron--up': generalNoteExpanded }" @click.stop="generalNoteExpanded = !generalNoteExpanded" :title="generalNoteExpanded ? 'Tutup' : 'Buka'">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
         </div>
       </div>
-      <!-- Body: hanya tampil saat expanded — daftar semua catatan general -->
-      <div v-if="generalNoteExpanded" class="mp-general-note-body">
-        <p v-if="!hasGeneralNote" class="mp-note-card-sub" style="margin:0; padding-top:2px;">Belum ada catatan. Klik "Tambah Catatan" untuk mulai menulis.</p>
-        <div v-else class="mp-note-list">
-          <div v-for="note in generalNotes" :key="note.id" class="mp-note-list-item" @click="openGeneralNoteModal(note.id)">
-            <div class="mp-note-list-item-main">
-              <p class="mp-note-list-item-title">{{ note.title || 'Tanpa Judul' }}</p>
-              <p class="mp-note-list-item-preview">{{ truncate(stripHtml(note.content), 140) }}</p>
+
+      <div v-if="generalNoteExpanded" class="mp-qn-body">
+        <!-- Filter kategori (sinkron dengan posisi di Pengalaman Kerja + kategori custom) -->
+        <div v-if="hasGeneralNote" class="mp-qn-chips">
+          <button type="button" class="mp-qn-chip" :class="{ 'mp-qn-chip--active': !gnFilterCategory }" @click="gnFilterCategory = ''">
+            Semua <span class="mp-qn-chip-n">{{ generalNotes.length }}</span>
+          </button>
+          <button v-for="c in gnChips" :key="'gnchip-' + c.name" type="button" class="mp-qn-chip" :class="{ 'mp-qn-chip--active': gnFilterCategory === c.name }" @click="gnFilterCategory = c.name">
+            {{ c.name }} <span class="mp-qn-chip-n">{{ c.count }}</span>
+          </button>
+        </div>
+
+        <div v-if="!hasGeneralNote" class="mp-qn-empty">Belum ada catatan. Klik "Tambah Catatan" untuk mulai menulis.</div>
+        <div v-else-if="!gnVisibleNotes.length" class="mp-qn-empty">Belum ada catatan di kategori ini.</div>
+        <div v-else class="mp-qn-grid">
+          <div v-for="note in gnDisplayedNotes" :key="note.id" class="mp-qn-card"
+               :style="{ backgroundColor: gnColorStyle(gnNoteColor(note)).bg }"
+               @click="openGeneralNoteModal(note.id)">
+            <div class="mp-qn-card-head">
+              <span class="mp-qn-card-cat" :style="{ color: gnColorStyle(gnNoteColor(note)).headerText }">{{ gnNoteCategory(note) }}</span>
+              <span class="mp-qn-card-dots" :style="{ color: gnColorStyle(gnNoteColor(note)).headerText }">···</span>
             </div>
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="mp-note-list-item-arrow"><polyline points="9 18 15 12 9 6"/></svg>
+            <div class="mp-qn-card-inner">
+              <div v-if="gnNoteDate(note)" class="mp-qn-card-date">{{ formatDate(gnNoteDate(note)) }}</div>
+              <h4 class="mp-qn-card-title">{{ note.title || 'Tanpa Judul' }}</h4>
+              <p class="mp-qn-card-body">{{ truncate(stripHtml(note.content), 140) }}</p>
+            </div>
           </div>
+        </div>
+        <div v-if="gnVisibleNotes.length > gnPreviewLimit" class="mp-qn-more">
+          <button type="button" class="mp-qn-btn" @click="gnShowAll = !gnShowAll">
+            {{ gnShowAll ? 'Tampilkan lebih sedikit' : 'Lihat semua (' + gnVisibleNotes.length + ')' }}
+          </button>
         </div>
       </div>
     </div>
@@ -20723,6 +20745,7 @@ const MyPortfolio = {
           <!-- ── Mode VIEW ── -->
           <template v-if="generalNoteModalMode === 'view'">
             <div class="cf-modal-body">
+              <span class="mp-qn-view-pill" :style="{ background: gnColorStyle(generalNoteModalDraftColor || gnAutoColorKey(generalNoteModalDraftCategory)).bg, color: gnColorStyle(generalNoteModalDraftColor || gnAutoColorKey(generalNoteModalDraftCategory)).headerText, borderColor: gnColorStyle(generalNoteModalDraftColor || gnAutoColorKey(generalNoteModalDraftCategory)).border }">{{ generalNoteModalDraftCategory || 'Umum' }}</span>
               <h4 class="mp-note-modal-view-title">{{ generalNoteModalDraftTitle || 'Tanpa Judul' }}</h4>
               <div class="mp-insight-view-box insight-rich-content" v-html="generalNoteModalDraft"></div>
             </div>
@@ -20742,6 +20765,31 @@ const MyPortfolio = {
               <div style="margin-bottom:12px;">
                 <label class="cf-field-label">Judul Catatan</label>
                 <input class="cf-input" v-model="generalNoteModalDraftTitle" placeholder="mis. Tujuan Karir, Ide Proyek, Refleksi..." />
+              </div>
+              <div style="margin-bottom:12px;">
+                <label class="cf-field-label">Kategori</label>
+                <div style="display:flex; gap:8px;">
+                  <select class="cf-input" v-model="generalNoteModalDraftCategory" style="flex:1;">
+                    <option v-for="c in gnCategoryList" :key="'gnopt-' + c.name" :value="c.name">{{ c.name }}</option>
+                  </select>
+                  <button type="button" class="mp-qn-btn" @click="gnCatModalOpen = true" title="Tambah / kelola kategori" style="height:auto; padding:0 12px;">+ Kategori</button>
+                </div>
+                <p style="font-size:11px; color:var(--text-muted); margin:5px 0 0;">Kategori otomatis mengikuti posisi di Pengalaman Kerja (CV ATS). Kamu juga bisa menambah kategori sendiri.</p>
+              </div>
+              <div style="margin-bottom:14px;">
+                <label class="cf-field-label">Warna Kartu</label>
+                <div class="mp-qn-swatches">
+                  <button type="button" class="mp-qn-swatch mp-qn-swatch--auto" :class="{ 'mp-qn-swatch--on': !generalNoteModalDraftColor }" @click="generalNoteModalDraftColor = ''" title="Otomatis (ikut kategori)">A</button>
+                  <button v-for="c in gnColorOptions" :key="'gnsw-' + c.key" type="button" class="mp-qn-swatch"
+                    :class="{ 'mp-qn-swatch--on': generalNoteModalDraftColor === c.key }"
+                    :style="{ background: c.bg, borderColor: generalNoteModalDraftColor === c.key ? c.headerText : 'transparent', color: c.headerText }"
+                    @click="generalNoteModalDraftColor = c.key" :title="c.label">
+                    <span v-if="generalNoteModalDraftColor === c.key">✓</span>
+                  </button>
+                  <label class="mp-qn-swatch mp-qn-swatch--custom" title="Warna custom" :class="{ 'mp-qn-swatch--on': generalNoteModalDraftColor && generalNoteModalDraftColor.charAt(0) === '#' }">
+                    <input type="color" :value="(generalNoteModalDraftColor && generalNoteModalDraftColor.charAt(0) === '#') ? generalNoteModalDraftColor : '#D1FAE5'" @input="generalNoteModalDraftColor = $event.target.value" />
+                  </label>
+                </div>
               </div>
               <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 10px; line-height:1.6;">Tulis catatan bebas tentang portofolio kamu — tujuan karir, narasi diri, hal yang ingin diingat, atau apapun yang relevan.</p>
               <div class="mp-rte-toolbar">
@@ -20776,6 +20824,55 @@ const MyPortfolio = {
               <button class="cf-btn-primary" @click="saveGeneralNoteModal">Simpan</button>
             </div>
           </template>
+        </div>
+      </div>
+    </transition>
+
+    <!-- ══ MODAL: Kategori Catatan General (sinkron dengan posisi Pengalaman Kerja + kategori custom) ══ -->
+    <transition name="cf-fade">
+      <div v-if="gnCatModalOpen" class="cf-modal-overlay" style="z-index: 100001;" @click.self="gnCatModalOpen = false">
+        <div class="cf-modal" style="max-width: 460px;">
+          <div class="cf-modal-header">
+            <div>
+              <h3 class="cf-modal-title">Kategori Catatan</h3>
+              <p style="font-size: 11.5px; color: var(--text-muted); margin: 3px 0 0;">Posisi dari Pengalaman Kerja otomatis jadi kategori. Tambah kategori lain sesuai kebutuhan.</p>
+            </div>
+            <button class="cf-modal-close" @click="gnCatModalOpen = false">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="cf-modal-body">
+            <p class="mp-qn-cat-label">Dari Pengalaman Kerja (otomatis)</p>
+            <div class="mp-qn-cat-chips">
+              <span v-for="c in gnCategoryList.filter(x => x.source === 'exp' || x.source === 'default')" :key="'gncm-' + c.name" class="mp-qn-cat-chip">{{ c.name }}</span>
+              <span v-if="!gnCategoryList.some(x => x.source === 'exp')" style="font-size:11.5px; color:var(--text-muted);">Belum ada pengalaman kerja di CV ATS.</span>
+            </div>
+
+            <p class="mp-qn-cat-label" style="margin-top:14px;">Kategori buatan sendiri</p>
+            <div class="mp-qn-cat-chips">
+              <span v-for="c in gnCategoryList.filter(x => x.source === 'custom')" :key="'gncc-' + c.name" class="mp-qn-cat-chip">
+                {{ c.name }}
+                <button type="button" @click="deleteGnCategory(c.name)" title="Hapus kategori">✕</button>
+              </span>
+              <span v-if="!gnCategoryList.some(x => x.source === 'custom')" style="font-size:11.5px; color:var(--text-muted);">Belum ada.</span>
+            </div>
+
+            <template v-if="gnCategoryList.some(x => x.source === 'orphan')">
+              <p class="mp-qn-cat-label" style="margin-top:14px;">Kategori lama di catatan (posisinya sudah tidak ada)</p>
+              <div class="mp-qn-cat-chips">
+                <span v-for="c in gnCategoryList.filter(x => x.source === 'orphan')" :key="'gnco-' + c.name" class="mp-qn-cat-chip mp-qn-cat-chip--orphan">{{ c.name }}</span>
+              </div>
+              <p style="font-size:11px; color:var(--text-muted); margin:6px 0 0;">Catatan tetap aman. Buka catatannya lalu pilih kategori lain kalau mau dipindah.</p>
+            </template>
+
+            <div style="display:flex; gap:8px; margin-top:16px;">
+              <input class="cf-input" v-model="gnNewCatInput" placeholder="Nama kategori baru..." @keydown.enter.prevent="addGnCategory" />
+              <button type="button" class="cf-btn-primary" @click="addGnCategory" :disabled="!gnNewCatInput.trim()">Tambah</button>
+            </div>
+          </div>
+          <div class="cf-modal-footer">
+            <button class="cf-btn-primary" @click="gnCatModalOpen = false">Selesai</button>
+          </div>
         </div>
       </div>
     </transition>
@@ -20901,6 +20998,14 @@ const MyPortfolio = {
       generalNoteModalDraftTitle: '',
       generalNoteModalDraft: '',
       generalNoteModalMode: 'view', // 'view' | 'edit'
+      generalNoteModalDraftCategory: '', // kategori catatan (kosong = 'Umum', untuk catatan lama yang belum punya kategori)
+      generalNoteModalDraftColor: '',    // kunci warna / hex custom; kosong = otomatis mengikuti kategori
+      gnCustomCategories: [],            // kategori buatan sendiri, disimpan di key baru 'portfolio_general_note_cats'
+      gnFilterCategory: '',
+      gnShowAll: false,
+      gnPreviewLimit: 6,
+      gnCatModalOpen: false,
+      gnNewCatInput: '',
     };
   },
 
@@ -20954,6 +21059,51 @@ const MyPortfolio = {
       return this.getTaskById(this.editingTaskId);
     },
 
+    // ── Catatan General: kategori (sinkron dengan posisi Pengalaman Kerja + custom + kategori lama yang masih dipakai catatan) ──
+    gnCategoryList() {
+      const list = [{ name: 'Umum', source: 'default' }];
+      const seen = new Set(['umum']);
+      const push = (name, source) => {
+        const n = (name || '').trim();
+        if (!n || seen.has(n.toLowerCase())) return;
+        seen.add(n.toLowerCase());
+        list.push({ name: n, source });
+      };
+      this.experiences.forEach(exp => push(exp.role, 'exp'));
+      (this.gnCustomCategories || []).forEach(c => push(c, 'custom'));
+      this.generalNotes.forEach(n => push(n.category, 'orphan')); // jaring pengaman: kategori lama tidak pernah hilang dari tampilan
+      return list;
+    },
+    gnColorOptions() {
+      return [
+        { key: 'pink',   label: 'Merah Muda', bg: '#FCE7F3', headerText: '#831843', border: '#f3ccde' },
+        { key: 'yellow', label: 'Kuning',     bg: '#FEF3C7', headerText: '#92400E', border: '#f5d782' },
+        { key: 'green',  label: 'Hijau',      bg: '#D1FAE5', headerText: '#065F46', border: '#6ee7b7' },
+        { key: 'blue',   label: 'Biru',       bg: '#DBEAFE', headerText: '#1E3A8A', border: '#93c5fd' },
+        { key: 'purple', label: 'Ungu',       bg: '#F3E8FF', headerText: '#4C1D95', border: '#c4b5fd' },
+        { key: 'rose',   label: 'Rose',       bg: '#FFE4E6', headerText: '#9F1239', border: '#fda4af' },
+        { key: 'orange', label: 'Oranye',     bg: '#FFEDD5', headerText: '#7C2D12', border: '#fdba74' },
+        { key: 'teal',   label: 'Teal',       bg: '#CCFBF1', headerText: '#134E4A', border: '#5eead4' },
+      ];
+    },
+    gnChips() {
+      const counts = {};
+      this.generalNotes.forEach(n => { const c = this.gnNoteCategory(n); counts[c] = (counts[c] || 0) + 1; });
+      return this.gnCategoryList
+        .filter(c => counts[c.name] || c.name === this.gnFilterCategory)
+        .map(c => ({ name: c.name, count: counts[c.name] || 0 }));
+    },
+    gnVisibleNotes() {
+      const list = this.gnFilterCategory
+        ? this.generalNotes.filter(n => this.gnNoteCategory(n) === this.gnFilterCategory)
+        : [...this.generalNotes];
+      // Terbaru di atas (seperti Quick Notes di Logbook)
+      return list.sort((a, b) => new Date(this.gnNoteDate(b) || 0) - new Date(this.gnNoteDate(a) || 0));
+    },
+    gnDisplayedNotes() {
+      return this.gnShowAll ? this.gnVisibleNotes : this.gnVisibleNotes.slice(0, this.gnPreviewLimit);
+    },
+
     // ── Search bar global: cari semua data task (judul, kata kunci, insight, status, pengalaman, bukti kerja, catatan general) di SEMUA pengalaman kerja ──
     isGlobalSearching() {
       return this.portfolioGlobalSearch.trim().length > 0;
@@ -20966,7 +21116,7 @@ const MyPortfolio = {
       // ── Cek Catatan General Portfolio (bisa lebih dari satu) ──
       this.generalNotes.forEach(note => {
         const noteText = this.stripHtml(note.content).trim();
-        const hay = ((note.title || '') + ' ' + noteText).toLowerCase();
+        const hay = ((note.title || '') + ' ' + (note.category || '') + ' ' + noteText).toLowerCase();
         if (hay.includes(q)) {
           results.push({ type: 'generalNote', expKey: null, expLabel: 'Catatan General Portfolio', noteId: note.id, noteTitle: note.title, noteText });
         }
@@ -21749,11 +21899,15 @@ const MyPortfolio = {
         this.generalNoteModalDraftId = note.id;
         this.generalNoteModalDraftTitle = note.title || '';
         this.generalNoteModalDraft = note.content || '';
+        this.generalNoteModalDraftCategory = this.gnNoteCategory(note);
+        this.generalNoteModalDraftColor = note.color || '';
         this.generalNoteModalMode = 'view';
       } else {
         this.generalNoteModalDraftId = null;
         this.generalNoteModalDraftTitle = '';
         this.generalNoteModalDraft = '';
+        this.generalNoteModalDraftCategory = this.gnFilterCategory || 'Umum';
+        this.generalNoteModalDraftColor = '';
         this.generalNoteModalMode = 'edit';
       }
       this.generalNoteModalOpen = true;
@@ -21767,6 +21921,8 @@ const MyPortfolio = {
       this.generalNoteModalDraftId = null;
       this.generalNoteModalDraftTitle = '';
       this.generalNoteModalDraft = '';
+      this.generalNoteModalDraftCategory = '';
+      this.generalNoteModalDraftColor = '';
       this.generalNoteModalMode = 'view';
     },
 
@@ -21781,6 +21937,8 @@ const MyPortfolio = {
         if (note) {
           this.generalNoteModalDraftTitle = note.title || '';
           this.generalNoteModalDraft = note.content || '';
+          this.generalNoteModalDraftCategory = this.gnNoteCategory(note);
+          this.generalNoteModalDraftColor = note.color || '';
           this.generalNoteModalMode = 'view';
           return;
         }
@@ -21802,10 +21960,22 @@ const MyPortfolio = {
         return;
       }
       if (this.generalNoteModalDraftId) {
-        this.generalNotes = this.generalNotes.map(n => n.id === this.generalNoteModalDraftId ? { ...n, title, content, updatedAt: new Date().toISOString() } : n);
+        const nowIso = new Date().toISOString();
+        const category = this.generalNoteModalDraftCategory || 'Umum';
+        const color = this.generalNoteModalDraftColor || '';
+        // createdAt diisi dari updatedAt lama kalau belum ada → tanggal kartu catatan lama tidak berubah
+        this.generalNotes = this.generalNotes.map(n => n.id === this.generalNoteModalDraftId
+          ? { ...n, title, content, category, color, createdAt: n.createdAt || n.updatedAt || nowIso, updatedAt: nowIso }
+          : n);
       } else {
         const id = 'gn_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-        this.generalNotes = [...this.generalNotes, { id, title, content, updatedAt: new Date().toISOString() }];
+        const nowIso = new Date().toISOString();
+        this.generalNotes = [...this.generalNotes, {
+          id, title, content,
+          category: this.generalNoteModalDraftCategory || 'Umum',
+          color: this.generalNoteModalDraftColor || '',
+          createdAt: nowIso, updatedAt: nowIso,
+        }];
         this.generalNoteModalDraftId = id;
       }
       this.saveGeneralNote();
@@ -21821,6 +21991,48 @@ const MyPortfolio = {
 
     saveGeneralNote() {
       try { WorkspaceStorage.setItem('portfolio_general_note', JSON.stringify(this.generalNotes)); } catch(_e) {}
+    },
+
+    // ── Helper tampilan Catatan General (gaya Quick Notes) ──
+    gnNoteCategory(note) { return (note && note.category) ? note.category : 'Umum'; },
+    gnNoteDate(note) { return (note && (note.createdAt || note.updatedAt)) || ''; },
+    gnAutoColorKey(cat) {
+      const keys = ['green', 'blue', 'pink', 'yellow', 'purple', 'orange', 'teal', 'rose'];
+      const name = (cat || 'Umum');
+      if (name === 'Umum') return 'yellow';
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      return keys[Math.abs(hash) % keys.length];
+    },
+    gnNoteColor(note) { return (note && note.color) ? note.color : this.gnAutoColorKey(this.gnNoteCategory(note)); },
+    gnColorStyle(color) {
+      if (color && color.charAt(0) === '#') {
+        return { bg: color + '33', headerText: color, border: color + '66' };
+      }
+      return this.gnColorOptions.find(c => c.key === color) || this.gnColorOptions[2];
+    },
+
+    // ── Kategori custom Catatan General (key baru, tidak menyentuh data catatan) ──
+    saveGnCategories() {
+      try { WorkspaceStorage.setItem('portfolio_general_note_cats', JSON.stringify(this.gnCustomCategories)); } catch(_e) {}
+    },
+    addGnCategory() {
+      const name = (this.gnNewCatInput || '').trim();
+      if (!name) return;
+      const exists = this.gnCategoryList.some(c => c.name.toLowerCase() === name.toLowerCase());
+      if (exists) {
+        alert('Kategori "' + name + '" sudah ada.');
+        return;
+      }
+      this.gnCustomCategories = [...this.gnCustomCategories, name];
+      this.saveGnCategories();
+      this.gnNewCatInput = '';
+      if (this.generalNoteModalOpen && this.generalNoteModalMode === 'edit') this.generalNoteModalDraftCategory = name;
+    },
+    deleteGnCategory(name) {
+      if (!confirm('Hapus kategori "' + name + '"?\n\nCatatan dengan kategori ini TIDAK ikut terhapus — kategorinya tetap tampil di catatan tersebut.')) return;
+      this.gnCustomCategories = this.gnCustomCategories.filter(c => c !== name);
+      this.saveGnCategories();
     },
 
     goToCareer() {
@@ -21893,6 +22105,13 @@ const MyPortfolio = {
           // Migrasi format lama (satu string) → array satu catatan
           this.generalNotes = [{ id: 'gn_migrated_' + Date.now().toString(36), title: '', content: parsed, updatedAt: new Date().toISOString() }];
         }
+      }
+    } catch(_e) {}
+    try {
+      const gc = WorkspaceStorage.getItem('portfolio_general_note_cats');
+      if (gc) {
+        const parsedCats = JSON.parse(gc);
+        if (Array.isArray(parsedCats)) this.gnCustomCategories = parsedCats.filter(c => typeof c === 'string' && c.trim());
       }
     } catch(_e) {}
     this.loadKeywordBank();

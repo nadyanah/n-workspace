@@ -14725,3 +14725,193 @@ img, svg, video, canvas, iframe {
     margin-left: 4px;
   }
 }
+
+/* ═══ Catatan General Portfolio — tampilan Quick Notes (mengikuti Logbook) ═══ */
+.mp-qn-wrap {
+  margin-bottom: 20px;
+  padding: 18px 20px;
+  border-radius: 12px;
+  background-color: transparent;
+  border: 1.5px dashed var(--color-sand, #E8DFD8);
+}
+.mp-qn-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.mp-qn-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dark, #3D2E22);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+}
+.mp-qn-count {
+  background: var(--color-terracotta, #D67B52);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 20px;
+}
+.mp-qn-actions { display: flex; align-items: center; gap: 8px; }
+.mp-qn-btn {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card, #fff);
+  color: var(--text-dark, #3D2E22);
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  white-space: nowrap;
+  transition: border-color 0.15s, background 0.15s;
+}
+.mp-qn-btn:hover { border-color: var(--color-terracotta, #D67B52); }
+.mp-qn-btn--primary {
+  background: var(--color-terracotta, #D67B52);
+  border-color: var(--color-terracotta, #D67B52);
+  color: #fff;
+}
+.mp-qn-btn--primary:hover { filter: brightness(0.96); }
+.mp-qn-body { margin-top: 14px; }
+
+.mp-qn-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.mp-qn-chip {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 20px;
+  cursor: pointer;
+  border: 1.5px solid var(--color-sand, #E8DFD8);
+  background: var(--bg-cream, #FDFBF7);
+  color: var(--text-muted, #7A6F66);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+.mp-qn-chip:hover { border-color: var(--color-terracotta, #D67B52); }
+.mp-qn-chip--active {
+  border-color: var(--color-terracotta, #D67B52);
+  background: #FFF4ED;
+  color: var(--color-terracotta, #D67B52);
+}
+.mp-qn-chip-n { font-size: 10.5px; font-weight: 700; opacity: 0.7; }
+
+.mp-qn-empty { text-align: center; padding: 20px; color: var(--text-muted, #7A6F66); font-size: 13px; }
+.mp-qn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+.mp-qn-card {
+  border-radius: 10px;
+  padding: 9px;
+  cursor: pointer;
+  transition: transform 0.2s;
+  min-width: 0;
+}
+.mp-qn-card:hover { transform: translateY(-3px); }
+.mp-qn-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  padding: 0 2px;
+  gap: 6px;
+}
+.mp-qn-card-cat {
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mp-qn-card-dots { font-weight: 700; opacity: 0.5; font-size: 14px; line-height: 1; }
+.mp-qn-card-inner {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 9px 10px;
+  min-height: 76px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+.mp-qn-card-date { font-size: 9.5px; color: var(--text-muted, #7A6F66); margin-bottom: 3px; font-weight: 600; }
+.mp-qn-card-title { font-size: 12.5px; font-weight: 800; color: #3D2E22; margin: 0 0 4px 0; line-height: 1.3; }
+.mp-qn-card-body {
+  font-size: 11.5px;
+  color: #7A6F66;
+  line-height: 1.45;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+.mp-qn-more { display: flex; justify-content: center; margin-top: 12px; }
+
+/* Modal: pill kategori, swatch warna, daftar kategori */
+.mp-qn-view-pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 11px;
+  border-radius: 20px;
+  border: 1.5px solid transparent;
+  margin-bottom: 8px;
+}
+.mp-qn-swatches { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 6px; }
+.mp-qn-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2.5px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+.mp-qn-swatch--auto { background: var(--bg-cream, #FDFBF7); border: 2px dashed #bbb; color: #888; }
+.mp-qn-swatch--custom { background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); border: 2px dashed #bbb; }
+.mp-qn-swatch--on { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #555; }
+.mp-qn-swatch--custom input { opacity: 0; position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; }
+.mp-qn-cat-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, #7A6F66);
+  margin: 0 0 6px;
+}
+.mp-qn-cat-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.mp-qn-cat-chip {
+  background: var(--bg-cream, #FDFBF7);
+  border: 1px solid var(--color-sand, #E8DFD8);
+  padding: 3px 10px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dark, #3D2E22);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.mp-qn-cat-chip--orphan { border-style: dashed; opacity: 0.8; }
+.mp-qn-cat-chip button { background: none; border: none; cursor: pointer; color: #DC2626; padding: 0; font-size: 11px; }
+@media (max-width: 520px) {
+  .mp-qn-wrap { padding: 14px; }
+  .mp-qn-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+}
