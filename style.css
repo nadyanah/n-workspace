@@ -10115,11 +10115,28 @@ input:checked + .switch-slider:before {
   content: '💡';
   font-size: 11px;
 }
+.cf-tip-toggle {
+  cursor: pointer;
+  user-select: none;
+  margin: 0;
+  justify-content: flex-start;
+}
+.cf-tip-toggle:hover { opacity: 0.8; }
+.cf-tip-toggle:focus-visible { outline: 2px solid rgba(214,123,82,0.5); outline-offset: 3px; border-radius: 4px; }
+.cf-tip-chevron {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+.cf-tip-chevron.open { transform: rotate(180deg); }
+.cf-tip-text { margin-top: 6px !important; }
 .cf-tip-text {
   font-size: 12px;
   color: var(--text-muted, #6E6359);
   line-height: 1.65;
   margin: 0;
+  /* Tampilkan enter/baris baru & spasi persis seperti yang diketik di kotak Edit Tip */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 /* ── Modals ── */

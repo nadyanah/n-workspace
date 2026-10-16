@@ -18235,8 +18235,8 @@ const CareerFoundation = {
         <button class="cf-tip-edit-btn" title="Edit tip" @click="openTipEdit('cover_letter')">
           <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
-        <p class="cf-tip-title">{{ cfTips.cover_letter.title }}</p>
-        <p class="cf-tip-text">{{ cfTips.cover_letter.text }}</p>
+        <p class="cf-tip-title cf-tip-toggle" role="button" tabindex="0" :aria-expanded="isTipOpen('cover_letter') ? 'true' : 'false'" @click="toggleTip('cover_letter')" @keydown.enter.prevent="toggleTip('cover_letter')" @keydown.space.prevent="toggleTip('cover_letter')"><span class="cf-tip-title-text">{{ cfTips.cover_letter.title }}</span><svg class="cf-tip-chevron" :class="{ open: isTipOpen('cover_letter') }" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></p>
+        <p class="cf-tip-text" v-show="isTipOpen('cover_letter')">{{ cfTips.cover_letter.text }}</p>
       </div>
       <div v-if="docsByType('cover_letter').length === 0" class="cf-empty">
         <p class="cf-empty-label">Belum ada Cover Letter</p>
@@ -18282,8 +18282,8 @@ const CareerFoundation = {
         <button class="cf-tip-edit-btn" title="Edit tip" @click="openTipEdit('surat_lamaran')">
           <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
-        <p class="cf-tip-title">{{ cfTips.surat_lamaran.title }}</p>
-        <p class="cf-tip-text">{{ cfTips.surat_lamaran.text }}</p>
+        <p class="cf-tip-title cf-tip-toggle" role="button" tabindex="0" :aria-expanded="isTipOpen('surat_lamaran') ? 'true' : 'false'" @click="toggleTip('surat_lamaran')" @keydown.enter.prevent="toggleTip('surat_lamaran')" @keydown.space.prevent="toggleTip('surat_lamaran')"><span class="cf-tip-title-text">{{ cfTips.surat_lamaran.title }}</span><svg class="cf-tip-chevron" :class="{ open: isTipOpen('surat_lamaran') }" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></p>
+        <p class="cf-tip-text" v-show="isTipOpen('surat_lamaran')">{{ cfTips.surat_lamaran.text }}</p>
       </div>
       <div v-if="docsByType('surat_lamaran').length === 0" class="cf-empty">
         <p class="cf-empty-label">Belum ada Surat Lamaran</p>
@@ -18329,8 +18329,8 @@ const CareerFoundation = {
         <button class="cf-tip-edit-btn" title="Edit tip" @click="openTipEdit('linkedin_note')">
           <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
-        <p class="cf-tip-title">{{ cfTips.linkedin_note.title }}</p>
-        <p class="cf-tip-text">{{ cfTips.linkedin_note.text }}</p>
+        <p class="cf-tip-title cf-tip-toggle" role="button" tabindex="0" :aria-expanded="isTipOpen('linkedin_note') ? 'true' : 'false'" @click="toggleTip('linkedin_note')" @keydown.enter.prevent="toggleTip('linkedin_note')" @keydown.space.prevent="toggleTip('linkedin_note')"><span class="cf-tip-title-text">{{ cfTips.linkedin_note.title }}</span><svg class="cf-tip-chevron" :class="{ open: isTipOpen('linkedin_note') }" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></p>
+        <p class="cf-tip-text" v-show="isTipOpen('linkedin_note')">{{ cfTips.linkedin_note.text }}</p>
       </div>
       <div v-if="docsByType('linkedin_note').length === 0" class="cf-empty">
         <p class="cf-empty-label">Belum ada Connect Note LinkedIn</p>
@@ -18375,8 +18375,8 @@ const CareerFoundation = {
         <button class="cf-tip-edit-btn" title="Edit tip" @click="openTipEdit('linkedin_about')">
           <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
-        <p class="cf-tip-title">{{ cfTips.linkedin_about.title }}</p>
-        <p class="cf-tip-text">{{ cfTips.linkedin_about.text }}</p>
+        <p class="cf-tip-title cf-tip-toggle" role="button" tabindex="0" :aria-expanded="isTipOpen('linkedin_about') ? 'true' : 'false'" @click="toggleTip('linkedin_about')" @keydown.enter.prevent="toggleTip('linkedin_about')" @keydown.space.prevent="toggleTip('linkedin_about')"><span class="cf-tip-title-text">{{ cfTips.linkedin_about.title }}</span><svg class="cf-tip-chevron" :class="{ open: isTipOpen('linkedin_about') }" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></p>
+        <p class="cf-tip-text" v-show="isTipOpen('linkedin_about')">{{ cfTips.linkedin_about.text }}</p>
       </div>
 
       <template v-if="linkedinAboutEntry">
@@ -18432,8 +18432,8 @@ const CareerFoundation = {
         <button class="cf-tip-edit-btn" title="Edit tip" @click="openTipEdit('body_email')">
           <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
-        <p class="cf-tip-title">{{ cfTips.body_email.title }}</p>
-        <p class="cf-tip-text">{{ cfTips.body_email.text }}</p>
+        <p class="cf-tip-title cf-tip-toggle" role="button" tabindex="0" :aria-expanded="isTipOpen('body_email') ? 'true' : 'false'" @click="toggleTip('body_email')" @keydown.enter.prevent="toggleTip('body_email')" @keydown.space.prevent="toggleTip('body_email')"><span class="cf-tip-title-text">{{ cfTips.body_email.title }}</span><svg class="cf-tip-chevron" :class="{ open: isTipOpen('body_email') }" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></p>
+        <p class="cf-tip-text" v-show="isTipOpen('body_email')">{{ cfTips.body_email.text }}</p>
       </div>
       <div v-if="docsByType('body_email').length === 0" class="cf-empty">
         <p class="cf-empty-label">Belum ada Body Email</p>
@@ -18783,7 +18783,7 @@ const CareerFoundation = {
             </div>
             <div>
               <label class="cf-field-label">Isi Tip</label>
-              <textarea class="cf-textarea" v-model="tipEditForm.text" rows="5" placeholder="Tulis tip/panduan singkat di sini..."></textarea>
+              <textarea class="cf-textarea" v-model="tipEditForm.text" rows="12" placeholder="Tulis tip/panduan singkat di sini..."></textarea>
             </div>
           </div>
           <div class="cf-modal-footer">
@@ -19112,6 +19112,8 @@ const CareerFoundation = {
         },
       },
       showTipModal: false,
+      // Status buka/tutup tip (spoiler). Default: tertutup. Disimpan di key TERPISAH, tidak menyentuh data tip.
+      tipOpen: {},
       tipEditKey: null,
       tipEditForm: { title: '', text: '' },
 
@@ -20006,6 +20008,13 @@ const CareerFoundation = {
       this.showTipModal = false;
       this.tipEditKey = null;
     },
+    isTipOpen(key) {
+      return !!this.tipOpen[key];
+    },
+    toggleTip(key) {
+      this.tipOpen = { ...this.tipOpen, [key]: !this.tipOpen[key] };
+      try { WorkspaceStorage.setItem('career_cf_tips_open', JSON.stringify(this.tipOpen)); } catch(_e) {}
+    },
     saveTips() {
       try { WorkspaceStorage.setItem('career_cf_tips', JSON.stringify(this.cfTips)); } catch(_e) {}
     },
@@ -20099,6 +20108,10 @@ const CareerFoundation = {
     try {
       const kd = WorkspaceStorage.getItem('career_keyword_descriptions');
       if (kd) this.keywordDescriptions = JSON.parse(kd);
+    } catch(_e) {}
+    try {
+      const to = WorkspaceStorage.getItem('career_cf_tips_open');
+      if (to) this.tipOpen = JSON.parse(to) || {};
     } catch(_e) {}
     try {
       const ct = WorkspaceStorage.getItem('career_cf_tips');
