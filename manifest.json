@@ -21,5 +21,51 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Set Pengingat",
+      "short_name": "Pengingat",
+      "url": "./index.html?shortcut=setReminder",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Catat Hari Baru",
+      "short_name": "Hari Baru",
+      "url": "./index.html?shortcut=addLog",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Tambah Task Plan",
+      "short_name": "Task Plan",
+      "url": "./index.html?shortcut=addTaskPlan",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Catat Momen Hari Ini",
+      "short_name": "Momen",
+      "url": "./index.html?shortcut=addYear365Moment",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ]
 }

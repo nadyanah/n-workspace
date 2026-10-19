@@ -610,6 +610,18 @@ const App = {
       globalThis._workspaceStorageReady.then(() => {
         loadDeskQuotes();
         startDeskQuoteCycle();
+
+        // Shortcut dari ikon HP / manifest: ?shortcut=addLog, setReminder, addTaskPlan, addYear365Moment
+        // Hanya membuka halaman + form tujuan. Tidak membaca/menulis data apa pun.
+        try {
+          const sc = new URLSearchParams(location.search).get('shortcut');
+          if (sc) {
+            const qa = quickShortcutActions.find(a => a.key === sc);
+            if (qa) triggerQuickShortcut(qa);
+            // bersihkan URL supaya refresh tidak memicu ulang
+            history.replaceState(null, '', location.pathname);
+          }
+        } catch (_e) { /* abaikan, app tetap jalan normal */ }
       });
 
       // Refresh quotes when InspirationBoard saves new ones
