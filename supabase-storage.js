@@ -297,6 +297,7 @@ const WorkspaceStorage = {
   // 🆕 Bisa dibaca UI (mis. tampilkan banner "gagal sinkron") alih-alih diam-diam
   // melanjutkan seolah semua normal.
   hasError: false,
+  _failedKeys: new Set(),
   _MIGRATION_FLAG_KEY: '__migration_done__',
 
   async init(_attempt = 1) {
@@ -384,7 +385,7 @@ const WorkspaceStorage = {
     }
   },
 
-  async _saveToSupabase(key, value) {
+  async _saveToSupabase(key, value, attempt = 1) {
     try {
       const userId = _currentUserId || await _ensureUser();
       if (!userId) return;
@@ -395,9 +396,39 @@ const WorkspaceStorage = {
           { onConflict: 'user_id,key' }
         );
       if (error) throw error;
+      // 🆕 Berhasil → hapus dari daftar gagal; banner hilang kalau tidak ada yang gagal lagi
+      this._failedKeys.delete(key);
+      if (this._failedKeys.size === 0) this.hasError = false;
     } catch (err) {
-      console.error(`[WorkspaceStorage] Gagal simpan "${key}":`, err.message);
+      console.error(`[WorkspaceStorage] Gagal simpan "${key}" (percobaan ${attempt}):`, err.message);
+      // 🆕 Dulu gagal simpan hanya muncul di console (diam-diam). Sekarang ditandai
+      // supaya banner peringatan muncul, dan dicoba ulang otomatis sampai 3x.
+      this._failedKeys.add(key);
+      this.hasError = true;
+      if (attempt < 3) {
+        setTimeout(() => {
+          // Pakai nilai TERBARU di cache; kalau key sudah dihapus, jangan dihidupkan lagi
+          if (Object.prototype.hasOwnProperty.call(this._cache, key)) {
+            this._saveToSupabase(key, this._cache[key], attempt + 1);
+          } else {
+            this._failedKeys.delete(key);
+          }
+        }, 2000 * attempt);
+      }
     }
+  },
+
+  // 🆕 Kirim SEGERA semua simpanan yang masih menunggu jeda debounce.
+  // Dipanggil saat tab ditutup / disembunyikan, supaya perubahan terakhir
+  // (mis. 1 detik sebelum tutup tab) tidak hilang.
+  flushPending() {
+    Object.keys(this._pendingSaves).forEach((key) => {
+      clearTimeout(this._pendingSaves[key]);
+      delete this._pendingSaves[key];
+      if (Object.prototype.hasOwnProperty.call(this._cache, key)) {
+        this._saveToSupabase(key, this._cache[key]);
+      }
+    });
   },
 
   async _deleteFromSupabase(key) {
@@ -486,6 +517,9 @@ const WorkspaceStorage = {
       'ws_quran_noon_shown','ws_quran_prefs','ws_reminder_miss_streak',
       'ws_reminder_reschedule_alerts','ws_timed_popup_shown','ws_wishlist_2026',
       'ws_word_glossary',
+      // -- Magnet Connection (LinkedIn Tracker) --
+      'career_magnet_connections','career_magnet_connection_columns',
+      'career_magnet_connections_trash','career_magnet_connections_snapshot',
     ];
     let count = 0;
     for (const key of keys) {
@@ -507,6 +541,12 @@ const WorkspaceStorage = {
 };
 
 globalThis.WorkspaceStorage = WorkspaceStorage;
+
+// 🆕 Flush simpanan tertunda saat tab disembunyikan / ditutup
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') WorkspaceStorage.flushPending();
+});
+globalThis.addEventListener('pagehide', () => WorkspaceStorage.flushPending());
 globalThis._workspaceStorageReady = WorkspaceStorage.init().then(() => WorkspaceStorage.migrateFromLocalStorage());
 
 // -- Expose client & user id (dipakai push-notifications.js untuk simpan push subscription) --

@@ -20153,6 +20153,12 @@ const MyPortfolio = {
       </div>
       <h2 class="mp-hero-title">My 'hidden gem' Portfolio</h2>
       <p class="mp-hero-sub">Catat task portfolio untuk tiap pengalaman kerja. Task berstatus <strong>Fix</strong> otomatis tampil sebagai Poin Pencapaian di CV ATS.</p>
+      <div style="margin: 10px 0 2px;">
+        <button class="cf-btn-ghost" @click="goToMagnet" title="Buka LinkedIn Connection Tracker">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Magnet Connection — LinkedIn Tracker
+        </button>
+      </div>
     </div>
 
     <!-- ── Catatan General Porto (tampilan Quick Notes seperti Logbook): selalu tampil, tidak terpengaruh filter Pengalaman Kerja ── -->
@@ -22048,6 +22054,9 @@ const MyPortfolio = {
       this.saveGnCategories();
     },
 
+    goToMagnet() {
+      globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'magnetConnectionTracker' }));
+    },
     goToCareer() {
       globalThis.dispatchEvent(new CustomEvent('navigate-to-career-foundation'));
     },
@@ -22183,6 +22192,7 @@ const CareerNavFab = {
       allItems: [
         { key: 'careerFoundation', label: 'Career Foundation', icon: svg('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>') },
         { key: 'myPortfolio', label: 'My Portfolio', icon: svg('<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>') },
+        { key: 'magnetConnectionTracker', label: 'Magnet Connection', icon: svg('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>') },
         { key: 'jobApplicationTracker', label: 'Job Apply Tracker', icon: svg('<rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6"/><path d="M9 16h6"/>') },
         { key: 'companyDatabase', label: 'Database Perusahaan', icon: svg('<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/>') },
       ],
@@ -23089,6 +23099,665 @@ const JobApplicationTracker = {
       const saved = WorkspaceStorage.getItem('career_job_apply_tracker');
       if (saved) this.applications = JSON.parse(saved);
     } catch (_e) {}
+  },
+};
+
+// ============================================================================
+// MAGNET CONNECTION — LinkedIn Tracker
+// ----------------------------------------------------------------------------
+// Tabel pelacak koneksi LinkedIn: Nama, Perusahaan, Posisi, Chat Connect,
+// Chat Terima Kasih + kolom custom yang bisa ditambah sendiri.
+//
+// 🛡️ PENGAMAN DATA (anti-hilang):
+//  1. Pakai WorkspaceStorage (Supabase) — key TERPISAH dari data lain:
+//       career_magnet_connections           → baris data
+//       career_magnet_connection_columns    → definisi kolom custom
+//       career_magnet_connections_trash     → baris yang dihapus (bisa dipulihkan)
+//       career_magnet_connections_snapshot  → titik pulih otomatis tiap halaman dibuka
+//  2. Tidak pernah menyimpan kalau data lama GAGAL dibaca / storage belum siap
+//     (supaya data kosong tidak menimpa data asli).
+//  3. Hapus baris = pindah ke Sampah (bisa dipulihkan), bukan hilang.
+//  4. "Hapus" kolom = Sembunyikan. Isi kolom tetap tersimpan di tiap baris.
+//  5. Ada tombol Export CSV & Backup JSON langsung dari halaman ini.
+// ============================================================================
+const MagnetConnectionTracker = {
+  template: `
+  <div class="cf-clean">
+
+    <!-- ── Hero Header ── -->
+    <div class="cf-hero">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div class="cf-hero-badge">
+          <span class="cf-hero-badge-dot"></span>
+          Magnet Connection
+        </div>
+        <button @click="goToPortfolio" title="Kembali ke My Portfolio"
+          style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;background:transparent;border:1.5px solid var(--color-sand,#C8BDB5);border-radius:8px;cursor:pointer;color:var(--text-secondary,#7A6F66);transition:background 0.15s,border-color 0.15s;"
+          onmouseover="this.style.background='var(--color-sand-light,#EDE8E1)';this.style.borderColor='var(--color-terracotta,#D67B52)'"
+          onmouseout="this.style.background='transparent';this.style.borderColor='var(--color-sand,#C8BDB5)'">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        </button>
+      </div>
+      <h2 class="cf-hero-title">LinkedIn Connection Tracker</h2>
+      <p class="cf-hero-sub">Catat siapa saja yang kamu ajak connect di LinkedIn, chat yang kamu kirim, dan ucapan terima kasihnya. Kolom bisa ditambah sesuai kebutuhan.</p>
+      <div class="cf-hero-stats">
+        <div class="cf-hero-stat">
+          <span class="cf-hero-stat-num">{{ rows.length }}</span>
+          <span>total koneksi</span>
+        </div>
+        <div class="cf-hero-stat">
+          <span class="cf-hero-stat-num">{{ chatConnectCount }}</span>
+          <span>sudah chat connect</span>
+        </div>
+        <div class="cf-hero-stat">
+          <span class="cf-hero-stat-num">{{ chatThanksCount }}</span>
+          <span>sudah chat terima kasih</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Peringatan kalau penyimpanan tidak aman ── -->
+    <div v-if="!canSave" style="margin: 14px 0 0; padding: 12px 16px; border-radius: 12px; background: #FDECEC; border: 1.5px solid #E9A9A9; color: #9B2C2C; font-size: 13px; line-height: 1.55;">
+      <strong>⚠️ Penyimpanan dikunci demi keamanan data.</strong>
+      {{ lockReason }}
+      Data lama kamu TIDAK disentuh. Coba refresh halaman; kalau masih begini, jangan menambah data dulu.
+    </div>
+
+    <!-- ── Toolbar: cari, kolom, export, sampah, tambah ── -->
+    <div class="mp-filter-panel" style="margin: 18px 0 14px;">
+      <div class="mp-filter-row">
+        <div class="mp-search-wrap">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mp-search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="form-input mp-search-input" v-model="searchQuery"
+            placeholder="Cari nama, perusahaan, posisi, atau isi chat..." />
+          <button v-if="searchQuery" class="mp-search-clear" title="Hapus pencarian" @click="searchQuery = ''">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <button class="cf-btn-ghost" style="white-space: nowrap;" @click="showColumnsModal = true">Kolom ({{ visibleColumns.length + 5 }})</button>
+        <select class="form-input mp-filter-select" v-model="filterColumn" style="max-width: 190px;">
+          <option value="">Filter kolom...</option>
+          <option v-for="fc in filterableColumns" :key="fc.key" :value="fc.key">{{ fc.title }}</option>
+        </select>
+        <select v-if="filterColumn" class="form-input mp-filter-select" v-model="filterMode" style="max-width: 160px;">
+          <option value="filled">Sudah terisi</option>
+          <option value="empty">Belum terisi</option>
+          <option value="contains">Berisi kata...</option>
+        </select>
+        <input v-if="filterColumn && filterMode === 'contains'" type="text" class="form-input" v-model="filterText" placeholder="Ketik kata..." style="max-width: 180px;" />
+        <button v-if="filterColumn || searchQuery" class="cf-btn-ghost" style="white-space: nowrap;" @click="resetFilters">Reset filter</button>
+        <button class="cf-btn-primary" style="margin-left: auto; white-space: nowrap;" :disabled="!canSave" @click="openAddModal">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah Koneksi
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Empty state ── -->
+    <div v-if="!rows.length" class="mp-empty-state">
+      <div class="mp-empty-icon">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <p class="mp-empty-title">Belum ada koneksi tercatat</p>
+      <p class="mp-empty-sub">Klik "Tambah Koneksi" untuk mencatat orang pertama yang kamu ajak connect.</p>
+    </div>
+
+    <div v-else-if="!filteredRows.length" class="mp-empty-state" style="padding: 40px 24px;">
+      <p class="mp-empty-title">Tidak ada hasil</p>
+      <p class="mp-empty-sub">Coba kata kunci atau filter yang lain.</p>
+    </div>
+
+    <!-- ── Tabel ── -->
+    <div v-else class="mp-table-container">
+      <table class="mp-table" :style="{ minWidth: tableMinWidth + 'px' }">
+        <thead>
+          <tr>
+            <th style="width: 170px;">Nama</th>
+            <th style="width: 170px;">Perusahaan</th>
+            <th style="width: 170px;">Posisi</th>
+            <th style="width: 260px;">Chat Connect</th>
+            <th style="width: 260px;">Chat Terima Kasih</th>
+            <th v-for="col in visibleColumns" :key="col.id" style="width: 200px;">{{ col.title }}</th>
+            <th style="width: 100px;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="row in filteredRows" :key="row.id" style="vertical-align: top;">
+            <td style="overflow-wrap: break-word; vertical-align: top;">
+              <span style="font-weight: 700; color: var(--text-dark);">{{ row.name }}</span>
+            </td>
+            <td style="overflow-wrap: break-word; vertical-align: top;">{{ row.company || '—' }}</td>
+            <td style="overflow-wrap: break-word; vertical-align: top;">{{ row.position || '—' }}</td>
+            <td style="vertical-align: top;">
+              <expandable-text v-if="row.chatConnect" :text="row.chatConnect"></expandable-text>
+              <span v-else style="color: var(--text-muted); font-size: 12px;">—</span>
+              <button v-if="row.chatConnect" class="cf-doc-action-btn" style="margin-top: 6px; padding: 2px 8px; font-size: 10.5px;" @click="copyText(row.chatConnect)">Salin</button>
+            </td>
+            <td style="vertical-align: top;">
+              <expandable-text v-if="row.chatThanks" :text="row.chatThanks"></expandable-text>
+              <span v-else style="color: var(--text-muted); font-size: 12px;">—</span>
+              <button v-if="row.chatThanks" class="cf-doc-action-btn" style="margin-top: 6px; padding: 2px 8px; font-size: 10.5px;" @click="copyText(row.chatThanks)">Salin</button>
+            </td>
+            <td v-for="col in visibleColumns" :key="col.id" style="vertical-align: top;">
+              <expandable-text v-if="customValue(row, col.id)" :text="customValue(row, col.id)"></expandable-text>
+              <span v-else style="color: var(--text-muted); font-size: 12px;">—</span>
+            </td>
+            <td style="vertical-align: top;">
+              <div class="cf-doc-actions">
+                <button class="cf-doc-action-btn" :disabled="!canSave" @click="openEditModal(row)">Edit</button>
+                <button class="cf-doc-action-btn del" :disabled="!canSave" @click="deleteRow(row.id)" title="Pindahkan ke Sampah (bisa dipulihkan)">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ══ MODAL: Tambah / Edit Koneksi ══ -->
+    <transition name="cf-fade">
+      <div v-if="showModal" class="cf-modal-overlay" @click.self="closeModal">
+        <div class="cf-modal">
+          <div class="cf-modal-header">
+            <h3 class="cf-modal-title">{{ editingId ? 'Edit Koneksi' : 'Tambah Koneksi' }}</h3>
+            <button class="cf-modal-close" @click="closeModal">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="cf-modal-body">
+            <div>
+              <label class="cf-field-label">Nama *</label>
+              <input class="cf-input" v-model="form.name" placeholder="mis. Rina Kusuma" />
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 180px;">
+                <label class="cf-field-label">Perusahaan</label>
+                <input class="cf-input" v-model="form.company" placeholder="mis. PT Maju Bersama" />
+              </div>
+              <div style="flex: 1; min-width: 180px;">
+                <label class="cf-field-label">Posisi</label>
+                <input class="cf-input" v-model="form.position" placeholder="mis. HR Recruiter" />
+              </div>
+            </div>
+            <div>
+              <label class="cf-field-label">Chat Connect</label>
+              <textarea class="cf-textarea" v-model="form.chatConnect" rows="4" placeholder="Pesan yang kamu kirim saat mengajak connect..."></textarea>
+            </div>
+            <div>
+              <label class="cf-field-label">Chat Terima Kasih</label>
+              <textarea class="cf-textarea" v-model="form.chatThanks" rows="4" placeholder="Pesan terima kasih setelah diterima / dibalas..."></textarea>
+            </div>
+            <div v-for="col in visibleColumns" :key="col.id">
+              <label class="cf-field-label">{{ col.title }}</label>
+              <textarea class="cf-textarea" v-model="form.custom[col.id]" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="cf-modal-footer">
+            <button v-if="editingId" class="cf-doc-action-btn del" style="margin-right: auto;" @click="deleteRow(editingId, true)">Hapus</button>
+            <button class="cf-btn-ghost" @click="closeModal">Batal</button>
+            <button class="cf-btn-primary" :disabled="!form.name.trim() || !canSave" @click="saveRow">Simpan</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- ══ MODAL: Kelola Kolom ══ -->
+    <transition name="cf-fade">
+      <div v-if="showColumnsModal" class="cf-modal-overlay" @click.self="showColumnsModal = false">
+        <div class="cf-modal">
+          <div class="cf-modal-header">
+            <h3 class="cf-modal-title">Kelola Kolom</h3>
+            <button class="cf-modal-close" @click="showColumnsModal = false">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="cf-modal-body">
+            <p style="margin: 0; font-size: 12px; color: var(--text-muted,#A09690); line-height: 1.6;">
+              Kolom bawaan: Nama, Perusahaan, Posisi, Chat Connect, Chat Terima Kasih. Kolom yang kamu sembunyikan <strong>tidak menghapus isinya</strong> — data tetap aman dan muncul lagi kalau kolomnya ditampilkan.
+            </p>
+            <div>
+              <label class="cf-field-label">Tambah kolom baru</label>
+              <div style="display: flex; gap: 8px;">
+                <input class="cf-input" v-model="newColumnTitle" placeholder="mis. Tanggal Connect, Link LinkedIn, Status Balasan..." @keyup.enter="addColumn" />
+                <button class="cf-btn-primary" style="white-space: nowrap;" :disabled="!newColumnTitle.trim() || !canSave" @click="addColumn">Tambah</button>
+              </div>
+            </div>
+            <div v-if="columns.length">
+              <label class="cf-field-label">Kolom tambahan kamu</label>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <div v-for="col in columns" :key="col.id" style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1.5px solid var(--color-sand,#E8DFD8); border-radius: 9px;">
+                  <input class="cf-input" style="flex: 1;" v-model="col.title" @change="renameColumn(col)" :disabled="!canSave" />
+                  <span v-if="col.hidden" style="font-size: 11px; color: var(--text-muted,#A09690);">tersembunyi</span>
+                  <button class="cf-doc-action-btn" :disabled="!canSave" @click="toggleColumn(col)">{{ col.hidden ? 'Tampilkan' : 'Sembunyikan' }}</button>
+                </div>
+              </div>
+            </div>
+            <p v-else style="margin: 0; font-size: 12px; color: var(--text-muted,#A09690);">Belum ada kolom tambahan.</p>
+          </div>
+          <div class="cf-modal-footer">
+            <button class="cf-btn-primary" @click="showColumnsModal = false">Selesai</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- ══ MODAL: Sampah & Pemulihan ══ -->
+    <transition name="cf-fade">
+      <div v-if="showRecoveryModal" class="cf-modal-overlay" @click.self="showRecoveryModal = false">
+        <div class="cf-modal">
+          <div class="cf-modal-header">
+            <h3 class="cf-modal-title">Sampah & Pemulihan</h3>
+            <button class="cf-modal-close" @click="showRecoveryModal = false">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="cf-modal-body">
+            <div>
+              <label class="cf-field-label">Baris yang kamu hapus</label>
+              <p v-if="!trash.length" style="margin: 0; font-size: 12px; color: var(--text-muted,#A09690);">Sampah kosong.</p>
+              <div v-else style="display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto;">
+                <div v-for="t in trash" :key="t.id" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1.5px solid var(--color-sand,#E8DFD8); border-radius: 9px;">
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-weight: 700; font-size: 13px; overflow-wrap: anywhere;">{{ t.name }}</div>
+                    <div style="font-size: 11.5px; color: var(--text-muted,#A09690); overflow-wrap: anywhere;">{{ [t.company, t.position].filter(Boolean).join(' · ') || '—' }}</div>
+                  </div>
+                  <button class="cf-doc-action-btn" :disabled="!canSave" @click="restoreFromTrash(t.id)">Pulihkan</button>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label class="cf-field-label">Titik pulih otomatis</label>
+              <p style="margin: 0 0 8px; font-size: 12px; color: var(--text-muted,#A09690); line-height: 1.6;">
+                Setiap kali halaman ini dibuka, salinan data dari sesi sebelumnya disimpan otomatis.
+                <template v-if="snapshotInfo">Snapshot terakhir: <strong>{{ snapshotInfo.count }} baris</strong>, disimpan {{ snapshotInfo.when }}.</template>
+                <template v-else>Belum ada snapshot.</template>
+              </p>
+              <button class="cf-btn-ghost" :disabled="!canSave || !snapshotInfo" @click="restoreMissingFromSnapshot">Kembalikan baris yang hilang dari snapshot</button>
+              <p style="margin: 6px 0 0; font-size: 11px; color: var(--text-muted,#A09690);">Hanya menambahkan baris yang tidak ada sekarang — tidak menimpa data yang sudah ada.</p>
+            </div>
+          </div>
+          <div class="cf-modal-footer">
+            <button class="cf-btn-primary" @click="showRecoveryModal = false">Tutup</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- ── Floating Button: menu shortcut halaman Career ── -->
+    <career-nav-fab current="magnetConnectionTracker"></career-nav-fab>
+
+  </div>
+  `,
+
+  data() {
+    return {
+      KEY_ROWS: 'career_magnet_connections',
+      KEY_COLS: 'career_magnet_connection_columns',
+      KEY_TRASH: 'career_magnet_connections_trash',
+      KEY_SNAP: 'career_magnet_connections_snapshot',
+      rows: [],
+      columns: [],      // kolom custom: [{ id, title, hidden }]
+      trash: [],        // baris terhapus: [{ ...row, deletedAt }]
+      snapshotInfo: null,
+      loaded: false,    // true hanya setelah SEMUA data berhasil dibaca
+      loadFailed: false,
+      searchQuery: '',
+      filterColumn: '',   // '' = tanpa filter; selain itu = key kolom
+      filterMode: 'filled', // 'filled' | 'empty' | 'contains'
+      filterText: '',
+      showModal: false,
+      showColumnsModal: false,
+      showRecoveryModal: false,
+      editingId: null,
+      newColumnTitle: '',
+      form: { name: '', company: '', position: '', chatConnect: '', chatThanks: '', custom: {} },
+    };
+  },
+
+  computed: {
+    // Boleh menyimpan? Hanya kalau data lama sukses dibaca & storage sehat.
+    canSave() {
+      return this.loaded && !this.loadFailed &&
+        !!globalThis.WorkspaceStorage && WorkspaceStorage._initialized === true;
+    },
+    lockReason() {
+      if (this.loadFailed) return 'Data yang tersimpan tidak bisa dibaca dengan benar, jadi halaman ini tidak akan menulis apa pun supaya tidak menimpanya.';
+      return 'Koneksi ke penyimpanan server belum siap.';
+    },
+    // Semua kolom yang bisa dipakai untuk filter (bawaan + kolom tambahan yang tampil)
+    filterableColumns() {
+      const fixed = [
+        { key: 'name', title: 'Nama' },
+        { key: 'company', title: 'Perusahaan' },
+        { key: 'position', title: 'Posisi' },
+        { key: 'chatConnect', title: 'Chat Connect' },
+        { key: 'chatThanks', title: 'Chat Terima Kasih' },
+      ];
+      return fixed.concat(this.visibleColumns.map(c => ({ key: c.id, title: c.title })));
+    },
+    visibleColumns() {
+      return this.columns.filter(c => !c.hidden);
+    },
+    tableMinWidth() {
+      return 1030 + this.visibleColumns.length * 200;
+    },
+    chatConnectCount() {
+      return this.rows.filter(r => (r.chatConnect || '').trim()).length;
+    },
+    chatThanksCount() {
+      return this.rows.filter(r => (r.chatThanks || '').trim()).length;
+    },
+    filteredRows() {
+      const q = this.searchQuery.trim().toLowerCase();
+      let list = this.rows.slice();
+      if (q) {
+        list = list.filter(r => {
+          const base = [r.name, r.company, r.position, r.chatConnect, r.chatThanks];
+          const extra = Object.values(r.custom || {});
+          return base.concat(extra).some(v => (v || '').toString().toLowerCase().includes(q));
+        });
+      }
+      // Filter berdasarkan kolom
+      if (this.filterColumn && this.filterableColumns.some(c => c.key === this.filterColumn)) {
+        const t = this.filterText.trim().toLowerCase();
+        list = list.filter(r => {
+          const v = this.fieldValue(r, this.filterColumn).trim();
+          if (this.filterMode === 'filled') return v !== '';
+          if (this.filterMode === 'empty') return v === '';
+          return !t || v.toLowerCase().includes(t);
+        });
+      }
+      // Terbaru di atas
+      list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      return list;
+    },
+  },
+
+  methods: {
+    uid(prefix) {
+      return prefix + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+    },
+
+    // ── Baca satu key; bedakan "memang kosong" vs "ada tapi rusak" ──
+    readKey(key, fallback) {
+      const raw = WorkspaceStorage.getItem(key);
+      if (raw === null || raw === undefined || raw === '') return { ok: true, value: fallback };
+      try {
+        const v = JSON.parse(raw);
+        if (!Array.isArray(v)) return { ok: false, value: fallback };
+        return { ok: true, value: v };
+      } catch (_e) {
+        return { ok: false, value: fallback };
+      }
+    },
+
+    // ── Tulis satu key (hanya kalau aman) ──
+    writeKey(key, data) {
+      if (!this.canSave) return false;
+      try {
+        WorkspaceStorage.setItem(key, JSON.stringify(data));
+        return true;
+      } catch (e) {
+        console.error('[MagnetConnection] gagal menyimpan ' + key, e);
+        alert('Gagal menyimpan data. Coba lagi, atau klik "Backup JSON" dulu.');
+        return false;
+      }
+    },
+    saveRows()  { return this.writeKey(this.KEY_ROWS, this.rows); },
+    saveCols()  { return this.writeKey(this.KEY_COLS, this.columns); },
+    saveTrash() { return this.writeKey(this.KEY_TRASH, this.trash); },
+
+    fieldValue(row, key) {
+      const fixed = ['name', 'company', 'position', 'chatConnect', 'chatThanks'];
+      const v = fixed.includes(key) ? row[key] : (row.custom && row.custom[key]);
+      return v == null ? '' : String(v);
+    },
+    resetFilters() {
+      this.searchQuery = '';
+      this.filterColumn = '';
+      this.filterMode = 'filled';
+      this.filterText = '';
+    },
+    customValue(row, colId) {
+      return (row.custom && row.custom[colId]) || '';
+    },
+
+    // ── Tambah / Edit ──
+    emptyForm() {
+      const custom = {};
+      this.columns.forEach(c => { custom[c.id] = ''; });
+      return { name: '', company: '', position: '', chatConnect: '', chatThanks: '', custom };
+    },
+    openAddModal() {
+      if (!this.canSave) return;
+      this.editingId = null;
+      this.form = this.emptyForm();
+      this.showModal = true;
+    },
+    openEditModal(row) {
+      if (!this.canSave) return;
+      this.editingId = row.id;
+      const custom = {};
+      this.columns.forEach(c => { custom[c.id] = (row.custom && row.custom[c.id]) || ''; });
+      this.form = {
+        name: row.name || '',
+        company: row.company || '',
+        position: row.position || '',
+        chatConnect: row.chatConnect || '',
+        chatThanks: row.chatThanks || '',
+        custom,
+      };
+      this.showModal = true;
+    },
+    closeModal() {
+      this.showModal = false;
+    },
+    saveRow() {
+      if (!this.canSave) return;
+      const name = this.form.name.trim();
+      if (!name) return;
+      const now = Date.now();
+      const fields = {
+        name,
+        company: this.form.company.trim(),
+        position: this.form.position.trim(),
+        chatConnect: this.form.chatConnect,
+        chatThanks: this.form.chatThanks,
+      };
+      if (this.editingId) {
+        const idx = this.rows.findIndex(r => r.id === this.editingId);
+        if (idx === -1) { this.showModal = false; return; }
+        const old = this.rows[idx];
+        // Gabungkan custom lama + baru, supaya isi kolom yang disembunyikan tidak ikut hilang
+        const custom = { ...(old.custom || {}), ...this.form.custom };
+        this.rows.splice(idx, 1, { ...old, ...fields, custom, updatedAt: now });
+      } else {
+        this.rows.push({
+          id: this.uid('mgn'),
+          ...fields,
+          custom: { ...this.form.custom },
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+      this.saveRows();
+      this.showModal = false;
+    },
+
+    // ── Hapus = pindah ke Sampah (bisa dipulihkan) ──
+    deleteRow(id, closeModalAfter) {
+      if (!this.canSave) return;
+      const row = this.rows.find(r => r.id === id);
+      if (!row) return;
+      if (!confirm('Pindahkan "' + row.name + '" ke Sampah? Kamu masih bisa memulihkannya lewat tombol "Sampah / Pulihkan".')) return;
+      // Urutan penting: simpan ke sampah DULU, baru hapus dari daftar utama.
+      this.trash.unshift({ ...row, deletedAt: Date.now() });
+      if (this.trash.length > 500) this.trash.length = 500;
+      this.saveTrash();
+      this.rows = this.rows.filter(r => r.id !== id);
+      this.saveRows();
+      if (closeModalAfter) this.showModal = false;
+    },
+    restoreFromTrash(id) {
+      if (!this.canSave) return;
+      const t = this.trash.find(x => x.id === id);
+      if (!t) return;
+      const { deletedAt, ...row } = t;
+      if (!this.rows.some(r => r.id === row.id)) this.rows.push(row);
+      this.saveRows();
+      this.trash = this.trash.filter(x => x.id !== id);
+      this.saveTrash();
+    },
+    restoreMissingFromSnapshot() {
+      if (!this.canSave) return;
+      const res = this.readSnapshot();
+      if (!res || !res.rows.length) { alert('Snapshot kosong.'); return; }
+      const have = new Set(this.rows.map(r => r.id));
+      const missing = res.rows.filter(r => r && r.id && !have.has(r.id));
+      if (!missing.length) { alert('Semua baris di snapshot sudah ada di daftar kamu.'); return; }
+      this.rows = this.rows.concat(missing);
+      this.saveRows();
+      alert(missing.length + ' baris berhasil dikembalikan.');
+    },
+    readSnapshot() {
+      try {
+        const raw = WorkspaceStorage.getItem(this.KEY_SNAP);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.rows)) return parsed;
+      } catch (_e) {}
+      return null;
+    },
+
+    // ── Kolom custom (tidak pernah dihapus, hanya disembunyikan) ──
+    addColumn() {
+      const title = this.newColumnTitle.trim();
+      if (!title || !this.canSave) return;
+      this.columns.push({ id: this.uid('col'), title, hidden: false });
+      this.newColumnTitle = '';
+      this.saveCols();
+    },
+    renameColumn(col) {
+      if (!col.title.trim()) col.title = 'Kolom';
+      col.title = col.title.trim();
+      this.saveCols();
+    },
+    toggleColumn(col) {
+      col.hidden = !col.hidden;
+      this.saveCols();
+    },
+
+    // ── Export / Backup ──
+    download(filename, content, mime) {
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    },
+    stamp() {
+      return new Date().toISOString().slice(0, 10);
+    },
+    exportCsv() {
+      const cols = this.visibleColumns;
+      const header = ['Nama', 'Perusahaan', 'Posisi', 'Chat Connect', 'Chat Terima Kasih'].concat(cols.map(c => c.title));
+      const esc = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+      const lines = [header.map(esc).join(',')];
+      this.rows.forEach(r => {
+        const line = [r.name, r.company, r.position, r.chatConnect, r.chatThanks].concat(cols.map(c => this.customValue(r, c.id)));
+        lines.push(line.map(esc).join(','));
+      });
+      // BOM supaya Excel membaca UTF-8 dengan benar
+      this.download('magnet-connection-' + this.stamp() + '.csv', '\ufeff' + lines.join('\r\n'), 'text/csv;charset=utf-8');
+    },
+    exportJson() {
+      const payload = {
+        exported_at: new Date().toISOString(),
+        rows: this.rows,
+        columns: this.columns,
+        trash: this.trash,
+      };
+      this.download('magnet-connection-backup-' + this.stamp() + '.json', JSON.stringify(payload, null, 2), 'application/json');
+    },
+    async copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (_e) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (_e2) {}
+        ta.remove();
+      }
+    },
+
+    goToPortfolio() {
+      globalThis.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'myPortfolio' }));
+    },
+  },
+
+  async mounted() {
+    await globalThis._workspaceStorageReady;
+
+    // Kalau storage belum/gagal init, JANGAN lanjut menandai "loaded" — halaman terkunci.
+    if (!globalThis.WorkspaceStorage || WorkspaceStorage._initialized !== true) {
+      this.loaded = false;
+      return;
+    }
+
+    const r = this.readKey(this.KEY_ROWS, []);
+    const c = this.readKey(this.KEY_COLS, []);
+    const t = this.readKey(this.KEY_TRASH, []);
+
+    if (!r.ok || !c.ok || !t.ok) {
+      // Ada data tapi tidak terbaca → kunci penyimpanan, jangan menimpa.
+      this.loadFailed = true;
+      this.loaded = true;
+      console.error('[MagnetConnection] Data tersimpan tidak terbaca — penyimpanan dikunci.');
+      return;
+    }
+
+    this.rows = r.value;
+    this.columns = c.value;
+    this.trash = t.value;
+    this.loaded = true;
+
+    // Kolom bawaan tentang profil orang tsb. Ditambahkan HANYA kalau id-nya belum ada,
+    // jadi aman dijalankan berkali-kali & tidak menimpa kolom/isi yang sudah ada.
+    const defaults = [
+      { id: 'col_postingan',   title: 'Postingan' },
+      { id: 'col_keunikan',    title: 'Keunikan' },
+      { id: 'col_prinsip',     title: 'Prinsip' },
+      { id: 'col_quote',       title: 'Quote' },
+      { id: 'col_core_value',  title: 'Core Value' },
+      { id: 'col_tagline',     title: 'Tagline' },
+    ];
+    let added = false;
+    defaults.forEach(d => {
+      if (!this.columns.some(c => c.id === d.id)) {
+        this.columns.push({ id: d.id, title: d.title, hidden: false });
+        added = true;
+      }
+    });
+    if (added) this.saveCols();
+
+    // Titik pulih otomatis: simpan salinan data yang baru dimuat (kalau tidak kosong)
+    if (this.rows.length) {
+      this.writeKey(this.KEY_SNAP, { savedAt: Date.now(), rows: this.rows });
+    }
+    const snap = this.readSnapshot();
+    if (snap) {
+      this.snapshotInfo = {
+        count: snap.rows.length,
+        when: new Date(snap.savedAt || Date.now()).toLocaleString('id-ID'),
+      };
+    }
   },
 };
 
