@@ -9,6 +9,7 @@
 // ============================================================================
 
 // VAPID public key (lihat PUSH_SETUP.md untuk pasangan private key-nya)
+// VAPID public key (boleh publik). Private key-nya disimpan HANYA di Supabase Secrets, jangan ditulis di file ini.
 const VAPID_PUBLIC_KEY = 'BP_WDK89oGuVid6kLiUZBDZNRG4JYcq7itT0k_L-iQQEVl3zqdGeT-DA-0O136AfOUj20rL9Iv2Zbb8z7HawYWg';
 
 function _urlBase64ToUint8Array(base64String) {
@@ -18,6 +19,20 @@ function _urlBase64ToUint8Array(base64String) {
   const outputArray = new Uint8Array(rawData.length);
   for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
   return outputArray;
+}
+
+// Cek apakah subscription di browser dibuat dengan VAPID key yang sama dengan kode sekarang.
+// Kalau key diganti, subscription lama tidak bisa dipakai lagi dan harus dibuat ulang.
+function _sameKey(sub) {
+  try {
+    const cur = sub && sub.options && sub.options.applicationServerKey;
+    if (!cur) return true; // tidak bisa dicek → anggap sama
+    const a = new Uint8Array(cur);
+    const b = _urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+  } catch (e) { return true; }
 }
 
 const PushNotif = {
@@ -73,12 +88,14 @@ const PushNotif = {
     if (!reg) return 'unsupported';
 
     const sub = await reg.pushManager.getSubscription();
+    if (sub && !_sameKey(sub)) return 'off'; // subscription lama (key lama) → perlu dinyalakan ulang
     return sub ? 'on' : 'off';
   },
 
   // -- Minta izin + subscribe + simpan ke Supabase --
   async subscribe() {
     if (!this.isSupported()) throw new Error('Browser ini tidak mendukung push notification.');
+    if (VAPID_PUBLIC_KEY.indexOf('GANTI_') === 0) throw new Error('VAPID public key belum diisi di push-notifications.js.');
 
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') throw new Error('Izin notifikasi tidak diberikan.');
@@ -87,6 +104,11 @@ const PushNotif = {
     if (!reg) throw new Error('Service worker gagal didaftarkan.');
 
     let sub = await reg.pushManager.getSubscription();
+    if (sub && !_sameKey(sub)) {
+      // Subscription lama terikat ke key lama → buang, lalu buat baru
+      try { await sub.unsubscribe(); } catch (e) { /* abaikan */ }
+      sub = null;
+    }
     if (!sub) {
       sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
