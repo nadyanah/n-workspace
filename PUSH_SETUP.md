@@ -68,8 +68,7 @@ supabase login
 supabase link --project-ref <PROJECT_REF>
 
 # 4. Set secrets (VAPID keys — SUDAH digenerate, tinggal pakai)
-supabase secrets set VAPID_PUBLIC_KEY="BK6q5hjI5UQgKGzMvb_hgHNt762mpI70uv7eX9XTvcZSTsmdtDqsgcSKwd3kNYbk_tMIynrgEKQU8TJNtkGeUWo"
-supabase secrets set VAPID_PRIVATE_KEY="EZiVF-snYhTTAXzgdT71brCiBzTdFOzqNTawHyP43Cg"
+supabase secrets set VAPID_PUBLIC_KEY="BP_WDK89oGuVid6kLiUZBDZNRG4JYcq7itT0k_L-iQQEVl3zqdGeT-DA-0O136AfOUj20rL9Iv2Zbb8z7HawYWg"
 supabase secrets set VAPID_SUBJECT="mailto:kamu@email.com"
 
 # 5. Deploy function
