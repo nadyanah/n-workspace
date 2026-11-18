@@ -12,6 +12,7 @@
 //
 // Env vars yang WAJIB di-set (supabase secrets set ...):
 //   VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT
+//   CRON_SECRET  (kunci rahasia yang sama dengan di SQL cron; function menolak request tanpa ini)
 // Env var opsional:
 //   APP_TZ_OFFSET_MINUTES (default 420 = WIB / UTC+7)
 //
@@ -20,14 +21,15 @@
 
 /// <reference lib="deno.window" />
 
-import { createClient } from "@supabase/supabase-js";
-import webpush from "web-push";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import webpush from "npm:web-push@3.6.7";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY")!;
 const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY")!;
 const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") || "mailto:admin@example.com";
+const CRON_SECRET = Deno.env.get("CRON_SECRET") || "";
 const TZ_OFFSET_MIN = parseInt(Deno.env.get("APP_TZ_OFFSET_MINUTES") || "420", 10); // WIB
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
@@ -52,7 +54,15 @@ function timeToMinutes(time: string): number | null {
   return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
 }
 
-Deno.serve(async (_req: Request) => {
+Deno.serve(async (req: Request) => {
+  // Hanya cron kita yang boleh memanggil function ini
+  if (!CRON_SECRET || req.headers.get("x-cron-secret") !== CRON_SECRET) {
+    return new Response(JSON.stringify({ ok: false, error: "unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+
   try {
     // Waktu "sekarang" di timezone aplikasi (default WIB)
     const shifted = new Date(Date.now() + TZ_OFFSET_MIN * 60_000);
@@ -60,10 +70,24 @@ Deno.serve(async (_req: Request) => {
     const nowMin = shifted.getUTCHours() * 60 + shifted.getUTCMinutes();
 
     // 1) Ambil semua data reminder relevan, dikelompokkan per user
+    // 0) Hanya proses user yang punya device terdaftar (hemat baca database)
+    const { data: subUsers, error: subUsersErr } = await supabase
+      .from("push_subscriptions")
+      .select("user_id");
+    if (subUsersErr) throw subUsersErr;
+    const userIds = [...new Set((subUsers || []).map((s: { user_id: string }) => s.user_id))];
+    if (userIds.length === 0) {
+      return new Response(
+        JSON.stringify({ ok: true, todayStr, nowMin, totalDue: 0, totalSent: 0, note: "no subscribers" }),
+        { headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     const { data: rows, error: rowsErr } = await supabase
       .from("workspace_storage")
       .select("user_id, key, value")
-      .in("key", STORAGE_KEYS);
+      .in("key", STORAGE_KEYS)
+      .in("user_id", userIds);
 
     if (rowsErr) throw rowsErr;
 
@@ -176,6 +200,9 @@ Deno.serve(async (_req: Request) => {
 
       // 3) Simpan status "sudah dikirim" agar tidak dobel
       pushSent[todayStr] = sentToday;
+      // Buang catatan lebih dari 7 hari supaya key ini tidak membengkak
+      const cutoff = new Date(shifted.getTime() - 7 * 86_400_000).toISOString().slice(0, 10);
+      for (const d of Object.keys(pushSent)) { if (d < cutoff) delete pushSent[d]; }
       await supabase
         .from("workspace_storage")
         .upsert(
