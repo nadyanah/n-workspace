@@ -3579,8 +3579,8 @@ const CalendarMoment = {
         const img = new Image();
         img.src = e.target.result;
         img.onload = () => {
-          const maxWidth = 450;
-          const maxHeight = 450;
+          const maxWidth = 320;
+          const maxHeight = 320;
           let w = img.width;
           let h = img.height;
           
@@ -3599,7 +3599,7 @@ const CalendarMoment = {
           canvas.height = h;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, w, h);
-          mItem.image = canvas.toDataURL('image/jpeg', 0.7);
+          mItem.image = canvas.toDataURL('image/jpeg', 0.55);
         };
       };
     },
@@ -13006,8 +13006,8 @@ const GoogleCalendar = {
         const img = new Image();
         img.src = e.target.result;
         img.onload = () => {
-          const maxWidth = 640;
-          const maxHeight = 640;
+          const maxWidth = 400;
+          const maxHeight = 400;
           let w = img.width;
           let h = img.height;
           if (w > maxWidth || h > maxHeight) {
@@ -13024,7 +13024,7 @@ const GoogleCalendar = {
           canvas.height = h;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, w, h);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.55);
           if (this.yearDotsDayMoments[targetIdx]) {
             this.yearDotsDayMoments[targetIdx].photo = dataUrl;
           }
