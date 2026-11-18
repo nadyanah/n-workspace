@@ -5,8 +5,9 @@
 // akan mendapat data yang sama, di device manapun.
 // ============================================================================
 
-const SUPABASE_URL = 'https://wsrzmemfhrcxqqseanxm.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_7DUVThoYDRVM2--MH2fkcQ_Gs9c3wyq';
+const SUPABASE_URL = 'https://uhcjhvqainecelcczuxe.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_5PVJQJn1dh1_Eh4h9_qdtw_hphQo6vj';
+
 
 // Email domain palsu untuk auth Supabase (tidak perlu valid)
 const AUTH_EMAIL_DOMAIN = 'nworkspace.app';
