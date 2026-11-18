@@ -9,7 +9,7 @@
 // ============================================================================
 
 // VAPID public key (lihat PUSH_SETUP.md untuk pasangan private key-nya)
-const VAPID_PUBLIC_KEY = 'BK6q5hjI5UQgKGzMvb_hgHNt762mpI70uv7eX9XTvcZSTsmdtDqsgcSKwd3kNYbk_tMIynrgEKQU8TJNtkGeUWo';
+const VAPID_PUBLIC_KEY = 'BP_WDK89oGuVid6kLiUZBDZNRG4JYcq7itT0k_L-iQQEVl3zqdGeT-DA-0O136AfOUj20rL9Iv2Zbb8z7HawYWg';
 
 function _urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
