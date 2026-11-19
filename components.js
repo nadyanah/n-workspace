@@ -3014,6 +3014,10 @@ const CalendarMoment = {
       newMomentCatColor: '#D67B52'
     };
   },
+  watch: {
+    // Modal ditutup (simpan / batal / klik luar) → bersihkan foto yang terunggah tapi tak tersimpan
+    showModal(open) { if (!open) this.cleanupMomentSessionUploads(); }
+  },
   computed: {
     calendarCells() {
       const year = this.currentDate.getFullYear();
@@ -3604,10 +3608,24 @@ const CalendarMoment = {
           const dataUrl = canvas.toDataURL('image/jpeg', 0.55);
           mItem.image = dataUrl; // preview instan
           PhotoStorage.upload(dataUrl, 'calendar').then(url => {
-            if (url !== dataUrl && mItem.image === dataUrl) mItem.image = url;
+            if (url === dataUrl) return;
+            (this._momSessionUploads = this._momSessionUploads || []).push(url);
+            if (mItem.image === dataUrl) mItem.image = url;
+            if (!this.showModal) this.cleanupMomentSessionUploads();
           });
         };
       };
+    },
+    // Hapus file bucket yang diunggah di sesi modal tapi tidak ikut tersimpan
+    cleanupMomentSessionUploads() {
+      const up = this._momSessionUploads;
+      if (!up || !up.length) return;
+      const used = new Set();
+      Object.values(this.moments).forEach(arr => (arr || []).forEach(m => { if (m.image) used.add(m.image); }));
+      if (this.showModal && this.modalMoments) this.modalMoments.forEach(m => { if (m.image) used.add(m.image); });
+      const orphans = up.filter(u => !used.has(u));
+      this._momSessionUploads = this.showModal ? up.filter(u => used.has(u)) : [];
+      if (orphans.length) PhotoStorage.remove(orphans);
     },
     async migrateMomentPhotos() {
       if (this._momMigrating || !globalThis.PhotoStorage || PhotoStorage._unavailable) return;
@@ -12992,8 +13010,22 @@ const GoogleCalendar = {
         }
       });
     },
+    // Hapus file bucket yang diunggah di sesi modal tapi TIDAK ikut tersimpan (modal ditutup tanpa simpan,
+    // atau foto diganti sebelum simpan). Aman: hanya menghapus yang tidak dipakai entri mana pun.
+    yearDotsCleanupSessionUploads() {
+      const up = this._y365SessionUploads;
+      if (!up || !up.length) return;
+      const used = new Set();
+      Object.values(this.yearDotsEntries).forEach(e => this.yearDotsRemoteUrls(e).forEach(u => used.add(u)));
+      // Modal masih terbuka? foto yang masih ada di draft juga dianggap dipakai
+      if (this.yearDotsModalOpen) this.yearDotsDayMoments.forEach(m => { if (m.photo) used.add(m.photo); });
+      const orphans = up.filter(u => !used.has(u));
+      this._y365SessionUploads = up.filter(u => used.has(u) && this.yearDotsModalOpen);
+      if (orphans.length) PhotoStorage.remove(orphans);
+    },
     yearDotsCloseModal() {
       this.yearDotsModalOpen = false;
+      this.yearDotsCleanupSessionUploads();
       this.yearDotsActiveDate = null;
       this.yearDotsDayMoments = [];
       this.yearDotsActiveMomentIdx = 0;
@@ -13118,8 +13150,13 @@ const GoogleCalendar = {
           if (target) {
             target.photo = dataUrl; // preview instan
             PhotoStorage.upload(dataUrl, 'year365').then(url => {
+              if (url === dataUrl) return;
+              // Catat: file ini baru diunggah di sesi modal ini (belum tentu disimpan)
+              (this._y365SessionUploads = this._y365SessionUploads || []).push(url);
               // Ganti hanya kalau foto di slot itu belum diganti user
-              if (url !== dataUrl && target.photo === dataUrl) target.photo = url;
+              if (target.photo === dataUrl) target.photo = url;
+              // Modal sudah ditutup sebelum upload selesai → langsung bersihkan kalau tak dipakai
+              if (!this.yearDotsModalOpen) this.yearDotsCleanupSessionUploads();
             });
           }
         };
