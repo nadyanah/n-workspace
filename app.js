@@ -991,35 +991,54 @@ const FloatingCountdownTimer = {
 // Awalnya KOSONG. Disimpan di WorkspaceStorage key `ws_page_guide`.
 // ============================================================================
 (function injectPageGuideStyle() {
-  if (document.getElementById('pg-style')) return;
+  const old = document.getElementById('pg-style'); if (old) old.remove();
   const st = document.createElement('style');
   st.id = 'pg-style';
   st.textContent = `
   .pg-backdrop{position:fixed;inset:0;z-index:9000;background:rgba(44,38,33,.45);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;}
-  .pg-card{background:var(--bg-card,#FDFBF7);border:1.5px solid var(--color-sand,#E8DFD8);border-radius:20px;width:100%;max-width:460px;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(44,38,33,.22);overflow:hidden;}
-  .pg-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px 12px;border-bottom:1px solid var(--color-sand,#E8DFD8);}
-  .pg-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--text-dark,#2C2621);margin:0;}
-  .pg-sub{font-size:11.5px;color:var(--text-muted,#6E6359);margin-top:2px;}
-  .pg-x{border:none;background:none;font-size:24px;line-height:1;cursor:pointer;color:var(--text-muted,#6E6359);}
-  .pg-body{padding:14px 18px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
-  .pg-empty{text-align:center;padding:26px 10px;color:var(--text-muted,#6E6359);font-size:13px;line-height:1.6;}
-  .pg-empty b{display:block;font-size:30px;margin-bottom:6px;}
-  .pg-item{border:1.5px solid var(--color-sand,#E8DFD8);border-radius:14px;padding:11px 13px;background:#fff;}
-  .pg-item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
-  .pg-item-title{font-size:13.5px;font-weight:700;color:var(--text-dark,#2C2621);}
-  .pg-item-note{font-size:12.5px;color:var(--text-muted,#6E6359);margin-top:3px;line-height:1.5;white-space:pre-wrap;}
+  .pg-card{background:#FDFBF7;border:1.5px solid #E8DFD8;border-radius:22px;width:100%;max-width:480px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(44,38,33,.22);overflow:hidden;}
+  .pg-card button,.pg-card select,.pg-card input,.pg-card textarea{opacity:1;filter:none;font-family:inherit;box-sizing:border-box;-webkit-appearance:none;appearance:none;}
+  .pg-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px 14px;}
+  .pg-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#2C2621;margin:0;line-height:1.2;}
+  .pg-sub{font-size:12px;color:#6E6359;margin-top:3px;}
+  .pg-x{flex-shrink:0;width:32px;height:32px;border-radius:50%;border:none;background:#F3EDE7;font-size:20px;line-height:1;cursor:pointer;color:#6E6359;display:flex;align-items:center;justify-content:center;}
+  .pg-x:hover{background:#E8DFD8;}
+  .pg-chips{display:flex;gap:6px;padding:0 20px 12px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;}
+  .pg-chips::-webkit-scrollbar{display:none;}
+  .pg-chip{flex-shrink:0;border:1.5px solid #E8DFD8;background:#fff;color:#6E6359;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
+  .pg-chip.on{background:#2C2621;border-color:#2C2621;color:#fff;}
+  .pg-chip small{opacity:.6;font-weight:600;margin-left:3px;}
+  .pg-body{padding:4px 20px 16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;flex:1;min-height:120px;border-top:1px solid #F0EAE2;padding-top:14px;}
+  .pg-group-h{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6E6359;margin-top:4px;}
+  .pg-group-h:first-child{margin-top:0;}
+  .pg-group-h i{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .pg-group-h span{flex:1;height:1px;background:#EFE8E1;}
+  .pg-empty{text-align:center;padding:30px 12px;color:#6E6359;font-size:13px;line-height:1.7;}
+  .pg-empty b{display:block;font-size:34px;margin-bottom:8px;}
+  .pg-item{position:relative;border:1.5px solid #E8DFD8;border-radius:14px;padding:12px 14px 12px 17px;background:#fff;overflow:hidden;}
+  .pg-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--pg-c,#D67B52);}
+  .pg-item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+  .pg-item-title{font-size:14px;font-weight:700;color:#2C2621;line-height:1.35;word-break:break-word;}
+  .pg-cat{display:inline-block;margin-top:5px;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:999px;color:var(--pg-c,#D67B52);background:var(--pg-bg,#FBEFE8);}
+  .pg-item-note{font-size:12.5px;color:#6E6359;margin-top:8px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
   .pg-actions{display:flex;gap:6px;flex-shrink:0;}
-  .pg-mini{border:1.5px solid var(--color-sand,#E8DFD8);background:#fff;border-radius:8px;padding:3px 8px;font-size:11px;font-weight:600;cursor:pointer;color:var(--text-muted,#6E6359);font-family:inherit;}
-  .pg-mini:hover{border-color:var(--color-terracotta,#D67B52);color:var(--color-terracotta,#D67B52);}
-  .pg-go{margin-top:8px;border:none;border-radius:9px;padding:6px 11px;font-size:12px;font-weight:700;cursor:pointer;background:var(--color-terracotta,#D67B52);color:#fff;font-family:inherit;}
-  .pg-field{display:flex;flex-direction:column;gap:4px;}
-  .pg-field label{font-size:11px;font-weight:700;color:var(--text-muted,#6E6359);}
-  .pg-input{border:2px solid var(--color-sand,#E8DFD8);border-radius:10px;padding:9px 11px;font-size:13px;font-family:inherit;color:var(--text-dark,#2C2621);background:#fff;outline:none;width:100%;box-sizing:border-box;}
-  .pg-input:focus{border-color:var(--color-terracotta,#D67B52);}
-  .pg-foot{padding:12px 18px;border-top:1px solid var(--color-sand,#E8DFD8);display:flex;gap:8px;}
-  .pg-btn{flex:1;border-radius:10px;padding:10px 0;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid var(--color-sand,#E8DFD8);background:#fff;color:var(--text-dark,#2C2621);}
-  .pg-btn.primary{background:var(--color-terracotta,#D67B52);border-color:var(--color-terracotta,#D67B52);color:#fff;}
-  .pg-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .pg-mini{border:1.5px solid #E8DFD8;background:#fff;border-radius:8px;padding:4px 10px;font-size:11.5px;font-weight:600;cursor:pointer;color:#6E6359;}
+  .pg-mini:hover{border-color:#D67B52;color:#D67B52;}
+  .pg-mini.del:hover{border-color:#C23939;color:#C23939;}
+  .pg-go{margin-top:10px;border:none;border-radius:9px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;background:#D67B52;color:#fff;}
+  .pg-go:hover{background:#C86D44;}
+  .pg-field{display:flex;flex-direction:column;gap:5px;}
+  .pg-field>label{font-size:11.5px;font-weight:700;color:#6E6359;}
+  .pg-input{border:2px solid #E8DFD8;border-radius:11px;padding:10px 12px;font-size:13.5px;color:#2C2621;background:#fff;outline:none;width:100%;resize:vertical;}
+  .pg-input:focus{border-color:#D67B52;}
+  select.pg-input{background-image:linear-gradient(45deg,transparent 50%,#6E6359 50%),linear-gradient(135deg,#6E6359 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px;}
+  .pg-suggest{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;}
+  .pg-foot{padding:12px 20px 16px;border-top:1px solid #F0EAE2;display:flex;gap:10px;flex-shrink:0;}
+  .pg-btn{flex:1;border-radius:12px;padding:11px 0;font-size:13.5px;font-weight:700;cursor:pointer;border:1.5px solid #E8DFD8;background:#fff;color:#2C2621;}
+  .pg-btn.primary{background:#D67B52;border-color:#D67B52;color:#fff;}
+  .pg-btn.primary:hover:not(:disabled){background:#C86D44;border-color:#C86D44;}
+  .pg-btn:disabled{opacity:.45;cursor:not-allowed;}
+  @media (max-width:480px){.pg-backdrop{align-items:flex-end;padding:0;}.pg-card{border-radius:22px 22px 0 0;max-height:92vh;}}
   `;
   document.head.appendChild(st);
 })();
@@ -1033,12 +1052,20 @@ const PageGuide = {
   template: `
     <div v-if="show" class="pg-backdrop" @click.self="$emit('close')">
       <div class="pg-card" role="dialog" aria-label="Petunjuk Page">
+
         <div class="pg-head">
           <div>
             <h3 class="pg-title">🧭 Petunjuk Page</h3>
-            <div class="pg-sub">Catatan arah: page ini ada di mana</div>
+            <div class="pg-sub">{{ editing ? (form.id ? 'Edit petunjuk' : 'Petunjuk baru') : 'Catatan arah: page ini ada di mana' }}</div>
           </div>
           <button class="pg-x" @click="$emit('close')" title="Tutup">&times;</button>
+        </div>
+
+        <!-- Filter kategori -->
+        <div class="pg-chips" v-if="!editing && items.length && categories.length">
+          <button class="pg-chip" :class="{ on: activeCat === '__all__' }" @click="activeCat = '__all__'">Semua<small>{{ items.length }}</small></button>
+          <button v-for="c in categories" :key="c" class="pg-chip" :class="{ on: activeCat === c }" @click="activeCat = c">{{ c }}<small>{{ countOf(c) }}</small></button>
+          <button v-if="uncategorizedCount" class="pg-chip" :class="{ on: activeCat === '__none__' }" @click="activeCat = '__none__'">Tanpa kategori<small>{{ uncategorizedCount }}</small></button>
         </div>
 
         <!-- Form tambah / edit -->
@@ -1046,6 +1073,13 @@ const PageGuide = {
           <div class="pg-field">
             <label>Judul</label>
             <input class="pg-input" v-model="form.title" maxlength="80" placeholder="mis. Catatan kerja harian" @keydown.enter="save" />
+          </div>
+          <div class="pg-field">
+            <label>Kategori</label>
+            <input class="pg-input" v-model="form.category" maxlength="30" placeholder="ketik kategori baru, atau pilih di bawah" />
+            <div class="pg-suggest" v-if="categories.length">
+              <button v-for="c in categories" :key="c" type="button" class="pg-chip" :class="{ on: form.category === c }" @click="form.category = c">{{ c }}</button>
+            </div>
           </div>
           <div class="pg-field">
             <label>Keterangan (page ini ada di mana?)</label>
@@ -1066,19 +1100,25 @@ const PageGuide = {
             <b>🗺️</b>
             Belum ada petunjuk.<br>Tekan <strong>+ Tambah petunjuk</strong> untuk menulis<br>"page ini ada di sini".
           </div>
-          <div v-for="it in items" :key="it.id" class="pg-item">
-            <div class="pg-item-top">
-              <div class="pg-item-title">{{ it.title }}</div>
-              <div class="pg-actions">
-                <button class="pg-mini" @click="startEdit(it)">Edit</button>
-                <button class="pg-mini" @click="remove(it)">Hapus</button>
+          <template v-for="g in groups" :key="g.key">
+            <div v-if="showHeadings" class="pg-group-h"><i :style="{ background: g.color }"></i>{{ g.name }}<span></span></div>
+            <div v-for="it in g.items" :key="it.id" class="pg-item" :style="{ '--pg-c': g.color, '--pg-bg': g.color + '1F' }">
+              <div class="pg-item-top">
+                <div>
+                  <div class="pg-item-title">{{ it.title }}</div>
+                  <span v-if="it.category" class="pg-cat">{{ it.category }}</span>
+                </div>
+                <div class="pg-actions">
+                  <button class="pg-mini" @click="startEdit(it)">Edit</button>
+                  <button class="pg-mini del" @click="remove(it)">Hapus</button>
+                </div>
               </div>
+              <div v-if="it.note" class="pg-item-note">{{ it.note }}</div>
+              <button v-if="it.pageKey && pages[it.pageKey]" class="pg-go" @click="$emit('go', it.pageKey)">
+                Buka {{ pages[it.pageKey].label }} →
+              </button>
             </div>
-            <div v-if="it.note" class="pg-item-note">{{ it.note }}</div>
-            <button v-if="it.pageKey && pages[it.pageKey]" class="pg-go" @click="$emit('go', it.pageKey)">
-              Buka {{ pages[it.pageKey].label }} →
-            </button>
-          </div>
+          </template>
         </div>
 
         <div class="pg-foot">
@@ -1092,12 +1132,47 @@ const PageGuide = {
     </div>
   `,
   data() {
-    return { items: [], editing: false, form: { id: null, title: '', note: '', pageKey: '' } };
+    return {
+      items: [], editing: false, activeCat: '__all__',
+      form: { id: null, title: '', category: '', note: '', pageKey: '' }
+    };
+  },
+  computed: {
+    categories() {
+      const seen = [];
+      this.items.forEach(i => { const c = (i.category || '').trim(); if (c && !seen.includes(c)) seen.push(c); });
+      return seen.sort((a, b) => a.localeCompare(b, 'id'));
+    },
+    uncategorizedCount() { return this.items.filter(i => !(i.category || '').trim()).length; },
+    showHeadings() { return this.activeCat === '__all__' && this.groups.length > 1; },
+    groups() {
+      const filtered = this.items.filter(i => {
+        const c = (i.category || '').trim();
+        if (this.activeCat === '__all__') return true;
+        if (this.activeCat === '__none__') return !c;
+        return c === this.activeCat;
+      });
+      const map = {};
+      filtered.forEach(i => {
+        const name = (i.category || '').trim() || 'Tanpa kategori';
+        (map[name] = map[name] || []).push(i);
+      });
+      return Object.keys(map)
+        .sort((a, b) => (a === 'Tanpa kategori') - (b === 'Tanpa kategori') || a.localeCompare(b, 'id'))
+        .map(name => ({ key: name, name, color: this.colorOf(name), items: map[name] }));
+    }
   },
   watch: {
-    show(v) { if (v) { this.load(); this.editing = false; } }
+    show(v) { if (v) { this.load(); this.editing = false; this.activeCat = '__all__'; } }
   },
   methods: {
+    colorOf(name) {
+      const palette = ['#D67B52', '#5F8575', '#4A7A96', '#8A609C', '#8C6239', '#C23939', '#7C8F5A', '#C58A12'];
+      if (name === 'Tanpa kategori') return '#A09488';
+      let h = 0; for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+      return palette[h % palette.length];
+    },
+    countOf(c) { return this.items.filter(i => (i.category || '').trim() === c).length; },
     load() {
       try {
         const raw = WorkspaceStorage.getItem('ws_page_guide');
@@ -1108,25 +1183,35 @@ const PageGuide = {
     persist() {
       try { WorkspaceStorage.setItem('ws_page_guide', JSON.stringify(this.items)); } catch (_e) { /* abaikan */ }
     },
-    startAdd() { this.form = { id: null, title: '', note: '', pageKey: '' }; this.editing = true; },
-    startEdit(it) { this.form = { id: it.id, title: it.title, note: it.note || '', pageKey: it.pageKey || '' }; this.editing = true; },
+    startAdd() {
+      const pre = (this.activeCat !== '__all__' && this.activeCat !== '__none__') ? this.activeCat : '';
+      this.form = { id: null, title: '', category: pre, note: '', pageKey: '' };
+      this.editing = true;
+    },
+    startEdit(it) {
+      this.form = { id: it.id, title: it.title, category: it.category || '', note: it.note || '', pageKey: it.pageKey || '' };
+      this.editing = true;
+    },
     cancel() { this.editing = false; },
     save() {
       const title = this.form.title.trim();
       if (!title) return;
-      const data = { title, note: this.form.note.trim(), pageKey: this.form.pageKey || '' };
+      const data = { title, category: this.form.category.trim(), note: this.form.note.trim(), pageKey: this.form.pageKey || '' };
       if (this.form.id) {
         this.items = this.items.map(x => x.id === this.form.id ? { ...x, ...data } : x);
       } else {
         this.items = [...this.items, { id: 'pg-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), ...data }];
       }
       this.persist();
+      // Kalau filter aktif tidak cocok dengan kategori item yang baru disimpan, balik ke "Semua"
+      if (this.activeCat !== '__all__' && !this.groups.length) this.activeCat = '__all__';
       this.editing = false;
     },
     remove(it) {
       if (!confirm(`Hapus petunjuk "${it.title}"?`)) return;
       this.items = this.items.filter(x => x.id !== it.id);
       this.persist();
+      if (this.activeCat !== '__all__' && !this.groups.length) this.activeCat = '__all__';
     }
   }
 };
