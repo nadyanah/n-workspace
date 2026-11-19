@@ -949,6 +949,11 @@
             📋
           </button>
 
+          <!-- 5. Petunjuk Page: peta/arah "page ini ada di mana" (isi bisa dicustom sendiri) -->
+          <button class="desk-config-floating-btn" @click="showPageGuideModal = true" title="Petunjuk Page — ini page-nya ada di mana">
+            🧭
+          </button>
+
           <!-- ✦ Grouped: Pengaturan & Tema — 1 toggle button -->
           <div class="desk-settings-group" @click.stop>
             <!-- Sub-menu vertikal (muncul ke atas saat toggle aktif) -->
@@ -1360,6 +1365,13 @@
         :show="showBucketListModal"
         @close="showBucketListModal = false">
       </bucket-list-yearly>
+
+      <page-guide
+        :show="showPageGuideModal"
+        :pages="PAGE_LABELS"
+        @close="showPageGuideModal = false"
+        @go="(k) => { showPageGuideModal = false; navigateTo(k); }">
+      </page-guide>
 
       <wish-list-2026
         :show="showWishListModal"

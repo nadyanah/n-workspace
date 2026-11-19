@@ -23,6 +23,7 @@ const App = {
     const showQuranModal = ref(false);
     const showWishListModal = ref(false);
     const showDailyStokModal = ref(false);
+    const showPageGuideModal = ref(false);
 
     // --- TAB BAR STATE (mirip Chrome) ---
     // Lucide SVG path strings — dirender via v-html di tab favicon
@@ -687,6 +688,7 @@ const App = {
       showQuranModal,
       showWishListModal,
       showDailyStokModal,
+      showPageGuideModal,
       showSettingsGroup,
       // Tab bar
       openTabs,
@@ -979,6 +981,156 @@ const FloatingCountdownTimer = {
   }
 };
 
+// ============================================================================
+// PAGE GUIDE — popup "Petunjuk Page" (tombol 🧭 di dock main page)
+// ============================================================================
+// Daftar petunjuk/arah page yang isinya dibuat sendiri oleh user:
+//   - judul           → nama petunjuk (mis. "Catatan kerja harian")
+//   - keterangan      → "page ini ada di sini: ..." (bebas ditulis)
+//   - tautan page     → opsional, pilih salah satu page agar ada tombol "Buka page"
+// Awalnya KOSONG. Disimpan di WorkspaceStorage key `ws_page_guide`.
+// ============================================================================
+(function injectPageGuideStyle() {
+  if (document.getElementById('pg-style')) return;
+  const st = document.createElement('style');
+  st.id = 'pg-style';
+  st.textContent = `
+  .pg-backdrop{position:fixed;inset:0;z-index:9000;background:rgba(44,38,33,.45);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;}
+  .pg-card{background:var(--bg-card,#FDFBF7);border:1.5px solid var(--color-sand,#E8DFD8);border-radius:20px;width:100%;max-width:460px;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(44,38,33,.22);overflow:hidden;}
+  .pg-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px 12px;border-bottom:1px solid var(--color-sand,#E8DFD8);}
+  .pg-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--text-dark,#2C2621);margin:0;}
+  .pg-sub{font-size:11.5px;color:var(--text-muted,#6E6359);margin-top:2px;}
+  .pg-x{border:none;background:none;font-size:24px;line-height:1;cursor:pointer;color:var(--text-muted,#6E6359);}
+  .pg-body{padding:14px 18px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
+  .pg-empty{text-align:center;padding:26px 10px;color:var(--text-muted,#6E6359);font-size:13px;line-height:1.6;}
+  .pg-empty b{display:block;font-size:30px;margin-bottom:6px;}
+  .pg-item{border:1.5px solid var(--color-sand,#E8DFD8);border-radius:14px;padding:11px 13px;background:#fff;}
+  .pg-item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+  .pg-item-title{font-size:13.5px;font-weight:700;color:var(--text-dark,#2C2621);}
+  .pg-item-note{font-size:12.5px;color:var(--text-muted,#6E6359);margin-top:3px;line-height:1.5;white-space:pre-wrap;}
+  .pg-actions{display:flex;gap:6px;flex-shrink:0;}
+  .pg-mini{border:1.5px solid var(--color-sand,#E8DFD8);background:#fff;border-radius:8px;padding:3px 8px;font-size:11px;font-weight:600;cursor:pointer;color:var(--text-muted,#6E6359);font-family:inherit;}
+  .pg-mini:hover{border-color:var(--color-terracotta,#D67B52);color:var(--color-terracotta,#D67B52);}
+  .pg-go{margin-top:8px;border:none;border-radius:9px;padding:6px 11px;font-size:12px;font-weight:700;cursor:pointer;background:var(--color-terracotta,#D67B52);color:#fff;font-family:inherit;}
+  .pg-field{display:flex;flex-direction:column;gap:4px;}
+  .pg-field label{font-size:11px;font-weight:700;color:var(--text-muted,#6E6359);}
+  .pg-input{border:2px solid var(--color-sand,#E8DFD8);border-radius:10px;padding:9px 11px;font-size:13px;font-family:inherit;color:var(--text-dark,#2C2621);background:#fff;outline:none;width:100%;box-sizing:border-box;}
+  .pg-input:focus{border-color:var(--color-terracotta,#D67B52);}
+  .pg-foot{padding:12px 18px;border-top:1px solid var(--color-sand,#E8DFD8);display:flex;gap:8px;}
+  .pg-btn{flex:1;border-radius:10px;padding:10px 0;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid var(--color-sand,#E8DFD8);background:#fff;color:var(--text-dark,#2C2621);}
+  .pg-btn.primary{background:var(--color-terracotta,#D67B52);border-color:var(--color-terracotta,#D67B52);color:#fff;}
+  .pg-btn:disabled{opacity:.5;cursor:not-allowed;}
+  `;
+  document.head.appendChild(st);
+})();
+
+const PageGuide = {
+  props: {
+    show:  { type: Boolean, default: false },
+    pages: { type: Object,  default: () => ({}) }   // PAGE_LABELS dari App
+  },
+  emits: ['close', 'go'],
+  template: `
+    <div v-if="show" class="pg-backdrop" @click.self="$emit('close')">
+      <div class="pg-card" role="dialog" aria-label="Petunjuk Page">
+        <div class="pg-head">
+          <div>
+            <h3 class="pg-title">🧭 Petunjuk Page</h3>
+            <div class="pg-sub">Catatan arah: page ini ada di mana</div>
+          </div>
+          <button class="pg-x" @click="$emit('close')" title="Tutup">&times;</button>
+        </div>
+
+        <!-- Form tambah / edit -->
+        <div class="pg-body" v-if="editing">
+          <div class="pg-field">
+            <label>Judul</label>
+            <input class="pg-input" v-model="form.title" maxlength="80" placeholder="mis. Catatan kerja harian" @keydown.enter="save" />
+          </div>
+          <div class="pg-field">
+            <label>Keterangan (page ini ada di mana?)</label>
+            <textarea class="pg-input" rows="4" v-model="form.note" maxlength="600" placeholder="mis. Ada di meja, ikon jam weker. Atau di menu ☰ → Job Logbook"></textarea>
+          </div>
+          <div class="pg-field">
+            <label>Tautan ke page (opsional)</label>
+            <select class="pg-input" v-model="form.pageKey">
+              <option value="">— tanpa tautan —</option>
+              <option v-for="(p, k) in pages" :key="k" :value="k">{{ p.label }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Daftar -->
+        <div class="pg-body" v-else>
+          <div v-if="!items.length" class="pg-empty">
+            <b>🗺️</b>
+            Belum ada petunjuk.<br>Tekan <strong>+ Tambah petunjuk</strong> untuk menulis<br>"page ini ada di sini".
+          </div>
+          <div v-for="it in items" :key="it.id" class="pg-item">
+            <div class="pg-item-top">
+              <div class="pg-item-title">{{ it.title }}</div>
+              <div class="pg-actions">
+                <button class="pg-mini" @click="startEdit(it)">Edit</button>
+                <button class="pg-mini" @click="remove(it)">Hapus</button>
+              </div>
+            </div>
+            <div v-if="it.note" class="pg-item-note">{{ it.note }}</div>
+            <button v-if="it.pageKey && pages[it.pageKey]" class="pg-go" @click="$emit('go', it.pageKey)">
+              Buka {{ pages[it.pageKey].label }} →
+            </button>
+          </div>
+        </div>
+
+        <div class="pg-foot">
+          <template v-if="editing">
+            <button class="pg-btn" @click="cancel">Batal</button>
+            <button class="pg-btn primary" :disabled="!form.title.trim()" @click="save">Simpan</button>
+          </template>
+          <button v-else class="pg-btn primary" @click="startAdd">+ Tambah petunjuk</button>
+        </div>
+      </div>
+    </div>
+  `,
+  data() {
+    return { items: [], editing: false, form: { id: null, title: '', note: '', pageKey: '' } };
+  },
+  watch: {
+    show(v) { if (v) { this.load(); this.editing = false; } }
+  },
+  methods: {
+    load() {
+      try {
+        const raw = WorkspaceStorage.getItem('ws_page_guide');
+        const arr = raw ? JSON.parse(raw) : [];
+        this.items = Array.isArray(arr) ? arr : [];
+      } catch (_e) { this.items = []; }
+    },
+    persist() {
+      try { WorkspaceStorage.setItem('ws_page_guide', JSON.stringify(this.items)); } catch (_e) { /* abaikan */ }
+    },
+    startAdd() { this.form = { id: null, title: '', note: '', pageKey: '' }; this.editing = true; },
+    startEdit(it) { this.form = { id: it.id, title: it.title, note: it.note || '', pageKey: it.pageKey || '' }; this.editing = true; },
+    cancel() { this.editing = false; },
+    save() {
+      const title = this.form.title.trim();
+      if (!title) return;
+      const data = { title, note: this.form.note.trim(), pageKey: this.form.pageKey || '' };
+      if (this.form.id) {
+        this.items = this.items.map(x => x.id === this.form.id ? { ...x, ...data } : x);
+      } else {
+        this.items = [...this.items, { id: 'pg-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), ...data }];
+      }
+      this.persist();
+      this.editing = false;
+    },
+    remove(it) {
+      if (!confirm(`Hapus petunjuk "${it.title}"?`)) return;
+      this.items = this.items.filter(x => x.id !== it.id);
+      this.persist();
+    }
+  }
+};
+
 // Start application
 const app = createApp(App);
 
@@ -1018,6 +1170,7 @@ app.component('bucket-list-yearly', BucketList100);
 app.component('quran-reader', QuranReader);
 app.component('wish-list-2026', WishList2026);
 app.component('daily-stok', DailyStok);
+app.component('page-guide', PageGuide);
 app.component('push-notif-toggle', PushNotifToggle);
 app.component('daily-question-float', DailyQuestionFloat);
 app.component('daily-question-float-circle', DailyQuestionFloatCircle);
