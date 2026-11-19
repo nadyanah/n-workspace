@@ -15020,3 +15020,19 @@ img, svg, video, canvas, iframe {
   line-height: 1.6;
 }
 .timeline-month-chevron { color: var(--text-muted); transition: transform 0.2s ease; }
+
+/* Cegah iOS Safari memperbesar otomatis teks panjang (penyebab ukuran font tiap momen beda-beda) */
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+.moment-feed-title,
+.moment-feed-caption,
+.moment-feed-time,
+.moment-date-label {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+.moment-feed-title { font-size: 16px; font-weight: 800; }
+.moment-feed-caption { font-size: 14.5px; font-weight: 400; }
