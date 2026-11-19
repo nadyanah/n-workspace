@@ -2435,7 +2435,7 @@ const CalendarMoment = {
                        @wheel.prevent="handleWheelZoom($event, cell.dateString, m)">
                     
                     <div class="stacked-photo-container" style="width: 100%; height: 100%; position: relative;">
-                      <img :src="m.image" 
+                      <img :src="$ph(m.image)" 
                            class="cell-moment-photo" 
                            referrerPolicy="no-referrer"
                            style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px; border: 2px solid #FFFFFF; box-shadow: var(--shadow-sm);" />
@@ -2544,7 +2544,7 @@ const CalendarMoment = {
 
                       <!-- 1:1 Polaroid Photo with absolute aspect ratio 1:1 -->
                       <div v-if="item.image" class="timeline-photo-wrapper" style="margin: 0 0 16px 0; border: 6px solid #FFFFFF; box-shadow: var(--shadow-sm); background: #FFFFFF; border-radius: 8px; overflow: hidden; max-height: unset; aspect-ratio: 1/1 !important;">
-                        <img :src="item.image" style="width: 100%; aspect-ratio: 1/1 !important; object-fit: cover; display: block;" referrerPolicy="no-referrer" />
+                        <img :src="$ph(item.image)" style="width: 100%; aspect-ratio: 1/1 !important; object-fit: cover; display: block;" referrerPolicy="no-referrer" />
                       </div>
                       <!-- 1:1 Polaroid Default Placeholder if no image, so all match 1:1 beautifully -->
                       <div v-else style="margin: 0 0 16px 0; width: 100%; aspect-ratio: 1/1 !important; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background-color: #FAF6F0; border: 1.5px dashed var(--color-sand); border-radius: 8px;">
@@ -2641,7 +2641,7 @@ const CalendarMoment = {
                      :style="getOrbitStyle(item, idx)">
                   
                   <img v-if="item.image" 
-                       :src="item.image" 
+                       :src="$ph(item.image)" 
                        style="width: 100%; height: 100%; object-fit: cover; display: block;" 
                        referrerPolicy="no-referrer" />
                   <div v-else 
@@ -2730,7 +2730,7 @@ const CalendarMoment = {
                   <div class="moment-feed-body">
 
                     <div v-if="item.entry.image" class="moment-feed-photos">
-                      <img :src="item.entry.image" class="moment-feed-photo" referrerPolicy="no-referrer" />
+                      <img :src="$ph(item.entry.image)" class="moment-feed-photo" referrerPolicy="no-referrer" />
                     </div>
 
                     <div class="moment-feed-caption-row">
@@ -2940,7 +2940,7 @@ const CalendarMoment = {
                            style="display: none;" />
                     
                     <div v-if="m.image" style="position: relative; line-height: 0; width: 100%;">
-                      <img :src="m.image" 
+                      <img :src="$ph(m.image)" 
                            style="max-height: 140px; width: 100%; object-fit: cover; border-radius: 8px; border: 2.5px solid #FFFFFF; box-shadow: var(--shadow-sm);" 
                            referrerPolicy="no-referrer" />
                       <button type="button" 
@@ -3344,6 +3344,8 @@ const CalendarMoment = {
       };
       this.saveToStorage();
     }
+    // Pindahkan foto base64 lama ke Supabase Storage (latar belakang)
+    this.migrateMomentPhotos();
 
     const savedMomentCats = WorkspaceStorage.getItem('personal_workspace_calendar_custom_categories');
     if (savedMomentCats) {
@@ -3599,13 +3601,40 @@ const CalendarMoment = {
           canvas.height = h;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, w, h);
-          mItem.image = canvas.toDataURL('image/jpeg', 0.55);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.55);
+          mItem.image = dataUrl; // preview instan
+          PhotoStorage.upload(dataUrl, 'calendar').then(url => {
+            if (url !== dataUrl && mItem.image === dataUrl) mItem.image = url;
+          });
         };
       };
+    },
+    async migrateMomentPhotos() {
+      if (this._momMigrating || !globalThis.PhotoStorage || PhotoStorage._unavailable) return;
+      this._momMigrating = true;
+      try {
+        const inlineList = [];
+        Object.values(this.moments).forEach(arr => (arr || []).forEach(m => {
+          if (PhotoStorage.isInline(m.image) && !inlineList.includes(m.image)) inlineList.push(m.image);
+        }));
+        const map = {};
+        for (const d of inlineList) {
+          const url = await PhotoStorage.upload(d, 'calendar');
+          if (url !== d) map[d] = url; else if (PhotoStorage._unavailable) break;
+        }
+        if (!Object.keys(map).length) return;
+        // Terapkan ke data terkini (in-place supaya reaktivitas & edit user tidak tertimpa)
+        Object.values(this.moments).forEach(arr => (arr || []).forEach(m => { if (map[m.image]) m.image = map[m.image]; }));
+        if (this.modalMoments) this.modalMoments.forEach(m => { if (map[m.image]) m.image = map[m.image]; });
+        this.saveToStorage();
+      } catch (e) {
+        console.warn('[Moment] Migrasi foto ditunda:', e.message || e);
+      } finally { this._momMigrating = false; }
     },
     saveAllMoments() {
       if (!this.selectedCell) return;
       const dateStr = this.selectedCell.dateString;
+      const _oldImgs = (this.moments[dateStr] || []).map(m => m.image).filter(u => PhotoStorage.isRemote(u));
       
       const finalMoments = this.modalMoments.filter(m => {
         return (m.title || '').trim() !== '' || 
@@ -3625,6 +3654,10 @@ const CalendarMoment = {
       }
       
       this.saveToStorage();
+      // Foto yang dibuang/diganti → hapus filenya dari bucket
+      const _keptImgs = (this.moments[dateStr] || []).map(m => m.image);
+      const _orph = _oldImgs.filter(u => !_keptImgs.includes(u));
+      if (_orph.length) PhotoStorage.remove(_orph);
       this.showModal = false;
     },
     getCategoryColorHex(category) {
@@ -11827,9 +11860,9 @@ const GoogleCalendar = {
 
                   <p class="moment-feed-title">{{ m.text }}</p>
 
-                  <div v-if="m.photo" class="moment-feed-photos">
+                  <div v-if="momentPhotoOf(m)" class="moment-feed-photos">
                     <button type="button" class="moment-feed-photo-btn" @click="momentIsSynced(m) ? yearDotsOpenFromSyncedMoment(m) : null" title="Buka momen ini">
-                      <img :src="m.photo" class="moment-feed-photo" referrerPolicy="no-referrer" />
+                      <img :src="$ph(momentPhotoOf(m))" class="moment-feed-photo" loading="lazy" referrerPolicy="no-referrer" />
                     </button>
                   </div>
 
@@ -11890,7 +11923,7 @@ const GoogleCalendar = {
             type="button"
             class="y365-dot"
             :class="{ 'y365-dot--filled': d.hasEntry, 'y365-dot--today': d.isToday, 'y365-dot--future': d.isFuture && !d.hasEntry }"
-            :style="d.coverPhoto ? { backgroundImage: 'url(' + d.coverPhoto + ')' } : {}"
+            :style="d.coverPhoto ? { backgroundImage: 'url(' + $ph(d.coverPhoto) + ')' } : {}"
             :title="yearDotsDateLabel(d.dateStr) + (d.hasEntry ? ' — has a story' : '')"
             @click="yearDotsOpenDay(d.dateStr)"
           ></button>
@@ -11913,7 +11946,7 @@ const GoogleCalendar = {
                     type="button"
                     class="y365-strip-item"
                     :class="{ 'y365-strip-item--active': d.isActive, 'y365-strip-item--filled': d.hasEntry, 'y365-strip-item--today': d.isToday }"
-                    :style="d.coverPhoto ? { backgroundImage: 'url(' + d.coverPhoto + ')' } : {}"
+                    :style="d.coverPhoto ? { backgroundImage: 'url(' + $ph(d.coverPhoto) + ')' } : {}"
                     :title="d.isToday ? 'Today' : yearDotsDateLabel(d.dateStr)"
                     @click="yearDotsJumpToDate(d.dateStr)">
                     <span v-if="d.isActive" class="y365-strip-item-label">{{ d.isToday ? 'Today' : d.dayNum }}</span>
@@ -11960,7 +11993,7 @@ const GoogleCalendar = {
                           <svg viewBox="0 0 24 24" width="13" height="13" :fill="yearDotsCoverId === m.id ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                         </button>
                         <div v-if="m.photo" class="y365-modal-photo-wrap" @click="yearDotsOpenFilePicker(idx)" title="Change photo">
-                          <img :src="m.photo" class="y365-modal-photo" />
+                          <img :src="$ph(m.photo)" class="y365-modal-photo" />
                           <button type="button" class="y365-modal-photo-remove" @click.stop="m.photo = ''" title="Remove photo">
                             <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                           </button>
@@ -12696,6 +12729,8 @@ const GoogleCalendar = {
     // Rangkum ulang judul-judul momen dari "365 Hari" ke daftar tab "Moment"
     // (jaga-jaga kalau ada data lama yang belum pernah disinkronkan).
     this.yearDotsSyncTitlesToMoments();
+    // Pindahkan foto base64 lama ke Supabase Storage (di latar belakang)
+    this.yearDotsMigratePhotos();
 
     // ── Jalankan aksi dari Floating Shortcut di Main Page (Desk), kalau ada ──
     // Contoh: klik "Set Pengingat" di Desk akan ditandai lewat flag global ini
@@ -12757,6 +12792,60 @@ const GoogleCalendar = {
       this.momentForm.link = '';
       clearTimeout(this.momentSuccessTimer);
       this.momentSuccessTimer = setTimeout(() => { this.momentSuccess = null; }, 2500);
+    },
+    // Foto untuk entri di tab Moment: kalau hasil sinkron 365 Hari, ambil dari sumber aslinya
+    // (satu-satunya salinan foto). Kalau entri manual, pakai field photo miliknya.
+    momentPhotoOf(m) {
+      if (!m) return '';
+      if (m.id && m.id.startsWith('year365-')) {
+        const entry = this.yearDotsEntries[m.date];
+        if (!entry) return '';
+        const origId = m.id.slice(8);
+        if (Array.isArray(entry.moments)) {
+          const found = entry.moments.find(x => x.id === origId);
+          return found ? (found.photo || '') : '';
+        }
+        return entry.photo || '';
+      }
+      return m.photo || '';
+    },
+    // Kumpulkan semua URL foto bucket dari satu entri hari (buat bersih-bersih file yatim)
+    yearDotsRemoteUrls(entry) {
+      if (!entry) return [];
+      const list = Array.isArray(entry.moments) ? entry.moments : [entry];
+      return list.map(x => x && x.photo).filter(u => typeof u === 'string' && PhotoStorage.isRemote(u));
+    },
+    // Pindahkan foto base64 lama di 365 Hari ke bucket (berjalan sendiri, aman diulang)
+    async yearDotsMigratePhotos() {
+      if (this._y365Migrating || !globalThis.PhotoStorage || PhotoStorage._unavailable) return;
+      this._y365Migrating = true;
+      try {
+        const map = {};
+        const inlineList = [];
+        Object.values(this.yearDotsEntries).forEach(entry => {
+          const list = Array.isArray(entry && entry.moments) ? entry.moments : [];
+          list.forEach(m => { if (PhotoStorage.isInline(m.photo) && !inlineList.includes(m.photo)) inlineList.push(m.photo); });
+        });
+        for (const dataUrl of inlineList) {
+          const url = await PhotoStorage.upload(dataUrl, 'year365');
+          if (url !== dataUrl) map[dataUrl] = url; else if (PhotoStorage._unavailable) break;
+        }
+        if (!Object.keys(map).length) return;
+        // Terapkan ke data TERKINI (user mungkin sempat edit saat upload berjalan)
+        const copy = {};
+        Object.keys(this.yearDotsEntries).forEach(d => {
+          const entry = this.yearDotsEntries[d];
+          if (entry && Array.isArray(entry.moments)) {
+            copy[d] = { ...entry, moments: entry.moments.map(m => map[m.photo] ? { ...m, photo: map[m.photo] } : m) };
+          } else copy[d] = entry;
+        });
+        this.yearDotsEntries = copy;
+        this.yearDotsPersistEntries();
+        // Modal yang sedang terbuka: ganti juga foto di draft-nya
+        this.yearDotsDayMoments.forEach(m => { if (map[m.photo]) m.photo = map[m.photo]; });
+      } catch (e) {
+        console.warn('[365] Migrasi foto ditunda:', e.message || e);
+      } finally { this._y365Migrating = false; }
     },
     momentIsSynced(m) {
       return !!(m && m.id && m.id.startsWith('year365-'));
@@ -13025,8 +13114,13 @@ const GoogleCalendar = {
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, w, h);
           const dataUrl = canvas.toDataURL('image/jpeg', 0.55);
-          if (this.yearDotsDayMoments[targetIdx]) {
-            this.yearDotsDayMoments[targetIdx].photo = dataUrl;
+          const target = this.yearDotsDayMoments[targetIdx];
+          if (target) {
+            target.photo = dataUrl; // preview instan
+            PhotoStorage.upload(dataUrl, 'year365').then(url => {
+              // Ganti hanya kalau foto di slot itu belum diganti user
+              if (url !== dataUrl && target.photo === dataUrl) target.photo = url;
+            });
           }
         };
       };
@@ -13050,6 +13144,7 @@ const GoogleCalendar = {
     // waktu geser ke hari lain, biar tulisan yang lagi diketik nggak hilang.
     yearDotsSaveDraft() {
       if (!this.yearDotsActiveDate) return;
+      const _oldUrls = this.yearDotsRemoteUrls(this.yearDotsEntries[this.yearDotsActiveDate]);
       // Cuma simpan momen yang ada isinya (judul, teks, atau foto)
       const filled = this.yearDotsDayMoments
         .filter(m => (m.title && m.title.trim()) || (m.text && m.text.trim()) || m.photo)
@@ -13069,6 +13164,10 @@ const GoogleCalendar = {
       }
       this.yearDotsPersistEntries();
       this.yearDotsSyncTitlesToMoments();
+      // Foto yang dihapus/diganti user → hapus filenya dari bucket supaya storage tidak numpuk
+      const _kept = this.yearDotsRemoteUrls(this.yearDotsEntries[this.yearDotsActiveDate]);
+      const _orphans = _oldUrls.filter(u => !_kept.includes(u));
+      if (_orphans.length) PhotoStorage.remove(_orphans);
     },
     // Swipe di strip tanggal (dalam modal) = pindah SATU tanggal per swipe,
     // bukan scroll bebas nge-geser semua dot. Ambang batas sama kayak swipe modal.
@@ -13119,6 +13218,8 @@ const GoogleCalendar = {
       const entry = this.yearDotsEntries[dateStr];
       const { moments, coverId } = this.yearDotsNormalizeEntry(entry);
       const remaining = moments.filter(mm => mm.id !== originalId);
+      const _gone = moments.find(mm => mm.id === originalId);
+      if (_gone && _gone.photo) PhotoStorage.remove([_gone.photo]);
 
       const copy = { ...this.yearDotsEntries };
       if (!remaining.length) {
@@ -13140,6 +13241,7 @@ const GoogleCalendar = {
     },
     yearDotsDeleteEntry() {
       if (!this.yearDotsActiveDate) return;
+      PhotoStorage.remove(this.yearDotsRemoteUrls(this.yearDotsEntries[this.yearDotsActiveDate]));
       const copy = { ...this.yearDotsEntries };
       delete copy[this.yearDotsActiveDate];
       this.yearDotsEntries = copy;
@@ -13166,7 +13268,7 @@ const GoogleCalendar = {
             momentBody: (m.text || '').trim(),
             category: 'year365',
             link: '',
-            photo: m.photo || '',
+            // foto TIDAK disalin (anti-duplikat) — dibaca langsung dari yearDotsEntries lewat momentPhotoOf()
             createdAt: m.updatedAt || Date.now()
           });
         });

@@ -982,6 +982,9 @@ const FloatingCountdownTimer = {
 // Start application
 const app = createApp(App);
 
+// Helper global di template: ubah referensi foto privat (sb:...) → signed URL sementara
+app.config.globalProperties.$ph = (v) => (globalThis.PhotoStorage ? PhotoStorage.url(v) : v);
+
 // Register individual modular components
 app.component('job-logbook', JobLogbook);
 app.component('calendar-moment', CalendarMoment);

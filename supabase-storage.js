@@ -541,6 +541,127 @@ const WorkspaceStorage = {
   }
 };
 
+
+// ============================================================================
+// PHOTO STORAGE — foto PRIBADI disimpan di Supabase Storage (bucket PRIVAT)
+// ============================================================================
+// - File foto diunggah ke bucket privat `moment-photos` (tidak bisa dibuka lewat
+//   URL biasa). Di JSON database hanya tersimpan referensi pendek: "sb:<path>".
+// - Saat ditampilkan, referensi diubah jadi signed URL sementara (berlaku 6 jam,
+//   diperbarui otomatis) lewat PhotoStorage.url(ref) / $ph(ref) di template.
+// - Hanya akun pemilik yang bisa membuat signed URL (policy folder = auth.uid()).
+// - Bucket belum ada / upload gagal → fallback ke base64 lama (foto tidak hilang),
+//   lalu dimigrasi otomatis di kunjungan berikutnya.
+// Setup bucket: lihat file SETUP_PHOTO_STORAGE.sql
+// ============================================================================
+const PhotoStorage = {
+  BUCKET: 'moment-photos',
+  REF_PREFIX: 'sb:',
+  SIGN_TTL: 6 * 3600,       // detik
+  REFRESH_BEFORE: 600,      // detik sebelum kedaluwarsa → diperbarui
+  PLACEHOLDER: 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
+  _unavailable: false,
+  _cache: null,             // { path: { url, exp(ms) } } — reactive supaya UI ter-update
+  _pending: new Set(),
+  _flushTimer: null,
+
+  isInline(v) { return typeof v === 'string' && v.startsWith('data:image'); },
+
+  // Ambil path file dari referensi "sb:..." (atau URL publik lama dari bucket ini)
+  _toPath(v) {
+    if (typeof v !== 'string') return null;
+    if (v.startsWith(this.REF_PREFIX)) return v.slice(this.REF_PREFIX.length);
+    const m = v.match(new RegExp('/object/(?:public|sign|authenticated)/' + this.BUCKET + '/([^?]+)'));
+    return m ? decodeURIComponent(m[1]) : null;
+  },
+  // true kalau nilai ini menunjuk ke file di bucket kita
+  isRemote(v) { return !!this._toPath(v); },
+
+  async upload(dataUrl, folder = 'moments') {
+    if (!this.isInline(dataUrl) || this._unavailable) return dataUrl;
+    try {
+      const userId = _currentUserId || await _ensureUser();
+      if (!userId) return dataUrl;
+      const blob = await (await fetch(dataUrl)).blob();
+      const rand = Math.random().toString(36).slice(2, 10);
+      const path = `${userId}/${folder}/${Date.now()}-${rand}.jpg`;
+      const { error } = await _supabaseClient.storage
+        .from(this.BUCKET)
+        .upload(path, blob, { contentType: 'image/jpeg', cacheControl: '31536000', upsert: false });
+      if (error) {
+        if (/not found|bucket/i.test(error.message || '')) this._unavailable = true;
+        throw error;
+      }
+      return this.REF_PREFIX + path;
+    } catch (err) {
+      console.warn('[PhotoStorage] Upload gagal, pakai penyimpanan inline sementara:', err.message || err);
+      return dataUrl;
+    }
+  },
+
+  // Sinkron: dipanggil dari template. Mengembalikan URL siap pakai (atau placeholder
+  // transparan sampai signed URL selesai dibuat — lalu UI otomatis ter-update).
+  url(v) {
+    if (!v) return '';
+    const path = this._toPath(v);
+    if (!path) return v; // base64 / URL lain → apa adanya
+    if (!this._cache) this._cache = (globalThis.Vue && Vue.reactive) ? Vue.reactive({}) : {};
+    const hit = this._cache[path];
+    const now = Date.now();
+    if (hit) {
+      if (hit.exp - now < this.REFRESH_BEFORE * 1000) this._queue(path);
+      return hit.url;
+    }
+    this._queue(path);
+    return this.PLACEHOLDER;
+  },
+
+  _queue(path) {
+    if (this._pending.has(path)) return;
+    this._pending.add(path);
+    clearTimeout(this._flushTimer);
+    this._flushTimer = setTimeout(() => this._flush(), 40); // gabungkan banyak foto jadi 1 request
+  },
+
+  async _flush() {
+    const paths = Array.from(this._pending);
+    if (!paths.length) return;
+    try {
+      const { data, error } = await _supabaseClient.storage
+        .from(this.BUCKET).createSignedUrls(paths, this.SIGN_TTL);
+      if (error) throw error;
+      const now = Date.now();
+      (data || []).forEach(row => {
+        if (row.signedUrl) {
+          this._cache[row.path] = { url: row.signedUrl, exp: now + this.SIGN_TTL * 1000 };
+        } else {
+          // file tidak ada / tidak boleh diakses → jangan diulang terus
+          this._cache[row.path] = { url: this.PLACEHOLDER, exp: now + 60 * 1000 };
+        }
+      });
+    } catch (err) {
+      console.warn('[PhotoStorage] Gagal membuat signed URL:', err.message || err);
+      const now = Date.now();
+      paths.forEach(p => { this._cache[p] = { url: this.PLACEHOLDER, exp: now + 15 * 1000 }; });
+    } finally {
+      paths.forEach(p => this._pending.delete(p));
+    }
+  },
+
+  async remove(refs) {
+    try {
+      const paths = (Array.isArray(refs) ? refs : [refs]).map(r => this._toPath(r)).filter(Boolean);
+      if (!paths.length) return;
+      const { error } = await _supabaseClient.storage.from(this.BUCKET).remove(paths);
+      if (error) throw error;
+      paths.forEach(p => { if (this._cache) delete this._cache[p]; });
+    } catch (err) {
+      console.warn('[PhotoStorage] Gagal hapus file lama:', err.message || err);
+    }
+  }
+};
+globalThis.PhotoStorage = PhotoStorage;
+
 globalThis.WorkspaceStorage = WorkspaceStorage;
 
 // 🆕 Flush simpanan tertunda saat tab disembunyikan / ditutup
