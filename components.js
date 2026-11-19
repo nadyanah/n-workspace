@@ -11854,10 +11854,22 @@ const GoogleCalendar = {
         </div>
 
         <div v-else class="timeline">
-          <div v-for="group in groupedMoments" :key="group.dateString" class="timeline-item">
-            <div class="timeline-dot"></div>
+          <template v-for="month in momentMonths" :key="month.key">
+          <!-- Pembeda bulan: bulatan besar, terisi = terbuka, kosong = tertutup -->
+          <div class="timeline-month" :class="{ 'is-open': isMomentMonthExpanded(month.key) }"
+               role="button" tabindex="0"
+               @click="toggleMomentMonth(month.key)" @keydown.enter="toggleMomentMonth(month.key)"
+               :title="isMomentMonthExpanded(month.key) ? 'Tutup bulan ini' : 'Buka bulan ini'">
+            <span class="timeline-month-dot"></span>
+            <span class="timeline-month-label">{{ month.label }}</span>
+            <span class="timeline-month-count">{{ month.count }}</span>
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-inline timeline-month-chevron" :style="{ transform: isMomentMonthExpanded(month.key) ? 'rotate(180deg)' : 'none' }"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <template v-if="isMomentMonthExpanded(month.key)">
+          <div v-for="group in month.days" :key="group.dateString" class="timeline-item">
+            <div class="timeline-dot" :class="{ 'is-open': isMomentDateExpanded(group.dateString) }"></div>
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-              <div class="timeline-date" style="margin-bottom: 0;">{{ formatMomentDate(group.dateString) }}</div>
+              <div class="timeline-date moment-date-label">{{ formatMomentDate(group.dateString) }}</div>
               <button type="button"
                       @click="toggleMomentDateGroup(group.dateString)"
                       :title="isMomentDateExpanded(group.dateString) ? 'Sembunyikan moment' : ('Lihat ' + group.items.length + ' moment')"
@@ -11887,7 +11899,7 @@ const GoogleCalendar = {
                   <div v-if="m.momentBody || m.link" class="moment-feed-caption-row">
                     <p v-if="m.momentBody" class="moment-feed-caption">{{ m.momentBody }}</p>
                     <a v-if="m.link" :href="m.link" target="_blank" rel="noopener noreferrer" title="Buka link moment"
-                       style="color: var(--color-terracotta); text-decoration: none; font-size: 13px; font-weight: 700; font-family: 'Space Mono', monospace;">🔗 Buka link</a>
+                       class="moment-feed-link">🔗 Buka link</a>
                   </div>
                 </div>
 
@@ -11914,6 +11926,8 @@ const GoogleCalendar = {
               </button>
             </div>
           </div>
+          </template>
+          </template>
         </div>
 
       </div>
@@ -12163,6 +12177,7 @@ const GoogleCalendar = {
       momentEditingId: null,
       showMomentForm: true,
       momentExpandedDates: {},
+      momentExpandedMonths: {},
       momentSuccess: null,
       momentSuccessTimer: null,
 
@@ -12251,6 +12266,18 @@ const GoogleCalendar = {
         map.get(m.date).push(m);
       });
       return Array.from(map.entries()).map(([dateString, items]) => ({ dateString, items }));
+    },
+    // Kelompok bulan (terbaru dulu) berisi kelompok tanggal di dalamnya
+    momentMonths() {
+      const map = new Map();
+      this.groupedMoments.forEach(g => {
+        const key = g.dateString.slice(0, 7);
+        if (!map.has(key)) map.set(key, { key, label: this.formatMomentMonth(key), days: [], count: 0 });
+        const mo = map.get(key);
+        mo.days.push(g);
+        mo.count += g.items.length;
+      });
+      return Array.from(map.values());
     },
     // --- 365 Hari Computeds ---
     yearDotsTotalDays() {
@@ -12913,6 +12940,19 @@ const GoogleCalendar = {
     },
     toggleMomentDateGroup(dateString) {
       this.momentExpandedDates = { ...this.momentExpandedDates, [dateString]: !this.isMomentDateExpanded(dateString) };
+    },
+    toggleMomentMonth(key) {
+      this.momentExpandedMonths = { ...this.momentExpandedMonths, [key]: !this.isMomentMonthExpanded(key) };
+    },
+    isMomentMonthExpanded(key) {
+      if (key in this.momentExpandedMonths) return this.momentExpandedMonths[key];
+      // Default: hanya bulan paling baru yang terbuka
+      return this.momentMonths.length > 0 && this.momentMonths[0].key === key;
+    },
+    formatMomentMonth(key) {
+      const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+      const [y, m] = key.split('-');
+      return months[parseInt(m, 10) - 1] + ' ' + y;
     },
     isMomentDateExpanded(dateString) {
       if (dateString in this.momentExpandedDates) return this.momentExpandedDates[dateString];

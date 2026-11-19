@@ -14673,9 +14673,9 @@ img, svg, video, canvas, iframe {
 
 .moment-feed-title {
   margin: 0;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Space Mono', monospace;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-dark);
   line-height: 1.4;
 }
@@ -14932,3 +14932,84 @@ img, svg, video, canvas, iframe {
   .mp-qn-wrap { padding: 14px; }
   .mp-qn-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 }
+
+
+/* ============================================================================
+   MOMENT — konsistensi teks + pembeda bulan (bulatan buka/tutup)
+   Semua teks di timeline Moment memakai Space Mono, ukuran 13px.
+   ============================================================================ */
+.moment-date-label,
+.moment-feed-time,
+.moment-feed-title,
+.moment-feed-caption,
+.moment-feed-link,
+.moment-feed-add-link,
+.timeline-month-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.moment-date-label { margin-bottom: 0; }
+.moment-feed-link {
+  color: var(--color-terracotta);
+  text-decoration: none;
+  font-weight: 700;
+}
+.moment-feed-link:hover { text-decoration: underline; }
+
+/* Bulatan tanggal: terisi = terbuka, kosong = tertutup */
+.timeline-dot.is-open { background-color: var(--color-terracotta); }
+
+/* Header bulan */
+.timeline-month {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 6px 0;
+  cursor: pointer;
+  user-select: none;
+  color: var(--text-dark);
+}
+.timeline-item + .timeline-month,
+.timeline-month:not(:first-child) { margin-top: 10px; }
+.timeline-month:focus-visible { outline: 2px solid var(--color-terracotta); outline-offset: 2px; border-radius: 8px; }
+
+.timeline-month-dot {
+  position: absolute;
+  left: -34px;
+  top: 50%;
+  width: 19px;
+  height: 19px;
+  box-sizing: border-box;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  border: 2.5px solid var(--color-terracotta);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 4px var(--bg-card);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.timeline-month.is-open .timeline-month-dot {
+  background: radial-gradient(circle, var(--bg-card) 0 28%, var(--color-terracotta) 32%);
+}
+.timeline-month:hover .timeline-month-dot { box-shadow: 0 0 0 4px var(--bg-card), 0 0 0 6px rgba(214, 123, 82, 0.25); }
+
+.timeline-month-label {
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--text-dark);
+}
+.timeline-month-count {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-terracotta);
+  background: var(--bg-cream);
+  border: 1.5px solid var(--color-sand);
+  border-radius: 20px;
+  padding: 0 8px;
+  line-height: 1.6;
+}
+.timeline-month-chevron { color: var(--text-muted); transition: transform 0.2s ease; }
